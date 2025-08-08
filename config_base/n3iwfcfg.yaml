@@ -32,7 +32,7 @@ configuration:
   nasTcpPort: 20000 # TCP port which the NAS listens on
 
   # --- Nwu Interfaces ---
-  ikeBindAddress: 192.168.10.254 #192.168.10.1 #10.100.200.15 # Nwu interface  IP address (IKE) on this N3IWF
+  ikeBindAddress: 10.100.200.15 # Nwu interface  IP address (IKE) on this N3IWF
   ipSecTunnelAddress: 10.0.0.1 # Tunnel IP address of XFRM interface on this N3IWF
   ueIpAddressRange: 10.0.0.0/24 # IP address pool allocated to UE in IPSec tunnel
   xfrmInterfaceName: xfrmi # Prefix of XFRM interface name created by N3IWF
@@ -56,5 +56,5 @@ configuration:
 
 logger: # log output setting
   enable: true # true or false
-  level: trace # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
