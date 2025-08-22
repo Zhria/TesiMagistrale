@@ -1,0 +1,9 @@
+info:
+  version: 1.0.0
+  description: E2Node initial configuration
+
+configuration:
+  e2NodeName: E2Node # the name of this E2Node
+  ricAddress: # the address of the RIC
+    - 192.168.17.70 # RIC address
+  ricPort: 36422 #36412 # the port of the RIC

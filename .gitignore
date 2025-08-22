@@ -1,0 +1,7 @@
+# vscode
+.vscode
+
+mongodb
+
+# cert
+cert/*_*.pem
