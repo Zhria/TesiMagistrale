@@ -95,25 +95,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
     return -1;
   }
   
-  printf("GNB ID: %02X%02X%02X%02X\n", gnb->gnb_id.choice.gnb_ID.buf[0],
-         gnb->gnb_id.choice.gnb_ID.buf[1],
-         gnb->gnb_id.choice.gnb_ID.buf[2],
-         gnb->gnb_id.choice.gnb_ID.buf[3]);
-
-  ifstream simfile;
-  string line;
-
-  simfile.open("simulation.txt", ios::in);
-
-  if (simfile.is_open()) {
-
-    while (getline(simfile, line)) {
-      cout << line << "\n";
-    }
-
-    simfile.close();
-
-  }
 
   bool xmlenc = false;
 

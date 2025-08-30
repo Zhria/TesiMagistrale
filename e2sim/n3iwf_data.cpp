@@ -226,6 +226,8 @@ GlobalgNB_ID_t* getGNBStore() {
 
   int total_bits = gnb_id_bs.size * 8 - gnb_id_bs.bits_unused;
   std::cout << "gNB ID length: " << total_bits << " bits\n";
+  std::cout << "Unused bits : " << gnb_id_bs.bits_unused << " bits\n";
+
   return g_gnbStore;
 }
 
