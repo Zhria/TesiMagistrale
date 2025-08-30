@@ -104,6 +104,12 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //  int server_fd = sctp_start_server(ops.server_ip, ops.server_port);
 
   client_fd = sctp_start_client(ops.server_ip, ops.server_port);
+
+  if(client_fd == -1) {
+    LOG_E("[SCTP] Unable to start SCTP client");
+    fprintf(stderr, "[SCTP] Unable to start SCTP client\n");
+    return -1;
+  }
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
 
   printf("client_fd SCTP START CLIENT value is %d\n", client_fd);
@@ -177,8 +183,11 @@ int E2Sim::run_loop(int argc, char* argv[]){
 
   if(sctp_send_data(client_fd, data) > 0) {
     LOG_I("[SCTP] Sent E2-SETUP-REQUEST");
+    fprintf(stderr, "[SCTP] Sent E2-SETUP-REQUEST\n");
+
   } else {
     LOG_E("[SCTP] Unable to send E2-SETUP-REQUEST to peer");
+    fprintf(stderr, "[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
   }
 
   sctp_buffer_t recv_buf;
