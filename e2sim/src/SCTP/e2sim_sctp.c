@@ -68,38 +68,49 @@ int sctp_start_server(const char *server_ip_str, const int server_port)
   return server_fd;
 }
 
-int sctp_start_client(const char *server_ip_str, const int server_port)
-{
-  int client_fd;
 
-  if((client_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP)) == -1)
-  {
-     perror("socket");
-     return -1;
-  }
+int sctp_start_client(const char *server_ip_str, int server_port) {
+    int fd = socket(AF_INET, SOCK_SEQPACKET, IPPROTO_SCTP);
+    if (fd == -1) { perror("socket"); return -1; }
 
-  struct sockaddr_in peer_addr;
-  memset(&peer_addr, 0, sizeof(struct sockaddr_in));
-  peer_addr.sin_family      = AF_INET;
-  peer_addr.sin_port        = htons(server_port);
-  peer_addr.sin_addr.s_addr = inet_addr(server_ip_str);
-  // if(inet_pton(AF_INET, server_ip, &(peer_addr.sin_addr)) != 1) {
-  //     printf("Error converting IP address (%s) to sockaddr_in structure\n", server_ip);
-  //     return 0;
-  // }
+    // OPTIONAL: let kernel pick ephemeral src port; do NOT bind to 36422
+    /* 
+    struct sockaddr_in local = {0};
+    local.sin_family = AF_INET;
+    local.sin_addr.s_addr = htonl(INADDR_ANY);           // or inet_addr("<edge161_ip>")
+    local.sin_port = htons(0);                           // ephemeral
+    if (bind(client_fd, (struct sockaddr*)&local, sizeof(local)) == -1) {
+        perror("bind");
+        close(client_fd);
+        return -1;
+    }
+    */
 
-  fprintf(stderr, "Connecting to server at %s:%d ...", server_ip_str, server_port);
-  if(connect(client_fd, (struct sockaddr*)&peer_addr, sizeof(peer_addr)) == -1) {
-    perror("connect");
-    return -1;
-  }
+    // OPTIONAL but nice: set init streams (E2AP typically fine with 2/2)
+    struct sctp_initmsg initmsg = {0};
+    initmsg.sinit_num_ostreams = 2;
+    initmsg.sinit_max_instreams = 2;
+    initmsg.sinit_max_attempts = 4;
+    setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
-  assert(client_fd != 0);
+    struct sockaddr_in peer = {0};
+    peer.sin_family = AF_INET;
+    peer.sin_port   = htons(server_port);                // 32222
+    if (inet_pton(AF_INET, server_ip_str, &peer.sin_addr) != 1) {
+        fprintf(stderr, "bad server ip: %s\n", server_ip_str);
+        close(fd);
+        return -1;
+    }
 
-  fprintf(stderr, "OK\n");
-
-  return client_fd;
-
+    fprintf(stderr, "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
+    if (connect(fd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
+        fprintf(stderr, "failed (errno=%d)\n", errno);
+        perror("connect");
+        close(fd);
+        return -1;
+    }
+    fprintf(stderr, "OK\n");
+    return client_fd;
 }
 
 //ssize_t sctp_send_to_socket(int sockfd, const void* buf, size_t len)

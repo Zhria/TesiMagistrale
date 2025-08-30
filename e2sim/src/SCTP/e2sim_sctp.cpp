@@ -114,88 +114,65 @@ int sctp_start_server(const char *server_ip_str, const int server_port)
 
 int sctp_start_client(const char *server_ip_str, const int server_port)
 {
-  int client_fd, af;
+    int client_fd = -1;
+    int family = AF_UNSPEC;
 
-  struct sockaddr* server_addr;
-  size_t addr_len;
+    // We'll fill exactly one of these and use it
+    struct sockaddr_in  peer4;  memset(&peer4, 0, sizeof(peer4));
+    struct sockaddr_in6 peer6;  memset(&peer6, 0, sizeof(peer6));
+    struct sockaddr *peer = nullptr;
+    socklen_t peer_len = 0;
 
-  struct sockaddr_in  server4_addr;
-  memset(&server4_addr, 0, sizeof(struct sockaddr_in));
+    // Try IPv4 first
+    if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1) {
+        family = AF_INET;
+        peer4.sin_family = AF_INET;
+        peer4.sin_port   = htons(server_port);
+        peer = (struct sockaddr*)&peer4;
+        peer_len = sizeof(peer4);
+    }
+    // Else try IPv6
+    else if (inet_pton(AF_INET6, server_ip_str, &peer6.sin6_addr) == 1) {
+        family = AF_INET6;
+        peer6.sin6_family = AF_INET6;
+        peer6.sin6_port   = htons(server_port);
+        peer = (struct sockaddr*)&peer6;
+        peer_len = sizeof(peer6);
+    } else {
+        perror("inet_pton(server)");
+        return -1;
+    }
 
-  struct sockaddr_in6 server6_addr;
-  memset(&server6_addr, 0, sizeof(struct sockaddr_in6));
+    // IMPORTANT: message-oriented SCTP
+    client_fd = socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
+    if (client_fd == -1) {
+        perror("socket");
+        return -1;
+    }
 
-  if(inet_pton(AF_INET, server_ip_str, &server4_addr.sin_addr) == 1)
-  {
-    server4_addr.sin_family = AF_INET;
-    server4_addr.sin_port   = htons(server_port);
-    server_addr = (struct sockaddr*)&server4_addr;
-    addr_len    = sizeof(server4_addr);
-  }
-  else if(inet_pton(AF_INET6, server_ip_str, &server6_addr.sin6_addr) == 1)
-  {
-    server6_addr.sin6_family = AF_INET6;
-    server6_addr.sin6_port   = htons(server_port);
-    server_addr = (struct sockaddr*)&server6_addr;
-    addr_len    = sizeof(server6_addr);
-  }
-  else {
-    perror("inet_pton()");
-    exit(1);
-  }
+    // Optional: set initial streams (harmless if it fails)
+    struct sctp_initmsg initmsg;
+    memset(&initmsg, 0, sizeof(initmsg));
+    initmsg.sinit_num_ostreams  = 2;
+    initmsg.sinit_max_instreams = 2;
+    initmsg.sinit_max_attempts  = 4;
+    (void)setsockopt(client_fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
 
-  if((client_fd = socket(AF_INET6, SOCK_STREAM, IPPROTO_SCTP)) == -1)
-  {
-     perror("socket");
-     exit(1);
-  }
+    // DO NOT bind() to 36422. Let the kernel pick an ephemeral source port.
+    // If you previously had a bind(), remove it.
 
-  // int sendbuff = 10000;
-  // socklen_t optlen = sizeof(sendbuff);
-  // if(getsockopt(client_fd, SOL_SOCKET, SO_SNDBUF, &sendbuff, &optlen) == -1) {
-  //   perror("getsockopt send");
-  //   exit(1);
-  // }
-  // else
-  //   LOG_D("[SCTP] send buffer size = %d\n", sendbuff);
+    fprintf(stderr, "[SCTP] Connecting to server at %s:%d ... ", server_ip_str, server_port);
+    if (connect(client_fd, peer, peer_len) == -1) {
+        fprintf(stderr, "failed (errnod)\n");
+        perror("connect");
+        close(client_fd);
+        return -1;
+    }
+    fprintf(stderr, "OK\n");
 
-  //--------------------------------
-  //Bind before connect
-  auto optval = 1;
-  if( setsockopt(client_fd, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof optval) != 0 ){
-    perror("setsockopt port");
-    exit(1);
-  }
-
-  if( setsockopt(client_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval) != 0 ){
-    perror("setsockopt addr");
-    exit(1);
-  }
-
-  struct sockaddr_in6  client6_addr {};
-  client6_addr.sin6_family = AF_INET6;
-  client6_addr.sin6_port   = htons(RIC_SCTP_SRC_PORT);
-  client6_addr.sin6_addr   = in6addr_any;
-
-  LOG_I("[SCTP] Binding client socket to source port %d", RIC_SCTP_SRC_PORT);
-  if(bind(client_fd, (struct sockaddr*)&client6_addr, sizeof(client6_addr)) == -1) {
-    perror("bind");
-    exit(1);
-  }
-  // end binding ---------------------
-
-  LOG_I("[SCTP] Connecting to server at %s:%d ...", server_ip_str, server_port);
-  if(connect(client_fd, server_addr, addr_len) == -1) {
-    perror("connect");
-    exit(1);
-  }
-  assert(client_fd != 0);
-
-  LOG_I("[SCTP] Connection established");
-
-  return client_fd;
+    assert(client_fd != 0);
+    return client_fd;
 }
-
 int sctp_accept_connection(const char *server_ip_str, const int server_fd)
 {
   LOG_I("[SCTP] Waiting for new connection...");
