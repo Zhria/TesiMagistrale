@@ -61,61 +61,61 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc
   int ret = ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List->list , trigger_style);
   printf("ret is %d\n", ret);
 
-  RIC_ReportStyle_List_t *report_style1 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style1->ric_ReportStyle_Type = 1;
+  // RIC_ReportStyle_List_t *report_style1 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
+  // report_style1->ric_ReportStyle_Type = 1;
 
-  uint8_t *buf5 = (uint8_t*)"O-DU Measurement Container for the 5GC connected deployment";
+  // uint8_t *buf5 = (uint8_t*)"O-DU Measurement Container for the 5GC connected deployment";
 
-  printf("kpm4\n");  
+  // printf("kpm4\n");  
   
-  //  report_style1->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  report_style1->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf5));
-  memcpy(report_style1->ric_ReportStyle_Name.buf, buf5, strlen((char*)buf5));
-  report_style1->ric_ReportStyle_Name.size = strlen((char*)buf5);  
-  report_style1->ric_IndicationHeaderFormat_Type = 1;
-  report_style1->ric_IndicationMessageFormat_Type = 1;
+  // //  report_style1->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  // report_style1->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf5));
+  // memcpy(report_style1->ric_ReportStyle_Name.buf, buf5, strlen((char*)buf5));
+  // report_style1->ric_ReportStyle_Name.size = strlen((char*)buf5);  
+  // report_style1->ric_IndicationHeaderFormat_Type = 1;
+  // report_style1->ric_IndicationMessageFormat_Type = 1;
   
-  printf("kpm5\n");  
+  // printf("kpm5\n");  
 
-  RIC_ReportStyle_List_t *report_style2 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style2->ric_ReportStyle_Type = 2;
+  // RIC_ReportStyle_List_t *report_style2 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
+  // report_style2->ric_ReportStyle_Type = 2;
   
-  uint8_t *buf6 = (uint8_t*)"O-DU Measurement Container for the EPC connected deployment";
+  // uint8_t *buf6 = (uint8_t*)"O-DU Measurement Container for the EPC connected deployment";
   
-  //  report_style2->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  // //  report_style2->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
 
   
-  report_style2->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf6));
-  memcpy(report_style2->ric_ReportStyle_Name.buf, buf6, strlen((char*)buf6));
-  report_style2->ric_ReportStyle_Name.size = strlen((char*)buf6);  
-  report_style2->ric_IndicationHeaderFormat_Type = 1;
-  report_style2->ric_IndicationMessageFormat_Type = 1;
+  // report_style2->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf6));
+  // memcpy(report_style2->ric_ReportStyle_Name.buf, buf6, strlen((char*)buf6));
+  // report_style2->ric_ReportStyle_Name.size = strlen((char*)buf6);  
+  // report_style2->ric_IndicationHeaderFormat_Type = 1;
+  // report_style2->ric_IndicationMessageFormat_Type = 1;
 
-  printf("kpm6\n");  
+  // printf("kpm6\n");
 
-  RIC_ReportStyle_List_t *report_style3 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style3->ric_ReportStyle_Type = 3;
+  // RIC_ReportStyle_List_t *report_style3 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
+  // report_style3->ric_ReportStyle_Type = 3;
 
-  uint8_t *buf7 = (uint8_t*)"O-CU-CP Measurement Container for the 5GC connected deployment";
+  // uint8_t *buf7 = (uint8_t*)"O-CU-CP Measurement Container for the 5GC connected deployment";
 
-  //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  report_style3->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf7));
-  memcpy(report_style3->ric_ReportStyle_Name.buf, buf7, strlen((char*)buf7));
-  report_style3->ric_ReportStyle_Name.size = strlen((char*)buf7);
-  report_style3->ric_IndicationHeaderFormat_Type = 1;
-  report_style3->ric_IndicationMessageFormat_Type = 1;
+  // //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  // report_style3->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf7));
+  // memcpy(report_style3->ric_ReportStyle_Name.buf, buf7, strlen((char*)buf7));
+  // report_style3->ric_ReportStyle_Name.size = strlen((char*)buf7);
+  // report_style3->ric_IndicationHeaderFormat_Type = 1;
+  // report_style3->ric_IndicationMessageFormat_Type = 1;
 
-  RIC_ReportStyle_List_t *report_style4 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style4->ric_ReportStyle_Type = 4;
+  // RIC_ReportStyle_List_t *report_style4 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
+  // report_style4->ric_ReportStyle_Type = 4;
 
-  uint8_t *buf8 = (uint8_t*)"O-CU-CP Measurement Container for the EPC connected deployment";
+  // uint8_t *buf8 = (uint8_t*)"O-CU-CP Measurement Container for the EPC connected deployment";
 
-  //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  report_style4->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf8));
-  memcpy(report_style4->ric_ReportStyle_Name.buf, buf8, strlen((char*)buf8));
-  report_style4->ric_ReportStyle_Name.size = strlen((char*)buf8);
-  report_style4->ric_IndicationHeaderFormat_Type = 1;
-  report_style4->ric_IndicationMessageFormat_Type = 1;
+  // //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  // report_style4->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf8));
+  // memcpy(report_style4->ric_ReportStyle_Name.buf, buf8, strlen((char*)buf8));
+  // report_style4->ric_ReportStyle_Name.size = strlen((char*)buf8);
+  // report_style4->ric_IndicationHeaderFormat_Type = 1;
+  // report_style4->ric_IndicationMessageFormat_Type = 1;
 
   RIC_ReportStyle_List_t *report_style5 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
   report_style5->ric_ReportStyle_Type = 5;
@@ -130,28 +130,28 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc
   report_style5->ric_IndicationMessageFormat_Type = 1;
 
 
-  RIC_ReportStyle_List_t *report_style6 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style6->ric_ReportStyle_Type = 6;
+  // RIC_ReportStyle_List_t *report_style6 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
+  // report_style6->ric_ReportStyle_Type = 6;
 
-  uint8_t *buf10 = (uint8_t*)"O-CU-UP Measurement Container for the EPC connected deployment";
+  // uint8_t *buf10 = (uint8_t*)"O-CU-UP Measurement Container for the EPC connected deployment";
 
-  //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  report_style6->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf10));
-  memcpy(report_style6->ric_ReportStyle_Name.buf, buf10, strlen((char*)buf10));
-  report_style6->ric_ReportStyle_Name.size = strlen((char*)buf10);
-  report_style6->ric_IndicationHeaderFormat_Type = 1;
-  report_style6->ric_IndicationMessageFormat_Type = 1;  
+  // //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
+  // report_style6->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf10));
+  // memcpy(report_style6->ric_ReportStyle_Name.buf, buf10, strlen((char*)buf10));
+  // report_style6->ric_ReportStyle_Name.size = strlen((char*)buf10);
+  // report_style6->ric_IndicationHeaderFormat_Type = 1;
+  // report_style6->ric_IndicationMessageFormat_Type = 1;  
   
 
   ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List =
     (E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_ReportStyle_List*)calloc(1,sizeof(E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_ReportStyle_List));
   
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style1);
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style2);
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style3);
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style4);
+  //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style1);
+  //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style2);
+  //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style3);
+  //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style4);
   ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style5);
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style6);
+  //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style6);
 
   xer_fprint(stderr, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
 }
