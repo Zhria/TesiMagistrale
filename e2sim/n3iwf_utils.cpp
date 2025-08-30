@@ -1,0 +1,87 @@
+#include <cstdint>
+#include <cstdlib>
+#include <cstring>
+#include <iostream>
+
+// Ritorna il numero di bit effettivi (size*8 - bits_unused)
+static inline int bit_length(const BIT_STRING_t& bs) {
+  if (!bs.buf || bs.size <= 0 || bs.bits_unused < 0 || bs.bits_unused > 7) return -1;
+  return bs.size * 8 - bs.bits_unused;
+}
+
+// Copia di sicurezza per (ri)allocare il buffer
+static bool realloc_and_zero(uint8_t** buf, int new_size) {
+  uint8_t* nb = (uint8_t*)calloc(1, new_size);
+  if (!nb) return false;
+  free(*buf);
+  *buf = nb;
+  return true;
+}
+
+/**
+ * Valida o corregge la lunghezza del gNB ID:
+ * - Se 22 <= len <= 32: OK (nessuna modifica)
+ * - Se len < 22: left-pad a 22 mantenendo il valore
+ * - Se len > 32: errore
+ *
+ * Ritorna 0 se OK (o dopo fix), -1 se errore.
+ */
+int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
+                                  int min_bits = 22,
+                                  int max_bits = 32,
+                                  int target_if_pad = 22) {
+  if (!gnb_id_bs) return -1;
+  if (min_bits < 1 || max_bits < min_bits) return -1;
+
+  int total_bits = bit_length(*gnb_id_bs);
+  if (total_bits < 0) return -1;
+
+  if (total_bits > max_bits) {
+    // Non tronchiamo: meglio segnalare errore
+    std::cerr << "gNB ID too long: " << total_bits << " bits (max " << max_bits << ")\n";
+    return -1;
+  }
+
+  if (total_bits >= min_bits && total_bits <= max_bits) {
+    // Già valido: nessuna azione
+    return 0;
+  }
+
+  // total_bits < min_bits -> left-pad a target_if_pad (tipicamente 22)
+  const int target_bits = target_if_pad;
+  if (target_bits < min_bits || target_bits > max_bits) return -1;
+
+  // 1) Ricostruisci il valore intero corrente (big-endian), rimuovendo i bits_unused
+  uint64_t value = 0;
+  for (int i = 0; i < gnb_id_bs->size; ++i) {
+    value = (value << 8) | gnb_id_bs->buf[i];
+  }
+  // Rimuove gli unused bit (in coda all'ultimo byte)
+  if (gnb_id_bs->bits_unused > 0) {
+    value >>= gnb_id_bs->bits_unused;
+  }
+
+  // A questo punto 'value' rappresenta i 'total_bits' effettivi del gNB ID.
+  // 2) Prepara il nuovo contenitore con target_bits
+  const int num_bytes = (target_bits + 7) / 8;
+  const int bits_unused_new = num_bytes * 8 - target_bits;
+
+  if (!realloc_and_zero(&gnb_id_bs->buf, num_bytes)) {
+    return -1;
+  }
+  gnb_id_bs->size = num_bytes;
+  gnb_id_bs->bits_unused = bits_unused_new;
+
+  // 3) Inserisci il valore nei target_bits *senza* cambiarlo (vero left-pad)
+  // Per codifica ASN.1 BIT STRING: i bit inutilizzati sono in coda ⇒ shiftiamo a sinistra di bits_unused_new
+  uint64_t out = value;
+  out <<= bits_unused_new;
+
+  // 4) Scrivi in big-endian
+  for (int i = num_bytes - 1; i >= 0; --i) {
+    gnb_id_bs->buf[i] = static_cast<uint8_t>(out & 0xFF);
+    out >>= 8;
+  }
+
+  return 0;
+}

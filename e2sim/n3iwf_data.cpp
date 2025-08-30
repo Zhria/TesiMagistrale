@@ -7,6 +7,7 @@
 #include <nlohmann/json.hpp>
 
 #include "encode_e2apv1.hpp"
+#include "n3iwf_utils.hpp"
 
 extern "C" {
 #include "E2SM-KPM-RANfunction-Description.h"
@@ -215,6 +216,16 @@ GlobalgNB_ID_t* getGNBStore() {
   if (!g_gnbStore) {
     if (init_n3iwf_data() != 0) return nullptr;
   }
+  BIT_STRING_t& gnb_id_bs = g_gnbStore->gnb_id.choice.gnb_ID;
+
+  int ret = validate_or_fix_gnb_id_length(&gnb_id_bs, /*min=*/22, /*max=*/32, /*target_if_pad=*/22);
+  if (ret != 0) {
+    std::cerr << "gNB ID invalid length (must be 22..32 bits) and cannot be auto-fixed.\n";
+    return nullptr;
+  }
+
+  int total_bits = gnb_id_bs.size * 8 - gnb_id_bs.bits_unused;
+  std::cout << "gNB ID length: " << total_bits << " bits\n";
   return g_gnbStore;
 }
 
