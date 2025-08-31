@@ -46,6 +46,7 @@ extern struct timespec ts;
     va_start(args, msg);
     vprintf(msg, args);
     va_end(args);
+    printf("\n");
     fflush(stdout);
 }
 // Ritorna il numero di bit effettivi (size*8 - bits_unused)

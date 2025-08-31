@@ -31,8 +31,6 @@
 #define RIC_SCTP_SRC_PORT   36422
 #define MAX_SCTP_BUFFER     10000
 #define WORKDIR_ENV         "E2SIM_DIR" //environment variable
-#define DEFAULT_CLIENT_IP   "192.168.17.94"
-#define DEFAULT_CLIENT_PORT 36422
 
 char* time_stamp(void);
 
@@ -57,8 +55,6 @@ typedef struct {
 typedef struct {
   char* server_ip;
   int   server_port;
-  char* client_ip;
-  int   client_port;
   //... extend as needed
 } options_t;
 

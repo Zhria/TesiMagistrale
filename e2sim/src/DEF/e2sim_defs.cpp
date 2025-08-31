@@ -69,9 +69,7 @@ options_t read_input_options(int argc, char *argv[])
   options_t options;
   options.server_ip   = (char*)DEFAULT_SCTP_IP;
   options.server_port = X2AP_SCTP_PORT;
-  options.client_ip   = (char*)DEFAULT_CLIENT_IP;
-  options.client_port = DEFAULT_CLIENT_PORT;
-
+ 
   // Log workdir se definito (evita costruzione da NULL)
   {
     const char* wd = std::getenv(WORKDIR_ENV);

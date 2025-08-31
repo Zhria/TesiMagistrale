@@ -25,17 +25,17 @@
 
 #include "encode_e2apv1.hpp"
 #include "kpm_callbacks.hpp"
+#include "n3iwf_utils.hpp"
 
 #include <unistd.h>
 
 void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, bool xmlenc, E2Sim *e2sim)
 {
-  fprintf(stderr, "in e2ap_handle_sctp_data()\n");
   //decode the data into E2AP-PDU
   E2AP_PDU_t* pdu = (E2AP_PDU_t*)calloc(1, sizeof(E2AP_PDU));
   ASN_STRUCT_RESET(asn_DEF_E2AP_PDU, pdu);
 
-  fprintf(stderr, "[E2AP HANDLE SCTP DATA] decoding...\n");
+  stampaln("[E2AP HANDLE SCTP DATA] decoding...");
 
   asn_transfer_syntax syntaxPER;
   asn_transfer_syntax syntaxXER;
@@ -44,7 +44,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, bool xmlenc, E2S
   syntaxPER = ATS_ALIGNED_BASIC_PER;
   syntaxXER = ATS_BASIC_XER; //Il setup response viene inviato in XER
 
-  fprintf(stderr, "[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
+  stampaln("[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
   //e2ap_asn1c_decode_pdu(pdu, data.buffer, data.len);
 
 
@@ -60,26 +60,23 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, bool xmlenc, E2S
   case RC_FAIL:
     rval= asn_decode(NULL, syntaxXER, &asn_DEF_E2AP_PDU, (void **) &pdu, data.buffer, data.len);
     if(rval.code == RC_OK) {
-      fprintf(stderr, "[E2AP HANDLE SCTP DATA] Decoding successful (XER)\n");
+      stampaln("[E2AP HANDLE SCTP DATA] Decoding successful (XER)\n");
     } else {
-      fprintf(stderr, "[E2AP HANDLE SCTP DATA] Decoding failed (XER)\n");
-      fprintf(stderr, "[E2AP HANDLE SCTP DATA] Error code: %d\n", rval.code);
+      stampaln("[E2AP HANDLE SCTP DATA] Decoding failed (XER)\n");
+      stampaln("[E2AP HANDLE SCTP DATA] Error code: %d\n", rval.code);
       free(pdu);
       return;
     }
   }
 
   int index = (int)pdu->present;
-  fprintf(stderr, "length of decoded data %ld with result %d and index is %d\n", rval.consumed, rval.code, index);
+  stampaln("length of decoded data %ld with result %d and index is %d\n", rval.consumed, rval.code, index);
 
-  //fprintf(stderr, "showing xer of data\n");
-  //COMMENTO XER_FRINT PERCHE RIEMPIE TROPPO LA SHELL
-  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu);
   
   int procedureCode = e2ap_asn1c_get_procedureCode(pdu);
   index = (int)pdu->present;
 
-  LOG_D("[E2AP] Unpacked E2AP-PDU: index = %d, procedureCode = %d\n", index, procedureCode);
+  stampaln("[E2AP] Unpacked E2AP-PDU: index = %d, procedureCode = %d\n", index, procedureCode);
 
   switch(procedureCode)
     {

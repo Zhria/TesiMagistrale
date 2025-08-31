@@ -132,7 +132,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
       
   //PRINT All_funcs
   for (const auto& func : all_funcs) {
-    printf("RAN Function ID: %ld, Description Size: %ld, Revision: %ld\n",
+    stampaln("RAN Function ID: %ld, Description Size: %ld, Revision: %ld\n",
            func.ranFunctionId, func.ranFunctionDesc->size, func.ranFunctionRev);
   }
   stampaln("After printing all functions\n");
@@ -142,11 +142,9 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv1_setup_request_parameterized(pdu_setup, all_funcs);
 
-  stampaln("After generating e2setup req ----------------------------------------------------------\n");
-
-  xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-
-  stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  //stampaln("After generating e2setup req ----------------------------------------------------------\n");
+  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
+  //stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -184,24 +182,22 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("after encoding message\n");
 
   if(sctp_send_data(client_fd, data) > 0) {
-    LOG_I("[SCTP] Sent E2-SETUP-REQUEST");
     stampaln("[SCTP] Sent E2-SETUP-REQUEST\n");
 
   } else {
-    LOG_E("[SCTP] Unable to send E2-SETUP-REQUEST to peer");
     stampaln("[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
   }
 
   sctp_buffer_t recv_buf;
 
-  LOG_I("[SCTP] Waiting for SCTP data");
+  stampaln("[SCTP] Waiting for SCTP data");
 
   while(1) //constantly looking for data on SCTP interface
   {
     if(sctp_receive_data(client_fd, recv_buf) <= 0)
       break;
 
-    LOG_I("[SCTP] Received new data of size %d", recv_buf.len);
+    stampaln("[SCTP] Received new data of size %d", recv_buf.len);
 
     e2ap_handle_sctp_data(client_fd, recv_buf, xmlenc, this);
     if (xmlenc) xmlenc = false;
