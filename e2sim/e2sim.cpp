@@ -105,7 +105,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //E2 Agent will automatically restart upon sctp disconnection
   //  int server_fd = sctp_start_server(ops.server_ip, ops.server_port);
 
-  client_fd = sctp_start_client(ops.server_ip, ops.server_port, ops.client_ip, ops.client_port);
+  client_fd = sctp_start_client(ops.server_ip, ops.server_port, ops.client_ip);
 
   if(client_fd == -1) {
     LOG_E("[SCTP] Unable to start SCTP client");
