@@ -1,7 +1,7 @@
 CMakeFiles/kpm_callbacks.dir/ASN1c/xer_support.c.o: \
- /home/ztraka/free5gc-compose/e2sim/ASN1c/xer_support.c \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/xer_support.c \
  /usr/include/stdc-predef.h \
- /home/ztraka/free5gc-compose/e2sim/./ASN1c/asn_system.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -82,4 +82,4 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/xer_support.c.o: \
  /usr/include/asm-generic/sockios.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
  /usr/include/x86_64-linux-gnu/bits/in.h \
- /home/ztraka/free5gc-compose/e2sim/./ASN1c/xer_support.h
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_support.h

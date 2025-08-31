@@ -5,13 +5,13 @@
 # compile CXX with /usr/bin/g++
 C_DEFINES = 
 
-C_INCLUDES = -I/home/ztraka/free5gc-compose/e2sim/. -I/home/ztraka/free5gc-compose/e2sim/./src -I/home/ztraka/free5gc-compose/e2sim/./src/DEF -I/home/ztraka/free5gc-compose/e2sim/./src/SCTP -I/home/ztraka/free5gc-compose/e2sim/./src/E2AP -I/home/ztraka/free5gc-compose/e2sim/./src/E2AP/E2SM -I/home/ztraka/free5gc-compose/e2sim/./ASN1c
+C_INCLUDES = -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include
 
 C_FLAGS = 
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/home/ztraka/free5gc-compose/e2sim/. -I/home/ztraka/free5gc-compose/e2sim/./src -I/home/ztraka/free5gc-compose/e2sim/./src/DEF -I/home/ztraka/free5gc-compose/e2sim/./src/SCTP -I/home/ztraka/free5gc-compose/e2sim/./src/E2AP -I/home/ztraka/free5gc-compose/e2sim/./src/E2AP/E2SM -I/home/ztraka/free5gc-compose/e2sim/./ASN1c
+CXX_INCLUDES = -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include
 
 CXX_FLAGS = -std=gnu++17
 

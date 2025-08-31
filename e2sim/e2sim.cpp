@@ -30,9 +30,7 @@
 #include "e2ap_message_handler.hpp"
 #include "encode_e2apv1.hpp"
 #include "n3iwf_data.hpp"
-
-
-struct timespec ts; 
+#include "n3iwf_utils.hpp"
 
 
 using namespace std;
@@ -86,22 +84,9 @@ void E2Sim::wait_for_sctp_data()
   }
 }
 
-void stampaln(const char msg[]) {
-  struct timespec now;
-  clock_gettime(CLOCK_REALTIME, &now);
-  long seconds = now.tv_sec - ts.tv_sec;
-  long nseconds = now.tv_nsec - ts.tv_nsec;
-  if (nseconds < 0) {
-    seconds -= 1;
-    nseconds += 1000000000L;
-  }
-  printf("[%ld.%09ld] %s\n", seconds, nseconds, msg);
-  fflush(stdout);
-}
 
 
 int E2Sim::run_loop(int argc, char* argv[]){
-  clock_gettime(CLOCK_REALTIME, &ts);
 
   stampaln("Start E2 Agent (E2 Simulator)");
   stampaln("Per vedere se funziona la lettura da file");

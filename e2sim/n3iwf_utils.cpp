@@ -28,6 +28,26 @@ extern "C" {
 #include "RICsubsequentAction.h"
 #include "RICtimeToWait.h"
 }
+
+struct timespec ts;
+
+//String ammettendo n variabili variabili
+ void stampaln(const char* msg, ...) {
+    struct timespec now;
+    clock_gettime(CLOCK_REALTIME, &now);
+    long seconds = now.tv_sec - ts.tv_sec;
+    long nseconds = now.tv_nsec - ts.tv_nsec;
+    if (nseconds < 0) {
+        seconds -= 1;
+        nseconds += 1000000000L;
+    }
+    printf("[%ld.%09ld] ", seconds, nseconds);
+    va_list args;
+    va_start(args, msg);
+    vprintf(msg, args);
+    va_end(args);
+    fflush(stdout);
+}
 // Ritorna il numero di bit effettivi (size*8 - bits_unused)
 static inline int bit_length(const BIT_STRING_t& bs) {
   if (!bs.buf || bs.size <= 0 || bs.bits_unused < 0 || bs.bits_unused > 7) return -1;
@@ -63,7 +83,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
 
   if (total_bits > max_bits) {
     // Non tronchiamo: meglio segnalare errore
-    std::cerr << "gNB ID too long: " << total_bits << " bits (max " << max_bits << ")\n";
+    stampaln("gNB ID too long: %d bits (max %d)\n", total_bits, max_bits);
     return -1;
   }
 

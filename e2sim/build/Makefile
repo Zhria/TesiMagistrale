@@ -57,18 +57,18 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/ztraka/free5gc-compose/e2sim
+CMAKE_SOURCE_DIR = /home/zakaria/TesiMagistrale/e2sim
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/ztraka/free5gc-compose/e2sim/build
+CMAKE_BINARY_DIR = /home/zakaria/TesiMagistrale/e2sim/build
 
 #=============================================================================
 # Targets provided globally by CMake.
 
 # Special rule for the target edit_cache
 edit_cache:
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "No interactive CMake dialog available..."
-	/usr/bin/cmake -E echo No\ interactive\ CMake\ dialog\ available.
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
+	/usr/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ztraka/free5gc-compose/e2sim/build/CMakeFiles /home/ztraka/free5gc-compose/e2sim/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles /home/zakaria/TesiMagistrale/e2sim/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/ztraka/free5gc-compose/e2sim/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -5193,6 +5193,30 @@ n3iwf_data.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.s
 .PHONY : n3iwf_data.cpp.s
 
+n3iwf_utils.o: n3iwf_utils.cpp.o
+.PHONY : n3iwf_utils.o
+
+# target to build an object file
+n3iwf_utils.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o
+.PHONY : n3iwf_utils.cpp.o
+
+n3iwf_utils.i: n3iwf_utils.cpp.i
+.PHONY : n3iwf_utils.i
+
+# target to preprocess a source file
+n3iwf_utils.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.i
+.PHONY : n3iwf_utils.cpp.i
+
+n3iwf_utils.s: n3iwf_utils.cpp.s
+.PHONY : n3iwf_utils.s
+
+# target to generate assembly for a file
+n3iwf_utils.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.s
+.PHONY : n3iwf_utils.cpp.s
+
 src/DEF/e2sim_defs.o: src/DEF/e2sim_defs.cpp.o
 .PHONY : src/DEF/e2sim_defs.o
 
@@ -5931,6 +5955,9 @@ help:
 	@echo "... n3iwf_data.o"
 	@echo "... n3iwf_data.i"
 	@echo "... n3iwf_data.s"
+	@echo "... n3iwf_utils.o"
+	@echo "... n3iwf_utils.i"
+	@echo "... n3iwf_utils.s"
 	@echo "... src/DEF/e2sim_defs.o"
 	@echo "... src/DEF/e2sim_defs.i"
 	@echo "... src/DEF/e2sim_defs.s"

@@ -24,6 +24,7 @@ extern "C"
 
 #include "kpm_callbacks.hpp"
 #include "encode_kpm.hpp"
+#include "n3iwf_utils.hpp"
 
 #include "encode_e2apv1.hpp"
 
@@ -33,15 +34,12 @@ extern "C"
 using json = nlohmann::json;
 
 using namespace std;
+static E2Sim e2;
 // Singleton lazy: niente globali che partono prima di main
-static E2Sim& E2() {
-  static E2Sim instance;
-  return instance;
-}
 
 int main(int argc, char *argv[])
 {
-  printf("Starting E2 Simulator with KPM Callbacks\n");
+  stampaln("Starting E2 Simulator with KPM Callbacks");
   asn_codec_ctx_t *opt_cod;
 
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc = (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
@@ -58,17 +56,17 @@ int main(int argc, char *argv[])
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
   // Print e2smbuffer, ranfunc_desc, and er.encoded for debugging
-  fprintf(stderr, "Encoded size: %zu\n", er.encoded);
-  fprintf(stderr, "Encoded message (hex): ");
+  stampaln("Encoded size: %zu\n", er.encoded);
+  stampaln("Encoded message (hex): ");
   for (size_t i = 0; i < er.encoded; ++i)
   {
-    fprintf(stderr, "%02X ", e2smbuffer[i]);
+    stampaln("%02X ", e2smbuffer[i]);
   }
-  fprintf(stderr, "\n");
+  stampaln("\n");
 
   if (er.encoded < 0)
   {
-    fprintf(stderr, "Encoding failed: %s\n", er.failed_type->name);
+    stampaln("Encoding failed: %s\n", er.failed_type->name);
     return -1;
   }
   uint8_t *ranfuncdesc = (uint8_t *)calloc(1, er.encoded);
@@ -80,10 +78,10 @@ int main(int argc, char *argv[])
   ranfunc_ostr->size = er.encoded;
   memcpy(ranfunc_ostr->buf, e2smbuffer, er.encoded);
 
-  E2().register_e2sm(1, ranfunc_ostr);
-  E2().register_subscription_callback(1, &callback_kpm_subscription_request);
+  e2.register_e2sm(1, ranfunc_ostr);
+  e2.register_subscription_callback(1, &callback_kpm_subscription_request);
 
-  E2().run_loop(argc, argv);
+  e2.run_loop(argc, argv);
 }
 
 void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId)
@@ -227,7 +225,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf3, 6, e2smbuffer3, er3.encoded);
 
-    E2().encode_and_send_sctp_data(pdu3);
+    e2.encode_and_send_sctp_data(pdu3);
 
     seqNum++;
   }
@@ -295,7 +293,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf2, 6, e2smbuffer2, er2.encoded);
 
-    E2().encode_and_send_sctp_data(pdu2);
+    e2.encode_and_send_sctp_data(pdu2);
 
     seqNum++;
 
@@ -340,7 +338,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf, 6, e2smbuffer, er.encoded);
 
-    E2().encode_and_send_sctp_data(pdu);
+    e2.encode_and_send_sctp_data(pdu);
 
     seqNum++;
   }
@@ -467,7 +465,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
   generate_e2apv1_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId);
 
-  E2().encode_and_send_sctp_data(e2ap_pdu);
+  e2.encode_and_send_sctp_data(e2ap_pdu);
 
   // Start thread for sending REPORT messages
 

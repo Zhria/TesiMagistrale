@@ -1,5 +1,5 @@
 CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
- /home/ztraka/free5gc-compose/e2sim/src/SCTP/e2sim_sctp.cpp \
+ /home/zakaria/TesiMagistrale/e2sim/src/SCTP/e2sim_sctp.cpp \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -91,8 +91,8 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /usr/include/asm-generic/types.h /usr/include/asm-generic/int-ll64.h \
  /usr/include/linux/sctp.h /usr/include/linux/socket.h \
  /usr/include/arpa/inet.h /usr/include/assert.h \
- /home/ztraka/free5gc-compose/e2sim/src/SCTP/e2sim_sctp.hpp \
- /home/ztraka/free5gc-compose/e2sim/./src/DEF/e2sim_defs.h \
+ /home/zakaria/TesiMagistrale/e2sim/src/SCTP/e2sim_sctp.hpp \
+ /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
  /usr/include/signal.h \
  /usr/include/x86_64-linux-gnu/bits/signum-generic.h \
  /usr/include/x86_64-linux-gnu/bits/signum-arch.h \
