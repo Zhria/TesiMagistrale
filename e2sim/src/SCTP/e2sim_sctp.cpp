@@ -256,20 +256,11 @@ int sctp_start_client(const char *server_ip_str, const int server_port,const cha
         return -1;
     }
 
-    for (;;) {
-    // fai poll/select su fd con POLLIN
-    struct pollfd p{fd, POLLIN, 0};
-    int rc = poll(&p, 1, 1000);
-    if (rc > 0 && (p.revents & POLLIN)) {
-        sctp_print_events(fd);
-    }
-    }
-
-    /*// Attendi il completamento della connect
+    // Attendi il completamento della connect
     struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
-    rc = poll(&p, 1, connect_timeout_ms);
+    rc = poll(&p, 1, 5000); // timeout 5s
     if (rc == 0) {
-        fprintf(stderr, "FAILED (timeout %d ms)\n", connect_timeout_ms);
+        fprintf(stderr, "FAILED (timeout 5000 ms)\n");
         close(fd);
         return -1;
     }
@@ -277,7 +268,7 @@ int sctp_start_client(const char *server_ip_str, const int server_port,const cha
         fprintf(stderr, "FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
-    }*/
+    }
 
     // Verifica l’esito reale
     int soerr = 0; socklen_t sl = sizeof(soerr);
