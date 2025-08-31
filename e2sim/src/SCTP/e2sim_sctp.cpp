@@ -315,23 +315,37 @@ int sctp_accept_connection(const char *server_ip_str, const int server_fd)
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
-  fprintf(stderr,"in sctp send data func\n");
-  fprintf(stderr,"data.len is %d\n", data.len);
-  //Check if socket is valid
-  if(socket_fd < 0) {
-    LOG_E("[SCTP] Invalid socket");
-    exit(1);
-  }
-  //send data to the socket
-  int sent_len = send(socket_fd, (void*)(&(data.buffer[0])), data.len, 0);
-  fprintf(stderr,"after getting sent_len: %d\n", sent_len);
+    fprintf(stderr,"in sctp send data func\n");
+    fprintf(stderr,"data.len is %d\n", data.len);
 
-  if(sent_len == -1) {
-    perror("[SCTP] sctp_send_data");
-    exit(1);
-  }
+    if(socket_fd < 0) {
+        fprintf(stderr,"[SCTP] Invalid socket\n");
+        return -1;
+    }
 
-  return sent_len;
+    // PPID per E2AP = 60 (decimale)
+    uint32_t ppid = htonl(60);
+
+    int sent_len = sctp_sendmsg(
+        socket_fd,
+        data.buffer,   // puntatore ai byte
+        data.len,      // lunghezza
+        NULL, 0,       // dest addr = NULL perché il socket è già connesso
+        ppid,          // Payload Protocol Identifier
+        0,             // flags
+        0,             // stream = 0
+        0,             // timetolive
+        0              // context
+    );
+
+    fprintf(stderr,"after getting sent_len: %d\n", sent_len);
+
+    if(sent_len == -1) {
+        perror("[SCTP] sctp_send_data");
+        return -1;
+    }
+
+    return sent_len;
 }
 
 int sctp_send_data_X2AP(int &socket_fd, sctp_buffer_t &data)
