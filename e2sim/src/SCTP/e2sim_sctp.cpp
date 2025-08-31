@@ -211,11 +211,11 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
-    fprintf(stderr,"in sctp send data func\n");
-    fprintf(stderr,"data.len is %d\n", data.len);
+    stampaln("in sctp send data func\n");
+    stampaln("data.len is %d\n", data.len);
 
     if(socket_fd < 0) {
-        fprintf(stderr,"[SCTP] Invalid socket\n");
+        stampaln("[SCTP] Invalid socket\n");
         return -1;
     }
 
@@ -234,7 +234,7 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
         0              // context
     );
 
-    fprintf(stderr,"after getting sent_len: %d\n", sent_len);
+    stampaln("after getting sent_len: %d\n", sent_len);
 
     if(sent_len == -1) {
         perror("[SCTP] sctp_send_data");
@@ -276,7 +276,7 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
         return -1;
     }
     if (recv_len == 0) {
-        fprintf(stderr, "[SCTP] Connection closed by peer\n");
+        stampaln( "[SCTP] Connection closed by peer\n");
         close(socket_fd);
         return -1;
     }
@@ -287,20 +287,20 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
         switch (snp->sn_header.sn_type) {
             case SCTP_ASSOC_CHANGE: {
                 struct sctp_assoc_change *sac = &snp->sn_assoc_change;
-                fprintf(stderr, "[SCTP_EVENT] ASSOC_CHANGE state=%d\n", sac->sac_state);
+               stampaln( "[SCTP_EVENT] ASSOC_CHANGE state=%d\n", sac->sac_state);
                 break;
             }
             case SCTP_SHUTDOWN_EVENT:
-                fprintf(stderr, "[SCTP_EVENT] SHUTDOWN\n");
+               stampaln("[SCTP_EVENT] SHUTDOWN\n");
                 break;
             case SCTP_REMOTE_ERROR:
-                fprintf(stderr, "[SCTP_EVENT] REMOTE_ERROR\n");
+                stampaln("[SCTP_EVENT] REMOTE_ERROR\n");
                 break;
             case SCTP_SEND_FAILED_EVENT:
-                fprintf(stderr, "[SCTP_EVENT] SEND_FAILED\n");
+                stampaln("[SCTP_EVENT] SEND_FAILED\n");
                 break;
             default:
-                fprintf(stderr, "[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
+                stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
                 break;
         }
         return 0; // nessun payload da decodificare
@@ -318,7 +318,7 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     if (ppid == 60) {
         return recv_len;
     } else {
-        fprintf(stderr, "[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
+        stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
         return 0;
     }
 }
