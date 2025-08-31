@@ -109,19 +109,19 @@ int E2Sim::run_loop(int argc, char* argv[]){
 
   if(client_fd == -1) {
     LOG_E("[SCTP] Unable to start SCTP client");
-    fprintf(stderr, "[SCTP] Unable to start SCTP client\n");
+    stampaln("[SCTP] Unable to start SCTP client\n");
     return -1;
   }
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
 
-  fprintf(stderr,"client_fd SCTP START CLIENT value is %d\n", client_fd);
+  stampaln("client_fd SCTP START CLIENT value is %d\n", client_fd);
 
   std::vector<ran_func_info> all_funcs;
 
   //Loop through RAN function definitions that are registered
 
   for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
-    printf("looping through ran func\n");
+    stampaln("looping through ran func");
     ran_func_info next_func;
 
     next_func.ranFunctionId = elem.first;
@@ -135,18 +135,18 @@ int E2Sim::run_loop(int argc, char* argv[]){
     printf("RAN Function ID: %ld, Description Size: %ld, Revision: %ld\n",
            func.ranFunctionId, func.ranFunctionDesc->size, func.ranFunctionRev);
   }
-  printf("After printing all funcs\n");
+  stampaln("After printing all functions\n");
 
   //Generate E2AP PDU for E2 Setup Request
-  printf("About to generate E2AP PDU for E2 Setup Request\n");
-  printf("Number of RAN Functions: %zu\n", all_funcs.size());
+  stampaln("About to generate E2AP PDU for E2 Setup Request\n");
+  stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv1_setup_request_parameterized(pdu_setup, all_funcs);
 
-  printf("After generating e2setup req ----------------------------------------------------------\n");
+  stampaln("After generating e2setup req ----------------------------------------------------------\n");
 
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
 
-  printf("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -159,37 +159,37 @@ int E2Sim::run_loop(int argc, char* argv[]){
   int checkConstraintE2AP_PDU=asn_check_constraints(&asn_DEF_E2AP_PDU, pdu_setup, error_buf, &errlen);
   
   if (checkConstraintE2AP_PDU != 0) {
-    fprintf(stderr, "E2AP PDU constraints check failed: %s\n", error_buf);
-    printf("error length %ld\n", errlen);
-    printf("error buf %s\n", error_buf);
+    stampaln("E2AP PDU constraints check failed: %s\n", error_buf);
+    stampaln("error length %ld\n", errlen);
+    stampaln("error buf %s\n", error_buf);
     free(error_buf);
     return -1;
   }
 
 
-  fprintf(stderr,"ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
+  stampaln("ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);
   if(er.encoded < 0) {
-    fprintf(stderr, "E2AP PDU encoding failed: %s\n", er.failed_type->name);
+    stampaln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
     free(error_buf);
     return -1;
   }
 
   data.len = er.encoded;
 
-  fprintf(stderr, "ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
+  stampaln("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
 
   memcpy(data.buffer, buffer, er.encoded);
 
-  fprintf(stderr, "after encoding message\n");
+  stampaln("after encoding message\n");
 
   if(sctp_send_data(client_fd, data) > 0) {
     LOG_I("[SCTP] Sent E2-SETUP-REQUEST");
-    fprintf(stderr, "[SCTP] Sent E2-SETUP-REQUEST\n");
+    stampaln("[SCTP] Sent E2-SETUP-REQUEST\n");
 
   } else {
     LOG_E("[SCTP] Unable to send E2-SETUP-REQUEST to peer");
-    fprintf(stderr, "[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
+    stampaln("[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
   }
 
   sctp_buffer_t recv_buf;
