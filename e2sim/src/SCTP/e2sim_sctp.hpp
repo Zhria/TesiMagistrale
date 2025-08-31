@@ -26,9 +26,8 @@ const int SERVER_LISTEN_QUEUE_SIZE  = 10;
 
 int sctp_start_server(const char *server_ip_str, const int server_port);
 
-int sctp_start_client(const char *server_ip_str, const int server_port,
-                      const char *bind_ip /*nullable*/ = nullptr, int connect_timeout_ms = 5000);
-                      
+int sctp_start_client(const char *server_ip_str, const int server_port,const char *bind_ip);
+
 int sctp_accept_connection(const char *server_ip_str, const int server_fd);
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data);

@@ -206,8 +206,7 @@ static int set_nonblock(int fd, bool on) {
     return fcntl(fd, F_SETFL, fl);
 }
 
-int sctp_start_client(const char *server_ip_str, const int server_port,
-                      const char *bind_ip /*nullable*/ = nullptr, int connect_timeout_ms = 5000)
+int sctp_start_client(const char *server_ip_str, const int server_port,const char *bind_ip)
 {
     int family = AF_UNSPEC;
     sockaddr_in  peer4{}; sockaddr_in6 peer6{};
@@ -216,9 +215,6 @@ int sctp_start_client(const char *server_ip_str, const int server_port,
     if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1) {
         family = AF_INET; peer4.sin_family = AF_INET; peer4.sin_port = htons(server_port);
         peer = (sockaddr*)&peer4; peer_len = sizeof(peer4);
-    } else if (inet_pton(AF_INET6, server_ip_str, &peer6.sin6_addr) == 1) {
-        family = AF_INET6; peer6.sin6_family = AF_INET6; peer6.sin6_port = htons(server_port);
-        peer = (sockaddr*)&peer6; peer_len = sizeof(peer6);
     } else {
         fprintf(stderr, "[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
@@ -233,11 +229,6 @@ int sctp_start_client(const char *server_ip_str, const int server_port,
             sockaddr_in l{}; l.sin_family = AF_INET; l.sin_port = htons(0);
             if (inet_pton(AF_INET, bind_ip, &l.sin_addr) == 1) {
                 if (bind(fd, (sockaddr*)&l, sizeof(l)) < 0) { perror("[SCTP] bind"); close(fd); return -1; }
-            }
-        } else {
-            sockaddr_in6 l{}; l.sin6_family = AF_INET6; l.sin6_port = htons(0);
-            if (inet_pton(AF_INET6, bind_ip, &l.sin6_addr) == 1) {
-                if (bind(fd, (sockaddr*)&l, sizeof(l)) < 0) { perror("[SCTP] bind6"); close(fd); return -1; }
             }
         }
     }
