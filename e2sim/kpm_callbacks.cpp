@@ -49,21 +49,9 @@ int main(int argc, char *argv[])
   size_t e2smbuffer_size = 8192;
   uint8_t e2smbuffer[e2smbuffer_size];
 
-  asn_enc_rval_t er =
-      asn_encode_to_buffer(opt_cod,
-                           ATS_ALIGNED_BASIC_PER,
-                           &asn_DEF_E2SM_KPM_RANfunction_Description,
-                           ranfunc_desc, e2smbuffer, e2smbuffer_size);
+  asn_enc_rval_t er = asn_encode_to_buffer(opt_cod,ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_KPM_RANfunction_Description,ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
   // Print e2smbuffer, ranfunc_desc, and er.encoded for debugging
-  stampaln("Encoded size: %zu\n", er.encoded);
-  stampaln("Encoded message (hex): ");
-  for (size_t i = 0; i < er.encoded; ++i)
-  {
-    stampaln("%02X ", e2smbuffer[i]);
-  }
-  stampaln("\n");
-
   if (er.encoded < 0)
   {
     stampaln("Encoding failed: %s\n", er.failed_type->name);

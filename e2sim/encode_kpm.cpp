@@ -153,7 +153,6 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc
   ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style5);
   //ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style6);
 
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
 }
 
 void encode_kpm_ocuup_user_level(RAN_Container_t *ranco) {
