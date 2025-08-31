@@ -87,7 +87,7 @@ void E2Sim::wait_for_sctp_data()
 
 
 int E2Sim::run_loop(int argc, char* argv[]){
-
+  
   stampaln("Start E2 Agent (E2 Simulator)");
   stampaln("Per vedere se funziona la lettura da file");
   stampaln("Apro il file n3iwf");

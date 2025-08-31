@@ -29,7 +29,7 @@ extern "C" {
 #include "RICtimeToWait.h"
 }
 
-struct timespec ts;
+extern struct timespec ts;
 
 //String ammettendo n variabili variabili
  void stampaln(const char* msg, ...) {

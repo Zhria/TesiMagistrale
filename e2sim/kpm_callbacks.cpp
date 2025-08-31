@@ -3,6 +3,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <time.h>
+
 
 extern "C"
 {
@@ -32,14 +34,17 @@ extern "C"
 #include <thread>
 
 using json = nlohmann::json;
+struct timespec ts;
+
 
 using namespace std;
 static E2Sim e2;
-// Singleton lazy: niente globali che partono prima di main
 
 int main(int argc, char *argv[])
 {
-  stampaln("Starting E2 Simulator with KPM Callbacks");
+  stampaln("Starting E2 Simulator with KPM Callbacks\n");
+  clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
+
   asn_codec_ctx_t *opt_cod;
 
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc = (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
