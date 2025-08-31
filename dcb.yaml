@@ -332,8 +332,6 @@ services:
     volumes:
       - ./n3iwf_e2logger:/home/e2sim/log/:rw
       - ./config/e2node.yaml:/home/e2sim/config/e2node.yaml
-    expose:
-      - "36460"
     depends_on:
       - free5gc-n3iwf
       - free5gc-upf
