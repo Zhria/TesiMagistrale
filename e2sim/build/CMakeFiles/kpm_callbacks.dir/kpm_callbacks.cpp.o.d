@@ -374,6 +374,29 @@ CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/encode_kpm.hpp \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
  /usr/include/c++/13/cstdint /usr/include/c++/13/cstring \
+ /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
+ /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/SuccessfulOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UnsuccessfulOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-gNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-DU-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeSetup-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeSetup-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICeventTriggerDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctions-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentActionType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentAction.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentActionType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICtimeToWait.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICtimeToWait.h \
  /home/zakaria/TesiMagistrale/e2sim/encode_e2apv1.hpp \
  /usr/include/nlohmann/json.hpp /usr/include/c++/13/algorithm \
  /usr/include/c++/13/bits/stl_algo.h \

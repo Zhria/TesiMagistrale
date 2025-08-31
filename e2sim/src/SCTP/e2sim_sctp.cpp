@@ -27,7 +27,8 @@
 #include <assert.h>
 
 #include "e2sim_sctp.hpp"
-// #include "e2sim_defs.h"
+#include "e2sim_defs.h"
+#include "n3iwf_utils.hpp"
 
 
 #include <sys/types.h>
@@ -81,34 +82,35 @@ void sctp_print_events(int fd)
                 case SCTP_RESTART:         state_str = "RESTART"; break;
                 case SCTP_SHUTDOWN_COMP:   state_str = "SHUTDOWN_COMPLETE"; break;
                 case SCTP_CANT_STR_ASSOC:  state_str = "CANT_START_ASSOC"; break;
+                default: state_str = "UNKNOWN"; break;
             }
-            fprintf(stderr, "[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
+            stampaln("[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
                     state_str, sac->sac_assoc_id);
             break;
         }
         case SCTP_SHUTDOWN_EVENT: {
             struct sctp_shutdown_event *sse = &snp->sn_shutdown_event;
-            fprintf(stderr, "[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
+            stampaln("[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
             break;
         }
         case SCTP_SEND_FAILED_EVENT: {
-            fprintf(stderr, "[SCTP_EVENT] SEND_FAILED\n");
+            stampaln("[SCTP_EVENT] SEND_FAILED\n");
             break;
         }
         case SCTP_ADAPTATION_INDICATION: {
-            fprintf(stderr, "[SCTP_EVENT] ADAPTATION_INDICATION\n");
+            stampaln("[SCTP_EVENT] ADAPTATION_INDICATION\n");
             break;
         }
         case SCTP_PARTIAL_DELIVERY_EVENT: {
-            fprintf(stderr, "[SCTP_EVENT] PARTIAL_DELIVERY\n");
+            stampaln("[SCTP_EVENT] PARTIAL_DELIVERY\n");
             break;
         }
         case SCTP_REMOTE_ERROR: {
-            fprintf(stderr, "[SCTP_EVENT] REMOTE_ERROR\n");
+            stampaln("[SCTP_EVENT] REMOTE_ERROR\n");
             break;
         }
         default:
-            fprintf(stderr, "[SCTP_EVENT] Unknown type %u\n", snp->sn_header.sn_type);
+            stampaln("[SCTP_EVENT] Unknown type %u\n", snp->sn_header.sn_type);
             break;
         }
     }
@@ -144,7 +146,7 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
         family = AF_INET; peer4.sin_family = AF_INET; peer4.sin_port = htons(server_port);
         peer = (sockaddr*)&peer4; peer_len = sizeof(peer4);
     } else {
-        fprintf(stderr, "[SCTP] inet_pton failed for '%s'\n", server_ip_str);
+        stampaln( "[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
     }
 
@@ -161,15 +163,15 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     // Rendi NON-blocking, così copriamo tutti i casi (anche se qualche altro punto del codice imposta O_NONBLOCK)
     if (set_nonblock(fd, true) < 0) { perror("[SCTP] fcntl(O_NONBLOCK)"); close(fd); return -1; }
 
-    fprintf(stderr, "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
+    stampaln(  "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
     int rc = connect(fd, peer, peer_len);
     if (rc == 0) {
-        fprintf(stderr, "OK (immediato)\n");
+        stampaln( "OK (immediato)\n");
         return fd;
     }
 
     if (rc < 0 && errno != EINPROGRESS && errno != EINTR) {
-        fprintf(stderr, "FAILED (errno=%d: %s)\n", errno, strerror(errno));
+        stampaln("FAILED (errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
@@ -178,12 +180,12 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
     rc = poll(&p, 1, -1); // bloccante  
     if (rc == 0) {
-        fprintf(stderr, "FAILED (timeout 5000 ms)\n");
+        stampaln("FAILED (timeout 5000 ms)\n");
         close(fd);
         return -1;
     }
     if (rc < 0) {
-        fprintf(stderr, "FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
+        stampaln("FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
@@ -194,12 +196,12 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
         perror("[SCTP] getsockopt(SO_ERROR)"); close(fd); return -1;
     }
     if (soerr != 0) {
-        fprintf(stderr, "FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
+        stampaln("FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
         close(fd);
         return -1;
     }
 
-    fprintf(stderr, "OK\n");
+    stampaln("OK\n");
 
     // (opzionale) torna blocking per il resto della logica
     (void)set_nonblock(fd, false);
