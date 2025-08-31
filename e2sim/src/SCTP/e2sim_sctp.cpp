@@ -120,6 +120,72 @@ int sctp_start_server(const char *server_ip_str, const int server_port)
   return server_fd;
 }
 
+// Stampa gli eventi SCTP dal socket fd (non blocca se non ci sono eventi)
+void sctp_print_events(int fd)
+{
+    char buf[1024];
+    struct iovec iov;
+    struct msghdr msg;
+    ssize_t n;
+
+    iov.iov_base = buf;
+    iov.iov_len  = sizeof(buf);
+
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov    = &iov;
+    msg.msg_iovlen = 1;
+
+    // Legge con MSG_DONTWAIT: non blocca
+    n = recvmsg(fd, &msg, MSG_DONTWAIT);
+    if (n <= 0) {
+        return; // nessun evento
+    }
+
+    if (msg.msg_flags & MSG_NOTIFICATION) {
+        union sctp_notification *snp = (union sctp_notification*)buf;
+        switch (snp->sn_header.sn_type) {
+        case SCTP_ASSOC_CHANGE: {
+            struct sctp_assoc_change *sac = &snp->sn_assoc_change;
+            const char* state_str = "UNKNOWN";
+            switch (sac->sac_state) {
+                case SCTP_COMM_UP:         state_str = "COMM_UP"; break;
+                case SCTP_COMM_LOST:       state_str = "COMM_LOST"; break;
+                case SCTP_RESTART:         state_str = "RESTART"; break;
+                case SCTP_SHUTDOWN_COMP:   state_str = "SHUTDOWN_COMPLETE"; break;
+                case SCTP_CANT_STR_ASSOC:  state_str = "CANT_START_ASSOC"; break;
+            }
+            fprintf(stderr, "[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
+                    state_str, sac->sac_assoc_id);
+            break;
+        }
+        case SCTP_SHUTDOWN_EVENT: {
+            struct sctp_shutdown_event *sse = &snp->sn_shutdown_event;
+            fprintf(stderr, "[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
+            break;
+        }
+        case SCTP_SEND_FAILED_EVENT: {
+            fprintf(stderr, "[SCTP_EVENT] SEND_FAILED\n");
+            break;
+        }
+        case SCTP_ADAPTATION_INDICATION: {
+            fprintf(stderr, "[SCTP_EVENT] ADAPTATION_INDICATION\n");
+            break;
+        }
+        case SCTP_PARTIAL_DELIVERY_EVENT: {
+            fprintf(stderr, "[SCTP_EVENT] PARTIAL_DELIVERY\n");
+            break;
+        }
+        case SCTP_REMOTE_ERROR: {
+            fprintf(stderr, "[SCTP_EVENT] REMOTE_ERROR\n");
+            break;
+        }
+        default:
+            fprintf(stderr, "[SCTP_EVENT] Unknown type %u\n", snp->sn_header.sn_type);
+            break;
+        }
+    }
+}
+
 static void enable_sctp_events(int fd) {
     struct sctp_event_subscribe ev = {};
     ev.sctp_data_io_event = 1;
@@ -199,7 +265,16 @@ int sctp_start_client(const char *server_ip_str, const int server_port,
         return -1;
     }
 
-    // Attendi il completamento della connect
+    for (;;) {
+    // fai poll/select su fd con POLLIN
+    struct pollfd p{fd, POLLIN, 0};
+    int rc = poll(&p, 1, 1000);
+    if (rc > 0 && (p.revents & POLLIN)) {
+        sctp_print_events(fd);
+    }
+    }
+
+    /*// Attendi il completamento della connect
     struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
     rc = poll(&p, 1, connect_timeout_ms);
     if (rc == 0) {
@@ -211,7 +286,7 @@ int sctp_start_client(const char *server_ip_str, const int server_port,
         fprintf(stderr, "FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
-    }
+    }*/
 
     // Verifica l’esito reale
     int soerr = 0; socklen_t sl = sizeof(soerr);
