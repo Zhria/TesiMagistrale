@@ -31,7 +31,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Copia il codice (usa la tua build context)
-COPY ./ ${E2SIM_DIR}
+COPY . ${E2SIM_DIR}
 
 WORKDIR ${E2SIM_DIR}
 RUN mkdir config

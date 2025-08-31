@@ -108,29 +108,38 @@ static bool buildPLMN(const std::string& mcc, const std::string& mnc, OCTET_STRI
   return true;
 }
 
-// Costruisce BIT_STRING da un intero non negativo (usa quanti byte servono)
-static bool buildBitStringFromUInt(uint32_t value, BIT_STRING_t& out) {
-  // calcola quanti bit davvero servono
-  int bits = 0;
-  uint32_t tmp = value;
-  while (tmp) { ++bits; tmp >>= 1; }
-  if (bits == 0) bits = 1; // rappresenta lo 0 con 1 bit
+// asn1c: BIT_STRING_t { uint8_t* buf; size_t size; int bits_unused; }
+static bool buildBitStringFromUIntN(uint32_t value, int nbits, BIT_STRING_t& out) {
+  if (nbits < 1 || nbits > 32) return false;
 
-  int num_bytes = (bits + 7) / 8;
-  int bits_unused = num_bytes * 8 - bits;
+  const int num_bytes   = (nbits + 7) / 8;
+  const int bits_unused = num_bytes * 8 - nbits;
 
-  out.buf = (uint8_t*)calloc(1, num_bytes);
-  if (!out.buf) return false;
-  out.size = num_bytes;
-  out.bits_unused = bits_unused;
+  // maschera di nbits (evita overflow se nbits==32)
+  uint32_t mask = (nbits == 32) ? 0xFFFFFFFFu : ((1u << nbits) - 1u);
+  if (value > mask) {
+    // il valore non entra in nbits
+    return false;
+  }
 
-  // big endian: byte più significativo per primo
+  // sposta a sinistra per “occupare” i bit inutilizzati in coda
+  uint32_t shifted = value << bits_unused;
+
+  uint8_t* buf = (uint8_t*)calloc(1, num_bytes);
+  if (!buf) return false;
+
+  // MSB-first (big-endian nel buffer ASN.1)
   for (int i = 0; i < num_bytes; ++i) {
     int shift = 8 * (num_bytes - 1 - i);
-    out.buf[i] = static_cast<uint8_t>((value >> shift) & 0xFF);
+    buf[i] = static_cast<uint8_t>((shifted >> shift) & 0xFF);
   }
+
+  out.buf = buf;
+  out.size = num_bytes;
+  out.bits_unused = bits_unused;
   return true;
 }
+
 
 // -------------------- costruzione strutture --------------------
 static bool getPLMNID_from_json(const json& j, OCTET_STRING_t& out) {
@@ -156,7 +165,7 @@ static bool getGNBIDChoice_from_json(const json& j, GNB_ID_Choice_t& out) {
     out.present = GNB_ID_Choice_PR_gnb_ID;
     // alloca buffer interno del bitstring
     BIT_STRING_t bs{};
-    if (!buildBitStringFromUInt(static_cast<uint32_t>(n3iwfId), bs)) return false;
+    if (!buildBitStringFromUIntN(static_cast<uint32_t>(n3iwfId), bs)) return false;
     out.choice.gnb_ID = bs; // copia shallow dei campi (puntatore incluso)
     return true;
   } catch (...) {
@@ -202,13 +211,6 @@ int init_n3iwf_data() {
     std::cerr << "[n3iwf] init_n3iwf_data: buildGlobalgNB_ID fallita\n";
     return -1;
   }
-  // stampa sicura: non trattare buf come stringa C (sono bytes!)
-  std::cerr << "[n3iwf] GNB_ID bytes: size="
-            << g_gnbStore->gnb_id.choice.gnb_ID.size
-            << " bits_unused=" << (int)g_gnbStore->gnb_id.choice.gnb_ID.bits_unused
-            << "\n";
-  std::cerr << "[n3iwf] PLMN_ID bytes: size="
-            << g_gnbStore->plmn_id.size << "\n";
   return 0;
 }
 

@@ -210,9 +210,15 @@ int sctp_accept_connection(const char *server_ip_str, const int server_fd)
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
   fprintf(stderr,"in sctp send data func\n");
-  fprintf(stderr,"data.len is %d", data.len);
+  fprintf(stderr,"data.len is %d\n", data.len);
+  //Check if socket is valid
+  if(socket_fd < 0) {
+    LOG_E("[SCTP] Invalid socket");
+    exit(1);
+  }
+  //send data to the socket
   int sent_len = send(socket_fd, (void*)(&(data.buffer[0])), data.len, 0);
-  fprintf(stderr,"after getting sent_len\n");
+  fprintf(stderr,"after getting sent_len: %d\n", sent_len);
 
   if(sent_len == -1) {
     perror("[SCTP] sctp_send_data");

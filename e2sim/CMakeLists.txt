@@ -55,6 +55,8 @@ file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/kpm_callbacks.cpp"
   "${E2SIM_ROOT}/encode_e2apv1.cpp" 
   "${E2SIM_ROOT}/n3iwf_data.cpp"
+  "${E2SIM_ROOT}/n3iwf_utils.cpp"
+
   "${E2SIM_ROOT}/src/DEF/*.cpp"
   "${E2SIM_ROOT}/src/SCTP/*.cpp"
   "${E2SIM_ROOT}/src/E2AP/*.c"
