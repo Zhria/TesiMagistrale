@@ -178,7 +178,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   while(1) //constantly looking for data on SCTP interface
   {
     if(sctp_receive_data(client_fd, recv_buf) <= 0)
-      break;
+      continue;
 
     stampaln("[SCTP] Received new data of size %d", recv_buf.len);
 

@@ -48,6 +48,9 @@
 #include <poll.h>
 #include <fcntl.h>
 
+#define SCTP_RECV_ERR      (-1)  // errore o connessione chiusa
+#define SCTP_RECV_SKIP      (0)  // notifica o payload non-E2AP (PPID != 60)
+#define SCTP_RECV_E2AP     (+1)  // payload E2AP valido in data.buffer/data.len
 
 // Stampa gli eventi SCTP dal socket fd (non blocca se non ci sono eventi)
 void sctp_print_events(int fd)
@@ -273,12 +276,12 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
 
     if (recv_len < 0) {
         perror("[SCTP] recv error");
-        return -1;
+        return SCTP_RECV_ERR;
     }
     if (recv_len == 0) {
         stampaln( "[SCTP] Connection closed by peer\n");
         close(socket_fd);
-        return -1;
+        return SCTP_RECV_ERR;
     }
 
     // Caso 1: è una notifica SCTP (non è payload E2AP)
@@ -303,12 +306,12 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
                 stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
                 break;
         }
-        return 0; // nessun payload da decodificare
+        return SCTP_RECV_SKIP; // nessun payload da decodificare
     }
 
     // Caso 2: è un vero DATA chunk
     uint32_t ppid = ntohl(sinfo.sinfo_ppid);
-    fprintf(stderr, "[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
+    stampaln("[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
             recv_len, ppid, sinfo.sinfo_stream);
 
     // salviamo il dato
@@ -316,9 +319,9 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
 
     // se è PPID=60 => payload E2AP valido
     if (ppid == 60) {
-        return recv_len;
+        return SCTP_RECV_E2AP;
     } else {
         stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
-        return 0;
+        return SCTP_RECV_SKIP;
     }
 }
