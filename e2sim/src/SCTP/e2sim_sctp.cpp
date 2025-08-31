@@ -47,11 +47,6 @@
 #include <poll.h>
 #include <fcntl.h>
 
-typedef struct {
-    char buffer[4096];
-    size_t len;
-} sctp_buffer_t;
-
 
 // Stampa gli eventi SCTP dal socket fd (non blocca se non ci sono eventi)
 void sctp_print_events(int fd)
