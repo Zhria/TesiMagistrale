@@ -328,6 +328,7 @@ services:
     build:
       context: ./e2sim
     command: ./build/kpm_callbacks -c ./config/e2node.yaml 
+    network_mode: "host"
     volumes:
       - ./n3iwf_e2logger:/home/e2sim/log/:rw
       - ./config/e2node.yaml:/home/e2sim/config/e2node.yaml
