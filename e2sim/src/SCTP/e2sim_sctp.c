@@ -104,13 +104,12 @@ int sctp_start_client(const char *server_ip_str, int server_port) {
 
     fprintf(stderr, "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
     if (connect(fd, (struct sockaddr*)&peer, sizeof(peer)) == -1) {
-        fprintf(stderr, "failed (errno=%d)\n", errno);
         perror("connect");
         close(fd);
         return -1;
     }
     fprintf(stderr, "OK\n");
-    return client_fd;
+    return fd;
 }
 
 //ssize_t sctp_send_to_socket(int sockfd, const void* buf, size_t len)
