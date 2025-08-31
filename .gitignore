@@ -7,3 +7,6 @@ mongodb
 cert/*_*.pem
 
 n3iwf_e2logger/n3iwf_e2.json.log
+
+#Cmakefiles ignore
+e2sim/build/CMakeFiles/*
