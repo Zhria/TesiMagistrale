@@ -206,7 +206,7 @@ static int set_nonblock(int fd, bool on) {
     return fcntl(fd, F_SETFL, fl);
 }
 
-int sctp_start_client(const char *server_ip_str, const int server_port,const char *bind_ip)
+int sctp_start_client(const char *server_ip_str, const int server_port)
 {
     int family = AF_UNSPEC;
     sockaddr_in  peer4{}; sockaddr_in6 peer6{};
@@ -220,18 +220,8 @@ int sctp_start_client(const char *server_ip_str, const int server_port,const cha
         return -1;
     }
 
-    int fd = socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
+    int fd = socket(family, SOCK_STREAM, IPPROTO_SCTP);
     if (fd < 0) { perror("[SCTP] socket"); return -1; }
-
-    // Opzionale: bind locale (se vuoi forzare la sorgente)
-    /*if (bind_ip && *bind_ip) {
-        if (family == AF_INET) {
-            sockaddr_in l{}; l.sin_family = AF_INET; l.sin_port = htons(0);
-            if (inet_pton(AF_INET, bind_ip, &l.sin_addr) == 1) {
-                if (bind(fd, (sockaddr*)&l, sizeof(l)) < 0) { perror("[SCTP] bind"); close(fd); return -1; }
-            }
-        }
-    }*/
 
     // Parametri iniziali (facoltativi)
     sctp_initmsg init{}; init.sinit_num_ostreams = 2; init.sinit_max_instreams = 2; init.sinit_max_attempts = 4;
