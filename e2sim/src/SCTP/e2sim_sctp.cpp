@@ -47,6 +47,11 @@
 #include <poll.h>
 #include <fcntl.h>
 
+typedef struct {
+    char buffer[4096];
+    size_t len;
+} sctp_buffer_t;
+
 
 // Stampa gli eventi SCTP dal socket fd (non blocca se non ci sono eventi)
 void sctp_print_events(int fd)
@@ -254,38 +259,69 @@ int sctp_send_data_X2AP(int &socket_fd, sctp_buffer_t &data)
   return sent_len;
 }
 
-/*
-Receive data from SCTP socket
-Outcome of recv()
--1: exit the program
-0: close the connection
-+: new data
-*/
+
+// esempio definizione
 int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
 {
-  //clear out the data before receiving
-  memset(data.buffer, 0, sizeof(data.buffer));
-  data.len = 0;
+    data.len = 0;
+    memset(data.buffer, 0, sizeof(data.buffer));
 
-  //receive data from the socket
-  int recv_len = recv(socket_fd, &(data.buffer), sizeof(data.buffer), 0);
-  
-  if(recv_len == -1)
-  {
-    perror("[SCTP] recv len -1");
-    exit(1);
-  }
-  else if (recv_len == 0)
-  {
-    LOG_I("[SCTP] Connection closed by remote peer");
-    if(close(socket_fd) == -1)
-    {
-      perror("[SCTP] close");
+    struct sctp_sndrcvinfo sinfo;
+    int flags = 0;
+
+    int recv_len = sctp_recvmsg(socket_fd,
+                                data.buffer,
+                                sizeof(data.buffer),
+                                NULL, 0, &sinfo, &flags);
+
+    if (recv_len < 0) {
+        perror("[SCTP] recv error");
+        return -1;
     }
-    return -1;
-  }
+    if (recv_len == 0) {
+        fprintf(stderr, "[SCTP] Connection closed by peer\n");
+        close(socket_fd);
+        return -1;
+    }
 
-  data.len = recv_len;
+    // Caso 1: è una notifica SCTP (non è payload E2AP)
+    if (flags & MSG_NOTIFICATION) {
+        union sctp_notification *snp = (union sctp_notification *)data.buffer;
+        switch (snp->sn_header.sn_type) {
+            case SCTP_ASSOC_CHANGE: {
+                struct sctp_assoc_change *sac = &snp->sn_assoc_change;
+                fprintf(stderr, "[SCTP_EVENT] ASSOC_CHANGE state=%d\n", sac->sac_state);
+                break;
+            }
+            case SCTP_SHUTDOWN_EVENT:
+                fprintf(stderr, "[SCTP_EVENT] SHUTDOWN\n");
+                break;
+            case SCTP_REMOTE_ERROR:
+                fprintf(stderr, "[SCTP_EVENT] REMOTE_ERROR\n");
+                break;
+            case SCTP_SEND_FAILED_EVENT:
+                fprintf(stderr, "[SCTP_EVENT] SEND_FAILED\n");
+                break;
+            default:
+                fprintf(stderr, "[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
+                break;
+        }
+        return 0; // nessun payload da decodificare
+    }
 
-  return recv_len;
+    // Caso 2: è un vero DATA chunk
+    uint32_t ppid = ntohl(sinfo.sinfo_ppid);
+    fprintf(stderr, "[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
+            recv_len, ppid, sinfo.sinfo_stream);
+
+    // salviamo il dato
+    data.len = recv_len;
+
+    // se è PPID=60 => payload E2AP valido
+    if (ppid == 60) {
+        return recv_len;
+    } else {
+        fprintf(stderr, "[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
+        return 0;
+    }
 }

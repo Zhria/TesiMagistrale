@@ -17,8 +17,6 @@ private:
 
   std::unordered_map<long, OCTET_STRING_t*> ran_functions_registered;
   std::unordered_map<long, SubscriptionCallback> subscription_callbacks;
-
-  void wait_for_sctp_data();
   
 public:
 

@@ -74,32 +74,16 @@ void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 }
 
 
-void E2Sim::wait_for_sctp_data()
-{
-  sctp_buffer_t recv_buf;
-  if(sctp_receive_data(client_fd, recv_buf) > 0)
-  {
-    LOG_I("[SCTP] Received new data of size %d", recv_buf.len);
-    e2ap_handle_sctp_data(client_fd, recv_buf, false, this);
-  }
-}
-
-
 
 int E2Sim::run_loop(int argc, char* argv[]){
 
   stampaln("Start E2 Agent (E2 Simulator)");
-  stampaln("Per vedere se funziona la lettura da file");
-  stampaln("Apro il file n3iwf");
   GlobalgNB_ID_t *gnb = getGNBStore();
   if (gnb == NULL) {
     fprintf(stderr, "GNB Store is NULL\n");
     return -1;
   }
   
-
-  bool xmlenc = false;
-
   options_t ops = read_input_options(argc, argv);
 
   //E2 Agent will automatically restart upon sctp disconnection
@@ -108,7 +92,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   client_fd = sctp_start_client(ops.server_ip, ops.server_port);
 
   if(client_fd == -1) {
-    LOG_E("[SCTP] Unable to start SCTP client");
     stampaln("[SCTP] Unable to start SCTP client\n");
     return -1;
   }
@@ -199,8 +182,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
 
     stampaln("[SCTP] Received new data of size %d", recv_buf.len);
 
-    e2ap_handle_sctp_data(client_fd, recv_buf, xmlenc, this);
-    if (xmlenc) xmlenc = false;
+    e2ap_handle_sctp_data(client_fd, recv_buf, this);
   }
 
   return 0;
