@@ -38,6 +38,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cerrno>
+
+#include <arpa/inet.h>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <poll.h>
+#include <fcntl.h>
 
 int sctp_start_server(const char *server_ip_str, const int server_port)
 {
@@ -112,67 +120,118 @@ int sctp_start_server(const char *server_ip_str, const int server_port)
   return server_fd;
 }
 
-int sctp_start_client(const char *server_ip_str, const int server_port)
+static void enable_sctp_events(int fd) {
+    struct sctp_event_subscribe ev = {};
+    ev.sctp_data_io_event = 1;
+    ev.sctp_association_event = 1;
+    ev.sctp_shutdown_event = 1;
+    ev.sctp_send_failure_event = 1;
+    ev.sctp_partial_delivery_event = 1;
+    ev.sctp_adaptation_layer_event = 1;
+    ev.sctp_address_event = 1;
+    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
+}
+
+static int set_nonblock(int fd, bool on) {
+    int fl = fcntl(fd, F_GETFL, 0);
+    if (fl < 0) return -1;
+    if (on) fl |= O_NONBLOCK;
+    else    fl &= ~O_NONBLOCK;
+    return fcntl(fd, F_SETFL, fl);
+}
+
+int sctp_start_client(const char *server_ip_str, const int server_port,
+                      const char *bind_ip /*nullable*/ = nullptr, int connect_timeout_ms = 5000)
 {
-    int client_fd = -1;
     int family = AF_UNSPEC;
+    sockaddr_in  peer4{}; sockaddr_in6 peer6{};
+    sockaddr *peer = nullptr; socklen_t peer_len = 0;
 
-    // We'll fill exactly one of these and use it
-    struct sockaddr_in  peer4;  memset(&peer4, 0, sizeof(peer4));
-    struct sockaddr_in6 peer6;  memset(&peer6, 0, sizeof(peer6));
-    struct sockaddr *peer = nullptr;
-    socklen_t peer_len = 0;
-
-    // Try IPv4 first
     if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1) {
-        family = AF_INET;
-        peer4.sin_family = AF_INET;
-        peer4.sin_port   = htons(server_port);
-        peer = (struct sockaddr*)&peer4;
-        peer_len = sizeof(peer4);
-    }
-    // Else try IPv6
-    else if (inet_pton(AF_INET6, server_ip_str, &peer6.sin6_addr) == 1) {
-        family = AF_INET6;
-        peer6.sin6_family = AF_INET6;
-        peer6.sin6_port   = htons(server_port);
-        peer = (struct sockaddr*)&peer6;
-        peer_len = sizeof(peer6);
+        family = AF_INET; peer4.sin_family = AF_INET; peer4.sin_port = htons(server_port);
+        peer = (sockaddr*)&peer4; peer_len = sizeof(peer4);
+    } else if (inet_pton(AF_INET6, server_ip_str, &peer6.sin6_addr) == 1) {
+        family = AF_INET6; peer6.sin6_family = AF_INET6; peer6.sin6_port = htons(server_port);
+        peer = (sockaddr*)&peer6; peer_len = sizeof(peer6);
     } else {
-        perror("inet_pton(server)");
+        fprintf(stderr, "[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
     }
 
-    // IMPORTANT: message-oriented SCTP
-    client_fd = socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
-    if (client_fd == -1) {
-        perror("socket");
+    int fd = socket(family, SOCK_SEQPACKET, IPPROTO_SCTP);
+    if (fd < 0) { perror("[SCTP] socket"); return -1; }
+
+    // Opzionale: bind locale (se vuoi forzare la sorgente)
+    if (bind_ip && *bind_ip) {
+        if (family == AF_INET) {
+            sockaddr_in l{}; l.sin_family = AF_INET; l.sin_port = htons(0);
+            if (inet_pton(AF_INET, bind_ip, &l.sin_addr) == 1) {
+                if (bind(fd, (sockaddr*)&l, sizeof(l)) < 0) { perror("[SCTP] bind"); close(fd); return -1; }
+            }
+        } else {
+            sockaddr_in6 l{}; l.sin6_family = AF_INET6; l.sin6_port = htons(0);
+            if (inet_pton(AF_INET6, bind_ip, &l.sin6_addr) == 1) {
+                if (bind(fd, (sockaddr*)&l, sizeof(l)) < 0) { perror("[SCTP] bind6"); close(fd); return -1; }
+            }
+        }
+    }
+
+    // Parametri iniziali (facoltativi)
+    sctp_initmsg init{}; init.sinit_num_ostreams = 2; init.sinit_max_instreams = 2; init.sinit_max_attempts = 4;
+    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
+
+    // Eventi per debug (facoltativo ma consigliato)
+    enable_sctp_events(fd);
+
+    // Rendi NON-blocking, così copriamo tutti i casi (anche se qualche altro punto del codice imposta O_NONBLOCK)
+    if (set_nonblock(fd, true) < 0) { perror("[SCTP] fcntl(O_NONBLOCK)"); close(fd); return -1; }
+
+    fprintf(stderr, "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
+    int rc = connect(fd, peer, peer_len);
+    if (rc == 0) {
+        fprintf(stderr, "OK (immediato)\n");
+        return fd;
+    }
+
+    if (rc < 0 && errno != EINPROGRESS && errno != EINTR) {
+        fprintf(stderr, "FAILED (errno=%d: %s)\n", errno, strerror(errno));
+        close(fd);
         return -1;
     }
 
-    // Optional: set initial streams (harmless if it fails)
-    struct sctp_initmsg initmsg;
-    memset(&initmsg, 0, sizeof(initmsg));
-    initmsg.sinit_num_ostreams  = 2;
-    initmsg.sinit_max_instreams = 2;
-    initmsg.sinit_max_attempts  = 4;
-    (void)setsockopt(client_fd, IPPROTO_SCTP, SCTP_INITMSG, &initmsg, sizeof(initmsg));
-
-    // DO NOT bind() to 36422. Let the kernel pick an ephemeral source port.
-    // If you previously had a bind(), remove it.
-
-    fprintf(stderr, "[SCTP] Connecting to server at %s:%d ... ", server_ip_str, server_port);
-    if (connect(client_fd, peer, peer_len) == -1) {
-        fprintf(stderr, "failed (errnod)\n");
-        perror("connect");
-        close(client_fd);
+    // Attendi il completamento della connect
+    struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
+    rc = poll(&p, 1, connect_timeout_ms);
+    if (rc == 0) {
+        fprintf(stderr, "FAILED (timeout %d ms)\n", connect_timeout_ms);
+        close(fd);
         return -1;
     }
+    if (rc < 0) {
+        fprintf(stderr, "FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    // Verifica l’esito reale
+    int soerr = 0; socklen_t sl = sizeof(soerr);
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) < 0) {
+        perror("[SCTP] getsockopt(SO_ERROR)"); close(fd); return -1;
+    }
+    if (soerr != 0) {
+        fprintf(stderr, "FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
+        close(fd);
+        return -1;
+    }
+
     fprintf(stderr, "OK\n");
 
-    assert(client_fd != 0);
-    return client_fd;
+    // (opzionale) torna blocking per il resto della logica
+    (void)set_nonblock(fd, false);
+
+    return fd;
 }
+
 int sctp_accept_connection(const char *server_ip_str, const int server_fd)
 {
   LOG_I("[SCTP] Waiting for new connection...");
