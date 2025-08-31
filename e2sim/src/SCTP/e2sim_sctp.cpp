@@ -248,9 +248,9 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
 
     // Attendi il completamento della connect
     struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
-    rc = poll(&p, 1, 5000); // timeout 5s
+    rc = poll(&p, 1, 50000); // timeout 50s
     if (rc == 0) {
-        fprintf(stderr, "FAILED (timeout 5000 ms)\n");
+        fprintf(stderr, "FAILED (timeout 50000 ms)\n");
         close(fd);
         return -1;
     }
