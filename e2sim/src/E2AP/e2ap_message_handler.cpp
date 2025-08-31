@@ -53,7 +53,8 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, bool xmlenc, E2S
   auto rval=asn_decode(NULL,syntaxPER, &asn_DEF_E2AP_PDU, (void **) &pdu, data.buffer, data.len);
 
   switch(rval.code){
-  case RC_OK:
+    case RC_OK:
+      stampaln("[E2AP HANDLE SCTP DATA] Decoding successful (APER)\n");
     break;
   case RC_WMORE:
     break;
