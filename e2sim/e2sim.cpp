@@ -31,6 +31,10 @@
 #include "encode_e2apv1.hpp"
 #include "n3iwf_data.hpp"
 
+
+struct timespec ts; 
+
+
 using namespace std;
 
 int client_fd = 0;
@@ -82,13 +86,26 @@ void E2Sim::wait_for_sctp_data()
   }
 }
 
+void stampaln(const char msg[]) {
+  struct timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
+  long seconds = now.tv_sec - ts.tv_sec;
+  long nseconds = now.tv_nsec - ts.tv_nsec;
+  if (nseconds < 0) {
+    seconds -= 1;
+    nseconds += 1000000000L;
+  }
+  printf("[%ld.%09ld] %s\n", seconds, nseconds, msg);
+  fflush(stdout);
+}
+
 
 int E2Sim::run_loop(int argc, char* argv[]){
+  clock_gettime(CLOCK_REALTIME, &ts);
 
-  printf("Start E2 Agent (E2 Simulator)\n");
-
-  printf("Per vedere se funziona la lettura da file\n");
-  printf("Apro il file n3iwf\n");
+  stampaln("Start E2 Agent (E2 Simulator)");
+  stampaln("Per vedere se funziona la lettura da file");
+  stampaln("Apro il file n3iwf");
   GlobalgNB_ID_t *gnb = getGNBStore();
   if (gnb == NULL) {
     fprintf(stderr, "GNB Store is NULL\n");
@@ -112,8 +129,8 @@ int E2Sim::run_loop(int argc, char* argv[]){
   }
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
 
-  printf("client_fd SCTP START CLIENT value is %d\n", client_fd);
-  
+  fprintf(stderr,"client_fd SCTP START CLIENT value is %d\n", client_fd);
+
   std::vector<ran_func_info> all_funcs;
 
   //Loop through RAN function definitions that are registered
