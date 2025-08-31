@@ -48,10 +48,6 @@
 #include <poll.h>
 #include <fcntl.h>
 
-#define SCTP_RECV_ERR      (-1)  // errore o connessione chiusa
-#define SCTP_RECV_SKIP      (0)  // notifica o payload non-E2AP (PPID != 60)
-#define SCTP_RECV_E2AP     (+1)  // payload E2AP valido in data.buffer/data.len
-
 // Stampa gli eventi SCTP dal socket fd (non blocca se non ci sono eventi)
 void sctp_print_events(int fd)
 {

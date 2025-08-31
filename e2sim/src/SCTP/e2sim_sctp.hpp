@@ -19,6 +19,10 @@
 
 #ifndef E2SIM_SCTP_HPP
 #define E2SIM_SCTP_HPP
+// Ritorni:
+#define SCTP_RECV_ERR      (-1)  // errore o connessione chiusa
+#define SCTP_RECV_SKIP      (0)  // notifica o payload non-E2AP (PPID != 60)
+#define SCTP_RECV_E2AP     (+1)  // payload E2AP valido in data.buffer/data.len
 
 #include "e2sim_defs.h"
 

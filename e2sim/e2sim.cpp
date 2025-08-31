@@ -177,12 +177,18 @@ int E2Sim::run_loop(int argc, char* argv[]){
 
   while(1) //constantly looking for data on SCTP interface
   {
-    if(sctp_receive_data(client_fd, recv_buf) <= 0)
-      continue;
-
-    stampaln("[SCTP] Received new data of size %d", recv_buf.len);
-
-    e2ap_handle_sctp_data(client_fd, recv_buf, this);
+    int r = sctp_receive_data(client_fd, recv_buf);
+    if (r == SCTP_RECV_E2AP) {
+        stampaln("[SCTP] Received E2AP len=%d", recv_buf.len);
+        e2ap_handle_sctp_data(client_fd, recv_buf, this);
+        // continua a leggere: potrebbero arrivare altri messaggi
+    } else if (r == SCTP_RECV_SKIP) {
+        // è solo una notifica o payload non E2AP → continua ad aspettare
+        continue;
+    } else { // SCTP_RECV_ERR
+        // errore o connessione chiusa
+        break;
+    }
   }
 
   return 0;
