@@ -109,9 +109,8 @@ static bool buildPLMN(const std::string& mcc, const std::string& mnc, OCTET_STRI
 }
 
 // asn1c: BIT_STRING_t { uint8_t* buf; size_t size; int bits_unused; }
-static bool buildBitStringFromUIntN(uint32_t value, int nbits, BIT_STRING_t& out) {
-  if (nbits < 1 || nbits > 32) return false;
-
+static bool buildBitStringFromUIntN(uint32_t value, BIT_STRING_t& out) {
+  const int nbits = 32 - __builtin_clz(value); // numero di bit significativi
   const int num_bytes   = (nbits + 7) / 8;
   const int bits_unused = num_bytes * 8 - nbits;
 
