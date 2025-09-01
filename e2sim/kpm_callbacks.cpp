@@ -50,6 +50,7 @@ int main(int argc, char *argv[])
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc = (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
 
   encode_kpm_function_description(ranfunc_desc);
+  xer_fprint(stderr, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
 
   size_t e2smbuffer_size = 8192;
   uint8_t e2smbuffer[e2smbuffer_size];

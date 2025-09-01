@@ -32,7 +32,6 @@
 
 
 #include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/sctp.h>
 #include <signal.h>
 #include <unistd.h>

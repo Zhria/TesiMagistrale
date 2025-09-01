@@ -14,7 +14,7 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc
 
   uint8_t *buf = (uint8_t*)"ORAN-E2SM-KPM";
   uint8_t *buf2 = (uint8_t*)"KPM monitor";
-  uint8_t *buf3 = (uint8_t*)"OID123";
+  uint8_t *buf3 = (uint8_t*)"1.3.6.1.4.1.53148.1.1.2.2";
 
   OCTET_STRING_t *sname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
   sname->buf = (uint8_t*)calloc(1,13);
