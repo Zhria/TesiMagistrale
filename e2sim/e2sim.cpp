@@ -104,7 +104,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //Loop through RAN function definitions that are registered
 
   for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
-    stampaln("looping through ran func");
     ran_func_info next_func;
 
     next_func.ranFunctionId = elem.first;
@@ -113,21 +112,14 @@ int E2Sim::run_loop(int argc, char* argv[]){
     all_funcs.push_back(next_func);
   }
       
-  //PRINT All_funcs
-  for (const auto& func : all_funcs) {
-    stampaln("RAN Function ID: %ld, Description Size: %ld, Revision: %ld\n",
-           func.ranFunctionId, func.ranFunctionDesc->size, func.ranFunctionRev);
-  }
-  stampaln("After printing all functions\n");
-
   //Generate E2AP PDU for E2 Setup Request
   stampaln("About to generate E2AP PDU for E2 Setup Request\n");
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv1_setup_request_parameterized(pdu_setup, all_funcs);
 
-  //stampaln("After generating e2setup req ----------------------------------------------------------\n");
-  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-  //stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  stampaln("After generating e2setup req ----------------------------------------------------------\n");
+  xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
+  stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -160,7 +152,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
 
   stampaln("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
 
-  memcpy(data.buffer, buffer, er.encoded);
+  memcpy(data.buffer, buffer, er.encoded); 
 
   stampaln("after encoding message\n");
 
