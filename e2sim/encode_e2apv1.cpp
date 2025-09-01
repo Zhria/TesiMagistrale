@@ -183,8 +183,8 @@ void generate_e2apv1_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu, std::vect
   E2setupRequestIEs_t *e2setuprid = (E2setupRequestIEs_t*)calloc(1, sizeof(E2setupRequestIEs_t));
   E2setupRequestIEs__value_PR pres3;
   pres3 = E2setupRequestIEs__value_PR_GlobalE2node_ID;
-  e2setuprid->id = 3;
-  e2setuprid->criticality = 0;
+  e2setuprid->id = ProtocolIE_ID_id_GlobalE2node_ID;
+  e2setuprid->criticality = Criticality_reject;
   e2setuprid->value.choice.GlobalE2node_ID = *globale2nodeid;
   e2setuprid->value.present = pres3;
 

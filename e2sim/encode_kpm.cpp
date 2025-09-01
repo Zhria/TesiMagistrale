@@ -10,8 +10,6 @@ using namespace std;
 
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc_desc) {
 
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
-
   uint8_t *buf = (uint8_t*)"ORAN-E2SM-KPM";
   uint8_t *buf2 = (uint8_t*)"KPM monitor";
   uint8_t *buf3 = (uint8_t*)"1.3.6.1.4.1.53148.1.1.2.2";
@@ -419,12 +417,10 @@ void encode_kpm_report_rancontainer_du(E2SM_KPM_IndicationMessage_t* indicationm
   encode_kpm_odu_user_level(ranco);
 
   PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
   containers_list->theRANContainer = ranco;
 
   E2SM_KPM_IndicationMessage_Format1_t *format =
     (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
 
   int ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
   

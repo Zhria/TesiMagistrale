@@ -45,17 +45,14 @@ int main(int argc, char *argv[])
   stampaln("Starting E2 Simulator with KPM Callbacks\n");
   clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
 
-  asn_codec_ctx_t *opt_cod;
-
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc = (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
 
   encode_kpm_function_description(ranfunc_desc);
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
 
-  size_t e2smbuffer_size = 8192;
+  size_t e2smbuffer_size = 16182;
   uint8_t e2smbuffer[e2smbuffer_size];
 
-  asn_enc_rval_t er = asn_encode_to_buffer(opt_cod,ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_KPM_RANfunction_Description,ranfunc_desc, e2smbuffer, e2smbuffer_size);
+  asn_enc_rval_t er = asn_encode_to_buffer(NULL,ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_KPM_RANfunction_Description,ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
   // Print e2smbuffer, ranfunc_desc, and er.encoded for debugging
   if (er.encoded < 0)
@@ -63,6 +60,8 @@ int main(int argc, char *argv[])
     stampaln("Encoding failed: %s\n", er.failed_type->name);
     return -1;
   }
+
+
   uint8_t *ranfuncdesc = (uint8_t *)calloc(1, er.encoded);
   memcpy(ranfuncdesc, e2smbuffer, er.encoded);
 
@@ -74,6 +73,17 @@ int main(int argc, char *argv[])
 
   e2.register_e2sm(1, ranfunc_ostr);
   e2.register_subscription_callback(1, &callback_kpm_subscription_request);
+
+
+  // 1) Self-test: decode della KPM RANfunction-Description appena encodata
+E2SM_KPM_RANfunction_Description_t *check = 0;
+asn_dec_rval_t dr = asn_decode(0, ATS_ALIGNED_BASIC_PER,
+                               &asn_DEF_E2SM_KPM_RANfunction_Description,
+                               (void**)&check,
+                               ranfunc_ostr->buf, ranfunc_ostr->size);
+if (dr.code != RC_OK) {
+  fprintf(stderr, "Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+}
 
   e2.run_loop(argc, argv);
 }

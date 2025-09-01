@@ -109,34 +109,40 @@ static bool buildPLMN(const std::string& mcc, const std::string& mnc, OCTET_STRI
 }
 
 // asn1c: BIT_STRING_t { uint8_t* buf; size_t size; int bits_unused; }
-static bool buildBitStringFromUIntN(uint32_t value, BIT_STRING_t& out) {
-  const int nbits = 32 - __builtin_clz(value); // numero di bit significativi
-  const int num_bytes   = (nbits + 7) / 8;
-  const int bits_unused = num_bytes * 8 - nbits;
+static bool buildBitStringFromUIntN(uint32_t value, BIT_STRING_t* out) {
+  int width=22;  
+  if (!out || width < 1 || width > 32) return false;
 
-  // maschera di nbits (evita overflow se nbits==32)
-  uint32_t mask = (nbits == 32) ? 0xFFFFFFFFu : ((1u << nbits) - 1u);
-  if (value > mask) {
-    // il valore non entra in nbits
-    return false;
-  }
+    // controllo che 'value' stia in 'width' bit
+    if (width < 32 && (value >> width) != 0) return false;
 
-  // sposta a sinistra per “occupare” i bit inutilizzati in coda
-  uint32_t shifted = value << bits_unused;
+    const int num_bytes   = (width + 7) / 8;
+    const int bits_unused = num_bytes * 8 - width;
 
-  uint8_t* buf = (uint8_t*)calloc(1, num_bytes);
-  if (!buf) return false;
+    uint8_t* buf = (uint8_t*)calloc(1, num_bytes);
+    if (!buf) return false;
 
-  // MSB-first (big-endian nel buffer ASN.1)
-  for (int i = 0; i < num_bytes; ++i) {
-    int shift = 8 * (num_bytes - 1 - i);
-    buf[i] = static_cast<uint8_t>((shifted >> shift) & 0xFF);
-  }
+    // Allinea a sinistra in modo che i bit inutilizzati (a destra) restino a zero
+    uint64_t shifted = ((uint64_t)value) << bits_unused;
 
-  out.buf = buf;
-  out.size = num_bytes;
-  out.bits_unused = bits_unused;
-  return true;
+    // MSB-first nel buffer ASN.1 (big-endian a livello di ottetti)
+    for (int i = 0; i < num_bytes; ++i) {
+        int shift = 8 * (num_bytes - 1 - i);
+        buf[i] = (uint8_t)((shifted >> shift) & 0xFFu);
+    }
+
+    // Azzeriamo esplicitamente i bit di padding (destra dell’ultimo ottetto)
+    if (bits_unused) {
+        buf[num_bytes - 1] &= (uint8_t)(0xFFu << bits_unused);
+    }
+
+    // (opzionale) libera out->buf se stai riusando la struct
+    // if (out->buf) free(out->buf);
+
+    out->buf = buf;
+    out->size = num_bytes;
+    out->bits_unused = bits_unused;
+    return true;
 }
 
 
@@ -163,8 +169,8 @@ static bool getGNBIDChoice_from_json(const json& j, GNB_ID_Choice_t& out) {
 
     out.present = GNB_ID_Choice_PR_gnb_ID;
     // alloca buffer interno del bitstring
-    BIT_STRING_t bs{};
-    if (!buildBitStringFromUIntN(static_cast<uint32_t>(n3iwfId), bs)) return false;
+    BIT_STRING_t bs;
+    if (!buildBitStringFromUIntN(static_cast<uint32_t>(n3iwfId), &bs)) return false;
     out.choice.gnb_ID = bs; // copia shallow dei campi (puntatore incluso)
     return true;
   } catch (...) {

@@ -155,6 +155,13 @@ int E2Sim::run_loop(int argc, char* argv[]){
   }
   stampaln("client_fd SCTP START CLIENT value is %d\n", client_fd);
 
+// 2) Self-test: encode E2AP -> decode E2AP prima di inviare
+E2AP_PDU_t *pdu2 = 0;
+asn_dec_rval_t dr2 = asn_decode(0, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU,
+                                (void**)&pdu2, buffer, er.encoded);
+if (dr2.code != RC_OK) {
+  fprintf(stderr, "Self-test decode E2AP FAILED (%d) at byte %zu\n", dr2.code, dr2.consumed);
+}
 
   if(sctp_send_data(client_fd, data) > 0) {
     stampaln("[SCTP] Sent E2-SETUP-REQUEST\n");
