@@ -209,8 +209,6 @@ void generate_e2apv1_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu, std::vect
     itemIes->value.present = RANfunction_ItemIEs__value_PR_RANfunction_Item;
     itemIes->value.choice.RANfunction_Item.ranFunctionID = nextRanFuncId;
 
-    int ranFuncLength = strlen((char*)nextRanFuncDesc);
-
     itemIes->value.choice.RANfunction_Item.ranFunctionDefinition = *nextRanFuncDesc;
     itemIes->value.choice.RANfunction_Item.ranFunctionRevision = nextRanFuncRev;
 
@@ -306,10 +304,8 @@ void generate_e2apv1_setup_request(E2AP_PDU_t *e2ap_pdu) {
   uint8_t e2smbuffer[8192];
   size_t e2smbuffer_size = 8192;
 
-  asn_codec_ctx_t *opt_cod;
-
   asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
+    asn_encode_to_buffer(NULL,
 			 ATS_ALIGNED_BASIC_PER,
 			 &asn_DEF_E2SM_KPM_RANfunction_Description,
 			 ranfunc_desc, e2smbuffer, e2smbuffer_size);
