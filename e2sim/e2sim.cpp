@@ -89,15 +89,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //E2 Agent will automatically restart upon sctp disconnection
   //  int server_fd = sctp_start_server(ops.server_ip, ops.server_port);
 
-  client_fd = sctp_start_client(ops.server_ip, ops.server_port);
-
-  if(client_fd == -1) {
-    stampaln("[SCTP] Unable to start SCTP client\n");
-    return -1;
-  }
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
-
-  stampaln("client_fd SCTP START CLIENT value is %d\n", client_fd);
 
   std::vector<ran_func_info> all_funcs;
 
@@ -155,6 +147,14 @@ int E2Sim::run_loop(int argc, char* argv[]){
   memcpy(data.buffer, buffer, er.encoded); 
 
   stampaln("after encoding message\n");
+  client_fd = sctp_start_client(ops.server_ip, ops.server_port);
+
+  if(client_fd == -1) {
+    stampaln("[SCTP] Unable to start SCTP client\n");
+    return -1;
+  }
+  stampaln("client_fd SCTP START CLIENT value is %d\n", client_fd);
+
 
   if(sctp_send_data(client_fd, data) > 0) {
     stampaln("[SCTP] Sent E2-SETUP-REQUEST\n");
