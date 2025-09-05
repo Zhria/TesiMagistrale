@@ -217,8 +217,8 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
         return -1;
     }
 
-    // PPID per E2AP = 60 (decimale)
-    uint32_t ppid = htonl(60);
+    // PPID per E2AP = 70 (decimale)
+    uint32_t ppid = htonl(70);
 
     int sent_len = sctp_sendmsg(
         socket_fd,
@@ -313,11 +313,11 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     data.len = recv_len;
 
     // se è PPID=60 => payload E2AP valido //Ometto questo controllo 
-    if (ppid == 60) {
+    return SCTP_RECV_E2AP;
+    if (ppid >= 70 && ppid <= 79) {
         return SCTP_RECV_E2AP;
     } else {
         stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
-        return SCTP_RECV_E2AP;
-        //return SCTP_RECV_SKIP;
+        return SCTP_RECV_SKIP;
     }
 }
