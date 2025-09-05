@@ -105,17 +105,17 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalE2node-gNB-ID.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_internal.h \
  /usr/include/assert.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-ID-Choice.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UP-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-DU-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_internal.h
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalenGNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/ENGNB-ID.h

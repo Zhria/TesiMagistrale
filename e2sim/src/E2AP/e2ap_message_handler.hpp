@@ -44,4 +44,6 @@ void e2ap_handle_RICSubscriptionRequest_securityDemo(E2AP_PDU_t* pdu, int &socke
 
 void e2ap_handle_ResourceStatusRequest(E2AP_PDU_t* pdu, int &socket_fd);
 
+void send_ric_service_update(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim);
+
 #endif

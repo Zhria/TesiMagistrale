@@ -30,6 +30,8 @@ public:
 
   int run_loop(int argc, char* argv[]);
 
+  std::unordered_map<long, OCTET_STRING_t *> get_registered_e2sm();
+
 };
 
 #endif

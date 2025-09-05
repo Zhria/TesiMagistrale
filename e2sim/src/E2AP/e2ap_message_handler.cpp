@@ -20,8 +20,8 @@
 ******************************************************************************/
 #include "e2ap_message_handler.hpp"
 
-//#include <iostream>
-//#include <vector>
+// #include <iostream>
+// #include <vector>
 
 #include "encode_e2apv2.hpp"
 #include "kpm_callbacks.hpp"
@@ -31,24 +31,24 @@
 
 void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 {
-  //decode the data into E2AP-PDU
-  E2AP_PDU_t* pdu = (E2AP_PDU_t*)calloc(1, sizeof(E2AP_PDU));
+  // decode the data into E2AP-PDU
+  E2AP_PDU_t *pdu = (E2AP_PDU_t *)calloc(1, sizeof(E2AP_PDU));
 
   stampaln("[E2AP HANDLE SCTP DATA] decoding...");
 
-
   stampaln("[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
-  auto rval=asn_decode(NULL,ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **) &pdu, data.buffer, data.len);
+  auto rval = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **)&pdu, data.buffer, data.len);
 
-  switch(rval.code){
-    case RC_OK:
-      stampaln("[E2AP HANDLE SCTP DATA] Decoding successful (APER)\n");
+  switch (rval.code)
+  {
+  case RC_OK:
+    stampaln("[E2AP HANDLE SCTP DATA] Decoding successful (APER)\n");
     break;
   case RC_WMORE:
     break;
   case RC_FAIL:
-      stampaln("[E2AP HANDLE SCTP DATA] Decoding failed (APER)\n");
-      return;
+    stampaln("[E2AP HANDLE SCTP DATA] Decoding failed (APER)\n");
+    return;
     break;
   default:
     break;
@@ -57,121 +57,119 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
   int index = (int)pdu->present;
   stampaln("length of decoded data %ld with result %d and index is %d\n", rval.consumed, rval.code, index);
 
-  
   int procedureCode = e2ap_asn1c_get_procedureCode(pdu);
   index = (int)pdu->present;
 
   stampaln("[E2AP] Unpacked E2AP-PDU: index = %d, procedureCode = %d\n", index, procedureCode);
 
-  switch(procedureCode)
+  switch (procedureCode)
+  {
+
+  case ProcedureCode_id_E2setup:
+    switch (index)
     {
-      
-    case ProcedureCode_id_E2setup:
-      switch(index)
-	{
-        case E2AP_PDU_PR_initiatingMessage:
-          stampaln("[E2AP] Received SETUP-REQUEST");
-          break;
-	  
-        case E2AP_PDU_PR_successfulOutcome:
-          stampaln("[E2AP] Received SETUP-RESPONSE-SUCCESS");
-          break;
-	  
-        case E2AP_PDU_PR_unsuccessfulOutcome:
-          stampaln("[E2AP] Received SETUP-RESPONSE-FAILURE");
-          break;
-	  
-        default:
-          stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
-          break;
-	}
-      break;    
-      
-    case ProcedureCode_id_Reset: //reset = 7
-      switch(index)
-	{
-        case E2AP_PDU_PR_initiatingMessage:
-          stampaln("[E2AP] Received RESET-REQUEST");
-          break;
-	  
-        case E2AP_PDU_PR_successfulOutcome:
-          break;
-	  
-        case E2AP_PDU_PR_unsuccessfulOutcome:
-          break;
-	  
-        default:
-          stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
-          break;
-	}
-      break;
-      
-    case ProcedureCode_id_RICsubscription: //RIC SUBSCRIPTION = 201
-      switch(index)
-	{
-        case E2AP_PDU_PR_initiatingMessage: { //initiatingMessage 
-          LOG_I("[E2AP] Received RIC-SUBSCRIPTION-REQUEST");
-	  //          e2ap_handle_RICSubscriptionRequest(pdu, socket_fd);
-	  long func_id = get_function_id_from_subscription(pdu);
-	  SubscriptionCallback cb = e2sim->get_subscription_callback(func_id);
-	  cb(pdu);
-	  //	  callback_kpm_subscription_request(pdu, socket_fd);
-
-	}
-          break;
-	  
-        case E2AP_PDU_PR_successfulOutcome:
-          stampaln("[E2AP] Received RIC-SUBSCRIPTION-RESPONSE");
-          break;
-	  
-        case E2AP_PDU_PR_unsuccessfulOutcome:
-          stampaln("[E2AP] Received RIC-SUBSCRIPTION-FAILURE");
-          break;
-	  
-        default:
-          stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
-          break;
-	}
+    case E2AP_PDU_PR_initiatingMessage:
+      stampaln("[E2AP] Received SETUP-REQUEST");
       break;
 
-    case ProcedureCode_id_RICindication: // 205
-      switch(index)
-	{
-        case E2AP_PDU_PR_initiatingMessage: //initiatingMessage
-          stampaln("[E2AP] Received RIC-INDICATION-REQUEST");
-          // e2ap_handle_RICSubscriptionRequest(pdu, socket_fd);
-          break;
-        case E2AP_PDU_PR_successfulOutcome:
-          stampaln("[E2AP] Received RIC-INDICATION-RESPONSE");
-          break;
-	  
-        case E2AP_PDU_PR_unsuccessfulOutcome:
-          stampaln("[E2AP] Received RIC-INDICATION-FAILURE");
-          break;
-	  
-        default:
-          stampaln("[E2AP] Invalid message index=%d in E2AP-PDU %d", index,
-                                    (int)ProcedureCode_id_RICindication);
-          break;
-	}
+    case E2AP_PDU_PR_successfulOutcome:
+      stampaln("[E2AP] Received SETUP-RESPONSE-SUCCESS");
+      // ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu_update); // se non riusi
       break;
-      
+
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      stampaln("[E2AP] Received SETUP-RESPONSE-FAILURE");
+      break;
+
     default:
-
-      stampaln("[E2AP] No available handler for procedureCode=%d", procedureCode);
-
+      stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
       break;
     }
+    break;
+
+  case ProcedureCode_id_Reset: // reset = 7
+    switch (index)
+    {
+    case E2AP_PDU_PR_initiatingMessage:
+      stampaln("[E2AP] Received RESET-REQUEST");
+      break;
+
+    case E2AP_PDU_PR_successfulOutcome:
+      break;
+
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      break;
+
+    default:
+      stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
+      break;
+    }
+    break;
+
+  case ProcedureCode_id_RICsubscription: // RIC SUBSCRIPTION = 201
+    switch (index)
+    {
+    case E2AP_PDU_PR_initiatingMessage:
+    { // initiatingMessage
+      LOG_I("[E2AP] Received RIC-SUBSCRIPTION-REQUEST");
+      //          e2ap_handle_RICSubscriptionRequest(pdu, socket_fd);
+      long func_id = get_function_id_from_subscription(pdu);
+      SubscriptionCallback cb = e2sim->get_subscription_callback(func_id);
+      cb(pdu);
+      //	  callback_kpm_subscription_request(pdu, socket_fd);
+    }
+    break;
+
+    case E2AP_PDU_PR_successfulOutcome:
+      stampaln("[E2AP] Received RIC-SUBSCRIPTION-RESPONSE");
+      break;
+
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      stampaln("[E2AP] Received RIC-SUBSCRIPTION-FAILURE");
+      break;
+
+    default:
+      stampaln("[E2AP] Invalid message index=%d in E2AP-PDU", index);
+      break;
+    }
+    break;
+
+  case ProcedureCode_id_RICindication: // 205
+    switch (index)
+    {
+    case E2AP_PDU_PR_initiatingMessage: // initiatingMessage
+      stampaln("[E2AP] Received RIC-INDICATION-REQUEST");
+      // e2ap_handle_RICSubscriptionRequest(pdu, socket_fd);
+      break;
+    case E2AP_PDU_PR_successfulOutcome:
+      stampaln("[E2AP] Received RIC-INDICATION-RESPONSE");
+      break;
+
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      stampaln("[E2AP] Received RIC-INDICATION-FAILURE");
+      break;
+
+    default:
+      stampaln("[E2AP] Invalid message index=%d in E2AP-PDU %d", index,
+               (int)ProcedureCode_id_RICindication);
+      break;
+    }
+    break;
+
+  default:
+
+    stampaln("[E2AP] No available handler for procedureCode=%d", procedureCode);
+
+    break;
+  }
 }
 
-
-
-void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
+void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 {
 
-  //Send back Subscription Success Response
+  // Send back Subscription Success Response
 
-  E2AP_PDU_t* pdu_resp = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
+  E2AP_PDU_t *pdu_resp = (E2AP_PDU_t *)calloc(1, sizeof(E2AP_PDU));
 
   generate_e2apv2_subscription_response(pdu_resp, pdu);
 
@@ -181,7 +179,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   auto buffer_size2 = MAX_SCTP_BUFFER;
   unsigned char buffer2[MAX_SCTP_BUFFER];
-  
+
   sctp_buffer_t data2;
 
   auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
@@ -191,16 +189,18 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   memcpy(data2.buffer, buffer2, er2.encoded);
 
-  if(sctp_send_data(socket_fd, data2) > 0) {
+  if (sctp_send_data(socket_fd, data2) > 0)
+  {
     LOG_I("[SCTP] Sent RIC-SUBSCRIPTION-RESPONSE");
-  } else {
+  }
+  else
+  {
     LOG_E("[SCTP] Unable to send RIC-SUBSCRIPTION-RESPONSE to peer");
   }
-  
-  
-  //Send back an Indication
 
-  E2AP_PDU_t* pdu_ind = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
+  // Send back an Indication
+
+  E2AP_PDU_t *pdu_ind = (E2AP_PDU_t *)calloc(1, sizeof(E2AP_PDU));
 
   generate_e2apv2_indication_request(pdu_ind);
 
@@ -208,7 +208,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
-  
+
   sctp_buffer_t data;
 
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
@@ -218,14 +218,47 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   memcpy(data.buffer, buffer, er.encoded);
 
-  if(sctp_send_data(socket_fd, data) > 0) {
+  if (sctp_send_data(socket_fd, data) > 0)
+  {
     LOG_I("[SCTP] Sent RIC-INDICATION-REQUEST");
-  } else {
+  }
+  else
+  {
     LOG_E("[SCTP] Unable to send RIC-INDICATION-REQUEST to peer");
-  }  
-
+  }
 }
 
+void send_ric_service_update(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
+{
+  // Subito dopo lo setup, manda il RICserviceUpdate
+  auto all_funcs = e2sim->get_registered_e2sm();
+  if (all_funcs.size() == 0)
+  {
+    stampaln("No RAN functions registered, cannot send RICserviceUpdate");
+    return;
+  }
+  std::vector<ran_func_info> funcs;
+  for (const auto &[func_id, ostr] : all_funcs)
+  {
+    ran_func_info next_func;
+    next_func.ranFunctionId = func_id;
+    next_func.ranFunctionDesc = ostr;
+    funcs.push_back(next_func);
+  }
+  E2AP_PDU_t *pdu_update = (E2AP_PDU_t *)calloc(1, sizeof(E2AP_PDU_t));
+  build_ric_service_update(pdu_update, funcs, /*txid*/ 2);
 
-
-
+  // encoda e invia con PPID=70
+  unsigned char buf[2048];
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
+                                 &asn_DEF_E2AP_PDU, pdu_update, buf, sizeof(buf));
+  if (er.encoded > 0)
+  {
+    sctp_buffer_t out{};
+    out.len = er.encoded;
+    memcpy(out.buffer, buf, er.encoded);
+    // assicurati che sctp_send_data setti sinfo_ppid = htonl(70)
+    sctp_send_data(socket_fd, out);
+  }
+  return;
+}

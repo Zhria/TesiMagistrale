@@ -1080,3 +1080,58 @@ void generate_e2apv2_indication_request(E2AP_PDU *e2ap_pdu)
 void generate_e2apv2_indication_response(E2AP_PDU *e2ap_pdu)
 {
 }
+
+
+// Costruisce un RICserviceUpdate con: TransactionID e RANfunctions-Added
+void build_ric_service_update(E2AP_PDU_t* pdu_out,
+                                     const std::vector<ran_func_info>& funcs,
+                                     long txid /* es. 2 */) {
+  // IE list
+  RICserviceUpdate_t *ru = (RICserviceUpdate_t*)calloc(1, sizeof(*ru));
+
+  // IE: TransactionID (id=49)
+  RICserviceUpdate_IEs *ie_tx = (RICserviceUpdate_IEs*)calloc(1, sizeof(*ie_tx));
+  ie_tx->id = ProtocolIE_ID_id_TransactionID;
+  ie_tx->criticality = Criticality_reject;
+  ie_tx->value.present = RICserviceUpdate_IEs__value_PR_TransactionID;
+  ie_tx->value.choice.TransactionID = txid;
+  ASN_SEQUENCE_ADD(&ru->protocolIEs.list, ie_tx);
+
+  // IE: RANfunctions-Added (id=10)
+  RICserviceUpdate_IEs_t *ie_added = (RICserviceUpdate_IEs_t*)calloc(1, sizeof(*ie_added));
+  ie_added->id = ProtocolIE_ID_id_RANfunctionsAdded;
+  ie_added->criticality = Criticality_reject;
+  ie_added->value.present = RICserviceUpdate_IEs__value_PR_RANfunctions_List;
+
+  for (const auto &rf : funcs) {
+    RANfunction_ItemIEs_t *item = (RANfunction_ItemIEs_t*)calloc(1, sizeof(*item));
+    item->id = ProtocolIE_ID_id_RANfunction_Item;
+    item->criticality = Criticality_reject;
+    item->value.present = RANfunction_ItemIEs__value_PR_RANfunction_Item;
+
+    item->value.choice.RANfunction_Item.ranFunctionID       = rf.ranFunctionId;
+    item->value.choice.RANfunction_Item.ranFunctionRevision = rf.ranFunctionRev;
+
+    // DEEP COPY dei buffer ASN.1
+    OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionDefinition,
+                         (const char*)rf.ranFunctionDesc->buf,
+                         (int)rf.ranFunctionDesc->size);
+
+    const char* oid = "1.3.6.1.4.1.53148.1.1.2.2";
+    OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
+                         oid, (int)strlen(oid));
+
+    ASN_SEQUENCE_ADD(&ie_added->value.choice.RANfunctions_List.list, item);
+  }
+  ASN_SEQUENCE_ADD(&ru->protocolIEs.list, ie_added);
+
+  // wrap in InitiatingMessage (procedureCode = id-RICserviceUpdate)
+  InitiatingMessage_t *init = (InitiatingMessage_t*)calloc(1, sizeof(*init));
+  init->procedureCode = ProcedureCode_id_RICserviceUpdate;
+  init->criticality = Criticality_reject;
+  init->value.present = InitiatingMessage__value_PR_RICserviceUpdate;
+  init->value.choice.RICserviceUpdate = *ru;
+
+  pdu_out->present = E2AP_PDU_PR_initiatingMessage;
+  pdu_out->choice.initiatingMessage = init;
+}

@@ -61,6 +61,10 @@ void E2Sim::register_e2sm(long func_id, OCTET_STRING_t *ostr) {
 
 }
 
+std::unordered_map<long, OCTET_STRING_t *> E2Sim::get_registered_e2sm() {
+  return ran_functions_registered;
+}
+
 
 void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 {
