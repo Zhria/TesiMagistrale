@@ -53,7 +53,7 @@ file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/e2sim.cpp"
   "${E2SIM_ROOT}/encode_kpm.cpp"
   "${E2SIM_ROOT}/kpm_callbacks.cpp"
-  "${E2SIM_ROOT}/encode_e2apv1.cpp" 
+  "${E2SIM_ROOT}/encode_e2apv2.cpp" 
   "${E2SIM_ROOT}/n3iwf_data.cpp"
   "${E2SIM_ROOT}/n3iwf_utils.cpp"
 
@@ -81,7 +81,7 @@ target_link_libraries( kpm_callbacks ${SCTP_STD_LIB}
 #file(GLOB RICSIM_SOURCES
 
 #  "${E2SIM_ROOT}/ricsim.cpp"
-#  "${E2SIM_ROOT}/encode_e2apv1.cpp"
+#  "${E2SIM_ROOT}/encode_e2apv2.cpp"
 #  "${E2SIM_ROOT}/src/DEF/*.cpp"
 #  "${E2SIM_ROOT}/src/SCTP/*.cpp"
 #  "${E2SIM_ROOT}/src/E2APr/*.c"

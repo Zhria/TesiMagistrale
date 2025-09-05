@@ -122,9 +122,6 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/OCUUP-PF-Container.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/CUUPMeasurement-Container.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/PlmnID-List.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_internal.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/FGC-CUUP-PM-Format.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/SliceToReportListItem.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/SNSSAI.h \

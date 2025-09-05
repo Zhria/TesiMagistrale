@@ -28,7 +28,7 @@
 #include "e2sim_defs.h"
 #include "e2sim_sctp.hpp"
 #include "e2ap_message_handler.hpp"
-#include "encode_e2apv1.hpp"
+#include "encode_e2apv2.hpp"
 #include "n3iwf_data.hpp"
 #include "n3iwf_utils.hpp"
 
@@ -107,11 +107,11 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //Generate E2AP PDU for E2 Setup Request
   stampaln("About to generate E2AP PDU for E2 Setup Request\n");
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
-  generate_e2apv1_setup_request_parameterized(pdu_setup, all_funcs);
+  generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs);
 
-//  stampaln("After generating e2setup req ----------------------------------------------------------\n");
-  // xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-  // stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  stampaln("After generating e2setup req ----------------------------------------------------------\n");
+   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
+   stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -130,7 +130,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
     free(error_buf);
     return -1;
   }
-
 
   stampaln("ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);

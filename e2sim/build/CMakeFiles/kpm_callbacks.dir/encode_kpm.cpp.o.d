@@ -236,8 +236,6 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CellResourceReportListItem.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NRCGI.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NRCellIdentity.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ServedPlmnPerCellListItem.h \

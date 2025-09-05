@@ -6,7 +6,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 
-#include "encode_e2apv1.hpp"
+#include "encode_e2apv2.hpp"
 #include "n3iwf_utils.hpp"
 
 extern "C" {

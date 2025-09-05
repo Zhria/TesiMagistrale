@@ -28,7 +28,7 @@ extern "C"
 #include "encode_kpm.hpp"
 #include "n3iwf_utils.hpp"
 
-#include "encode_e2apv1.hpp"
+#include "encode_e2apv2.hpp"
 
 #include <nlohmann/json.hpp>
 #include <thread>
@@ -225,7 +225,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     fprintf(stderr, "after encoding message\n");
     uint8_t *e2smheader_buf3 = (uint8_t *)"header";
 
-    generate_e2apv1_indication_request_parameterized(pdu3, requestorId,
+    generate_e2apv2_indication_request_parameterized(pdu3, requestorId,
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf3, 6, e2smbuffer3, er3.encoded);
 
@@ -293,7 +293,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     fprintf(stderr, "after encoding message\n");
     uint8_t *e2smheader_buf2 = (uint8_t *)"header";
 
-    generate_e2apv1_indication_request_parameterized(pdu2, requestorId,
+    generate_e2apv2_indication_request_parameterized(pdu2, requestorId,
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf2, 6, e2smbuffer2, er2.encoded);
 
@@ -338,7 +338,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     uint8_t *cpid_buf = (uint8_t *)"CPID";
 
     fprintf(stderr, "About to encode Indication\n");
-    generate_e2apv1_indication_request_parameterized(pdu, requestorId,
+    generate_e2apv2_indication_request_parameterized(pdu, requestorId,
                                                      instanceId, ranFunctionId,
                                                      actionId, seqNum, e2smheader_buf, 6, e2smbuffer, er.encoded);
 
@@ -467,7 +467,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   int accept_size = actionIdsAccept.size();
   int reject_size = actionIdsReject.size();
 
-  generate_e2apv1_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId);
+  generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId);
 
   e2.encode_and_send_sctp_data(e2ap_pdu);
 

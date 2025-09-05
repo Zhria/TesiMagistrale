@@ -112,7 +112,4 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunction-Item.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANfunctionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANfunctionRevision.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANfunctionOID.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PrintableString.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h

@@ -238,8 +238,6 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CellResourceReportListItem.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NRCGI.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NRCellIdentity.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ServedPlmnPerCellListItem.h \
@@ -285,6 +283,7 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Timestamp.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-PDU.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
@@ -314,18 +313,11 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupFailure.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdate.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdateAcknowledge.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdateFailure.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateAcknowledge.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateFailure.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ResetRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ResetResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceQuery.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ErrorIndication.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteRequired.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OPEN_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/SuccessfulOutcome.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UnsuccessfulOutcome.h \
@@ -334,9 +326,7 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-gNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UP-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-DU-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
@@ -346,42 +336,23 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionType.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Presence.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-Admitted-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-NotAdmitted-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Cause.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseRICrequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseRIC.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseRICservice.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseE2node.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseTransport.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseProtocol.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseMisc.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscription-withCause-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICrequestID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TNLinformation.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TNLusage.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateRemove-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionSetupFailed-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAddition-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentInterfaceType.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfiguration.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdate-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemoval-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeTNLassociationRemoval-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAdditionAck-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigurationAck.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdateAck-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemovalAck-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionRevision.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionOID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionID-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionIDcause-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICrequestID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDetails.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICeventTriggerDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeSetup-List.h \
@@ -389,7 +360,6 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-NotAdmitted-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CriticalityDiagnostics.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TriggeringMessage.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscription-List-withCause.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationSN.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationType.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationHeader.h \
@@ -398,24 +368,15 @@ CMakeFiles/kpm_callbacks.dir/encode_e2apv1.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolHeader.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolMessage.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolAckRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolStatus.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolOutcome.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TransactionID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctions-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAddition-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalRIC-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsID-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsIDcause-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAdditionAck-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeToWait.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateRemove-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionSetupFailed-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdate-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemoval-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeTNLassociationRemoval-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdateAck-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemovalAck-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeSetup-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeSetup-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICeventTriggerDefinition.h \
