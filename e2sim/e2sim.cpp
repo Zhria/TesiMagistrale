@@ -131,9 +131,9 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs);
 
-  //stampaln("After generating e2setup req ----------------------------------------------------------\n");
-  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-  //stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  stampaln("After generating e2setup req ----------------------------------------------------------\n");
+  xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
+  stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
