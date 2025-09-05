@@ -54,6 +54,8 @@ extern "C"
 #include "RICsubsequentAction.h"
 #include "RICtimeToWait.h"
 #include "E2nodeComponentInterfaceNG.h"
+#include "GNB-CU-CP-Name.h"
+#include "E2nodeComponentInterfaceE1.h"
 
 }
 
@@ -170,113 +172,113 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
                                                  std::vector<ran_func_info> all_funcs)
 {
 
+   // --- GlobalE2node-ID.gNB ---
   GlobalgNB_ID_t *gnb = getGNBStore();
 
-  GlobalE2node_gNB_ID_t *e2gnb = (GlobalE2node_gNB_ID_t *)calloc(1, sizeof(*e2gnb));
+  GlobalE2node_gNB_ID_t *e2gnb = (GlobalE2node_gNB_ID_t*)calloc(1, sizeof(*e2gnb));
   e2gnb->global_gNB_ID = *gnb;
 
-  GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t *)calloc(1, sizeof(*globale2nodeid));
-  globale2nodeid->present = GlobalE2node_ID_PR_gNB;
-  globale2nodeid->choice.gNB = e2gnb;
-  
+  // >>> OBBLIGATORIO (de facto): uno tra gNB-CU-UP-ID o gNB-DU-ID <<<
+  GNB_CU_UP_ID_t *cu = (GNB_CU_UP_ID_t*)calloc(1, sizeof(*cu));
+  // assegna valore all'intero, se GNB_CU_UP_ID_t è typedef di long/int
+  *(long*)cu = 1;                                   // qualsiasi valore >0
+  e2gnb->gNB_CU_UP_ID = cu;
 
-  // IE: GlobalE2node-ID
-  E2setupRequestIEs_t *ie_global = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_global));
-  ie_global->id = ProtocolIE_ID_id_GlobalE2node_ID;
-  ie_global->criticality = Criticality_reject;
-  ie_global->value.present = E2setupRequestIEs__value_PR_GlobalE2node_ID;
+  GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t*)calloc(1, sizeof(*globale2nodeid));
+  globale2nodeid->present     = GlobalE2node_ID_PR_gNB;
+  globale2nodeid->choice.gNB  = e2gnb;
+
+  // --- IE: TransactionID ---
+  E2setupRequestIEs_t *ie_txid = (E2setupRequestIEs_t*)calloc(1, sizeof(*ie_txid));
+  ie_txid->id                   = ProtocolIE_ID_id_TransactionID;
+  ie_txid->criticality          = Criticality_reject;
+  ie_txid->value.present        = E2setupRequestIEs__value_PR_TransactionID;
+  ie_txid->value.choice.TransactionID = 1;   // o un contatore
+
+  // --- IE: GlobalE2node-ID ---
+  E2setupRequestIEs_t *ie_global = (E2setupRequestIEs_t*)calloc(1, sizeof(*ie_global));
+  ie_global->id                   = ProtocolIE_ID_id_GlobalE2node_ID;
+  ie_global->criticality          = Criticality_reject;
+  ie_global->value.present        = E2setupRequestIEs__value_PR_GlobalE2node_ID;
   ie_global->value.choice.GlobalE2node_ID = *globale2nodeid;
 
-  auto *e2txid = (E2setupRequestIEs_t *)calloc(1, sizeof(E2setupRequestIEs_t));
-  e2txid->id = ProtocolIE_ID_id_TransactionID;
-  e2txid->criticality = Criticality_reject;
-  e2txid->value.present = E2setupRequestIEs__value_PR_TransactionID;
-  e2txid->value.choice.TransactionID = 1;
-
-  // IE: RANfunctions-Added
-  E2setupRequestIEs_t *ie_ranf = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_ranf));
-  ASN_STRUCT_RESET(asn_DEF_E2setupRequestIEs, ie_ranf);
-  ie_ranf->criticality = Criticality_reject;
-  ie_ranf->id = ProtocolIE_ID_id_RANfunctionsAdded;
+  // --- IE: RANfunctions-Added (NO doppioni) ---
+  E2setupRequestIEs_t *ie_ranf = (E2setupRequestIEs_t*)calloc(1, sizeof(*ie_ranf));
+  ie_ranf->id            = ProtocolIE_ID_id_RANfunctionsAdded;
+  ie_ranf->criticality   = Criticality_reject;
   ie_ranf->value.present = E2setupRequestIEs__value_PR_RANfunctions_List;
-  for (int i = 0; i < all_funcs.size(); i++) {
 
-    ran_func_info nextRanFunc = all_funcs.at(i);
-    long nextRanFuncId = nextRanFunc.ranFunctionId;
-    OCTET_STRING_t *nextRanFuncDesc = nextRanFunc.ranFunctionDesc;
-    long nextRanFuncRev = nextRanFunc.ranFunctionRev;
+  for (size_t i = 0; i < all_funcs.size(); ++i) {
+    const ran_func_info& rf = all_funcs[i];
 
-    auto *itemIes = (RANfunction_ItemIEs_t *)calloc(1, sizeof(RANfunction_ItemIEs_t));
-    itemIes->id = ProtocolIE_ID_id_RANfunction_Item;
-    itemIes->criticality = Criticality_reject;
-    itemIes->value.present = RANfunction_ItemIEs__value_PR_RANfunction_Item;
-    itemIes->value.choice.RANfunction_Item.ranFunctionID = nextRanFuncId;
-    itemIes->value.choice.RANfunction_Item.ranFunctionOID = RANfunctionOID_t(*(nextRanFunc.ranFunctionOId));
-    int ranFuncLength = strlen((char*)nextRanFuncDesc);
+    RANfunction_ItemIEs_t *item = (RANfunction_ItemIEs_t*)calloc(1, sizeof(*item));
+    item->id                   = ProtocolIE_ID_id_RANfunction_Item;
+    item->criticality          = Criticality_reject;
+    item->value.present        = RANfunction_ItemIEs__value_PR_RANfunction_Item;
 
-    itemIes->value.choice.RANfunction_Item.ranFunctionDefinition = *nextRanFuncDesc;
-    itemIes->value.choice.RANfunction_Item.ranFunctionRevision = nextRanFuncRev;
-    
-    ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, itemIes);
+    item->value.choice.RANfunction_Item.ranFunctionID         = rf.ranFunctionId;
+    item->value.choice.RANfunction_Item.ranFunctionDefinition  = *rf.ranFunctionDesc;
+    item->value.choice.RANfunction_Item.ranFunctionRevision    = rf.ranFunctionRev;
 
+    // Copia safe dell'OID (evita alias/doppie free)
+    const char* oid = "1.3.6.1.4.1.53148.1.1.2.2";
+    OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
+                         oid, (int)strlen(oid));
+
+    ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, item);
   }
 
-  auto *e2configIE = (E2setupRequestIEs_t *)calloc(1, sizeof(E2setupRequestIEs_t));
-  e2configIE->id = ProtocolIE_ID_id_E2nodeComponentConfigAddition;
-  e2configIE->criticality = Criticality_reject;
-  e2configIE->value.present = E2setupRequestIEs__value_PR_E2nodeComponentConfigAddition_List;
+  // --- IE: E2nodeComponentConfigAdditionList (coerente con CU-UP → E1) ---
+  E2setupRequestIEs_t *ie_add = (E2setupRequestIEs_t*)calloc(1, sizeof(*ie_add));
+  ie_add->id            = ProtocolIE_ID_id_E2nodeComponentConfigAddition;
+  ie_add->criticality   = Criticality_reject;
+  ie_add->value.present = E2setupRequestIEs__value_PR_E2nodeComponentConfigAddition_List;
 
-  auto *e2configAdditionItem = (E2nodeComponentConfigAddition_ItemIEs_t *)calloc(1, sizeof(E2nodeComponentConfigAddition_ItemIEs_t));
-  e2configAdditionItem->id = ProtocolIE_ID_id_E2nodeComponentConfigAddition_Item;
-  e2configAdditionItem->criticality = Criticality_reject;
-  e2configAdditionItem->value.present = E2nodeComponentConfigAddition_ItemIEs__value_PR_E2nodeComponentConfigAddition_Item;
+  E2nodeComponentConfigAddition_ItemIEs_t *add_ie =
+      (E2nodeComponentConfigAddition_ItemIEs_t*)calloc(1, sizeof(*add_ie));
+  add_ie->id            = ProtocolIE_ID_id_E2nodeComponentConfigAddition_Item;
+  add_ie->criticality   = Criticality_reject;
+  add_ie->value.present = E2nodeComponentConfigAddition_ItemIEs__value_PR_E2nodeComponentConfigAddition_Item;
 
-  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2nodeComponentInterfaceType_ng;
-  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentID.present = E2nodeComponentID_PR_e2nodeComponentInterfaceTypeNG;
+  // Per un CU-UP ha più senso l’interfaccia E1 (fra CU-CP e CU-UP)
+  add_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType =
+      E2nodeComponentInterfaceType_e1;
 
-  auto *intfNG = (E2nodeComponentInterfaceNG_t *) calloc(1, sizeof(E2nodeComponentInterfaceNG_t));
-  OCTET_STRING_t nginterf;
-  nginterf.buf = (uint8_t*)calloc(1,8);
-  memcpy(nginterf.buf, (uint8_t *)"TEST", 8);
+  // ComponentID coerente: E1 → union e2nodeComponentInterfaceTypeE1
+  E2nodeComponentID_t *compId =
+      &add_ie->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentID;
+  compId->present = E2nodeComponentID_PR_e2nodeComponentInterfaceTypeE1;
 
-  nginterf.size = 8;
-  intfNG->amf_name = (AMFName_t)(nginterf);
-
-  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentID.choice.e2nodeComponentInterfaceTypeNG = intfNG;
-
-
-  OCTET_STRING_t reqPart;
-  reqPart.buf = (uint8_t*)calloc(1,7);
-  memcpy(reqPart.buf, (uint8_t *)"reqpart", 7);
-  reqPart.size = 7;
-
-  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart = reqPart;
-
-  OCTET_STRING_t resPart;
-  resPart.buf = (uint8_t*)calloc(1,7);
-  memcpy(resPart.buf, (uint8_t *)"respart", 7);
-  resPart.size = 7;
-  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart = resPart;
+  E2nodeComponentInterfaceE1_t *e1 =
+      (E2nodeComponentInterfaceE1_t*)calloc(1, sizeof(*e1));
+  // lega l’ID che hai messo nel GlobalE2node-ID
+  e1->gNB_CU_CP_ID = *cu;
+  compId->choice.e2nodeComponentInterfaceTypeE1 = e1;
+    OCTET_STRING_fromBuf(
+    &add_ie->value.choice.E2nodeComponentConfigAddition_Item
+       .e2nodeComponentConfiguration.e2nodeComponentRequestPart,
+    "req", 3);
+  OCTET_STRING_fromBuf(
+    &add_ie->value.choice.E2nodeComponentConfigAddition_Item
+       .e2nodeComponentConfiguration.e2nodeComponentResponsePart,
+    "rsp", 3);
 
 
-  ASN_SEQUENCE_ADD(&e2configIE->value.choice.RANfunctions_List.list, e2configAdditionItem);
-
+  ASN_SEQUENCE_ADD(&ie_add->value.choice.E2nodeComponentConfigAddition_List.list, add_ie);
   // Costruzione E2setupRequest e aggiunta IE in lista (ordine: Global, TransactionID, RANfuncs)
-  E2setupRequest_t *e2setupreq = (E2setupRequest_t *)calloc(1, sizeof(*e2setupreq));
-  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, e2txid);
-  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_global);
-  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_ranf);
-  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, e2configIE);
-  
+  E2setupRequest_t *req = (E2setupRequest_t*)calloc(1, sizeof(*req));
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_txid);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_global);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_ranf);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_add);
   // Wrapping nell'InitiatingMessage
-  InitiatingMessage_t *initmsg = (InitiatingMessage_t *)calloc(1, sizeof(*initmsg));
-  initmsg->procedureCode = ProcedureCode_id_E2setup;
-  initmsg->criticality = Criticality_reject;
-  initmsg->value.present = InitiatingMessage__value_PR_E2setupRequest;
-  initmsg->value.choice.E2setupRequest = *e2setupreq;
-
-  e2ap_pdu->present = E2AP_PDU_PR_initiatingMessage;
-  e2ap_pdu->choice.initiatingMessage = initmsg;
+  InitiatingMessage_t *init = (InitiatingMessage_t*)calloc(1, sizeof(*init));
+  init->procedureCode               = ProcedureCode_id_E2setup;
+  init->criticality                 = Criticality_reject;
+  init->value.present               = InitiatingMessage__value_PR_E2setupRequest;
+  init->value.choice.E2setupRequest = *req;
+ e2ap_pdu->present = E2AP_PDU_PR_initiatingMessage;
+  e2ap_pdu->choice.initiatingMessage = init;
 }
 
 void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
