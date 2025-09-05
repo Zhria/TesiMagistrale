@@ -44,9 +44,10 @@ extern "C" {
 }
 
 struct ran_func_info {
-  long ranFunctionId;
-  OCTET_STRING_t *ranFunctionDesc;
-  long ranFunctionRev;
+       long ranFunctionId;
+       OCTET_STRING_t *ranFunctionDesc;
+       long ranFunctionRev;
+       PrintableString_t *ranFunctionOId;
 };
 
 long get_function_id_from_subscription(E2AP_PDU_t *e2ap_pdu);

@@ -90,11 +90,33 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //  int server_fd = sctp_start_server(ops.server_ip, ops.server_port);
 
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
-
+  
   std::vector<ran_func_info> all_funcs;
-
+  RANfunctionOID_t *ranFunctionOIDe = (RANfunctionOID_t*)calloc(1,sizeof(RANfunctionOID_t));
+  uint8_t *buf = (uint8_t*)"1.3.6.1.4.1.53148.1.1.2.2";
+  ranFunctionOIDe->buf = (uint8_t*)calloc(1,strlen((char*)buf)+1);
+  memcpy(ranFunctionOIDe->buf, buf, strlen((char*)buf)+1);
+  ranFunctionOIDe->size = strlen((char*)buf);
   //Loop through RAN function definitions that are registered
 
+    //Loop through RAN function definitions that are registered
+    LOG_I("Constructing a list of RAN functions based on registered information");
+    for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
+      char* ran_desc = (char*) calloc(1, elem.second->size+1);
+      ran_desc = (char*)elem.second->buf;
+      ran_desc[elem.second->size] = '\0';
+  
+      LOG_I("Adding RAN function ID %ld, description: %s to the list", elem.first, ran_desc);
+  
+      ran_func_info next_func;
+  
+      next_func.ranFunctionId = elem.first;
+      next_func.ranFunctionDesc = elem.second;
+      next_func.ranFunctionRev = (long)2;
+      next_func.ranFunctionOId = ranFunctionOIDe;
+  
+      all_funcs.push_back(next_func);
+    }
   for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
     ran_func_info next_func;
 

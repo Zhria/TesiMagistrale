@@ -176,6 +176,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t *)calloc(1, sizeof(*globale2nodeid));
   globale2nodeid->present = GlobalE2node_ID_PR_gNB;
   globale2nodeid->choice.gNB = e2gnb;
+  
 
   // IE: GlobalE2node-ID
   E2setupRequestIEs_t *ie_global = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_global));
@@ -184,12 +185,11 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   ie_global->value.present = E2setupRequestIEs__value_PR_GlobalE2node_ID;
   ie_global->value.choice.GlobalE2node_ID = *globale2nodeid;
 
-  // IE: TransactionID (OBBLIGATORIO in E2AP v2)
-  E2setupRequestIEs_t *ie_tx = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_tx));
-  ie_tx->id = ProtocolIE_ID_id_TransactionID;
-  ie_tx->criticality = Criticality_reject;
-  ie_tx->value.present = E2setupRequestIEs__value_PR_TransactionID;
-  ie_tx->value.choice.TransactionID = 1; // usa un contatore se vuoi: ++txid
+  auto *e2txid = (E2setupRequestIEs_t *)calloc(1, sizeof(E2setupRequestIEs_t));
+  e2txid->id = ProtocolIE_ID_id_TransactionID;
+  e2txid->criticality = Criticality_reject;
+  e2txid->value.present = E2setupRequestIEs__value_PR_TransactionID;
+  e2txid->value.choice.TransactionID = 1;
 
   // IE: RANfunctions-Added
   E2setupRequestIEs_t *ie_ranf = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_ranf));
@@ -199,20 +199,26 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
   for (size_t i = 0; i < all_funcs.size(); ++i)
   {
-    const ran_func_info &nextRanFunc = all_funcs[i];
+    ran_func_info nextRanFunc = all_funcs.at(i);
+    long nextRanFuncId = nextRanFunc.ranFunctionId;
+    OCTET_STRING_t *nextRanFuncDesc = nextRanFunc.ranFunctionDesc;
+    long nextRanFuncRev = nextRanFunc.ranFunctionRev;
+
     auto *itemIes = (RANfunction_ItemIEs_t *)calloc(1, sizeof(RANfunction_ItemIEs_t));
     itemIes->id = ProtocolIE_ID_id_RANfunction_Item;
     itemIes->criticality = Criticality_reject;
     itemIes->value.present = RANfunction_ItemIEs__value_PR_RANfunction_Item;
-    itemIes->value.choice.RANfunction_Item.ranFunctionID = nextRanFunc.ranFunctionId;
-    itemIes->value.choice.RANfunction_Item.ranFunctionDefinition = *nextRanFunc.ranFunctionDesc;
-    itemIes->value.choice.RANfunction_Item.ranFunctionRevision = nextRanFunc.ranFunctionRev;
+    itemIes->value.choice.RANfunction_Item.ranFunctionID = nextRanFuncId;
+    itemIes->value.choice.RANfunction_Item.ranFunctionOID = RANfunctionOID_t(*(nextRanFunc.ranFunctionOId));
+    int ranFuncLength = strlen((char*)nextRanFuncDesc);
+    itemIes->value.choice.RANfunction_Item.ranFunctionDefinition = *nextRanFuncDesc;
+    itemIes->value.choice.RANfunction_Item.ranFunctionRevision = nextRanFuncRev;
     ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, itemIes);
   }
 
   // Costruzione E2setupRequest e aggiunta IE in lista (ordine: Global, TransactionID, RANfuncs)
   E2setupRequest_t *e2setupreq = (E2setupRequest_t *)calloc(1, sizeof(*e2setupreq));
-  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_tx); // <<--- mancava!
+  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, e2txid);
   ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_global);
   ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_ranf);
 
