@@ -23,7 +23,7 @@
 //#include <iostream>
 //#include <vector>
 
-#include "encode_e2apv1.hpp"
+#include "encode_e2apv2.hpp"
 #include "kpm_callbacks.hpp"
 #include "n3iwf_utils.hpp"
 
@@ -246,7 +246,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   E2AP_PDU_t* pdu_resp = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
 
-  generate_e2apv1_subscription_response(pdu_resp, pdu);
+  generate_e2apv2_subscription_response(pdu_resp, pdu);
 
   fprintf(stderr, "Subscription Response\n");
 
@@ -275,7 +275,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)
 
   E2AP_PDU_t* pdu_ind = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
 
-  generate_e2apv1_indication_request(pdu_ind);
+  generate_e2apv2_indication_request(pdu_ind);
 
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_ind);
 
