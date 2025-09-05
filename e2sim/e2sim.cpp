@@ -109,9 +109,9 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs);
 
-  stampaln("After generating e2setup req ----------------------------------------------------------\n");
-  xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-  stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  //stampaln("After generating e2setup req ----------------------------------------------------------\n");
+  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
+  //stampaln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -182,8 +182,10 @@ if (dr2.code != RC_OK) {
         // continua a leggere: potrebbero arrivare altri messaggi
     } else if (r == SCTP_RECV_SKIP) {
         // è solo una notifica o payload non E2AP → continua ad aspettare
+        stampaln("[SCTP] Received SCTP_RECV_SKIP");
         continue;
     } else { // SCTP_RECV_ERR
+        stampaln("[SCTP] Received SCTP_RECV_ERR");
         // errore o connessione chiusa
         break;
     }
