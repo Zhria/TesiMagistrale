@@ -100,16 +100,8 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //Loop through RAN function definitions that are registered
 
     //Loop through RAN function definitions that are registered
-    LOG_I("Constructing a list of RAN functions based on registered information");
-    for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
-      char* ran_desc = (char*) calloc(1, elem.second->size+1);
-      ran_desc = (char*)elem.second->buf;
-      ran_desc[elem.second->size] = '\0';
-  
-      LOG_I("Adding RAN function ID %ld, description: %s to the list", elem.first, ran_desc);
-  
+    for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {    
       ran_func_info next_func;
-  
       next_func.ranFunctionId = elem.first;
       next_func.ranFunctionDesc = elem.second;
       next_func.ranFunctionRev = (long)2;
