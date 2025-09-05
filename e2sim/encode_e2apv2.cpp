@@ -53,6 +53,8 @@ extern "C"
 #include "RICsubsequentActionType.h"
 #include "RICsubsequentAction.h"
 #include "RICtimeToWait.h"
+#include "E2nodeComponentInterfaceNG.h"
+
 }
 
 void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu)
@@ -193,12 +195,12 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
   // IE: RANfunctions-Added
   E2setupRequestIEs_t *ie_ranf = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_ranf));
+  ASN_STRUCT_RESET(asn_DEF_E2setupRequestIEs, ie_ranf);
   ie_ranf->criticality = Criticality_reject;
   ie_ranf->id = ProtocolIE_ID_id_RANfunctionsAdded;
   ie_ranf->value.present = E2setupRequestIEs__value_PR_RANfunctions_List;
+  for (int i = 0; i < all_funcs.size(); i++) {
 
-  for (size_t i = 0; i < all_funcs.size(); ++i)
-  {
     ran_func_info nextRanFunc = all_funcs.at(i);
     long nextRanFuncId = nextRanFunc.ranFunctionId;
     OCTET_STRING_t *nextRanFuncDesc = nextRanFunc.ranFunctionDesc;
@@ -211,17 +213,61 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
     itemIes->value.choice.RANfunction_Item.ranFunctionID = nextRanFuncId;
     itemIes->value.choice.RANfunction_Item.ranFunctionOID = RANfunctionOID_t(*(nextRanFunc.ranFunctionOId));
     int ranFuncLength = strlen((char*)nextRanFuncDesc);
+
     itemIes->value.choice.RANfunction_Item.ranFunctionDefinition = *nextRanFuncDesc;
     itemIes->value.choice.RANfunction_Item.ranFunctionRevision = nextRanFuncRev;
+    
     ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, itemIes);
+
   }
+
+  auto *e2configIE = (E2setupRequestIEs_t *)calloc(1, sizeof(E2setupRequestIEs_t));
+  e2configIE->id = ProtocolIE_ID_id_E2nodeComponentConfigAddition;
+  e2configIE->criticality = Criticality_reject;
+  e2configIE->value.present = E2setupRequestIEs__value_PR_E2nodeComponentConfigAddition_List;
+
+  auto *e2configAdditionItem = (E2nodeComponentConfigAddition_ItemIEs_t *)calloc(1, sizeof(E2nodeComponentConfigAddition_ItemIEs_t));
+  e2configAdditionItem->id = ProtocolIE_ID_id_E2nodeComponentConfigAddition_Item;
+  e2configAdditionItem->criticality = Criticality_reject;
+  e2configAdditionItem->value.present = E2nodeComponentConfigAddition_ItemIEs__value_PR_E2nodeComponentConfigAddition_Item;
+
+  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentInterfaceType = E2nodeComponentInterfaceType_ng;
+  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentID.present = E2nodeComponentID_PR_e2nodeComponentInterfaceTypeNG;
+
+  auto *intfNG = (E2nodeComponentInterfaceNG_t *) calloc(1, sizeof(E2nodeComponentInterfaceNG_t));
+  OCTET_STRING_t nginterf;
+  nginterf.buf = (uint8_t*)calloc(1,8);
+  memcpy(nginterf.buf, (uint8_t *)"TEST", 8);
+
+  nginterf.size = 8;
+  intfNG->amf_name = (AMFName_t)(nginterf);
+
+  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentID.choice.e2nodeComponentInterfaceTypeNG = intfNG;
+
+
+  OCTET_STRING_t reqPart;
+  reqPart.buf = (uint8_t*)calloc(1,7);
+  memcpy(reqPart.buf, (uint8_t *)"reqpart", 7);
+  reqPart.size = 7;
+
+  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentRequestPart = reqPart;
+
+  OCTET_STRING_t resPart;
+  resPart.buf = (uint8_t*)calloc(1,7);
+  memcpy(resPart.buf, (uint8_t *)"respart", 7);
+  resPart.size = 7;
+  e2configAdditionItem->value.choice.E2nodeComponentConfigAddition_Item.e2nodeComponentConfiguration.e2nodeComponentResponsePart = resPart;
+
+
+  ASN_SEQUENCE_ADD(&e2configIE->value.choice.RANfunctions_List.list, e2configAdditionItem);
 
   // Costruzione E2setupRequest e aggiunta IE in lista (ordine: Global, TransactionID, RANfuncs)
   E2setupRequest_t *e2setupreq = (E2setupRequest_t *)calloc(1, sizeof(*e2setupreq));
   ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, e2txid);
   ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_global);
   ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, ie_ranf);
-
+  ASN_SEQUENCE_ADD(&e2setupreq->protocolIEs.list, e2configIE);
+  
   // Wrapping nell'InitiatingMessage
   InitiatingMessage_t *initmsg = (InitiatingMessage_t *)calloc(1, sizeof(*initmsg));
   initmsg->procedureCode = ProcedureCode_id_E2setup;
@@ -239,7 +285,7 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
   //  uint8_t *buf = (uint8_t *)"gnb1"
 
   BIT_STRING_t *gnb_bstring = (BIT_STRING_t *)calloc(1, sizeof(BIT_STRING_t));
-  ;
+  
   gnb_bstring->buf = (uint8_t *)calloc(1, 4);
   gnb_bstring->size = 4;
   gnb_bstring->buf[0] = 0xB5;
