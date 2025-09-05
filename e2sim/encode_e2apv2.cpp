@@ -207,7 +207,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   ie_ranf->criticality   = Criticality_reject;
   ie_ranf->value.present = E2setupRequestIEs__value_PR_RANfunctions_List;
 
-  for (size_t i = 0; i < all_funcs.size(); ++i) {
+  for (size_t i = 0; i < all_funcs.size(); i++) {
     const ran_func_info& rf = all_funcs[i];
 
     RANfunction_ItemIEs_t *item = (RANfunction_ItemIEs_t*)calloc(1, sizeof(*item));
