@@ -312,11 +312,12 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     // salviamo il dato
     data.len = recv_len;
 
-    // se è PPID=60 => payload E2AP valido
+    // se è PPID=60 => payload E2AP valido //Ometto questo controllo 
     if (ppid == 60) {
         return SCTP_RECV_E2AP;
     } else {
         stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
-        return SCTP_RECV_SKIP;
+        return SCTP_RECV_E2AP;
+        //return SCTP_RECV_SKIP;
     }
 }
