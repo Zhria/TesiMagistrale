@@ -117,15 +117,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   
       all_funcs.push_back(next_func);
     }
-  for (std::pair<long, OCTET_STRING_t*> elem : ran_functions_registered) {
-    ran_func_info next_func;
-
-    next_func.ranFunctionId = elem.first;
-    next_func.ranFunctionDesc = elem.second;
-    next_func.ranFunctionRev = (long)2;
-    all_funcs.push_back(next_func);
-  }
-      
+ 
   //Generate E2AP PDU for E2 Setup Request
   stampaln("About to generate E2AP PDU for E2 Setup Request\n");
   stampaln("Number of RAN Functions: %zu\n", all_funcs.size());
