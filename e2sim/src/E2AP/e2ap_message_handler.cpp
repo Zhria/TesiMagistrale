@@ -33,21 +33,12 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 {
   //decode the data into E2AP-PDU
   E2AP_PDU_t* pdu = (E2AP_PDU_t*)calloc(1, sizeof(E2AP_PDU));
-  ASN_STRUCT_RESET(asn_DEF_E2AP_PDU, pdu);
 
   stampaln("[E2AP HANDLE SCTP DATA] decoding...");
 
-  asn_transfer_syntax syntaxPER;  
-
-  syntaxPER = ATS_ALIGNED_BASIC_PER;
 
   stampaln("[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
-  //e2ap_asn1c_decode_pdu(pdu, data.buffer, data.len);
-
-
-  //auto rval = asn_decode(nullptr, syntax, &asn_DEF_E2AP_PDU, (void **) &pdu,data.buffer, data.len);
-
-  auto rval=asn_decode(NULL,syntaxPER, &asn_DEF_E2AP_PDU, (void **) &pdu, data.buffer, data.len);
+  auto rval=asn_decode(NULL,ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **) &pdu, data.buffer, data.len);
 
   switch(rval.code){
     case RC_OK:
@@ -57,7 +48,6 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     break;
   case RC_FAIL:
       stampaln("[E2AP HANDLE SCTP DATA] Decoding failed (APER)\n");
-      free(pdu);
       return;
     break;
   default:
@@ -80,7 +70,6 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
       switch(index)
 	{
         case E2AP_PDU_PR_initiatingMessage:
-	  //e2ap_handle_E2SetupRequest(pdu, socket_fd);
           stampaln("[E2AP] Received SETUP-REQUEST");
           break;
 	  
@@ -175,68 +164,6 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     }
 }
 
-//FUNZIONE UTILIZZATA DAL SERVER. NON PER IL LATO CLIENT
-// void e2ap_handle_E2SetupRequest(E2AP_PDU_t* pdu, int &socket_fd) {
-
-  
-//   E2AP_PDU_t* res_pdu = (E2AP_PDU_t*)calloc(1, sizeof(E2AP_PDU));
-//   generate_e2apv1_setup_response(res_pdu);
-
-  
-//   LOG_D("[E2AP] Created E2-SETUP-RESPONSE");
-
-//   e2ap_asn1c_print_pdu(res_pdu);
-
-
-//   auto buffer_size = MAX_SCTP_BUFFER;
-//   unsigned char buffer[MAX_SCTP_BUFFER];
-  
-//   sctp_buffer_t data;
-//   auto er = asn_encode_to_buffer(nullptr, ATS_BASIC_XER, &asn_DEF_E2AP_PDU, res_pdu, buffer, buffer_size);
-
-//   data.len = er.encoded;
-//   fprintf(stderr, "er encoded is %ld\n", er.encoded);  
-  
-//   //data.len = e2ap_asn1c_encode_pdu(res_pdu, &buf);
-//   memcpy(data.buffer, buffer, er.encoded);
-
-//   //send response data over sctp
-//   if(sctp_send_data(socket_fd, data) > 0) {
-//     LOG_I("[SCTP] Sent E2-SETUP-RESPONSE");
-//   } else {
-//     LOG_E("[SCTP] Unable to send E2-SETUP-RESPONSE to peer");
-//   }
-
-//   sleep(5);
-
-//   //Sending Subscription Request
-
-//   E2AP_PDU_t* pdu_sub = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
-
-//   generate_e2apv1_subscription_request(pdu_sub);
-
-//   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_sub);
-
-//   auto buffer_size2 = MAX_SCTP_BUFFER;
-//   unsigned char buffer2[MAX_SCTP_BUFFER];
-  
-//   sctp_buffer_t data2;
-
-//   auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_sub, buffer2, buffer_size2);
-  
-//   data2.len = er2.encoded;
-//   memcpy(data2.buffer, buffer2, er2.encoded);
-  
-//   fprintf(stderr, "er encded is %ld\n", er2.encoded);
-
-//   if(sctp_send_data(socket_fd, data2) > 0) {
-//     LOG_I("[SCTP] Sent E2-SUBSCRIPTION-REQUEST");
-//   } else {
-//     LOG_E("[SCTP] Unable to send E2-SUBSCRIPTION-REQUEST to peer");
-//   }  
-
-
-// }
 
 
 void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t* pdu, int &socket_fd)

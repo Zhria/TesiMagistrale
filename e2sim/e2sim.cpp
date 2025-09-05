@@ -141,7 +141,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
     stampaln("E2AP PDU constraints check failed: %s\n", error_buf);
     stampaln("error length %ld\n", errlen);
     stampaln("error buf %s\n", error_buf);
-    free(error_buf);
     return -1;
   }
 
@@ -149,7 +148,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);
   if(er.encoded < 0) {
     stampaln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
-    free(error_buf);
     return -1;
   }
 
