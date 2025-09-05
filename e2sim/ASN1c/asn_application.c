@@ -416,11 +416,8 @@ asn_encode_internal(const asn_codec_ctx_t *opt_codec_ctx,
 
 asn_dec_rval_t
 asn_decode(const asn_codec_ctx_t *opt_codec_ctx,
-           enum asn_transfer_syntax syntax, 
-           const asn_TYPE_descriptor_t *td,
-           void **sptr, 
-           const void *buffer, 
-           size_t size) {
+           enum asn_transfer_syntax syntax, const asn_TYPE_descriptor_t *td,
+           void **sptr, const void *buffer, size_t size) {
     if(!td || !td->op || !sptr || (size && !buffer)) {
         ASN__DECODE_FAILED;
     }

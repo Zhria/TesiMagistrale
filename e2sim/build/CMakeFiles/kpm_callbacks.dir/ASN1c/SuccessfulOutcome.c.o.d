@@ -136,10 +136,17 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/SuccessfulOutcome.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2setupRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2setupResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2setupFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2nodeConfigurationUpdate.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2nodeConfigurationUpdateAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2nodeConfigurationUpdateFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2connectionUpdate.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2connectionUpdateAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2connectionUpdateFailure.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ResetRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ResetResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICindication.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICserviceQuery.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ErrorIndication.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICsubscriptionDeleteRequired.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE.h

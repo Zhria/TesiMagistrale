@@ -9,18 +9,13 @@
 extern "C" {
 #endif
 
-#define maxofMessageProtocolTests (15)
-#define maxofRICstyles (63)
-#define maxnoofQCI (256)
-#define maxnoofQoSFlows (64)
-#define maxnoofSliceItems (1024)
-#define maxnoofContainerListItems (3)
-#define maxCellingNBDU (512)
-#define maxofContainers (8)
-#define maxPLMN (12)
-#define maxofRANparamters (65536)
-#define maxUeReport (32)
-#define maxCellingNB (16384)
+#define maxProtocolIEs (65535)
+#define maxnoofErrors (256)
+#define maxofE2nodeComponents (1024)
+#define maxofRANfunctionID (256)
+#define maxofRICactionID (16)
+#define maxofTNLA (32)
+#define maxofRICrequestID (4294967295)
 
 
 #ifdef __cplusplus
