@@ -296,21 +296,24 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
                          sac->sac_state, sac->sac_error, sac->sac_outbound_streams, sac->sac_inbound_streams);
                 break;
             }
-            case SCTP_SHUTDOWN_EVENT:
+            case SCTP_SHUTDOWN_EVENT:{
                stampaln("[SCTP_EVENT] SHUTDOWN\n");
                 break;
-            case SCTP_REMOTE_ERROR:
+            }
+            case SCTP_REMOTE_ERROR:{
                 struct sctp_remote_error *se = &snp->sn_remote_error;
                 uint16_t cause = ntohs(se->sre_error);
                 stampaln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
-                // opzionale: dump dei primi byte di se->sre_data per capire la 'Cause' (Protocol Violation, User Initiated, ecc.)
                 break;
-            case SCTP_SEND_FAILED_EVENT:
+            }
+            case SCTP_SEND_FAILED_EVENT:{
                 stampaln("[SCTP_EVENT] SEND_FAILED\n");
                 break;
-            default:
+            }
+            default:{
                 stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
                 break;
+            }
         }
         return SCTP_RECV_SKIP; // nessun payload da decodificare
     }
