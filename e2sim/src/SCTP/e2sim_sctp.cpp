@@ -199,7 +199,8 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     init.sinit_max_attempts = 8;
     init.sinit_max_init_timeo = 8000;
     setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
-
+    int t = 0;  // 0 = disabilita
+    setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &t, sizeof(t));
     // Eventi per debug (facoltativo ma consigliato)
     enable_sctp_events(fd);
 
