@@ -382,6 +382,12 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
             stampaln("[SCTP_EVENT] SEND_FAILED\n");
             break;
         }
+        case SCTP_PEER_ADDR_CHANGE: {
+            struct sctp_paddr_change *pc = (struct sctp_paddr_change *)snp;
+            stampaln("[SCTP_EVENT] PEER_ADDR_CHANGE state=%d error=%d",
+            pc->spc_state, pc->spc_error);
+           break;
+        }
         default:
         {
             stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
