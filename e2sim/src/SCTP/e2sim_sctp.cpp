@@ -18,18 +18,17 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>		//for close()
+#include <unistd.h> //for close()
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/sctp.h>
-#include <arpa/inet.h>	//for inet_ntop()
+#include <arpa/inet.h> //for inet_ntop()
 #include <assert.h>
 
 #include "e2sim_sctp.hpp"
 #include "e2sim_defs.h"
 #include "n3iwf_utils.hpp"
-
 
 #include <sys/types.h>
 #include <netinet/sctp.h>
@@ -56,54 +55,76 @@ void sctp_print_events(int fd)
     ssize_t n;
 
     iov.iov_base = buf;
-    iov.iov_len  = sizeof(buf);
+    iov.iov_len = sizeof(buf);
 
     memset(&msg, 0, sizeof(msg));
-    msg.msg_iov    = &iov;
+    msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
 
     // Legge con MSG_DONTWAIT: non blocca
     n = recvmsg(fd, &msg, MSG_DONTWAIT);
-    if (n <= 0) {
+    if (n <= 0)
+    {
         return; // nessun evento
     }
 
-    if (msg.msg_flags & MSG_NOTIFICATION) {
-        union sctp_notification *snp = (union sctp_notification*)buf;
-        switch (snp->sn_header.sn_type) {
-        case SCTP_ASSOC_CHANGE: {
+    if (msg.msg_flags & MSG_NOTIFICATION)
+    {
+        union sctp_notification *snp = (union sctp_notification *)buf;
+        switch (snp->sn_header.sn_type)
+        {
+        case SCTP_ASSOC_CHANGE:
+        {
             struct sctp_assoc_change *sac = &snp->sn_assoc_change;
-            const char* state_str = "UNKNOWN";
-            switch (sac->sac_state) {
-                case SCTP_COMM_UP:         state_str = "COMM_UP"; break;
-                case SCTP_COMM_LOST:       state_str = "COMM_LOST"; break;
-                case SCTP_RESTART:         state_str = "RESTART"; break;
-                case SCTP_SHUTDOWN_COMP:   state_str = "SHUTDOWN_COMPLETE"; break;
-                case SCTP_CANT_STR_ASSOC:  state_str = "CANT_START_ASSOC"; break;
-                default: state_str = "UNKNOWN"; break;
+            const char *state_str = "UNKNOWN";
+            switch (sac->sac_state)
+            {
+            case SCTP_COMM_UP:
+                state_str = "COMM_UP";
+                break;
+            case SCTP_COMM_LOST:
+                state_str = "COMM_LOST";
+                break;
+            case SCTP_RESTART:
+                state_str = "RESTART";
+                break;
+            case SCTP_SHUTDOWN_COMP:
+                state_str = "SHUTDOWN_COMPLETE";
+                break;
+            case SCTP_CANT_STR_ASSOC:
+                state_str = "CANT_START_ASSOC";
+                break;
+            default:
+                state_str = "UNKNOWN";
+                break;
             }
             stampaln("[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
-                    state_str, sac->sac_assoc_id);
+                     state_str, sac->sac_assoc_id);
             break;
         }
-        case SCTP_SHUTDOWN_EVENT: {
+        case SCTP_SHUTDOWN_EVENT:
+        {
             struct sctp_shutdown_event *sse = &snp->sn_shutdown_event;
             stampaln("[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
             break;
         }
-        case SCTP_SEND_FAILED_EVENT: {
+        case SCTP_SEND_FAILED_EVENT:
+        {
             stampaln("[SCTP_EVENT] SEND_FAILED\n");
             break;
         }
-        case SCTP_ADAPTATION_INDICATION: {
+        case SCTP_ADAPTATION_INDICATION:
+        {
             stampaln("[SCTP_EVENT] ADAPTATION_INDICATION\n");
             break;
         }
-        case SCTP_PARTIAL_DELIVERY_EVENT: {
+        case SCTP_PARTIAL_DELIVERY_EVENT:
+        {
             stampaln("[SCTP_EVENT] PARTIAL_DELIVERY\n");
             break;
         }
-        case SCTP_REMOTE_ERROR: {
+        case SCTP_REMOTE_ERROR:
+        {
             stampaln("[SCTP_EVENT] REMOTE_ERROR\n");
             break;
         }
@@ -114,7 +135,8 @@ void sctp_print_events(int fd)
     }
 }
 
-static void enable_sctp_events(int fd) {
+static void enable_sctp_events(int fd)
+{
     struct sctp_event_subscribe ev = {0};
     ev.sctp_data_io_event = 1;
     ev.sctp_association_event = 1;
@@ -123,84 +145,124 @@ static void enable_sctp_events(int fd) {
     ev.sctp_send_failure_event = 1;
     ev.sctp_partial_delivery_event = 1;
     ev.sctp_adaptation_layer_event = 1;
-    ev.sctp_peer_error_event = 1;    
+    ev.sctp_peer_error_event = 1;
     ev.sctp_authentication_event = 1;
 
     setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
 }
 
-static int set_nonblock(int fd, bool on) {
+static int set_nonblock(int fd, bool on)
+{
     int fl = fcntl(fd, F_GETFL, 0);
-    if (fl < 0) return -1;
-    if (on) fl |= O_NONBLOCK;
-    else    fl &= ~O_NONBLOCK;
+    if (fl < 0)
+        return -1;
+    if (on)
+        fl |= O_NONBLOCK;
+    else
+        fl &= ~O_NONBLOCK;
     return fcntl(fd, F_SETFL, fl);
 }
 
 int sctp_start_client(const char *server_ip_str, const int server_port)
 {
     int family = AF_UNSPEC;
-    sockaddr_in  peer4{}; sockaddr_in6 peer6{};
-    sockaddr *peer = nullptr; socklen_t peer_len = 0;
+    sockaddr_in peer4{};
+    sockaddr_in6 peer6{};
+    sockaddr *peer = nullptr;
+    socklen_t peer_len = 0;
 
-    if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1) {
-        family = AF_INET; peer4.sin_family = AF_INET; peer4.sin_port = htons(server_port);
-        peer = (sockaddr*)&peer4; peer_len = sizeof(peer4);
-    } else {
-        stampaln( "[SCTP] inet_pton failed for '%s'\n", server_ip_str);
+    if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1)
+    {
+        family = AF_INET;
+        peer4.sin_family = AF_INET;
+        peer4.sin_port = htons(server_port);
+        peer = (sockaddr *)&peer4;
+        peer_len = sizeof(peer4);
+    }
+    else
+    {
+        stampaln("[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
     }
 
     int fd = socket(family, SOCK_STREAM, IPPROTO_SCTP);
-    if (fd < 0) { perror("[SCTP] socket"); return -1; }
+    if (fd < 0)
+    {
+        perror("[SCTP] socket");
+        return -1;
+    }
 
     // Parametri iniziali (facoltativi)
-    sctp_initmsg init{}; init.sinit_num_ostreams = 2; init.sinit_max_instreams = 2; init.sinit_max_attempts = 4;
-    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
+    struct sctp_initmsg init = {0};
+    init.sinit_num_ostreams = 10;
+    init.sinit_max_instreams = 10;
+    init.sinit_max_attempts = 8;
+    init.sinit_max_init_timeo = 8000;
+    setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
 
+    // heartbeat attivi e frequenti
     struct sctp_paddrparams sp = {0};
-    sp.spp_flags = SPP_HB_ENABLE;          // abilita heartbeat
-    sp.spp_hbinterval = 30000;             // 30s
+    sp.spp_flags = SPP_HB_ENABLE;
+    sp.spp_hbinterval = 15000; // 15s
     setsockopt(fd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &sp, sizeof(sp));
+
+    // niente autoclose (se il peer lo usa, non puoi impedirlo, ma lato tuo non lo attivare)
+    int ac = 0;
+    setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &ac, sizeof(ac));
+
     // Eventi per debug (facoltativo ma consigliato)
     enable_sctp_events(fd);
 
     // Rendi NON-blocking, così copriamo tutti i casi (anche se qualche altro punto del codice imposta O_NONBLOCK)
-    if (set_nonblock(fd, true) < 0) { perror("[SCTP] fcntl(O_NONBLOCK)"); close(fd); return -1; }
+    if (set_nonblock(fd, true) < 0)
+    {
+        perror("[SCTP] fcntl(O_NONBLOCK)");
+        close(fd);
+        return -1;
+    }
 
-    stampaln(  "[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
+    stampaln("[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
     int rc = connect(fd, peer, peer_len);
-    if (rc == 0) {
-        stampaln( "OK (immediato)\n");
+    if (rc == 0)
+    {
+        stampaln("OK (immediato)\n");
         return fd;
     }
 
-    if (rc < 0 && errno != EINPROGRESS && errno != EINTR) {
+    if (rc < 0 && errno != EINPROGRESS && errno != EINTR)
+    {
         stampaln("FAILED (errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
 
     // Attendi il completamento della connect
-    struct pollfd p{ .fd = fd, .events = POLLOUT, .revents = 0 };
-    rc = poll(&p, 1, -1); // bloccante  
-    if (rc == 0) {
+    struct pollfd p{.fd = fd, .events = POLLOUT, .revents = 0};
+    rc = poll(&p, 1, -1); // bloccante
+    if (rc == 0)
+    {
         stampaln("FAILED (timeout 5000 ms)\n");
         close(fd);
         return -1;
     }
-    if (rc < 0) {
+    if (rc < 0)
+    {
         stampaln("FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
 
     // Verifica l’esito reale
-    int soerr = 0; socklen_t sl = sizeof(soerr);
-    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) < 0) {
-        perror("[SCTP] getsockopt(SO_ERROR)"); close(fd); return -1;
+    int soerr = 0;
+    socklen_t sl = sizeof(soerr);
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) < 0)
+    {
+        perror("[SCTP] getsockopt(SO_ERROR)");
+        close(fd);
+        return -1;
     }
-    if (soerr != 0) {
+    if (soerr != 0)
+    {
         stampaln("FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
         close(fd);
         return -1;
@@ -219,7 +281,8 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
     stampaln("in sctp send data func\n");
     stampaln("data.len is %d\n", data.len);
 
-    if(socket_fd < 0) {
+    if (socket_fd < 0)
+    {
         stampaln("[SCTP] Invalid socket\n");
         return -1;
     }
@@ -229,19 +292,20 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 
     int sent_len = sctp_sendmsg(
         socket_fd,
-        data.buffer,   // puntatore ai byte
-        data.len,      // lunghezza
-        NULL, 0,       // dest addr = NULL perché il socket è già connesso
-        ppid,          // Payload Protocol Identifier
-        0,             // flags
-        0,             // stream = 0
-        0,             // timetolive
-        0              // context
+        data.buffer, // puntatore ai byte
+        data.len,    // lunghezza
+        NULL, 0,     // dest addr = NULL perché il socket è già connesso
+        ppid,        // Payload Protocol Identifier
+        0,           // flags
+        0,           // stream = 0
+        0,           // timetolive
+        0            // context
     );
 
     stampaln("after getting sent_len: %d\n", sent_len);
 
-    if(sent_len == -1) {
+    if (sent_len == -1)
+    {
         perror("[SCTP] sctp_send_data");
         return -1;
     }
@@ -251,16 +315,16 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 
 int sctp_send_data_X2AP(int &socket_fd, sctp_buffer_t &data)
 {
-  int sent_len = sctp_sendmsg(socket_fd, (void*)(&(data.buffer[0])), data.len,
-                  NULL, 0, (uint32_t) X2AP_PPID, 0, 0, 0, 0);
+    int sent_len = sctp_sendmsg(socket_fd, (void *)(&(data.buffer[0])), data.len,
+                                NULL, 0, (uint32_t)X2AP_PPID, 0, 0, 0, 0);
 
-  if(sent_len == -1) {
-    perror("[SCTP] sctp_send_data");
-    exit(1);
-  }
-  return sent_len;
+    if (sent_len == -1)
+    {
+        perror("[SCTP] sctp_send_data");
+        exit(1);
+    }
+    return sent_len;
 }
-
 
 // esempio definizione
 int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
@@ -276,44 +340,53 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
                                 sizeof(data.buffer),
                                 NULL, 0, &sinfo, &flags);
 
-    if (recv_len < 0) {
+    if (recv_len < 0)
+    {
         perror("[SCTP] recv error");
         return SCTP_RECV_ERR;
     }
-    if (recv_len == 0) {
-        stampaln( "[SCTP] Connection closed by peer\n");
+    if (recv_len == 0)
+    {
+        stampaln("[SCTP] Connection closed by peer\n");
         close(socket_fd);
         return SCTP_RECV_ERR;
     }
 
     // Caso 1: è una notifica SCTP (non è payload E2AP)
-    if (flags & MSG_NOTIFICATION) {
+    if (flags & MSG_NOTIFICATION)
+    {
         union sctp_notification *snp = (union sctp_notification *)data.buffer;
-        switch (snp->sn_header.sn_type) {
-            case SCTP_ASSOC_CHANGE: {
-                struct sctp_assoc_change *sac = &snp->sn_assoc_change;
-                stampaln("[SCTP_EVENT] ASSOC_CHANGE state=%d error=%d out=%u in=%u",
-                         sac->sac_state, sac->sac_error, sac->sac_outbound_streams, sac->sac_inbound_streams);
-                break;
-            }
-            case SCTP_SHUTDOWN_EVENT:{
-               stampaln("[SCTP_EVENT] SHUTDOWN\n");
-                break;
-            }
-            case SCTP_REMOTE_ERROR:{
-                struct sctp_remote_error *se = &snp->sn_remote_error;
-                uint16_t cause = ntohs(se->sre_error);
-                stampaln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
-                break;
-            }
-            case SCTP_SEND_FAILED_EVENT:{
-                stampaln("[SCTP_EVENT] SEND_FAILED\n");
-                break;
-            }
-            default:{
-                stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
-                break;
-            }
+        switch (snp->sn_header.sn_type)
+        {
+        case SCTP_ASSOC_CHANGE:
+        {
+            struct sctp_assoc_change *sac = &snp->sn_assoc_change;
+            stampaln("[SCTP_EVENT] ASSOC_CHANGE state=%d error=%d out=%u in=%u",
+                     sac->sac_state, sac->sac_error, sac->sac_outbound_streams, sac->sac_inbound_streams);
+            break;
+        }
+        case SCTP_SHUTDOWN_EVENT:
+        {
+            stampaln("[SCTP_EVENT] SHUTDOWN\n");
+            break;
+        }
+        case SCTP_REMOTE_ERROR:
+        {
+            struct sctp_remote_error *se = &snp->sn_remote_error;
+            uint16_t cause = ntohs(se->sre_error);
+            stampaln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
+            break;
+        }
+        case SCTP_SEND_FAILED_EVENT:
+        {
+            stampaln("[SCTP_EVENT] SEND_FAILED\n");
+            break;
+        }
+        default:
+        {
+            stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
+            break;
+        }
         }
         return SCTP_RECV_SKIP; // nessun payload da decodificare
     }
@@ -321,16 +394,19 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     // Caso 2: è un vero DATA chunk
     uint32_t ppid = ntohl(sinfo.sinfo_ppid);
     stampaln("[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
-            recv_len, ppid, sinfo.sinfo_stream);
+             recv_len, ppid, sinfo.sinfo_stream);
 
     // salviamo il dato
     data.len = recv_len;
 
-    // se è PPID=60 => payload E2AP valido //Ometto questo controllo 
+    // se è PPID=60 => payload E2AP valido //Ometto questo controllo
     return SCTP_RECV_E2AP;
-    if (ppid >= 70 && ppid <= 79) {
+    if (ppid >= 70 && ppid <= 79)
+    {
         return SCTP_RECV_E2AP;
-    } else {
+    }
+    else
+    {
         stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
         return SCTP_RECV_SKIP;
     }
