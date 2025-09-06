@@ -115,15 +115,18 @@ void sctp_print_events(int fd)
 }
 
 static void enable_sctp_events(int fd) {
-    struct sctp_event_subscribe ev = {};
+    struct sctp_event_subscribe ev = {0};
     ev.sctp_data_io_event = 1;
     ev.sctp_association_event = 1;
+    ev.sctp_address_event = 1;
     ev.sctp_shutdown_event = 1;
     ev.sctp_send_failure_event = 1;
     ev.sctp_partial_delivery_event = 1;
     ev.sctp_adaptation_layer_event = 1;
-    ev.sctp_address_event = 1;
-    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
+    ev.sctp_peer_error_event = 1;    
+    ev.sctp_authentication_event = 1;
+
+    setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
 }
 
 static int set_nonblock(int fd, bool on) {
@@ -289,14 +292,18 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
         switch (snp->sn_header.sn_type) {
             case SCTP_ASSOC_CHANGE: {
                 struct sctp_assoc_change *sac = &snp->sn_assoc_change;
-               stampaln( "[SCTP_EVENT] ASSOC_CHANGE state=%d\n", sac->sac_state);
+                stampaln("[SCTP_EVENT] ASSOC_CHANGE state=%d error=%d out=%u in=%u",
+                         sac->sac_state, sac->sac_error, sac->sac_outbound_streams, sac->sac_inbound_streams);
                 break;
             }
             case SCTP_SHUTDOWN_EVENT:
                stampaln("[SCTP_EVENT] SHUTDOWN\n");
                 break;
             case SCTP_REMOTE_ERROR:
-                stampaln("[SCTP_EVENT] REMOTE_ERROR\n");
+                struct sctp_remote_error *se = &snp->sn_remote_error;
+                uint16_t cause = ntohs(se->sre_error);
+                stampaln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
+                // opzionale: dump dei primi byte di se->sre_data per capire la 'Cause' (Protocol Violation, User Initiated, ecc.)
                 break;
             case SCTP_SEND_FAILED_EVENT:
                 stampaln("[SCTP_EVENT] SEND_FAILED\n");
