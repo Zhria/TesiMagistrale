@@ -155,6 +155,10 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     sctp_initmsg init{}; init.sinit_num_ostreams = 2; init.sinit_max_instreams = 2; init.sinit_max_attempts = 4;
     (void)setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
 
+    struct sctp_paddrparams sp = {0};
+    sp.spp_flags = SPP_HB_ENABLE;          // abilita heartbeat
+    sp.spp_hbinterval = 30000;             // 30s
+    setsockopt(fd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &sp, sizeof(sp));
     // Eventi per debug (facoltativo ma consigliato)
     enable_sctp_events(fd);
 
