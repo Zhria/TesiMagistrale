@@ -194,16 +194,11 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
 
     // Parametri iniziali (facoltativi)
     struct sctp_initmsg init = {0};
-    init.sinit_num_ostreams = 10;
-    init.sinit_max_instreams = 10;
+    init.sinit_num_ostreams = 2;
+    init.sinit_max_instreams = 2;
     init.sinit_max_attempts = 8;
     init.sinit_max_init_timeo = 8000;
     setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
-
-    
-    // niente autoclose (se il peer lo usa, non puoi impedirlo, ma lato tuo non lo attivare)
-    int ac = 0;
-    setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &ac, sizeof(ac));
 
     // Eventi per debug (facoltativo ma consigliato)
     enable_sctp_events(fd);
