@@ -200,13 +200,7 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     init.sinit_max_init_timeo = 8000;
     setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
 
-    // heartbeat attivi e frequenti
-    struct sctp_paddrparams sp = {0};
-    memcpy(&sp.spp_address, peer, peer_len);   // <— IMPORTANTISSIMO
-    sp.spp_flags = SPP_HB_ENABLE;
-    sp.spp_hbinterval = 15000;
-    setsockopt(fd, IPPROTO_SCTP, SCTP_PEER_ADDR_PARAMS, &sp, sizeof(sp));
-
+    
     // niente autoclose (se il peer lo usa, non puoi impedirlo, ma lato tuo non lo attivare)
     int ac = 0;
     setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &ac, sizeof(ac));
