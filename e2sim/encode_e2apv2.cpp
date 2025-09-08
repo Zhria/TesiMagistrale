@@ -178,10 +178,18 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   e2gnb->global_gNB_ID = *gnb;
 
   // Metti un CU-UP-ID (>0), altrimenti e2term mostra cuupid=-1
-  /*e2gnb->gNB_CU_UP_ID = (GNB_CU_UP_ID_t*)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
+  e2gnb->gNB_CU_UP_ID = (GNB_CU_UP_ID_t*)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
   if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, 1) != 0) {
     fprintf(stderr, "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
-  }*/
+  }
+
+
+  // Metti un CU-UP-ID (>0), altrimenti e2term mostra cuupid=-1
+  e2gnb->gNB_DU_ID = (GNB_DU_ID_t*)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
+  if (asn_long2INTEGER(e2gnb->gNB_DU_ID, 1) != 0) {
+    fprintf(stderr, "asn_long2INTEGER(gNB_DU_ID) failed\n");
+  }
+
 
   GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t*)calloc(1, sizeof(*globale2nodeid));
   globale2nodeid->present    = GlobalE2node_ID_PR_gNB;
