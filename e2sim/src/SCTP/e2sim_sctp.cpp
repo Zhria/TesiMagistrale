@@ -135,33 +135,6 @@ void sctp_print_events(int fd)
     }
 }
 
-static void enable_sctp_events(int fd)
-{
-    struct sctp_event_subscribe ev = {0};
-    ev.sctp_data_io_event = 1;
-    ev.sctp_association_event = 1;
-    ev.sctp_address_event = 1;
-    ev.sctp_shutdown_event = 1;
-    ev.sctp_send_failure_event = 1;
-    ev.sctp_partial_delivery_event = 1;
-    ev.sctp_adaptation_layer_event = 1;
-    ev.sctp_peer_error_event = 1;
-    ev.sctp_authentication_event = 1;
-
-    setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
-}
-
-static int set_nonblock(int fd, bool on)
-{
-    int fl = fcntl(fd, F_GETFL, 0);
-    if (fl < 0)
-        return -1;
-    if (on)
-        fl |= O_NONBLOCK;
-    else
-        fl &= ~O_NONBLOCK;
-    return fcntl(fd, F_SETFL, fl);
-}
 
 int sctp_start_client(const char *server_ip_str, const int server_port)
 {
@@ -202,8 +175,18 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     int t = 0;  // 0 = disabilita
     setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &t, sizeof(t));
     // Eventi per debug (facoltativo ma consigliato)
-    enable_sctp_events(fd);
+    struct sctp_event_subscribe ev = {0};
+    ev.sctp_data_io_event = 1;
+    ev.sctp_association_event = 1;
+    ev.sctp_address_event = 1;
+    ev.sctp_shutdown_event = 1;
+    ev.sctp_send_failure_event = 1;
+    ev.sctp_partial_delivery_event = 1;
+    ev.sctp_adaptation_layer_event = 1;
+    ev.sctp_peer_error_event = 1;
+    ev.sctp_authentication_event = 1;
 
+    setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
 
     stampaln("[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
     int rc = connect(fd, peer, peer_len);
