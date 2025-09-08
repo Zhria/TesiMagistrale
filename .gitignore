@@ -11,4 +11,4 @@ n3iwf_e2logger/n3iwf_e2.json
 n3iwf_e2logger/n3iwf_e2.json.kpm.log
 
 #Cmakefiles ignore
-e2sim/build/CMakeFiles/*.*
+e2sim/build/*
