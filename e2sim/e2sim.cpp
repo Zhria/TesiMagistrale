@@ -154,7 +154,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   memcpy(data.buffer, buffer, er.encoded); 
 
   stampaln("after encoding message\n");
-  client_fd = sctp_start_client(ops.server_ip, ops.server_port);
+  client_fd = sctp_start_client(ops.server_ip, ops.server_port, ops.local_ip);
 
   if(client_fd == -1) {
     stampaln("[SCTP] Unable to start SCTP client\n");

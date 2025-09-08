@@ -69,6 +69,7 @@ options_t read_input_options(int argc, char *argv[])
   options_t options;
   options.server_ip   = (char*)DEFAULT_SCTP_IP;
   options.server_port = X2AP_SCTP_PORT;
+  options.local_ip = (char*)DEFAULT_LOCAL_IP;
  
   // Log workdir se definito (evita costruzione da NULL)
   {
@@ -133,6 +134,14 @@ options_t read_input_options(int argc, char *argv[])
         ricAddr = cfg["ricAddress"].as<std::string>("");
       }
 
+      std::string localAddr;
+      if (cfg["localAddress"] && cfg["localAddress"].IsSequence() && cfg["localAddress"].size() > 0) {
+        localAddr = cfg["localAddress"][0].as<std::string>("");
+      } else if (cfg["localAddress"] && cfg["localAddress"].IsScalar()) {
+        // fallback: se qualcuno ha messo direttamente una stringa
+        localAddr = cfg["localAddress"].as<std::string>("");
+      }
+
       int ricPort = -1;
       if (cfg["ricPort"]) {
         ricPort = cfg["ricPort"].as<int>(-1);
@@ -144,6 +153,13 @@ options_t read_input_options(int argc, char *argv[])
       }
 
       // assegna a options (duplichiamo la stringa per avere storage proprio)
+      char* locAddr = dup_cstr(localAddr);
+      if (!locAddr) {
+        LOG_E("Out of memory while duplicating localAddress\n");
+        std::exit(1);
+      }
+
+            // assegna a options (duplichiamo la stringa per avere storage proprio)
       char* ipdup = dup_cstr(ricAddr);
       if (!ipdup) {
         LOG_E("Out of memory while duplicating ricAddress\n");
@@ -151,6 +167,7 @@ options_t read_input_options(int argc, char *argv[])
       }
       options.server_ip   = ipdup;
       options.server_port = ricPort;
+      options.local_ip = locAddr;
 
       LOG_I("Loaded RIC from config: %s:%d", options.server_ip, options.server_port);
     } catch (const std::exception& e) {

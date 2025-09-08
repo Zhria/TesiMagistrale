@@ -135,108 +135,96 @@ void sctp_print_events(int fd)
     }
 }
 
-
-int sctp_start_client(const char *server_ip_str, const int server_port)
+// Ritorna fd aperto o -1 su errore
+int sctp_start_client(const char *server_ip_str, int server_port, const char *local_ip /* può essere nullptr o "" */)
 {
-    int family = AF_UNSPEC;
-    sockaddr_in peer4{};
-    sockaddr_in6 peer6{};
-    sockaddr *peer = nullptr;
-    socklen_t peer_len = 0;
-
-    if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) == 1)
-    {
-        family = AF_INET;
-        peer4.sin_family = AF_INET;
-        peer4.sin_port = htons(server_port);
-        peer = (sockaddr *)&peer4;
-        peer_len = sizeof(peer4);
-    }
-    else
-    {
+    sockaddr_in peer4{};  // solo IPv4 per semplicità
+    if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) != 1) {
         stampaln("[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
     }
+    peer4.sin_family = AF_INET;
+    peer4.sin_port   = htons(server_port);
 
-    int fd = socket(family, SOCK_STREAM, IPPROTO_SCTP);
-    if (fd < 0)
-    {
-        perror("[SCTP] socket");
-        return -1;
+    // socket one-to-one SCTP
+    int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
+    if (fd < 0) { perror("[SCTP] socket"); return -1; }
+
+    // *** BIND LOCALE (chiave della fix) ***
+    if (local_ip && *local_ip) {
+        sockaddr_in local{};
+        local.sin_family = AF_INET;
+        local.sin_port   = htons(0);             // porta effimera
+        if (inet_pton(AF_INET, local_ip, &local.sin_addr) != 1) {
+            stampaln("[SCTP] invalid local ip: %s\n", local_ip);
+            close(fd);
+            return -1;
+        }
+        if (bind(fd, (sockaddr*)&local, sizeof(local)) < 0) {
+            stampaln("[SCTP] bind(%s) failed: errno=%d (%s)\n", local_ip, errno, strerror(errno));
+            close(fd);
+            return -1;
+        }
     }
 
-    // Parametri iniziali (facoltativi)
-    struct sctp_initmsg init = {0};
-    init.sinit_num_ostreams = 2;
-    init.sinit_max_instreams = 2;
-    init.sinit_max_attempts = 8;
+    // Parametri INIT (prima della connect)
+    struct sctp_initmsg init{};
+    init.sinit_num_ostreams   = 2;
+    init.sinit_max_instreams  = 2;
+    init.sinit_max_attempts   = 8;
     init.sinit_max_init_timeo = 8000;
-    setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
-    int t = 0;  // 0 = disabilita
-    setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &t, sizeof(t));
-    // Eventi per debug (facoltativo ma consigliato)
-    struct sctp_event_subscribe ev = {0};
-    ev.sctp_data_io_event = 1;
-    ev.sctp_association_event = 1;
-    ev.sctp_address_event = 1;
-    ev.sctp_shutdown_event = 1;
-    ev.sctp_send_failure_event = 1;
-    ev.sctp_partial_delivery_event = 1;
-    ev.sctp_adaptation_layer_event = 1;
-    ev.sctp_peer_error_event = 1;
-    ev.sctp_authentication_event = 1;
+    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_INITMSG, &init, sizeof(init));
 
-    setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
+    int t = 0; // disabilita autoclose
+    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_AUTOCLOSE, &t, sizeof(t));
 
-    stampaln("[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
-    int rc = connect(fd, peer, peer_len);
-    if (rc == 0)
-    {
+    struct sctp_event_subscribe ev{};
+    ev.sctp_data_io_event           = 1;
+    ev.sctp_association_event       = 1;
+    ev.sctp_address_event           = 1;
+    ev.sctp_shutdown_event          = 1;
+    ev.sctp_send_failure_event      = 1;
+    ev.sctp_partial_delivery_event  = 1;
+    ev.sctp_adaptation_layer_event  = 1;
+    ev.sctp_peer_error_event        = 1;
+    ev.sctp_authentication_event    = 1;
+    (void)setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
+
+    stampaln("[SCTP] Connecting %s:%d (local=%s)... ",
+             server_ip_str, server_port, (local_ip && *local_ip) ? local_ip : "auto");
+
+    // connect bloccante con poll per robustezza
+    if (connect(fd, (sockaddr*)&peer4, sizeof(peer4)) == 0) {
         stampaln("OK (immediato)\n");
         return fd;
     }
-
-    if (rc < 0 && errno != EINPROGRESS && errno != EINTR)
-    {
+    if (errno != EINPROGRESS && errno != EINTR) {
         stampaln("FAILED (errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
 
-    // Attendi il completamento della connect
     struct pollfd p{.fd = fd, .events = POLLOUT, .revents = 0};
-    rc = poll(&p, 1, -1); // bloccante
-    if (rc == 0)
-    {
-        stampaln("FAILED (timeout 5000 ms)\n");
-        close(fd);
-        return -1;
-    }
-    if (rc < 0)
-    {
-        stampaln("FAILED (poll errno=%d: %s)\n", errno, strerror(errno));
+    int rc = poll(&p, 1, -1);
+    if (rc <= 0) {
+        stampaln("FAILED (poll rc=%d, errno=%d: %s)\n", rc, errno, strerror(errno));
         close(fd);
         return -1;
     }
 
-    // Verifica l’esito reale
-    int soerr = 0;
-    socklen_t sl = sizeof(soerr);
-    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) < 0)
-    {
+    int soerr = 0; socklen_t sl = sizeof(soerr);
+    if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &soerr, &sl) < 0) {
         perror("[SCTP] getsockopt(SO_ERROR)");
         close(fd);
         return -1;
     }
-    if (soerr != 0)
-    {
+    if (soerr) {
         stampaln("FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
         close(fd);
         return -1;
     }
 
     stampaln("OK\n");
-
     return fd;
 }
 
