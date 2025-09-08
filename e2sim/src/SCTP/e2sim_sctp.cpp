@@ -204,13 +204,6 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     // Eventi per debug (facoltativo ma consigliato)
     enable_sctp_events(fd);
 
-    // Rendi NON-blocking, così copriamo tutti i casi (anche se qualche altro punto del codice imposta O_NONBLOCK)
-    if (set_nonblock(fd, true) < 0)
-    {
-        perror("[SCTP] fcntl(O_NONBLOCK)");
-        close(fd);
-        return -1;
-    }
 
     stampaln("[SCTP] Connecting to %s:%d ... ", server_ip_str, server_port);
     int rc = connect(fd, peer, peer_len);
@@ -260,9 +253,6 @@ int sctp_start_client(const char *server_ip_str, const int server_port)
     }
 
     stampaln("OK\n");
-
-    // (opzionale) torna blocking per il resto della logica
-    (void)set_nonblock(fd, false);
 
     return fd;
 }
