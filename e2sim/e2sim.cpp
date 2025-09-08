@@ -90,9 +90,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   
   options_t ops = read_input_options(argc, argv);
 
-  //E2 Agent will automatically restart upon sctp disconnection
-  //  int server_fd = sctp_start_server(ops.server_ip, ops.server_port);
-
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
   
   std::vector<ran_func_info> all_funcs;
