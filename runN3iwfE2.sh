@@ -39,6 +39,7 @@ if [ -z "$PARAM_AVVIO" ]; then
     PARAM_AVVIO=""
 fi
 
+sudo ./setup-gtp5g.sh
 # Run con docker compose
 sudo docker compose -f dcb.yaml up $PARAM_AVVIO
 
