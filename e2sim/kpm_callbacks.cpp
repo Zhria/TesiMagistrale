@@ -42,6 +42,8 @@ static E2Sim e2;
 
 int main(int argc, char *argv[])
 {
+  //Sleep per 5 secondi per permettere al n3iwf di avviarsi e di iniziar a loggare.
+  std::this_thread::sleep_for(std::chrono::seconds(5));
   stampaln("Starting E2 Simulator with KPM Callbacks\n");
   clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
 
