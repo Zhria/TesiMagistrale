@@ -125,7 +125,7 @@ func action(cliCtx *cli.Context) error {
 		return err
 	}
 
-	logger.InitCustomLogger(factory.N3iwfE2DefaultLogPath,100)
+	logger.InitCustomLogger(factory.N3iwfE2DefaultLogPath, 100)
 
 	go startSnapshot(n3iwfApp)
 
@@ -180,8 +180,8 @@ func startSnapshot(n3iwfApp *service.N3iwfApp) {
 func startKPMLogger() {
 	logger.MainLog.Infof("INIT KPM Logger")
 	for {
-		storeData := snapshot.Agg.Snapshot()
-		logger.LogKPMMetrics(storeData)
+		//storeData := snapshot.Agg.Snapshot()
+		//logger.LogKPMMetrics(storeData)
 		time.Sleep(500 * time.Millisecond) // Sleep for 500 milliseconds
 	}
 	// This function will continuously log KPM metrics every 500 milliseconds.
