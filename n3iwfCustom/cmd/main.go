@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/free5gc/n3iwf/internal/logger"
+	"github.com/free5gc/n3iwf/internal/snapshot"
 	"github.com/free5gc/n3iwf/pkg/factory"
 	"github.com/free5gc/n3iwf/pkg/service"
 	logger_util "github.com/free5gc/util/logger"
@@ -166,11 +167,11 @@ func startSnapshot(n3iwfApp *service.N3iwfApp) {
 
 	for {
 		//ADD KPM LOGGER VERSION and Config N3IWF
-		/*n3iwfContext := snapshot.MakeN3IWFContextSnapshotFull(n3iwfApp.Context())
+		n3iwfContext := snapshot.MakeN3IWFContextSnapshotFull(n3iwfApp.Context())
 		logger.LogKPM_N3IWF_CONTEXT(map[string]any{
 			"config":   n3iwfApp.Config(),
 			"n3iwfctx": n3iwfContext,
-		})*/
+		})
 
 		time.Sleep(time.Second)
 	}
@@ -179,8 +180,8 @@ func startSnapshot(n3iwfApp *service.N3iwfApp) {
 func startKPMLogger() {
 	logger.MainLog.Infof("INIT KPM Logger")
 	for {
-		//storeData := snapshot.Agg.Snapshot()
-		//logger.LogKPMMetrics(storeData)
+		storeData := snapshot.Agg.Snapshot()
+		logger.LogKPMMetrics(storeData)
 		time.Sleep(500 * time.Millisecond) // Sleep for 500 milliseconds
 	}
 	// This function will continuously log KPM metrics every 500 milliseconds.
