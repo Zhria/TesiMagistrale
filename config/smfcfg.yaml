@@ -88,7 +88,7 @@ configuration:
     enable: true # true or false
     expireTime: 16s # default is 6 seconds
     maxRetryTimes: 3 # the max number of retransmission
-  nrfUri: http://nrf.free5gc.org:8000 # a valid URI of NRF
+  nrfUri: http://10.100.200.17:8000 # a valid URI of NRF
   nrfCertPem: cert/nrf.pem # NRF Certificate
   urrPeriod: 10 # default usage report period in seconds
   urrThreshold: 1000 # default usage report threshold in bytes
