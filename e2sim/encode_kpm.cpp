@@ -67,9 +67,9 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   et->ric_EventTriggerFormat_Type = 1; // KPM EventTrigger Format 1
   ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
-  // --- Report style: CU-UP (Type 5) con Header/Message Format 1/1
+  // --- Report style: CU-UP (Type 4) con Header/Message Format 1/1
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
-  rs->ric_ReportStyle_Type = 5; // usa 5 se il tuo xApp lo richiede
+  rs->ric_ReportStyle_Type = 4; // usa 4 se il tuo xApp lo richiede
   set_octet_string(&rs->ric_ReportStyle_Name, "KPM v3 CU-UP", strlen("KPM v3 CU-UP"));
   rs->ric_IndicationHeaderFormat_Type = 1;
   rs->ric_IndicationMessageFormat_Type = 1;
