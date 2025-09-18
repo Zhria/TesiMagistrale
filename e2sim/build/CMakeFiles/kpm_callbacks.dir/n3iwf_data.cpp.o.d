@@ -348,6 +348,7 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Format-Type.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-ReportStyle-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader-Format1.h \
@@ -381,7 +382,8 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecordItem.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeReal.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NULL.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-PDU.h \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \

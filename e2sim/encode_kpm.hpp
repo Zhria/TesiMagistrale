@@ -15,6 +15,7 @@ extern "C" {
   #include "E2SM-KPM-RANfunction-Description.h"
   #include "RIC-EventTriggerStyle-Item.h"
   #include "RIC-ReportStyle-Item.h"
+  #include "asn_SEQUENCE_OF.h"
 
   // Header/Message v3 (formati)
   #include "E2SM-KPM-IndicationHeader.h"
@@ -34,13 +35,13 @@ extern "C" {
   #include "MeasurementRecord.h"
   #include "MeasurementRecordItem.h"
 
-  #include "asn_application.h"
-  #include "asn_internal.h"
-  #include "OCTET_STRING.h"
+  #include "MeasurementInfo-Action-Item.h"
+
   #include "INTEGER.h"
-  #include "TimeStamp.h"
 
   #include "E2SM-KPM-RANfunction-Description.h"
+  #include "E2SM-KPM-ActionDefinition.h" // or the correct header where MeasurementInfoAction_Item_t is defined
+
   #include "RIC-EventTriggerStyle-Item.h"
   #include "RIC-ReportStyle-Item.h"
 
