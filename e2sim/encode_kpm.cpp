@@ -1,1768 +1,218 @@
-#include <stdio.h>
-#include <string.h>
-#include <iostream>
-#include <unistd.h>
-#include <vector>
-
+// encode_kpm.cpp
 #include "encode_kpm.hpp"
 
-using namespace std;
-
-void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc_desc) {
-
-  uint8_t *buf = (uint8_t*)"ORAN-E2SM-KPM";
-  uint8_t *buf2 = (uint8_t*)"KPM monitor";
-  uint8_t *buf3 = (uint8_t*)"1.3.6.1.4.1.53148.1.1.2.2";
-
-  OCTET_STRING_t *sname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sname->buf = (uint8_t*)calloc(1,13);
-  
-  memcpy(sname->buf, buf, 13);
-  sname->size = strlen((char*)buf);
-  ranfunc_desc->ranFunction_Name.ranFunction_ShortName = *sname;
-
-  long* inst = (long*)calloc(1, sizeof(long));
-  *inst = 1;
-
-  //  ranfunc_desc->ranFunction_Name.ranFunction_Description = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  ranfunc_desc->ranFunction_Name.ranFunction_Description.buf = (uint8_t*)calloc(1,strlen((char*)buf2));
-  memcpy(ranfunc_desc->ranFunction_Name.ranFunction_Description.buf, buf2, strlen((char*)buf2));
-  ranfunc_desc->ranFunction_Name.ranFunction_Description.size = strlen((char*)buf2);
-  ranfunc_desc->ranFunction_Name.ranFunction_Instance = inst;
-
-
-  //  ranfunc_desc->ranFunction_Name.ranFunction_E2SM_OID = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  ranfunc_desc->ranFunction_Name.ranFunction_E2SM_OID.buf = (uint8_t*)calloc(1,strlen((char*)buf3));
-  memcpy(ranfunc_desc->ranFunction_Name.ranFunction_E2SM_OID.buf, buf3, strlen((char*)buf3));
-  ranfunc_desc->ranFunction_Name.ranFunction_E2SM_OID.size = strlen((char*)buf3);
-  
-
-  RIC_EventTriggerStyle_List_t *trigger_style =
-    (RIC_EventTriggerStyle_List_t*)calloc(1, sizeof(RIC_EventTriggerStyle_List_t));
-  trigger_style->ric_EventTriggerStyle_Type = 1;
-  uint8_t *buf4 = (uint8_t*)"Periodic report";
-  trigger_style->ric_EventTriggerStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf4));
-  memcpy(trigger_style->ric_EventTriggerStyle_Name.buf, buf4, strlen((char*)buf4));
-  trigger_style->ric_EventTriggerStyle_Name.size = strlen((char*)buf4);
-  trigger_style->ric_EventTriggerFormat_Type = 5;
-
-
-  ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List =
-    (E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_EventTriggerStyle_List*)calloc(1,sizeof(E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_EventTriggerStyle_List));
-
-  int ret = ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_EventTriggerStyle_List->list , trigger_style);
-
-  RIC_ReportStyle_List_t *report_style5 = (RIC_ReportStyle_List_t*)calloc(1, sizeof(RIC_ReportStyle_List_t));
-  report_style5->ric_ReportStyle_Type = 5;
-
-  uint8_t *buf9 = (uint8_t*)"O-CU-UP Measurement Container for the 5GC connected deployment";
-
-  //  report_style3->ric_ReportStyle_Name = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  report_style5->ric_ReportStyle_Name.buf = (uint8_t*)calloc(1,strlen((char*)buf9));
-  memcpy(report_style5->ric_ReportStyle_Name.buf, buf9, strlen((char*)buf9));
-  report_style5->ric_ReportStyle_Name.size = strlen((char*)buf9);
-  report_style5->ric_IndicationHeaderFormat_Type = 1;
-  report_style5->ric_IndicationMessageFormat_Type = 1;
-
-
-
-  ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List =
-    (E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_ReportStyle_List*)calloc(1,sizeof(E2SM_KPM_RANfunction_Description::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item::E2SM_KPM_RANfunction_Description__e2SM_KPM_RANfunction_Item__ric_ReportStyle_List));
-  
-  ASN_SEQUENCE_ADD(&ranfunc_desc->e2SM_KPM_RANfunction_Item.ric_ReportStyle_List->list, report_style5);
-
+// -----------------------------
+// Utility locali
+// -----------------------------
+static inline void set_octet_string(OCTET_STRING_t* dst, const void* src, size_t len) {
+  if (!dst) return;
+  dst->buf  = (uint8_t*)calloc(1, len);
+  dst->size = len;
+  if (len && src) memcpy(dst->buf, src, len);
 }
 
-void encode_kpm_ocuup_user_level(RAN_Container_t *ranco) {
-
-  uint8_t *buf = (uint8_t*)"2020.06.13 13:01:05.222";
-  Timestamp_t *ts = (Timestamp_t*)calloc(1,sizeof(Timestamp_t));
-  ts->buf = (uint8_t*)calloc(strlen((char*)buf),1);
-  ts->size = strlen((char*)buf);
-  memcpy(ts->buf,buf,ts->size);
-
-  printf("enc1\n");
-
-  CU_UP_Usage_Report_CellResourceReportItem_t  *report_item =
-    (CU_UP_Usage_Report_CellResourceReportItem_t*)calloc(1,sizeof(CU_UP_Usage_Report_CellResourceReportItem_t));
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, buf2, plmnidstr->size);
-
-  printf("enc2\n");  
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, buf3, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
- 
-  printf("enc3\n");
-  
-  report_item->nRCGI = *nrcgi;
-
-  CU_UP_Usage_Report_UeResourceReportItem *ue_report_item =
-    (CU_UP_Usage_Report_UeResourceReportItem*)calloc(1,sizeof(CU_UP_Usage_Report_UeResourceReportItem));
-
-  printf("enc3.2\n");   
-  
-  uint8_t* crnti_str = (uint8_t*)"1111";
-  OCTET_STRING *crnti = (OCTET_STRING*)calloc(1,sizeof(OCTET_STRING));
-  crnti->buf = (uint8_t*)calloc(1,4);
-  
-  printf("enc3.3\n");
-  
-  crnti->size = strlen((char*)crnti_str);
-
-  printf("enc3.4\n");
-  memcpy(crnti->buf, crnti_str, crnti->size);
-
-  printf("enc4\n");
-
-  INTEGER_t *bytesdl = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer[1];
-  buffer[0]= 40000;
-  bytesdl->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesdl->buf, buffer,1);
-  bytesdl->size = 1;
-
-  INTEGER_t *bytesul = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer1[1];
-  buffer1[0] = 50000;
-  bytesul->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesul->buf, buffer1, 1);
-  bytesul->size = 1;  
-
-  
-  ue_report_item->c_RNTI = *crnti;
-  ue_report_item->pDCPBytesDL = bytesdl;
-  ue_report_item->pDCPBytesUL = bytesul;
-
-
-  ASN_SEQUENCE_ADD(&report_item->ueResourceReportList.list, ue_report_item);  
-
-  ranco->timestamp = *ts;
-  ranco->reportContainer.present = RAN_Container__reportContainer_PR_oCU_UP_UE;
-  ASN_SEQUENCE_ADD(&ranco->reportContainer.choice.oCU_UP_UE.cellResourceReportList.list, report_item);
-
-  xer_fprint(stderr, &asn_DEF_RAN_Container, ranco);
-
-}
-
-void encode_kpm_ocucp_user_level(RAN_Container_t *ranco,
-				 uint8_t *plmnid_buf,
-				 uint8_t *nrcellid_buf,
-				 uint8_t *crnti_buf,
-				 const uint8_t *serving_buf,
-				 const uint8_t *neighbor_buf) {
-  uint8_t *buf = (uint8_t*)"2020.06.13 13:01:05.222";
-  Timestamp_t *ts = (Timestamp_t*)calloc(1,sizeof(Timestamp_t));
-  ts->buf = (uint8_t*)calloc(strlen((char*)buf),1);
-  ts->size = strlen((char*)buf);
-  memcpy(ts->buf,buf,ts->size);
-
-  printf("enc1\n");
-
-  CU_CP_Usage_Report_CellResourceReportItem_t  *report_item =
-    (CU_CP_Usage_Report_CellResourceReportItem_t*)calloc(1,sizeof(CU_CP_Usage_Report_CellResourceReportItem_t));
-
-  int plmnid_size = strlen((char*)plmnid_buf);  
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(plmnid_size,1);
-  plmnidstr->size = plmnid_size;
-  memcpy(plmnidstr->buf, plmnid_buf, plmnidstr->size);
-
-  printf("enc2\n");
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-
-  int nrcellid_size = strlen((char*)nrcellid_buf);
-  nrcellid->buf = (uint8_t*)calloc(1, nrcellid_size);
-  memcpy(nrcellid->buf, nrcellid_buf, nrcellid_size);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
- 
-  printf("enc3\n");
-  
-  report_item->nRCGI = *nrcgi;
-
-  CU_CP_Usage_Report_UeResourceReportItem *ue_report_item =
-    (CU_CP_Usage_Report_UeResourceReportItem*)calloc(1,sizeof(CU_CP_Usage_Report_UeResourceReportItem));
-
-  printf("enc3.2\n");
-
-
-  int crnti_size = strlen((char*)crnti_buf);
-  OCTET_STRING *crnti = (OCTET_STRING*)calloc(1,sizeof(OCTET_STRING));
-  crnti->buf = (uint8_t*)calloc(1, crnti_size);
-  
-  printf("enc3.3\n");
-  
-  crnti->size = strlen((char*)crnti_buf);
-
-  printf("enc3.4\n");
-  memcpy(crnti->buf, crnti_buf, crnti->size);
-
-  //  uint8_t *buf_serving = (uint8_t*)"RSRP10";
-
-  int serving_buf_len = strlen((char*)serving_buf);
-  OCTET_STRING_t *servingstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  servingstr->buf = (uint8_t*)calloc(serving_buf_len,1);
-  servingstr->size = serving_buf_len;
-  memcpy(servingstr->buf, serving_buf, servingstr->size);
-
-
-  int neighbor_buf_len = strlen((char*)neighbor_buf);
-  //  uint8_t *buf_neighbor = (uint8_t*)"-10,-15";
-  OCTET_STRING_t *neighborstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  ts->buf = (uint8_t*)calloc(neighbor_buf_len,1);
-  neighborstr->buf = (uint8_t*)calloc(neighbor_buf_len,1);
-  neighborstr->size = neighbor_buf_len;
-  memcpy(neighborstr->buf, neighbor_buf, neighborstr->size);
-
-  ue_report_item->c_RNTI = *crnti;
-  ue_report_item->serving_Cell_RF_Type = servingstr;
-  ue_report_item->neighbor_Cell_RF = neighborstr;
-
-
-  ASN_SEQUENCE_ADD(&report_item->ueResourceReportList.list, ue_report_item);  
-
-  ranco->timestamp = *ts;
-  ranco->reportContainer.present = RAN_Container__reportContainer_PR_oCU_CP_UE;
-  ASN_SEQUENCE_ADD(&ranco->reportContainer.choice.oCU_CP_UE.cellResourceReportList.list, report_item);
-
-  xer_fprint(stderr, &asn_DEF_RAN_Container, ranco);
-  
-
-}
-
-void encode_kpm_ocucp_user_level(RAN_Container_t *ranco) {
-
-  uint8_t *buf = (uint8_t*)"2020.06.13 13:01:05.222";
-  Timestamp_t *ts = (Timestamp_t*)calloc(1,sizeof(Timestamp_t));
-  ts->buf = (uint8_t*)calloc(strlen((char*)buf),1);
-  ts->size = strlen((char*)buf);
-  memcpy(ts->buf,buf,ts->size);
-
-  printf("enc1\n");
-
-  CU_CP_Usage_Report_CellResourceReportItem_t  *report_item =
-    (CU_CP_Usage_Report_CellResourceReportItem_t*)calloc(1,sizeof(CU_CP_Usage_Report_CellResourceReportItem_t));
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, buf2, plmnidstr->size);
-
-  printf("enc2\n");
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, buf3, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
- 
-  printf("enc3\n");
-  
-  report_item->nRCGI = *nrcgi;
-
-  CU_CP_Usage_Report_UeResourceReportItem *ue_report_item =
-    (CU_CP_Usage_Report_UeResourceReportItem*)calloc(1,sizeof(CU_CP_Usage_Report_UeResourceReportItem));
-
-  printf("enc3.2\n");
-
-  uint8_t* crnti_str = (uint8_t*)"1111";
-  OCTET_STRING *crnti = (OCTET_STRING*)calloc(1,sizeof(OCTET_STRING));
-  crnti->buf = (uint8_t*)calloc(1,4);
-  
-  printf("enc3.3\n");
-  
-  crnti->size = strlen((char*)crnti_str);
-
-  printf("enc3.4\n");
-  memcpy(crnti->buf, crnti_str, crnti->size);
-
-  uint8_t *buf_serving = (uint8_t*)"RSRP10";
-  OCTET_STRING_t *servingstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  servingstr->buf = (uint8_t*)calloc(6,1);
-  servingstr->size = 6;
-  memcpy(servingstr->buf, buf_serving, servingstr->size);
-
-  uint8_t *buf_neighbor = (uint8_t*)"-10,-15";
-  OCTET_STRING_t *neighborstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  neighborstr->buf = (uint8_t*)calloc(7,1);
-  neighborstr->size = 7;
-  memcpy(neighborstr->buf, buf_neighbor, neighborstr->size);
-
-  ue_report_item->c_RNTI = *crnti;
-  ue_report_item->serving_Cell_RF_Type = servingstr;
-  ue_report_item->neighbor_Cell_RF = neighborstr;
-
-
-  ASN_SEQUENCE_ADD(&report_item->ueResourceReportList.list, ue_report_item);  
-
-  ranco->timestamp = *ts;
-  ranco->reportContainer.present = RAN_Container__reportContainer_PR_oCU_CP_UE;
-  ASN_SEQUENCE_ADD(&ranco->reportContainer.choice.oCU_CP_UE.cellResourceReportList.list, report_item);
-
-  xer_fprint(stderr, &asn_DEF_RAN_Container, ranco);
-
-}
-
-
-void encode_kpm_odu_user_level(RAN_Container_t *ranco) {
-
-  uint8_t *buf = (uint8_t*)"2020.06.13 13:01:05.222";
-  Timestamp_t *ts = (Timestamp_t*)calloc(1,sizeof(Timestamp_t));
-  ts->buf = (uint8_t*)calloc(strlen((char*)buf),1);
-  ts->size = strlen((char*)buf);
-  memcpy(ts->buf,buf,ts->size);
-
-  printf("enc1\n");
-
-  DU_Usage_Report_CellResourceReportItem_t *report_item =
-    (DU_Usage_Report_CellResourceReportItem_t*)calloc(1,sizeof(DU_Usage_Report_CellResourceReportItem_t));
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, buf2, plmnidstr->size);
-
-  printf("enc2\n");  
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, buf3, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
- 
-  printf("enc3\n"); 
-  
-  report_item->nRCGI = *nrcgi;
-
-  printf("enc3.1\n");   
-
-  DU_Usage_Report_UeResourceReportItem *ue_report_item =
-    (DU_Usage_Report_UeResourceReportItem*)calloc(1,sizeof(DU_Usage_Report_UeResourceReportItem));
-
-  printf("enc3.2\n");   
-  
-  uint8_t* crnti_str = (uint8_t*)"1111";
-  OCTET_STRING *crnti = (OCTET_STRING*)calloc(1,sizeof(OCTET_STRING));
-  crnti->buf = (uint8_t*)calloc(1,4);
-  
-  printf("enc3.3\n");
-  
-  crnti->size = strlen((char*)crnti_str);
-
-  printf("enc3.4\n");
-  memcpy(crnti->buf, crnti_str, crnti->size);
-
-  printf("enc4\n");  
-
-  long lval1 = 2;
-  long lval2 = 1;
-  
-  ue_report_item->c_RNTI = *crnti;
-  ue_report_item->dl_PRBUsage = &lval1;
-
-  printf("enc5\n");
-  
-  ue_report_item->ul_PRBUsage = &lval2;
-
-  printf("enc6\n");
-  
-  ASN_SEQUENCE_ADD(&report_item->ueResourceReportList.list, ue_report_item);
-
-  
-  ranco->timestamp = *ts;
-  ranco->reportContainer.present = RAN_Container__reportContainer_PR_oDU_UE;
-  ASN_SEQUENCE_ADD(&ranco->reportContainer.choice.oDU_UE.cellResourceReportList.list, report_item);
-
-  xer_fprint(stderr, &asn_DEF_RAN_Container, ranco);
-
-  
-}
-
-void encode_kpm_report_rancontainer_du(E2SM_KPM_IndicationMessage_t* indicationmessage) {
-
-  RAN_Container_t *ranco = (RAN_Container_t*)calloc(1,sizeof(RAN_Container_t));
-  encode_kpm_odu_user_level(ranco);
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  containers_list->theRANContainer = ranco;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-
-  int ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-
-  asn_codec_ctx_t *opt_cod;
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-
-}
-
-void encode_kpm_report_rancontainer_cucp_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage,
-						       uint8_t *plmnid_buf,
-						       uint8_t *nrcellid_buf,
-						       uint8_t *crnti_buf,
-						       const uint8_t *serving_buf,
-						       const uint8_t *neighbor_buf) {
-
-  RAN_Container_t *ranco = (RAN_Container_t*)calloc(1,sizeof(RAN_Container_t));
-  encode_kpm_ocucp_user_level(ranco, plmnid_buf,
-			      nrcellid_buf, crnti_buf,
-			      serving_buf, neighbor_buf);
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->theRANContainer = ranco;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  int ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-
-  asn_codec_ctx_t *opt_cod;
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-  
-}
-						       
-						       
-void encode_kpm_report_rancontainer_cucp(E2SM_KPM_IndicationMessage_t* indicationmessage) {
-
-  RAN_Container_t *ranco = (RAN_Container_t*)calloc(1,sizeof(RAN_Container_t));
-  encode_kpm_ocucp_user_level(ranco);
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->theRANContainer = ranco;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  int ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-
-  asn_codec_ctx_t *opt_cod;
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-
-}
-
-void encode_kpm_report_rancontainer_cuup_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage,
-						       uint8_t *plmnid_buf,
-						       uint8_t *nrcellid_buf,
-						       uint8_t *crnti_buf,
-						       int pdcp_bytesdl,
-						       int pdcp_bytesul) {
-
-
-}
-
-void encode_kpm_report_rancontainer_cuup(E2SM_KPM_IndicationMessage_t* indicationmessage) {
-
-  RAN_Container_t *ranco = (RAN_Container_t*)calloc(1,sizeof(RAN_Container_t));
-  //encode_kpm_ocuup_user_level(ranco);
-
-  
-  uint8_t *buf = (uint8_t*)"2020.06.13 13:01:05.222";
-  Timestamp_t *ts = (Timestamp_t*)calloc(1,sizeof(Timestamp_t));
-  ts->buf = (uint8_t*)calloc(strlen((char*)buf),1);
-  ts->size = strlen((char*)buf);
-  memcpy(ts->buf,buf,ts->size);
-
-  printf("enc1\n");
-
-  CU_CP_Usage_Report_CellResourceReportItem_t  *report_item =
-    (CU_CP_Usage_Report_CellResourceReportItem_t*)calloc(1,sizeof(CU_CP_Usage_Report_CellResourceReportItem_t));
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, buf2, plmnidstr->size);
-
-  printf("enc2\n");  
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, buf3, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
- 
-  printf("enc3\n"); 
-  
-  report_item->nRCGI = *nrcgi;
-
-  CU_CP_Usage_Report_UeResourceReportItem *ue_report_item =
-    (CU_CP_Usage_Report_UeResourceReportItem*)calloc(1,sizeof(CU_CP_Usage_Report_UeResourceReportItem));
-
-  printf("enc3.2\n");
-
-  uint8_t* crnti_str = (uint8_t*)"1111";
-  OCTET_STRING *crnti = (OCTET_STRING*)calloc(1,sizeof(OCTET_STRING));
-  crnti->buf = (uint8_t*)calloc(1,4);
-  
-  printf("enc3.3\n");
-  
-  crnti->size = strlen((char*)crnti_str);
-
-  printf("enc3.4\n");
-  memcpy(crnti->buf, crnti_str, crnti->size);
-
-  uint8_t *buf_serving = (uint8_t*)"RSRP10";
-  OCTET_STRING_t *servingstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  servingstr->buf = (uint8_t*)calloc(6,1);
-  servingstr->size = 6;
-  memcpy(servingstr->buf, buf_serving, servingstr->size);
-
-  uint8_t *buf_neighbor = (uint8_t*)"-10,-15";
-  OCTET_STRING_t *neighborstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  neighborstr->buf = (uint8_t*)calloc(7,1);
-  neighborstr->size = 7;
-  memcpy(neighborstr->buf, buf_neighbor, neighborstr->size);
-
-  ue_report_item->c_RNTI = *crnti;
-  ue_report_item->serving_Cell_RF_Type = servingstr;
-  ue_report_item->neighbor_Cell_RF = neighborstr;
-
-
-  ASN_SEQUENCE_ADD(&report_item->ueResourceReportList.list, ue_report_item);
-
-  ranco->timestamp = *ts;
-  ranco->reportContainer.present = RAN_Container__reportContainer_PR_oCU_CP_UE;
-  ASN_SEQUENCE_ADD(&ranco->reportContainer.choice.oCU_CP_UE.cellResourceReportList.list, report_item);
-
-  //  xer_fprint(stderr, &asn_DEF_RAN_Container, ranco);
-  
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->theRANContainer = ranco;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  int ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-
-  asn_codec_ctx_t *opt_cod;
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-
-}
-
-void encode_kpm_report_style1_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage,
-					    long fiveqi,
-					    long dl_prb_usage,
-					    long ul_prb_usage,
-					    uint8_t* sd_buf,
-					    uint8_t* sst_buf,
-					    uint8_t* plmnid_buf,
-					    uint8_t* nrcellid_buf,
-					    long *dl_prbs,
-					    long *ul_prbs) {
-
-
-  asn_codec_ctx_t *opt_cod;
-
-  FQIPERSlicesPerPlmnPerCellListItem_t *fqi_item =
-    (FQIPERSlicesPerPlmnPerCellListItem_t*)calloc(1,sizeof(FQIPERSlicesPerPlmnPerCellListItem_t));
-  fqi_item->fiveQI = fiveqi;
-  fqi_item->dl_PRBUsage = &dl_prb_usage;
-  fqi_item->ul_PRBUsage = &ul_prb_usage;
-
-  uint8_t *buf1 = (uint8_t*)"4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,buf1,sst->size);
-
-  //  std::string sd = "SD1";
-  //  std::vector<uint8_t> sdvec(sd.begin(), sd.end());
-  //  uint8_t *bufz = &sdvec[0];
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, bufz, sds->size);
-
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(1,1);
-  snssai->sST.size = 1;
-  memcpy(snssai->sST.buf, sst_buf, 1);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, sd_buf, 3);
-  
-  
-  SlicePerPlmnPerCellListItem_t *sliceitem =
-    (SlicePerPlmnPerCellListItem_t*)calloc(1,sizeof(SlicePerPlmnPerCellListItem_t));
-  sliceitem->sliceID = *snssai;
-  ASN_SEQUENCE_ADD(&sliceitem->fQIPERSlicesPerPlmnPerCellList.list, fqi_item);
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(3,1);
-  plmnid->size = 3;
-  memcpy(plmnid->buf, plmnid_buf, plmnid->size);  
-
-  ServedPlmnPerCellListItem_t *percellitem1 =
-    (ServedPlmnPerCellListItem_t*)calloc(1,sizeof(ServedPlmnPerCellListItem_t));
-  percellitem1->pLMN_Identity = *plmnid;
-  percellitem1->du_PM_5GC = (FGC_DU_PM_Container*)calloc(1,sizeof(FGC_DU_PM_Container));
-  ASN_SEQUENCE_ADD(&percellitem1->du_PM_5GC->slicePerPlmnPerCellList.list, sliceitem);
-
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, plmnid_buf, plmnidstr->size);
-
-  printf("enc2\n");  
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, nrcellid_buf, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
-    
-
-  CellResourceReportListItem_t *listitem1 = (CellResourceReportListItem_t*)calloc(1,sizeof(CellResourceReportListItem_t));
-  listitem1->nRCGI = *nrcgi;
-  listitem1->dl_TotalofAvailablePRBs = dl_prbs;
-  listitem1->ul_TotalofAvailablePRBs = ul_prbs;
-  ASN_SEQUENCE_ADD(&listitem1->servedPlmnPerCellList.list, percellitem1);
-  
-
-  ODU_PF_Container_t *ducont = (ODU_PF_Container_t*)calloc(1,sizeof(ODU_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_ODU_PF_Container, ducont);
-  int ret = ASN_SEQUENCE_ADD(&ducont->cellResourceReportList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oDU;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oDU = *ducont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-
-}
-
-
-void encode_kpm_report_style1(E2SM_KPM_IndicationMessage_t* indicationmessage) {
-
-  long fiveqi = 8;
-  long dl_prb_usage = 50;
-  long ul_prb_usage = 70;
-
-  asn_codec_ctx_t *opt_cod;
-
-  FQIPERSlicesPerPlmnPerCellListItem_t *fqi_item =
-    (FQIPERSlicesPerPlmnPerCellListItem_t*)calloc(1,sizeof(FQIPERSlicesPerPlmnPerCellListItem_t));
-  fqi_item->fiveQI = fiveqi;
-  fqi_item->dl_PRBUsage = &dl_prb_usage;
-  fqi_item->ul_PRBUsage = &ul_prb_usage;
-
-  uint8_t *buf1 = (uint8_t*)"4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,buf1,sst->size);
-
-  //  std::string sd = "SD1";
-  //  std::vector<uint8_t> sdvec(sd.begin(), sd.end());
-  //  uint8_t *bufz = &sdvec[0];
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, bufz, sds->size);
-
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(1,1);
-  snssai->sST.size = 1;
-  memcpy(snssai->sST.buf, buf1, 1);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, bufz, 3);
-  
-  
-  SlicePerPlmnPerCellListItem_t *sliceitem =
-    (SlicePerPlmnPerCellListItem_t*)calloc(1,sizeof(SlicePerPlmnPerCellListItem_t));
-  sliceitem->sliceID = *snssai;
-  ASN_SEQUENCE_ADD(&sliceitem->fQIPERSlicesPerPlmnPerCellList.list, fqi_item);
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(3,1);
-  plmnid->size = 3;
-  memcpy(plmnid->buf, buf2, plmnid->size);  
-
-  ServedPlmnPerCellListItem_t *percellitem1 =
-    (ServedPlmnPerCellListItem_t*)calloc(1,sizeof(ServedPlmnPerCellListItem_t));
-  percellitem1->pLMN_Identity = *plmnid;
-  percellitem1->du_PM_5GC = (FGC_DU_PM_Container*)calloc(1,sizeof(FGC_DU_PM_Container));
-  ASN_SEQUENCE_ADD(&percellitem1->du_PM_5GC->slicePerPlmnPerCellList.list, sliceitem);
-
-  OCTET_STRING_t *plmnidstr = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnidstr->buf = (uint8_t*)calloc(3,1);
-  plmnidstr->size = 3;
-  memcpy(plmnidstr->buf, buf2, plmnidstr->size);
-
-  printf("enc2\n");  
-
-  NRCellIdentity_t *nrcellid = (NRCellIdentity_t*)calloc(1,sizeof(NRCellIdentity_t));
-  uint8_t* buf3 = (uint8_t*)"12340";
-  nrcellid->buf = (uint8_t*)calloc(1,5);
-  memcpy(nrcellid->buf, buf3, 5);
-  nrcellid->size = 5;
-  nrcellid->bits_unused = 4;
-
-  NRCGI *nrcgi = (NRCGI*)calloc(1,sizeof(NRCGI));
-  nrcgi->pLMN_Identity = *plmnidstr;
-  nrcgi->nRCellIdentity = *nrcellid;
-    
-  long dl_prbs = (long)100;
-  long ul_prbs = (long)120;
-
-  CellResourceReportListItem_t *listitem1 = (CellResourceReportListItem_t*)calloc(1,sizeof(CellResourceReportListItem_t));
-  listitem1->nRCGI = *nrcgi;
-  listitem1->dl_TotalofAvailablePRBs = &dl_prbs;
-  listitem1->ul_TotalofAvailablePRBs = &ul_prbs;
-  ASN_SEQUENCE_ADD(&listitem1->servedPlmnPerCellList.list, percellitem1);
-  
-
-  ODU_PF_Container_t *ducont = (ODU_PF_Container_t*)calloc(1,sizeof(ODU_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_ODU_PF_Container, ducont);
-  int ret = ASN_SEQUENCE_ADD(&ducont->cellResourceReportList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oDU;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oDU = *ducont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-
-}
-
-void encode_kpm_report_style5_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage,
-					    uint8_t *gnbcuupname_buf,
-					    int bytes_dl,
-					    int bytes_ul,
-					    uint8_t *sst_buf,
-					    uint8_t *sd_buf,
-					    uint8_t *plmnid_buf) {
-  
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-
-
-  //  uint8_t *buf = (uint8_t*)"GNBCUUP5";
-  OCTET_STRING_t *gnbcuupname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  gnbcuupname->size = 8;
-  gnbcuupname->buf = (uint8_t*)calloc(1,8);
-  memcpy(gnbcuupname->buf, gnbcuupname_buf, gnbcuupname->size);
-
-
-  //We need to convert bytes_dl into array of uint8_t
-
-  int array_size_dl;
-
-  INTEGER_t *bytesdl = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-
-  if (bytes_dl <= 64) {
-    array_size_dl = 1;
-
-    uint8_t buffer[array_size_dl];
-    buffer[0] = bytes_dl & 0xFF;
-    bytesdl->buf = (uint8_t*)calloc(1,1);
-    memcpy(bytesdl->buf,buffer,1);
-    bytesdl->size = 1;
-
-  } else if (bytes_dl <= 16384) {
-    array_size_dl = 2;
-
-    uint8_t buffer[array_size_dl];
-    buffer[0] = (bytes_dl >> 8) & 0xFF;
-    buffer[1] = bytes_dl & 0xFF;
-    bytesdl->buf = (uint8_t*)calloc(2,1);
-    memcpy(bytesdl->buf,buffer,2);
-    bytesdl->size = 2;
-    
-  } else if (bytes_dl <= 4194304) {
-    array_size_dl = 3;
-
-    uint8_t buffer[array_size_dl];
-    buffer[0] = (bytes_dl >> 16) & 0xFF;
-    buffer[1] = (bytes_dl >> 8) & 0xFF;
-    buffer[2] = bytes_dl & 0xFF;
-    bytesdl->buf = (uint8_t*)calloc(3,1);
-    memcpy(bytesdl->buf,buffer,3);
-    bytesdl->size = 3;    
-    
-  } else if (bytes_dl <= 1073741824) {
-    array_size_dl = 4;
-    uint8_t buffer[array_size_dl];
-    buffer[0] = (bytes_dl >> 24) & 0xFF;
-    buffer[1] = (bytes_dl >> 16) & 0xFF;
-    buffer[2] = (bytes_dl >> 8) & 0xFF;
-    buffer[3] = bytes_dl & 0xFF;
-    bytesdl->buf = (uint8_t*)calloc(4,1);
-    memcpy(bytesdl->buf,buffer,4);
-    bytesdl->size = 4;
+static inline void add_meas_name(MeasurementInfoList_t* list,
+                                 const char* name,
+                                 const MeasurementLabel_t* opt_label /* può essere nullptr */) {
+  MeasurementInfoItem_t* it = (MeasurementInfoItem_t*)calloc(1, sizeof(*it));
+  it->measType.present = MeasurementType_PR_measName;
+  set_octet_string(&it->measType.choice.measName, name, strlen(name));
+
+  if (opt_label) {
+    // Copia "by value" dell'etichetta dentro un LabelInfoItem
+    LabelInfoItem *li = (LabelInfoItem*)calloc(1, sizeof(LabelInfoItem));
+    li->measLabel = *opt_label;
+    ASN_SEQUENCE_ADD(&it->labelInfoList.list, li);
   }
-  
-  
-  //We need to convert bytes_ul into array of uint8_t
-  INTEGER_t *bytesul = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
 
-  int array_size_ul;
-
-  if (bytes_ul <= 64) {
-    array_size_ul = 1;
-
-    uint8_t buffer[array_size_ul];
-    buffer[0] = bytes_ul & 0xFF;
-    bytesul->buf = (uint8_t*)calloc(1,1);
-    memcpy(bytesul->buf,buffer,1);
-    bytesul->size = 1;
-
-  } else if (bytes_ul <= 16384) {
-    array_size_ul = 2;
-
-    uint8_t buffer[array_size_ul];
-    buffer[0] = (bytes_ul >> 8) & 0xFF;
-    buffer[1] = bytes_ul & 0xFF;
-    bytesul->buf = (uint8_t*)calloc(2,1);
-    memcpy(bytesul->buf,buffer,2);
-    bytesul->size = 2;
-    
-  } else if (bytes_ul <= 4194304) {
-    array_size_ul = 3;
-
-    uint8_t buffer[array_size_ul];
-    buffer[0] = (bytes_ul >> 16) & 0xFF;
-    buffer[1] = (bytes_ul >> 8) & 0xFF;
-    buffer[2] = bytes_ul & 0xFF;
-    bytesul->buf = (uint8_t*)calloc(3,1);
-    memcpy(bytesul->buf,buffer,3);
-    bytesul->size = 3;    
-    
-  } else if (bytes_ul <= 1073741824) {
-    array_size_ul = 4;
-    uint8_t buffer[array_size_ul];
-    buffer[0] = (bytes_ul >> 24) & 0xFF;
-    buffer[1] = (bytes_ul >> 16) & 0xFF;
-    buffer[2] = (bytes_ul >> 8) & 0xFF;
-    buffer[3] = bytes_ul & 0xFF;
-    bytesul->buf = (uint8_t*)calloc(4,1);
-    memcpy(bytesul->buf,buffer,4);
-    bytesul->size = 4;
-  }
-  
-
-  FQIPERSlicesPerPlmnListItem_t *fqilistitem = (FQIPERSlicesPerPlmnListItem_t*)calloc(1, sizeof(FQIPERSlicesPerPlmnListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_FQIPERSlicesPerPlmnListItem, fqilistitem);
-  fqilistitem->fiveQI = 9;
-  fqilistitem->pDCPBytesDL = bytesdl;
-  fqilistitem->pDCPBytesUL = bytesul;
-
-
-  uint8_t *buf1 = (uint8_t*)"4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,sst_buf,sst->size);
-
-
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, sd_buf, sds->size);
-
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(1,1);
-  snssai->sST.size = 1;
-  memcpy(snssai->sST.buf, sst_buf, 1);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, sd_buf, 3);
-
-  
-
-  SliceToReportListItem_t *slicelistitem = (SliceToReportListItem_t*)calloc(1,sizeof(SliceToReportListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_SliceToReportListItem, slicelistitem);
-  slicelistitem->sliceID = *snssai;
-  int ret = ASN_SEQUENCE_ADD(&slicelistitem->fQIPERSlicesPerPlmnList.list, fqilistitem);
-
-  asn_codec_ctx_t *opt_cod;  
-
-
-  uint8_t e2smbuffera[8192];
-  size_t e2smbuffer_sizea = 8192;
-
-
-
-  asn_enc_rval_t era =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_SliceToReportListItem,
-			 slicelistitem, e2smbuffera, e2smbuffer_sizea);
-  fprintf(stderr, "inner er encded is %ld\n", era.encoded);
-  fprintf(stderr, "after encoding message\n");      
-
-
-
-  FGC_CUUP_PM_Format_t *pm_format = (FGC_CUUP_PM_Format_t*)calloc(1,sizeof(FGC_CUUP_PM_Format_t));
-  ASN_STRUCT_RESET(asn_DEF_FGC_CUUP_PM_Format, pm_format);
-  ret = ASN_SEQUENCE_ADD(&pm_format->sliceToReportList.list, slicelistitem);
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  //  std::string pl = "PLMNID7";
-  //  std::vector<uint8_t> plvec(pl.begin(), pl.end());
-  //  uint8_t *buf2 = &plvec[0];
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(3,1);
-  plmnid->size = 3;
-  memcpy(plmnid->buf, plmnid_buf, plmnid->size);
-
-
-  PlmnID_List_t *plmnidlist = (PlmnID_List_t*)calloc(1,sizeof(PlmnID_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PlmnID_List, plmnidlist);
-  plmnidlist->pLMN_Identity = *plmnid;
-  plmnidlist->cu_UP_PM_5GC = pm_format;
-
-  CUUPMeasurement_Container_t *meas_cont = (CUUPMeasurement_Container_t*)calloc(1, sizeof(CUUPMeasurement_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_CUUPMeasurement_Container, meas_cont);
-  ret = ASN_SEQUENCE_ADD(&meas_cont->plmnList.list, plmnidlist);
-
-
-  
-  
-  PF_ContainerListItem_t *listitem1 = (PF_ContainerListItem_t*)calloc(1, sizeof(PF_ContainerListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_ContainerListItem, listitem1);
-  listitem1->interface_type = 2;
-  listitem1->o_CU_UP_PM_Container = *meas_cont;
-
-  OCUUP_PF_Container_t *cuupcont = (OCUUP_PF_Container_t*)calloc(1,sizeof(OCUUP_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_OCUUP_PF_Container, cuupcont);
-  cuupcont->gNB_CU_UP_Name = gnbcuupname;
-  ret = ASN_SEQUENCE_ADD(&cuupcont->pf_ContainerList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oCU_UP;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oCU_UP = *cuupcont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");  
-
-
+  ASN_SEQUENCE_ADD(&list->list, it);
 }
 
-void encode_kpm_report_style5(E2SM_KPM_IndicationMessage_t* indicationmessage) {
+static inline void rec_add_int(MeasurementRecord_t* rec, long v) {
+  MeasurementRecordItem_t* item = (MeasurementRecordItem_t*)calloc(1, sizeof(*item));
+  item->present = MeasurementRecordItem_PR_integer;
+  item->choice.integer = v; //(INTEGER_t*)calloc(1, sizeof(INTEGER_t));
+  //asn_long2INTEGER(item->choice.integer, v);
+  ASN_SEQUENCE_ADD(&rec->list, item);
+}
 
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
+// -----------------------------
+// RAN Function Description (v3)
+// -----------------------------
+void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* desc) {
+  // Nome / Descrizione / OID / Instance
+  set_octet_string(&desc->ranFunction_Name.ranFunction_ShortName,
+                   "ORAN-E2SM-KPM", 13);
+  set_octet_string(&desc->ranFunction_Name.ranFunction_Description,
+                   "KPM monitor", 11);
+  set_octet_string(&desc->ranFunction_Name.ranFunction_E2SM_OID,
+                   "1.3.6.1.4.1.53148.1.1.2.2",
+                   strlen("1.3.6.1.4.1.53148.1.1.2.2"));
+  desc->ranFunction_Name.ranFunction_Instance = (long*)calloc(1, sizeof(long));
+  *desc->ranFunction_Name.ranFunction_Instance = 1;
 
+  // Event Trigger style (es. "Periodic report")
+  RIC_EventTriggerStyle_Item_t* et = (RIC_EventTriggerStyle_Item_t*)calloc(1, sizeof(*et));
+  et->ric_EventTriggerStyle_Type = 1;
+  set_octet_string(&et->ric_EventTriggerStyle_Name,
+                   "Periodic report", 15);
+  et->ric_EventTriggerFormat_Type = 1; // usa IndicationHeader Format1
+  ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
-  uint8_t *buf = (uint8_t*)"GNBCUUP5";
-  OCTET_STRING_t *gnbcuupname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  gnbcuupname->size = 8;
-  gnbcuupname->buf = (uint8_t*)calloc(1,8);
-  memcpy(gnbcuupname->buf, buf, gnbcuupname->size);
+  // Report style "KPM v3 generic"
+  RIC_ReportStyle_Item_t* rs = (RIC_ReportStyle_Item_t*)calloc(1, sizeof(*rs));
+  rs->ric_ReportStyle_Type = 1;
+  set_octet_string(&rs->ric_ReportStyle_Name,
+                   "KPM v3 generic", 14);
+  rs->ric_IndicationHeaderFormat_Type  = 1;
+  rs->ric_IndicationMessageFormat_Type = 1;
+  ASN_SEQUENCE_ADD(&desc->ric_ReportStyle_List->list, rs);
+}
 
+// ---------------------------------------
+// Indication Header - Format 1 (minimale)
+// ---------------------------------------
+void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t* hdr) {
+  memset(hdr, 0, sizeof(*hdr));
+  hdr->indicationHeader_formats.present = E2SM_KPM_IndicationHeader__indicationHeader_formats_PR_indicationHeader_Format1;
 
-  INTEGER_t *bytesdl = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer[1];
-  buffer[0]= 40000;
-  bytesdl->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesdl->buf, buffer,1);
-  bytesdl->size = 1;
+  E2SM_KPM_IndicationHeader_Format1_t* h1 = (E2SM_KPM_IndicationHeader_Format1_t*)calloc(1, sizeof(*h1));
 
-  INTEGER_t *bytesul = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer1[1];
-  buffer1[0] = 50000;
-  bytesul->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesul->buf, buffer1, 1);
-  bytesul->size = 1;
+  // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
+  // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
+  const char ts[] = "20240620123000Z";
+  set_octet_string(&h1->colletStartTime, ts, sizeof(ts) - 1);
 
-  FQIPERSlicesPerPlmnListItem_t *fqilistitem = (FQIPERSlicesPerPlmnListItem_t*)calloc(1, sizeof(FQIPERSlicesPerPlmnListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_FQIPERSlicesPerPlmnListItem, fqilistitem);
-  fqilistitem->fiveQI = 9;
-  fqilistitem->pDCPBytesDL = bytesdl;
-  fqilistitem->pDCPBytesUL = bytesul;
+  // (opzionali) id_GlobalKPMnode_ID, ecc. -> lascio non settati
 
+  hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1; // by value
+  free(h1);
+}
 
-  uint8_t *buf1 = (uint8_t*)"4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,buf1,sst->size);
+// --------------------------------------------------
+// Indication Message - Format 1 (minimo dimostrativo)
+// --------------------------------------------------
+void encode_kpm_ind_msg_fmt1(E2SM_KPM_IndicationMessage_t* indMsg) {
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
 
+  E2SM_KPM_IndicationMessage_Format1_t *fmt1 = (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(*fmt1));
 
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, bufz, sds->size);
+  // Colonne: PDCP_BytesDL, PDCP_BytesUL (senza label)
+  add_meas_name(fmt1->measInfoList, "PDCP_BytesDL", nullptr);
+  add_meas_name(fmt1->measInfoList, "PDCP_BytesUL", nullptr);
 
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(1,1);
-  snssai->sST.size = 1;
-  memcpy(snssai->sST.buf, buf1, 1);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, bufz, 3);
+  // Una riga con 2 valori
+  MeasurementDataItem_t* mdi = (MeasurementDataItem_t*)calloc(1, sizeof(*mdi));
+  rec_add_int(&mdi->measRecord, 0);
+  rec_add_int(&mdi->measRecord, 0);
+  ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
-  
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1; // by value
+  free(fmt1);
+}
 
-  SliceToReportListItem_t *slicelistitem = (SliceToReportListItem_t*)calloc(1,sizeof(SliceToReportListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_SliceToReportListItem, slicelistitem);
-  slicelistitem->sliceID = *snssai;
-  int ret = ASN_SEQUENCE_ADD(&slicelistitem->fQIPERSlicesPerPlmnList.list, fqilistitem);
+// -----------------------------------------------------------------------
+// Indication Message - Format 2 (stub minimo: presente ma senza contenuti)
+// -----------------------------------------------------------------------
+void encode_kpm_ind_msg_fmt2(E2SM_KPM_IndicationMessage_t* indMsg) {
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format2;
 
-  asn_codec_ctx_t *opt_cod;  
+  // Se davvero ti serve il Format2 (misure condizionate/UE), riempio volentieri
+  // i campi specifici (measCondUEidList, ecc.). Qui lo lascio vuoto per compilare.
+  E2SM_KPM_IndicationMessage_Format2_t* fmt2 = (E2SM_KPM_IndicationMessage_Format2_t*)calloc(1, sizeof(*fmt2));
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format2 = fmt2;
+  free(fmt2);
+}
 
+// ---------------------------------------------------------------------------------
+// ex-STYLE5 → Throughput CU-UP: PDCP_BytesDL/UL con (eventuale) etichettatura slice
+// ---------------------------------------------------------------------------------
+void kpm_fill_cuup_throughput(E2SM_KPM_IndicationMessage_t* indMsg,
+                              const uint8_t* /*gnbcuupname_buf*/,
+                              int bytes_dl, int bytes_ul,
+                              const uint8_t* /*sst_buf*/, const uint8_t* /*sd_buf*/,
+                              const uint8_t* /*plmnid_buf*/) {
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
 
-  uint8_t e2smbuffera[8192];
-  size_t e2smbuffer_sizea = 8192;
+  E2SM_KPM_IndicationMessage_Format1_t* fmt1 = (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(*fmt1));
 
+  // Colonne
+  add_meas_name(fmt1->measInfoList, "PDCP_BytesDL", nullptr);
+  add_meas_name(fmt1->measInfoList, "PDCP_BytesUL", nullptr);
 
+  // Record
+  MeasurementDataItem_t* mdi = (MeasurementDataItem_t*)calloc(1, sizeof(*mdi));
+  rec_add_int(&mdi->measRecord, (long)bytes_dl);
+  rec_add_int(&mdi->measRecord, (long)bytes_ul);
+  ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
-  asn_enc_rval_t era =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_SliceToReportListItem,
-			 slicelistitem, e2smbuffera, e2smbuffer_sizea);
-  fprintf(stderr, "inner er encded is %ld\n", era.encoded);
-  fprintf(stderr, "after encoding message\n");
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
+  free(fmt1);
+}
 
+// ----------------------------------------------------------------------------------------------------
+// ex-STYLE1 → PRB usage per cella/slice/5QI:  DL_PRB_Usage, UL_PRB_Usage, DL_Total_PRBs, UL_Total_PRBs
+// ----------------------------------------------------------------------------------------------------
+void kpm_fill_cell_slice_qos_meas(E2SM_KPM_IndicationMessage_t* indMsg,
+                                  long fiveqi,
+                                  const uint8_t* /*sst_buf*/, const uint8_t* /*sd_buf*/,
+                                  const uint8_t* /*plmnid_buf*/,
+                                  const uint8_t* /*nrcellid_buf*/,
+                                  const long* dl_prbs, const long* ul_prbs,
+                                  long dl_prb_usage, long ul_prb_usage) {
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
 
+  E2SM_KPM_IndicationMessage_Format1_t* fmt1 = (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(*fmt1));
 
-  FGC_CUUP_PM_Format_t *pm_format = (FGC_CUUP_PM_Format_t*)calloc(1,sizeof(FGC_CUUP_PM_Format_t));
-  ASN_STRUCT_RESET(asn_DEF_FGC_CUUP_PM_Format, pm_format);
-  ret = ASN_SEQUENCE_ADD(&pm_format->sliceToReportList.list, slicelistitem);
+  // Etichetta minimale: solo 5QI (per evitare dipendenze da mapping IDL variabile di slice/cella)
+  MeasurementLabel_t label{};
+  label.fiveQI = (long*)calloc(1, sizeof(long));
+  *label.fiveQI = fiveqi;
 
-  uint8_t *buf2 = (uint8_t*)"747";
-  //  std::string pl = "PLMNID7";
-  //  std::vector<uint8_t> plvec(pl.begin(), pl.end());
-  //  uint8_t *buf2 = &plvec[0];
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(3,1);
-  plmnid->size = 3;
-  memcpy(plmnid->buf, buf2, plmnid->size);
+  // Definizione colonne con etichetta
+  add_meas_name(fmt1->measInfoList, "DL_PRB_Usage", &label);
+  add_meas_name(fmt1->measInfoList, "UL_PRB_Usage", &label);
+  add_meas_name(fmt1->measInfoList, "DL_Total_PRBs", &label);
+  add_meas_name(fmt1->measInfoList, "UL_Total_PRBs", &label);
 
+  // Un record con quattro valori
+  MeasurementDataItem_t* mdi = (MeasurementDataItem_t*)calloc(1, sizeof(*mdi));
+  rec_add_int(&mdi->measRecord, dl_prb_usage);
+  rec_add_int(&mdi->measRecord, ul_prb_usage);
+  rec_add_int(&mdi->measRecord, dl_prbs ? *dl_prbs : 0);
+  rec_add_int(&mdi->measRecord, ul_prbs ? *ul_prbs : 0);
+  ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
-  PlmnID_List_t *plmnidlist = (PlmnID_List_t*)calloc(1,sizeof(PlmnID_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PlmnID_List, plmnidlist);
-  plmnidlist->pLMN_Identity = *plmnid;
-  plmnidlist->cu_UP_PM_5GC = pm_format;
-
-  CUUPMeasurement_Container_t *meas_cont = (CUUPMeasurement_Container_t*)calloc(1, sizeof(CUUPMeasurement_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_CUUPMeasurement_Container, meas_cont);
-  ret = ASN_SEQUENCE_ADD(&meas_cont->plmnList.list, plmnidlist);
-
-
-  
-  
-  PF_ContainerListItem_t *listitem1 = (PF_ContainerListItem_t*)calloc(1, sizeof(PF_ContainerListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_ContainerListItem, listitem1);
-  listitem1->interface_type = 2;
-  listitem1->o_CU_UP_PM_Container = *meas_cont;
-
-  OCUUP_PF_Container_t *cuupcont = (OCUUP_PF_Container_t*)calloc(1,sizeof(OCUUP_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_OCUUP_PF_Container, cuupcont);
-  cuupcont->gNB_CU_UP_Name = gnbcuupname;
-  ret = ASN_SEQUENCE_ADD(&cuupcont->pf_ContainerList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oCU_UP;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oCU_UP = *cuupcont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage__indicationMessage_PR pres = E2SM_KPM_IndicationMessage__indicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->indicationMessage.present = pres;
-
-  indicationmessage->indicationMessage.choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
+  free(fmt1);
 }
 
 
-void encode_kpm(E2SM_KPM_IndicationMessage_t* indicationmessage) {
+void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t* indMsg,
+                          long rsrp, long rsrq, long rssinr) {
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present =
+      E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
 
-  /*
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  //std::string gn = "GNBCUUP5";
-  //std::vector<uint8_t> gnvec(gn.begin(), gn.end());
-  //uint8_t *buf = &gnvec[0];
-  uint8_t *buf = (uint8_t*)"GNBCUUP5";
-  OCTET_STRING_t *gnbcuupname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  gnbcuupname->size = 8;
-  gnbcuupname->buf = (uint8_t*)calloc(1,8);
-  memcpy(gnbcuupname->buf, buf, gnbcuupname->size);
+  E2SM_KPM_IndicationMessage_Format1_t* fmt1 =
+      (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(*fmt1));
 
+  // Colonne misure base UE RF
+  add_meas_name(fmt1->measInfoList, "UE_RSRP",  nullptr);
+  add_meas_name(fmt1->measInfoList, "UE_RSRQ",  nullptr);
+  add_meas_name(fmt1->measInfoList, "UE_RSSINR",nullptr);
 
-  INTEGER_t *bytesdl = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer[1];
-  buffer[0]= 40000;
-  bytesdl->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesdl->buf, buffer,1);
-  bytesdl->size = 1;
+  // Un record con i 3 valori
+  MeasurementDataItem_t* mdi = (MeasurementDataItem_t*)calloc(1, sizeof(*mdi));
+  rec_add_int(&mdi->measRecord, rsrp);
+  rec_add_int(&mdi->measRecord, rsrq);
+  rec_add_int(&mdi->measRecord, rssinr);
+  ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
-  INTEGER_t *bytesul = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer1[1];
-  buffer1[0] = 50000;
-  bytesul->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesul->buf, buffer1, 1);
-  bytesul->size = 1;
-
-  FQIPERSlicesPerPlmnListItem_t *fqilistitem = (FQIPERSlicesPerPlmnListItem_t*)calloc(1, sizeof(FQIPERSlicesPerPlmnListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_FQIPERSlicesPerPlmnListItem, fqilistitem);
-  fqilistitem->fiveQI = 9;
-  fqilistitem->pDCPBytesDL = bytesdl;
-  fqilistitem->pDCPBytesUL = bytesul;
-
-
-
-  //  std::string sl = "SLICE4";
-  //  std::vector<uint8_t> slvec(sl.begin(), sl.end());
-  //  uint8_t *buf1 = &slvec[0];
-  uint8_t *buf1 = (uint8_t*)"4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,buf1,sst->size);
-
-  //  std::string sd = "SD1";
-  //  std::vector<uint8_t> sdvec(sd.begin(), sd.end());
-  //  uint8_t *bufz = &sdvec[0];
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, bufz, sds->size);
-
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(1,1);
-  snssai->sST.size = 1;
-  memcpy(snssai->sST.buf, buf1, 1);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, bufz, 3);
-
-  
-
-  SliceToReportListItem_t *slicelistitem = (SliceToReportListItem_t*)calloc(1,sizeof(SliceToReportListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_SliceToReportListItem, slicelistitem);
-  slicelistitem->sliceID = *snssai;
-  int ret = ASN_SEQUENCE_ADD(&slicelistitem->fQIPERSlicesPerPlmnList.list, fqilistitem);
-
-  asn_codec_ctx_t *opt_cod;  
-
-
-  uint8_t e2smbuffera[8192];
-  size_t e2smbuffer_sizea = 8192;
-
-
-
-  asn_enc_rval_t era =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_SliceToReportListItem,
-			 slicelistitem, e2smbuffera, e2smbuffer_sizea);
-  fprintf(stderr, "inner er encded is %d\n", era.encoded);
-  fprintf(stderr, "after encoding message\n");      
-
-
-
-  FGC_CUUP_PM_Format_t *pm_format = (FGC_CUUP_PM_Format_t*)calloc(1,sizeof(FGC_CUUP_PM_Format_t));
-  ASN_STRUCT_RESET(asn_DEF_FGC_CUUP_PM_Format, pm_format);
-  ret = ASN_SEQUENCE_ADD(&pm_format->sliceToReportList.list, slicelistitem);
-
-  uint8_t *buf2 = (uint8_t*)"747";
-  //  std::string pl = "PLMNID7";
-  //  std::vector<uint8_t> plvec(pl.begin(), pl.end());
-  //  uint8_t *buf2 = &plvec[0];
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(3,1);
-  plmnid->size = 3;
-  memcpy(plmnid->buf, buf2, plmnid->size);
-
-
-  PlmnID_List_t *plmnidlist = (PlmnID_List_t*)calloc(1,sizeof(PlmnID_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PlmnID_List, plmnidlist);
-  plmnidlist->pLMN_Identity = *plmnid;
-  plmnidlist->cu_UP_PM_5GC = pm_format;
-
-  CUUPMeasurement_Container_t *meas_cont = (CUUPMeasurement_Container_t*)calloc(1, sizeof(CUUPMeasurement_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_CUUPMeasurement_Container, meas_cont);
-  ret = ASN_SEQUENCE_ADD(&meas_cont->plmnList.list, plmnidlist);
-
-
-  
-  
-  PF_ContainerListItem_t *listitem1 = (PF_ContainerListItem_t*)calloc(1, sizeof(PF_ContainerListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_ContainerListItem, listitem1);
-  listitem1->interface_type = 2;
-  listitem1->o_CU_UP_PM_Container = *meas_cont;
-
-  OCUUP_PF_Container_t *cuupcont = (OCUUP_PF_Container_t*)calloc(1,sizeof(OCUUP_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_OCUUP_PF_Container, cuupcont);
-  cuupcont->gNB_CU_UP_Name = gnbcuupname;
-  ret = ASN_SEQUENCE_ADD(&cuupcont->pf_ContainerList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oCU_UP;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oCU_UP = *cuupcont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage_PR pres = E2SM_KPM_IndicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->present = pres;
-
-  indicationmessage->choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %d\n", errlen);
-  printf("error buf %s\n", error_buf);
-
-  xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  asn_enc_rval_t er =
-    asn_encode_to_buffer(opt_cod,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %d\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-  */
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
+  free(fmt1);
 }
-
-/*
-void encode_kpm_bak(E2SM_KPM_IndicationMessage_t* indicationmessage) {
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage);
-  std::string gn = "GNBCUUP5";
-  std::vector<uint8_t> gnvec(gn.begin(), gn.end());
-  uint8_t *buf = &gnvec[0];
-  OCTET_STRING_t *gnbcuupname = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  gnbcuupname->size = 8;
-  gnbcuupname->buf = (uint8_t*)calloc(1,8);
-  memcpy(gnbcuupname->buf, buf, gnbcuupname->size);
-
-
-  INTEGER_t *bytesdl = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer[1];
-  buffer[0]= 40000;
-  bytesdl->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesdl->buf, buffer,1);
-  bytesdl->size = 1;
-
-  INTEGER_t *bytesul = (INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  uint8_t buffer1[1];
-  buffer1[0] = 50000;
-  bytesul->buf = (uint8_t*)calloc(1,1);
-  memcpy(bytesul->buf, buffer1, 1);
-  bytesul->size = 1;
-
-  FQIPERSlicesPerPlmnListItem_t *fqilistitem = (FQIPERSlicesPerPlmnListItem_t*)calloc(1, sizeof(FQIPERSlicesPerPlmnListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_FQIPERSlicesPerPlmnListItem, fqilistitem);
-  fqilistitem->fiveQI = 9;
-  fqilistitem->pDCPBytesDL = bytesdl;
-  fqilistitem->pDCPBytesUL = bytesul;
-
-
-
-  std::string sl = "SLICE4";
-  std::vector<uint8_t> slvec(sl.begin(), sl.end());
-  //  uint8_t *buf1 = &slvec[0];
-  uint8_t *buf1 = (uint8_t*)"SLICE4";  
-  OCTET_STRING_t *sst = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sst->size = 6;
-  sst->buf = (uint8_t*)calloc(1,6);
-  memcpy(sst->buf,buf1,sst->size);
-
-  std::string sd = "SD1";
-  std::vector<uint8_t> sdvec(sd.begin(), sd.end());
-  //  uint8_t *bufz = &sdvec[0];
-  uint8_t *bufz = (uint8_t*)"SD1";
-  OCTET_STRING_t *sds = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  sds->size = 3;
-  sds->buf = (uint8_t*)calloc(1,3);
-  memcpy(sds->buf, bufz, sds->size);
-
-  
-  SNSSAI_t *snssai = (SNSSAI_t*)calloc(1, sizeof(SNSSAI_t));
-  ASN_STRUCT_RESET(asn_DEF_SNSSAI,snssai);
-  snssai->sST.buf = (uint8_t*)calloc(6,1);
-  snssai->sST.size = 6;
-  memcpy(snssai->sST.buf, buf1, 6);
-  snssai->sD = (OCTET_STRING_t*)calloc(1, sizeof(OCTET_STRING_t));
-  snssai->sD->buf = (uint8_t*)calloc(1,3);
-  snssai->sD->size = 3;
-  memcpy(snssai->sD->buf, bufz, 3);
-
-  
-
-  SliceToReportListItem_t *slicelistitem = (SliceToReportListItem_t*)calloc(1,sizeof(SliceToReportListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_SliceToReportListItem, slicelistitem);
-  slicelistitem->sliceID = *snssai;
-  int ret = ASN_SEQUENCE_ADD(&slicelistitem->fQIPERSlicesPerPlmnList.list, fqilistitem);
-
-  uint8_t e2smbuffera[8192];
-  size_t e2smbuffer_sizea = 8192;  
-
-  auto era =
-    asn_encode_to_buffer(nullptr,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_SliceToReportListItem,
-			 slicelistitem, e2smbuffera, e2smbuffer_sizea);
-  fprintf(stderr, "inner er encded is %d\n", era.encoded);
-  fprintf(stderr, "after encoding message\n");      
-
-  FGC_CUUP_PM_Format_t *pm_format = (FGC_CUUP_PM_Format_t*)calloc(1,sizeof(FGC_CUUP_PM_Format_t));
-  ASN_STRUCT_RESET(asn_DEF_FGC_CUUP_PM_Format, pm_format);
-  ret = ASN_SEQUENCE_ADD(&pm_format->sliceToReportList.list, slicelistitem);
-
-  std::string pl = "PLMNID7";
-  std::vector<uint8_t> plvec(pl.begin(), pl.end());
-  uint8_t *buf2 = &plvec[0];
-  
-  OCTET_STRING_t *plmnid = (OCTET_STRING_t*)calloc(1,sizeof(OCTET_STRING_t));
-  plmnid->buf = (uint8_t*)calloc(1,7);
-  plmnid->size = 7;  
-  memcpy(plmnid->buf, buf2, plmnid->size);
-
-
-  PlmnID_List_t *plmnidlist = (PlmnID_List_t*)calloc(1,sizeof(PlmnID_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PlmnID_List, plmnidlist);
-  plmnidlist->pLMN_Identity = *plmnid;
-  plmnidlist->cu_UP_PM_5GC = pm_format;
-
-  CUUPMeasurement_Container_t *meas_cont = (CUUPMeasurement_Container_t*)calloc(1, sizeof(CUUPMeasurement_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_CUUPMeasurement_Container, meas_cont);
-  ret = ASN_SEQUENCE_ADD(&meas_cont->plmnList.list, plmnidlist);
-
-
-  
-  
-  PF_ContainerListItem_t *listitem1 = (PF_ContainerListItem_t*)calloc(1, sizeof(PF_ContainerListItem_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_ContainerListItem, listitem1);
-  listitem1->interface_type = 2;
-  listitem1->o_CU_UP_PM_Container = *meas_cont;
-
-  OCUUP_PF_Container_t *cuupcont = (OCUUP_PF_Container_t*)calloc(1,sizeof(OCUUP_PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_OCUUP_PF_Container, cuupcont);
-  cuupcont->gNB_CU_UP_Name = gnbcuupname;
-  ret = ASN_SEQUENCE_ADD(&cuupcont->pf_ContainerList.list, listitem1);
-  
-  PF_Container_PR pres1 = PF_Container_PR_oCU_UP;
-
-  PF_Container_t *pfcontainer = (PF_Container_t*)calloc(1, sizeof(PF_Container_t));
-  ASN_STRUCT_RESET(asn_DEF_PF_Container, pfcontainer);
-  pfcontainer->present = pres1;
-  pfcontainer->choice.oCU_UP = *cuupcont;
-
-  PM_Containers_List_t *containers_list = (PM_Containers_List_t*)calloc(1, sizeof(PM_Containers_List_t));
-  ASN_STRUCT_RESET(asn_DEF_PM_Containers_List, containers_list);
-  containers_list->performanceContainer = pfcontainer;
-
-  E2SM_KPM_IndicationMessage_Format1_t *format =
-    (E2SM_KPM_IndicationMessage_Format1_t*)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format1_t));
-  ASN_STRUCT_RESET(asn_DEF_E2SM_KPM_IndicationMessage_Format1, format);
-
-  ret = ASN_SEQUENCE_ADD(&format->pm_Containers.list, containers_list);
-  
-  E2SM_KPM_IndicationMessage_PR pres = E2SM_KPM_IndicationMessage_PR_indicationMessage_Format1;
-
-  indicationmessage->present = pres;
-
-  indicationmessage->choice.indicationMessage_Format1 = *format;
-
-  char *error_buf = (char*)calloc(300, sizeof(char));
-  size_t errlen;
-
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, indicationmessage, error_buf, &errlen);
-  printf("error length %d\n", errlen);
-  printf("error buf %s\n", error_buf);
-  
-
-  uint8_t e2smbuffer[8192];
-  size_t e2smbuffer_size = 8192;
-
-  uint8_t e2smbuffer2[8192];
-  size_t e2smbuffer_size2 = 8192;  
-
-  auto er =
-    asn_encode_to_buffer(nullptr,
-			 ATS_ALIGNED_BASIC_PER,
-			 &asn_DEF_E2SM_KPM_IndicationMessage,
-			 indicationmessage, e2smbuffer, e2smbuffer_size);
-
-  fprintf(stderr, "er encded is %d\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
-
-  
-}
-*/

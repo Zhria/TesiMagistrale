@@ -39,6 +39,7 @@
 extern "C" {
   //#include "e2sim_defs.h"
 #include "E2AP-PDU.h"
+#include "asn_application.h"
 
 
 }

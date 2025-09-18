@@ -67,32 +67,17 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
- /usr/include/netinet/in.h /usr/include/x86_64-linux-gnu/sys/socket.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
- /usr/include/x86_64-linux-gnu/bits/socket.h \
- /usr/include/x86_64-linux-gnu/bits/socket_type.h \
- /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
- /usr/include/x86_64-linux-gnu/asm/socket.h \
- /usr/include/asm-generic/socket.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
- /usr/include/asm-generic/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h \
- /usr/include/x86_64-linux-gnu/asm/sockios.h \
- /usr/include/asm-generic/sockios.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
- /usr/include/x86_64-linux-gnu/bits/in.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_codecs.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_config.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_length.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_tag.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/der_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
@@ -100,15 +85,18 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SET_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_internal.h \
  /usr/include/assert.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ProtocolIE-SingleContainer.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ProtocolIE-Field.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ProtocolIE-ID.h \
@@ -126,6 +114,7 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactionType.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactionExecutionOrder.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/Presence.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE.h \
@@ -142,6 +131,22 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICsubscription-withCause-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICrequestID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANfunctionID.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ToBeRemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ToBeModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ToBeAddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-RemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-FailedToBeRemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-FailedToBeModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-AddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-FailedToBeAddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-RequiredToBeModified-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICtimeToWait.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-RequiredToBeRemoved-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ConfirmedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-RefusedToBeModified-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-ConfirmedForRemoval-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-RefusedToBeRemoved-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2connectionUpdate-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/TNLinformation.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING.h \
@@ -169,12 +174,28 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICsubscriptionDetails.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICeventTriggerDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ToBeSetup-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICsubscriptionTime.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-Admitted-List.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICaction-NotAdmitted-List.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/CriticalityDiagnostics.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/ProcedureCode.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggeringMessage.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICsubscription-List-withCause.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ToBeRemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ToBeModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ToBeAddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-RemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-FailedToBeRemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-FailedToBeModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-AddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-FailedToBeAddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-RequiredToBeModified-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-RequiredToBeRemoved-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ConfirmedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-RefusedToBeModified-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-ConfirmedForRemoval-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICactions-RefusedToBeRemoved-List.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICindicationSN.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICindicationType.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICindicationHeader.h \
@@ -184,6 +205,9 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/RANfunctionsIDcause-List.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICcontrolMessage.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICcontrolAckRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICcontrolOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICqueryHeader.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICqueryDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/RICqueryOutcome.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/TransactionID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalE2node-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANfunctions-List.h \

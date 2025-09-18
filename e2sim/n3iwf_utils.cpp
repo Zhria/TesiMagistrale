@@ -30,6 +30,7 @@ extern "C" {
 }
 
 extern struct timespec ts;
+#include "n3iwf_utils.hpp"
 
 //String ammettendo n variabili variabili
  void stampaln(const char* msg, ...) {

@@ -2,8 +2,8 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-KPM-IndicationMessage-Format1.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-KPM-IndicationMessage-Format1.c \
  /usr/include/stdc-predef.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-KPM-IndicationMessage-Format1.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_application.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_system.h \
  /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -67,31 +67,17 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-KPM-IndicationMessage-Format1.c.o: \
  /usr/include/x86_64-linux-gnu/bits/wchar.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
  /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
- /usr/include/netinet/in.h /usr/include/x86_64-linux-gnu/sys/socket.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_iovec.h \
- /usr/include/x86_64-linux-gnu/bits/socket.h \
- /usr/include/x86_64-linux-gnu/bits/socket_type.h \
- /usr/include/x86_64-linux-gnu/bits/sockaddr.h \
- /usr/include/x86_64-linux-gnu/asm/socket.h \
- /usr/include/asm-generic/socket.h /usr/include/linux/posix_types.h \
- /usr/include/linux/stddef.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/posix_types_64.h \
- /usr/include/asm-generic/posix_types.h \
- /usr/include/x86_64-linux-gnu/asm/bitsperlong.h \
- /usr/include/asm-generic/bitsperlong.h \
- /usr/include/x86_64-linux-gnu/asm/sockios.h \
- /usr/include/asm-generic/sockios.h \
- /usr/include/x86_64-linux-gnu/bits/types/struct_osockaddr.h \
- /usr/include/x86_64-linux-gnu/bits/in.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_TYPE.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_codecs.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_config.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_length.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_tag.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/der_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
+ /home/zakaria/TesiMagistrale/e2sim/./der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
@@ -99,63 +85,22 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-KPM-IndicationMessage-Format1.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/MeasurementData.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SET_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PM-Containers-List.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PF-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/ODU-PF-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CellResourceReportListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/NRCGI.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/asn_internal.h \
  /usr/include/assert.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/NRCellIdentity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/GranularityPeriod.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeInteger.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/ServedPlmnPerCellListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/FGC-DU-PM-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/SlicePerPlmnPerCellListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/SNSSAI.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/FQIPERSlicesPerPlmnPerCellListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/EPC-DU-PM-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PerQCIReportListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCUCP-PF-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-CP-Name.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCUUP-PF-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UP-Name.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PF-ContainerListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/NI-Type.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CUUPMeasurement-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PlmnID-List.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/FGC-CUUP-PM-Format.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/SliceToReportListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/FQIPERSlicesPerPlmnListItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/EPC-CUUP-PM-Format.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/PerQCIReportListItemFormat.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/RAN-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/Timestamp.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/DU-Usage-Report-Per-UE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/DU-Usage-Report-CellResourceReportItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/DU-Usage-Report-UeResourceReportItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/C-RNTI.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-CP-Usage-Report-Per-UE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-CP-Usage-Report-CellResourceReportItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-CP-Usage-Report-UeResourceReportItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-UP-Usage-Report-Per-UE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-UP-Usage-Report-CellResourceReportItem.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/CU-UP-Usage-Report-UeResourceReportItem.h
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/MeasurementInfoList.h

@@ -1,6 +1,5 @@
 
 extern "C" {
-
 #include "e2ap_asn1c_codec.h"
 #include "GlobalE2node-ID.h"
 #include "GlobalE2node-gNB-ID.h"

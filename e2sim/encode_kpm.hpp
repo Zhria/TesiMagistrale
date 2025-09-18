@@ -1,45 +1,78 @@
-#ifndef ENCODE_KPM_HPP
-#define ENCODE_KPM_HPP
+#ifndef ENCODE_KPM_V3_HPP
+#define ENCODE_KPM_V3_HPP
+
+// encode_kpm_v3.cpp
+#include <cstring>
+#include <cstdlib>
+#include <cassert>
 
 extern "C" {
-  #include "OCUCP-PF-Container.h"
-  #include "OCTET_STRING.h"
   #include "asn_application.h"
-  #include "E2SM-KPM-IndicationMessage.h"
-  #include "FQIPERSlicesPerPlmnListItem.h"
+  #include "OCTET_STRING.h"
+  #include "TimeStamp.h"
+
+  // RAN function description (stili ET/Report esistono ancora)
   #include "E2SM-KPM-RANfunction-Description.h"
-  #include "Timestamp.h"
+  #include "RIC-EventTriggerStyle-Item.h"
+  #include "RIC-ReportStyle-Item.h"
+
+  // Header/Message v3 (formati)
+  #include "E2SM-KPM-IndicationHeader.h"
+  #include "E2SM-KPM-IndicationHeader-Format1.h"
+  #include "E2SM-KPM-IndicationMessage.h"
+  #include "E2SM-KPM-IndicationMessage-Format1.h"
+  #include "E2SM-KPM-IndicationMessage-Format2.h"
+
+  // Nuovo data model delle misure
+  #include "MeasurementInfoList.h"
+  #include "MeasurementInfoItem.h"
+  #include "LabelInfoList.h"
+  #include "LabelInfoItem.h"
+  #include "MeasurementLabel.h"
+  #include "MeasurementData.h"
+  #include "MeasurementDataItem.h"
+  #include "MeasurementRecord.h"
+  #include "MeasurementRecordItem.h"
+
+  #include "asn_application.h"
+  #include "asn_internal.h"
+  #include "OCTET_STRING.h"
+  #include "INTEGER.h"
+  #include "TimeStamp.h"
+
+  #include "E2SM-KPM-RANfunction-Description.h"
+  #include "RIC-EventTriggerStyle-Item.h"
+  #include "RIC-ReportStyle-Item.h"
+
 }
-
-void encode_kpm(E2SM_KPM_IndicationMessage_t* indicationmessage);
-
-void encode_kpm_bak(E2SM_KPM_IndicationMessage_t* indicationmessage);
-
+  
+// --- RAN Function Description (rimane)
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc_desc);
 
-void encode_kpm_report_style5(E2SM_KPM_IndicationMessage_t* indicationmessage);
+// --- Indication Header/Message (nuovi formati v3)
+void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t* hdr);
+void encode_kpm_ind_msg_fmt1(E2SM_KPM_IndicationMessage_t* indMsg);
+void encode_kpm_ind_msg_fmt2(E2SM_KPM_IndicationMessage_t* indMsg);
 
-void encode_kpm_odu_user_level(RAN_Container_t *ranco);
+// --- Helper che sostituiscono le vecchie “style1/style5/rancontainer_*” ---
+void kpm_fill_cell_slice_qos_meas(  // ex style1_parameterized(...)
+    E2SM_KPM_IndicationMessage_t* indMsg,
+    long fiveqi,
+    const uint8_t* sst_buf, const uint8_t* sd_buf,
+    const uint8_t* plmnid_buf,
+    const uint8_t* nrcellid_buf,
+    const long* dl_prbs, const long* ul_prbs,
+    long dl_prb_usage, long ul_prb_usage);
 
-void encode_kpm_ocucp_user_level(RAN_Container_t *ranco);
+void kpm_fill_cuup_throughput(      // ex style5_parameterized(...)
+    E2SM_KPM_IndicationMessage_t* indMsg,
+    const uint8_t* gnbcuupname_buf,
+    int bytes_dl, int bytes_ul,
+    const uint8_t* sst_buf, const uint8_t* sd_buf,
+    const uint8_t* plmnid_buf);
 
-void encode_kpm_ocuup_user_level(RAN_Container_t *ranco);
+    void kpm_fill_ue_rf_basic( // ex rancontainer_cucp_parameterized(...)
+    E2SM_KPM_IndicationMessage_t* indMsg,
+    long rsrp, long rsrq, long rssinr);
 
-void encode_kpm_report_rancontainer_du(E2SM_KPM_IndicationMessage_t *indMsg);
-
-void encode_kpm_report_rancontainer_cucp(E2SM_KPM_IndicationMessage_t *indMsg);
-
-void encode_kpm_report_rancontainer_cuup(E2SM_KPM_IndicationMessage_t *indMsg);
-
-void encode_kpm_report_style1(E2SM_KPM_IndicationMessage_t* indicationmessage);
-
-void encode_kpm_report_rancontainer_cucp_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage,uint8_t *plmnid_buf,uint8_t *nrcellid_buf,uint8_t *crnti_buf,const uint8_t *serving_buf, const uint8_t *neighbor_buf);
-
-void encode_kpm_report_rancontainer_cuup_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage, uint8_t *plmnid_buf, uint8_t *nrcellid_buf, uint8_t *crnti_buf,int pdcp_bytesdl, int pdcp_bytesul);
-
-void encode_kpm_report_style1_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage, long fiveqi, long dl_prb_usage, long ul_prb_usage, uint8_t* sd_buf, uint8_t* sst_buf,uint8_t* plmnid_buf, uint8_t* nrcellid_buf, long *dl_prbs, long *ul_prbs);
-
-void encode_kpm_report_style5_parameterized(E2SM_KPM_IndicationMessage_t* indicationmessage, uint8_t *gnbcuupname_buf, int bytes_dl,int bytes_ul, uint8_t *sst_buf, uint8_t *sd_buf, uint8_t *plmnid_buf);
-
-
-#endif
+#endif // ENCODE_KPM_V3_HPP

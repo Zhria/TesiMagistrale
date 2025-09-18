@@ -37,6 +37,13 @@ using namespace std;
 
 int client_fd = 0;
 
+static inline void set_octet_string(OCTET_STRING_t* dst, const void* src, size_t len) {
+  if (!dst) return;
+  dst->buf  = (uint8_t*)calloc(1, len);
+  dst->size = len;
+  if (len && src) memcpy(dst->buf, src, len);
+}
+
 void E2Sim::register_subscription_callback(long func_id, SubscriptionCallback cb) {
   printf("%%%%about to register callback for subscription for func_id %ld\n", func_id);
   subscription_callbacks[func_id] = cb;
@@ -93,11 +100,10 @@ int E2Sim::run_loop(int argc, char* argv[]){
   E2AP_PDU_t* pdu_setup = (E2AP_PDU_t*)calloc(1,sizeof(E2AP_PDU));
   
   std::vector<ran_func_info> all_funcs;
-  RANfunctionOID_t *ranFunctionOIDe = (RANfunctionOID_t*)calloc(1,sizeof(RANfunctionOID_t));
-  uint8_t *buf = (uint8_t*)"1.3.6.1.4.1.53148.1.1.2.2";
-  ranFunctionOIDe->buf = (uint8_t*)calloc(1,strlen((char*)buf)+1);
-  memcpy(ranFunctionOIDe->buf, buf, strlen((char*)buf)+1);
-  ranFunctionOIDe->size = strlen((char*)buf);
+
+  const char* oid = "1.3.6.1.4.1.53148.1.1.2.2"; // usa il tuo valore OID
+  PrintableString_t* ranFunctionOIDe = (PrintableString_t*)calloc(1, sizeof(PrintableString_t));
+  set_octet_string(ranFunctionOIDe, oid, strlen(oid));
   //Loop through RAN function definitions that are registered
 
     //Loop through RAN function definitions that are registered
@@ -107,7 +113,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
       next_func.ranFunctionDesc = elem.second;
       next_func.ranFunctionRev = (long)2;
       next_func.ranFunctionOId = ranFunctionOIDe;
-  
       all_funcs.push_back(next_func);
     }
  
