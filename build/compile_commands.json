@@ -79,6 +79,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/BIT_STRING_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/BIT_STRING_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/BIT_STRING_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/BIT_STRING_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/BIT_STRING_print.c.o"
@@ -187,6 +193,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/CallProcessBreakpoint-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/CallProcessBreakpoint-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/CallProcessBreakpoint-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/CallProcessBreakpoint-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/Cause.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/Cause.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/Cause.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/Cause.c.o"
@@ -226,6 +238,24 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/CauseTransport.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/CauseTransport.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/CauseTransport.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/CauseTransport.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/CellIdentification-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/CellIdentification-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/CellIdentification-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/CellIdentification-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/ControlAction-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/ControlAction-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/ControlAction-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/ControlAction-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/ControlOutcome-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/ControlOutcome-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/ControlOutcome-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/ControlOutcome-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -472,6 +502,378 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-KPM-RANfunction-Description.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-KPM-RANfunction-Description.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-KPM-RANfunction-Description.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-KPM-RANfunction-Description.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format1-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format1-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format1-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format1-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format2-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format2-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format2-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format2-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format3-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format3-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format3-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format3-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format3.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format3.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format3.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format3.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-Indication-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-Indication-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-Indication-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-Indication-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-RANP-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-RANP-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-RANP-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-RANP-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-Style-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-Style-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4-Style-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4-Style-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition-Format4.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition-Format4.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ActionDefinition.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ActionDefinition.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-CallProcessID-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-CallProcessID-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-CallProcessID-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-CallProcessID-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-CallProcessID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-CallProcessID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-CallProcessID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-CallProcessID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlHeader.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlHeader.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format1-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format1-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format1-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format1-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2-ControlAction-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2-ControlAction-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2-ControlAction-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2-ControlAction-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2-Style-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2-Style-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2-Style-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2-Style-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlMessage.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlMessage.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format1-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format1-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format1-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format1-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-ControlOutcome-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-ControlOutcome-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-ControlOutcome-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-ControlOutcome-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-RANP-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-RANP-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-RANP-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-RANP-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-Style-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-Style-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2-Style-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2-Style-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format3-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format3-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format3-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format3-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format3.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format3.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome-Format3.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome-Format3.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-ControlOutcome.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-ControlOutcome.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format1-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format1-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format1-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format1-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format3-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format3-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format3-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format3-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format3.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format3.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format3.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format3.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format4-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format4-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format4-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format4-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format4.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format4.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format4.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format4.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format5.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format5.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger-Format5.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger-Format5.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-EventTrigger.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-EventTrigger.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format3.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format3.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader-Format3.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader-Format3.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationHeader.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationHeader.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format1-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format1-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format1-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format1-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format1.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format1.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format1.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format1.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format2.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format2.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format3-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format3-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format3-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format3-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format3.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format3.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format3.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format3.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemCell.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemCell.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemCell.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemCell.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemUE.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemUE.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemUE.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4-ItemUE.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format4.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format4.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format5-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format5-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format5-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format5-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format5.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format5.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format5.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format5.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-Indication-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-Indication-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-Indication-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-Indication-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-RANP-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-RANP-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-RANP-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-RANP-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-Style-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-Style-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6-Style-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6-Style-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage-Format6.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage-Format6.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-IndicationMessage.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-IndicationMessage.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-RANFunctionDefinition.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-RANFunctionDefinition.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/E2SM-RC-RANFunctionDefinition.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/E2SM-RC-RANFunctionDefinition.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -727,6 +1129,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/ENB-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/ENB-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/ENB-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/ENB-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/ENB-UE-X2AP-ID-Extension.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/ENB-UE-X2AP-ID-Extension.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/ENB-UE-X2AP-ID-Extension.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/ENB-UE-X2AP-ID-Extension.c.o"
@@ -769,6 +1177,66 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item-Choice-Group.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item-Choice-Group.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item-Choice-Group.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item-Choice-Group.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item-Choice-Individual.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item-Choice-Individual.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item-Choice-Individual.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item-Choice-Individual.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-Cell-Info.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-Cell-Info.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item-Choice-Group.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item-Choice-Group.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item-Choice-Group.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item-Choice-Group.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item-Choice-Individual.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item-Choice-Individual.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item-Choice-Individual.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item-Choice-Individual.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UE-Info.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UE-Info.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UEevent-Info-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UEevent-Info-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UEevent-Info-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UEevent-Info-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UEevent-Info.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UEevent-Info.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/EventTrigger-UEevent-Info.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/EventTrigger-UEevent-Info.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/FiveGS-TAC.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/FiveGS-TAC.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/FiveGS-TAC.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/FiveGS-TAC.c.o"
@@ -796,6 +1264,18 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-CU-UE-F1AP-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UE-F1AP-ID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UE-F1AP-ID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-CU-UE-F1AP-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-CU-UP-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UP-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UP-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-CU-UP-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-DU-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-DU-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-DU-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GNB-DU-ID.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -853,6 +1333,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalENB-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalENB-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalENB-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalENB-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalGNB-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalGNB-ID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalGNB-ID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalGNB-ID.c.o"
@@ -880,6 +1366,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalRIC-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalRIC-ID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalRIC-ID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalRIC-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalenGNB-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalenGNB-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalenGNB-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalenGNB-ID.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -937,6 +1429,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/INTEGER_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/INTEGER_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/INTEGER_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/INTEGER_print.c.o"
@@ -970,6 +1468,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/InitiatingMessage.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/InitiatingMessage.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/InitiatingMessage.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/InitiatingMessage.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/InsertIndication-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/InsertIndication-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/InsertIndication-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/InsertIndication-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1030,6 +1534,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/InterfaceType.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/InterfaceType.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/InterfaceType.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/InterfaceType.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/L2Parameters-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/L2Parameters-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/L2Parameters-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/L2Parameters-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1249,6 +1759,24 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice-NI.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice-NI.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice-NI.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice-NI.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice-RRC.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice-RRC.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice-RRC.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice-RRC.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/MessageType-Choice.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/MessageType-Choice.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NG-RANnodeUEXnAPID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NG-RANnodeUEXnAPID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NG-RANnodeUEXnAPID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NG-RANnodeUEXnAPID.c.o"
@@ -1258,6 +1786,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NGENB-CU-UE-W1AP-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NGENB-CU-UE-W1AP-ID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NGENB-CU-UE-W1AP-ID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NGENB-CU-UE-W1AP-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NGENB-DU-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NGENB-DU-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NGENB-DU-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NGENB-DU-ID.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1375,6 +1909,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NativeEnumerated_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeEnumerated_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeEnumerated_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NativeEnumerated_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NativeEnumerated_uper.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeEnumerated_uper.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeEnumerated_uper.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NativeEnumerated_uper.c.o"
@@ -1408,6 +1948,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NativeInteger_jer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeInteger_jer.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeInteger_jer.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NativeInteger_jer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NativeInteger_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeInteger_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NativeInteger_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NativeInteger_oer.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1483,6 +2029,36 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item-Choice-E-UTRA.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item-Choice-E-UTRA.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item-Choice-E-UTRA.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item-Choice-E-UTRA.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item-Choice-NR.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item-Choice-NR.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item-Choice-NR.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item-Choice-NR.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-List.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-List.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborCell-List.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborCell-List.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborRelation-Info.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborRelation-Info.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NeighborRelation-Info.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NeighborRelation-Info.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/NgENB-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/NgENB-ID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/NgENB-ID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/NgENB-ID.c.o"
@@ -1543,6 +2119,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/OCTET_STRING_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/OCTET_STRING_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/OCTET_STRING_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/OCTET_STRING_print.c.o"
@@ -1585,6 +2167,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/OPEN_TYPE_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/OPEN_TYPE_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/OPEN_TYPE_uper.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE_uper.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/OPEN_TYPE_uper.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/OPEN_TYPE_uper.c.o"
@@ -1612,6 +2200,18 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/PLMNIdentity.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMNIdentity.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMNIdentity.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/PLMNIdentity.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/PolicyAction-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/PolicyAction-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/PolicyAction-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/PolicyAction-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/PolicyCondition-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/PolicyCondition-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/PolicyCondition-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/PolicyCondition-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1696,6 +2296,258 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/QosFlowIdentifier.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/QosFlowIdentifier.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/QosFlowIdentifier.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/QosFlowIdentifier.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RAN-CallProcess-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RAN-CallProcess-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RAN-CallProcess-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RAN-CallProcess-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control-Action-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control-Action-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control-Action-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control-Action-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Control.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Control.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-Breakpoint-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-Breakpoint-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-Breakpoint-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-Breakpoint-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-CallProcess-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-CallProcess-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-CallProcess-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-CallProcess-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-Style-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-Style-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger-Style-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger-Style-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-EventTrigger.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-EventTrigger.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert-Indication-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert-Indication-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert-Indication-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert-Indication-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Insert.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Insert.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy-Action-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy-Action-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy-Action-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy-Action-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Policy.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Policy.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Report-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Report-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Report-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Report-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Report.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Report.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANFunctionDefinition-Report.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANFunctionDefinition-Report.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-LIST-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-LIST-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-LIST-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-LIST-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-LIST.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-LIST.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-LIST.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-LIST.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-STRUCTURE-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-STRUCTURE-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-STRUCTURE-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-STRUCTURE-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-STRUCTURE.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-STRUCTURE.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice-STRUCTURE.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice-STRUCTURE.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition-Choice.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition-Choice.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Definition.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Definition.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-LIST.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-LIST.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-LIST.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-LIST.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Name.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Name.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Name.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Name.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-STRUCTURE-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-STRUCTURE-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-STRUCTURE-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-STRUCTURE-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-STRUCTURE.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-STRUCTURE.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-STRUCTURE.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-STRUCTURE.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-ElementFalse.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-ElementFalse.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-ElementFalse.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-ElementFalse.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-ElementTrue.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-ElementTrue.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-ElementTrue.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-ElementTrue.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-List.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-List.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-List.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-List.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-Structure.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-Structure.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item-Choice-Structure.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item-Choice-Structure.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-LIST.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-LIST.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-LIST.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-LIST.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-STRUCTURE.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-STRUCTURE.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing-STRUCTURE.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing-STRUCTURE.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Testing.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Testing.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-TestingCondition.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-TestingCondition.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-TestingCondition.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-TestingCondition.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Value.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Value.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-Value.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-Value.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-ElementFalse.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-ElementFalse.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-ElementFalse.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-ElementFalse.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-ElementTrue.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-ElementTrue.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-ElementTrue.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-ElementTrue.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-List.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-List.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-List.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-List.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-Structure.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-Structure.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType-Choice-Structure.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType-Choice-Structure.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RANParameter-ValueType.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RANParameter-ValueType.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -1813,6 +2665,66 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessBreakpoint-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessBreakpoint-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessBreakpoint-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessBreakpoint-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessBreakpoint-Name.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessBreakpoint-Name.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessBreakpoint-Name.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessBreakpoint-Name.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessType-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessType-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessType-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessType-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessType-Name.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessType-Name.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-CallProcessType-Name.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-CallProcessType-Name.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-ControlAction-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-ControlAction-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-ControlAction-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-ControlAction-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-ControlAction-Name.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-ControlAction-Name.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-ControlAction-Name.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-ControlAction-Name.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-Cell-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-Cell-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-Cell-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-Cell-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-UE-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-UE-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-UE-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-UE-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-UEevent-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-UEevent-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTrigger-UEevent-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTrigger-UEevent-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTriggerCondition-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTriggerCondition-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTriggerCondition-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTriggerCondition-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTriggerStyle-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTriggerStyle-Item.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-EventTriggerStyle-Item.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-EventTriggerStyle-Item.c.o"
@@ -1822,6 +2734,30 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-Format-Type.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-Format-Type.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-Format-Type.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-Format-Type.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-InsertIndication-ID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-InsertIndication-ID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-InsertIndication-ID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-InsertIndication-ID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-InsertIndication-Name.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-InsertIndication-Name.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-InsertIndication-Name.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-InsertIndication-Name.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-PolicyAction-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-PolicyAction-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-PolicyAction-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-PolicyAction-RANParameter-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-PolicyAction.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-PolicyAction.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RIC-PolicyAction.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RIC-PolicyAction.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -2359,6 +3295,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RRC-State.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RRC-State.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RRC-State.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RRC-State.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RRCclass-LTE.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RRCclass-LTE.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RRCclass-LTE.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RRCclass-LTE.c.o"
@@ -2368,6 +3310,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/RRCclass-NR.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/RRCclass-NR.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/RRCclass-NR.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/RRCclass-NR.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/Report-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/Report-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/Report-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/Report-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -2491,6 +3439,36 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-L2state.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-L2state.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-L2state.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-L2state.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-RRCstate-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-RRCstate-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-RRCstate-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-RRCstate-Item.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-RRCstate.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-RRCstate.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-RRCstate.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-RRCstate.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-UEID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-UEID.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice-UEID.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice-UEID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggerType-Choice.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggerType-Choice.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/TriggeringMessage.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggeringMessage.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/TriggeringMessage.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/TriggeringMessage.c.o"
@@ -2572,6 +3550,12 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/UEID.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/UEID.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/UEID.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/UEID.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/UEIdentification-RANParameter-Item.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/UEIdentification-RANParameter-Item.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/UEIdentification-RANParameter-Item.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/UEIdentification-RANParameter-Item.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
@@ -2713,6 +3697,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_CHOICE_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_CHOICE_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_CHOICE_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_CHOICE_print.c.o"
@@ -2797,6 +3787,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SEQUENCE_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SEQUENCE_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SEQUENCE_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SEQUENCE_print.c.o"
@@ -2845,6 +3841,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SET_OF_oer.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SET_OF_oer.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SET_OF_oer.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SET_OF_oer.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SET_OF_print.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SET_OF_print.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SET_OF_print.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/constr_SET_OF_print.c.o"
@@ -2881,6 +3883,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/converter-example.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/converter-example.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/converter-example.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/converter-example.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/der_encoder.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/der_encoder.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/der_encoder.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/der_encoder.c.o"
@@ -2890,6 +3898,30 @@
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/jer_encoder.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/jer_encoder.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/jer_encoder.c",
   "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/jer_encoder.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/oer_decoder.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_decoder.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_decoder.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/oer_decoder.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/oer_encoder.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_encoder.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_encoder.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/oer_encoder.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/oer_support.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_support.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/oer_support.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/oer_support.c.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/ASN1c/pdu_collection.c.o -c /home/zakaria/TesiMagistrale/e2sim/ASN1c/pdu_collection.c",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/ASN1c/pdu_collection.c",
+  "output": "CMakeFiles/kpm_callbacks.dir/ASN1c/pdu_collection.c.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
