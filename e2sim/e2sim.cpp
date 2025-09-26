@@ -91,7 +91,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("Start E2 Agent (E2 Simulator)");
   GlobalgNB_ID_t *gnb = getGNBStore();
   if (gnb == NULL) {
-    fprintf(stderr, "GNB Store is NULL\n");
+    stampaln( "GNB Store is NULL\n");
     return -1;
   }
   

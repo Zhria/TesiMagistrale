@@ -106,7 +106,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     }
     break;
 
-  case ProcedureCode_id_RICsubscription: // RIC SUBSCRIPTION = 201
+  case ProcedureCode_id_RICsubscription: // RIC SUBSCRIPTION = 8
     switch (index)
     {
     case E2AP_PDU_PR_initiatingMessage:
@@ -173,7 +173,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 
   generate_e2apv2_subscription_response(pdu_resp, pdu);
 
-  fprintf(stderr, "Subscription Response\n");
+  stampaln( "Subscription Response\n");
 
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_resp);
 
@@ -185,7 +185,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
   auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
   data2.len = er2.encoded;
 
-  fprintf(stderr, "er encded is %ld\n", er2.encoded);
+  stampaln( "er encded is %ld\n", er2.encoded);
 
   memcpy(data2.buffer, buffer2, er2.encoded);
 
@@ -214,7 +214,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
   data.len = er.encoded;
 
-  fprintf(stderr, "er encded is %ld\n", er.encoded);
+  stampaln( "er encoded is %ld\n", er.encoded);
 
   memcpy(data.buffer, buffer, er.encoded);
 

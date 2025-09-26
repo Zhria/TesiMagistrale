@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
       (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
   if (ranfunc_desc == NULL) {
-    fprintf(stderr, "calloc failed for ranfunc_desc\n");
+    stampaln( "calloc failed for ranfunc_desc\n");
     return -1;
   }
 
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
   const size_t e2smbuffer_size = 16384;
   uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
   if (e2smbuffer == NULL) {
-    fprintf(stderr, "calloc failed for e2smbuffer\n");
+    stampaln( "calloc failed for e2smbuffer\n");
     return -1;
   }
 
@@ -82,14 +82,14 @@ int main(int argc, char *argv[])
   // Crea OCTET_STRING per registrazione nel simulatore
   OCTET_STRING_t *ranfunc_ostr = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   if (ranfunc_ostr == NULL) {
-    fprintf(stderr, "calloc failed for ranfunc_ostr\n");
+    stampaln( "calloc failed for ranfunc_ostr\n");
     free(e2smbuffer);
     return -1;
   }
   ranfunc_ostr->buf  = (uint8_t *)calloc(1, (size_t)er.encoded);
   ranfunc_ostr->size = (er.encoded > 0) ? (size_t)er.encoded : 0;
   if (ranfunc_ostr->buf == NULL) {
-    fprintf(stderr, "calloc failed for ranfunc_ostr->buf\n");
+    stampaln( "calloc failed for ranfunc_ostr->buf\n");
     free(ranfunc_ostr);
     free(e2smbuffer);
     return -1;
@@ -107,9 +107,9 @@ int main(int argc, char *argv[])
                                  (void **)&check,
                                  ranfunc_ostr->buf, ranfunc_ostr->size);
   if (dr.code != RC_OK) {
-    fprintf(stderr, "Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+    stampaln( "Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
   } else {
-    fprintf(stderr, "Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+    stampaln( "Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
   }
 
   // Non servono più questi buffer locali
@@ -135,11 +135,11 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   std::ifstream cell_stream("cellMeasReport.txt");
 
   if (!ue_stream.is_open()) {
-    fprintf(stderr, "Failed to open ueMeasReport.txt\n");
+    stampaln( "Failed to open ueMeasReport.txt\n");
     return;
   }
   if (!cell_stream.is_open()) {
-    fprintf(stderr, "Failed to open cellMeasReport.txt\n");
+    stampaln( "Failed to open cellMeasReport.txt\n");
     return;
   }
 
@@ -190,13 +190,13 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
     E2AP_PDU *pdu3 = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (ind_msg3 == NULL || pdu3 == NULL) {
-      fprintf(stderr, "calloc failed for ind_msg3/pdu3\n");
+      stampaln( "calloc failed for ind_msg3/pdu3\n");
       return;
     }
 
     uint8_t *crnti_buf = (uint8_t *)calloc(1, 2);
     if (crnti_buf == NULL) {
-      fprintf(stderr, "calloc failed for crnti_buf\n");
+      stampaln( "calloc failed for crnti_buf\n");
       return;
     }
 
@@ -275,7 +275,7 @@ uint8_t hdr_buf3[512];
 asn_enc_rval_t ehr3 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
     &hdr3, hdr_buf3, sizeof(hdr_buf3));
-if (ehr3.encoded < 0) { fprintf(stderr, "hdr enc failed\n"); /* handle */ }
+if (ehr3.encoded < 0) { stampaln( "hdr enc failed\n"); /* handle */ }
 
 // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 kpm_fill_ue_rf_basic(ind_msg3, nextRsrp, nextRsrq, nextRssinr);
@@ -284,7 +284,7 @@ uint8_t msg_buf3[8192];
 asn_enc_rval_t emr3 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
     &ind_msg3, msg_buf3, sizeof(msg_buf3));
-if (emr3.encoded < 0) { fprintf(stderr, "msg enc failed\n"); /* handle */ }
+if (emr3.encoded < 0) { stampaln( "msg enc failed\n"); /* handle */ }
 
 // ----- E2AP wrapper -----
 generate_e2apv2_indication_request_parameterized(
@@ -301,8 +301,8 @@ seqNum++;
         &asn_DEF_E2SM_KPM_IndicationMessage,
         ind_msg3, e2smbuffer3, e2smbuffer_size3);
 
-    fprintf(stderr, "er encoded is %ld\n", er3.encoded);
-    fprintf(stderr, "after encoding message\n");
+    stampaln( "er encoded is %ld\n", er3.encoded);
+    stampaln( "after encoding message\n");
 
     uint8_t *e2smheader_buf3 = (uint8_t *)"header"; // header KPM (v3)
 
@@ -356,7 +356,7 @@ seqNum++;
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
     E2AP_PDU *pdu2 = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (ind_msg2 == NULL || pdu2 == NULL) {
-      fprintf(stderr, "calloc failed for ind_msg2/pdu2\n");
+      stampaln( "calloc failed for ind_msg2/pdu2\n");
       return;
     }
 
@@ -368,7 +368,7 @@ uint8_t hdr_buf2[512];
 asn_enc_rval_t ehr2 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
     &hdr2, hdr_buf2, sizeof(hdr_buf2));
-if (ehr2.encoded < 0) { fprintf(stderr, "hdr enc failed\n"); }
+if (ehr2.encoded < 0) { stampaln( "hdr enc failed\n"); }
 
 // MESSAGE
 kpm_fill_cuup_throughput(ind_msg2, (const uint8_t*)"GNBCUUP5",
@@ -379,7 +379,7 @@ uint8_t msg_buf2[8192];
 asn_enc_rval_t emr2 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
     &ind_msg2, msg_buf2, sizeof(msg_buf2));
-if (emr2.encoded < 0) { fprintf(stderr, "msg enc failed\n"); }
+if (emr2.encoded < 0) { stampaln( "msg enc failed\n"); }
 
 // E2AP
 generate_e2apv2_indication_request_parameterized(
@@ -396,8 +396,8 @@ seqNum++;
         &asn_DEF_E2SM_KPM_IndicationMessage,
         ind_msg2, e2smbuffer2, e2smbuffer_size2);
 
-    fprintf(stderr, "er encoded is %ld\n", er2.encoded);
-    fprintf(stderr, "after encoding message\n");
+    stampaln( "er encoded is %ld\n", er2.encoded);
+    stampaln( "after encoding message\n");
 
     uint8_t *e2smheader_buf2 = (uint8_t *)"header";
 
@@ -421,7 +421,7 @@ seqNum++;
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
     E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (ind_msg1 == NULL || pdu == NULL) {
-      fprintf(stderr, "calloc failed for ind_msg1/pdu\n");
+      stampaln( "calloc failed for ind_msg1/pdu\n");
       return;
     }
 
@@ -438,7 +438,7 @@ uint8_t hdr_buf1[512];
 asn_enc_rval_t ehr1 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
     &hdr1, hdr_buf1, sizeof(hdr_buf1));
-if (ehr1.encoded < 0) { fprintf(stderr, "hdr enc failed\n"); }
+if (ehr1.encoded < 0) { stampaln( "hdr enc failed\n"); }
 
 // MESSAGE
 long dl_prbs_long = (long)nextPRBBytesDL;
@@ -457,7 +457,7 @@ uint8_t msg_buf1[8192];
 asn_enc_rval_t emr1 = asn_encode_to_buffer(
     NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
     &ind_msg1, msg_buf1, sizeof(msg_buf1));
-if (emr1.encoded < 0) { fprintf(stderr, "msg enc failed\n"); }
+if (emr1.encoded < 0) { stampaln( "msg enc failed\n"); }
 
 // E2AP
 generate_e2apv2_indication_request_parameterized(
@@ -474,12 +474,12 @@ seqNum++;
         &asn_DEF_E2SM_KPM_IndicationMessage,
         ind_msg1, e2smbuffer, e2smbuffer_size);
 
-    fprintf(stderr, "er encoded is %ld\n", er.encoded);
-    fprintf(stderr, "after encoding message\n");
+    stampaln( "er encoded is %ld\n", er.encoded);
+    stampaln( "after encoding message\n");
 
     uint8_t *e2smheader_buf = (uint8_t *)"header";
 
-    fprintf(stderr, "About to encode Indication\n");
+    stampaln( "About to encode Indication\n");
     generate_e2apv2_indication_request_parameterized(
         pdu, requestorId, instanceId, ranFunctionId, actionId,
         seqNum, e2smheader_buf, 6, e2smbuffer, er.encoded);
@@ -496,7 +496,7 @@ seqNum++;
  * ============================================================ */
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
-  fprintf(stderr, "[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
+  stampaln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
 
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
@@ -506,7 +506,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
-  fprintf(stderr, "count %d\n", count);
+  stampaln("Processing Subscription Request...count %d\n", count);
 
   RICsubscriptionRequest_IEs__value_PR pres;
 
@@ -521,15 +521,15 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     RICsubscriptionRequest_IEs_t *next_ie = ies[i];
     pres = next_ie->value.present;
 
-    fprintf(stderr, "next present value %d\n", pres);
+    stampaln("next present value %d\n", pres);
 
     switch (pres) {
       case RICsubscriptionRequest_IEs__value_PR_RICrequestID: {
         RICrequestID_t reqId = next_ie->value.choice.RICrequestID;
         long requestorId = reqId.ricRequestorID;
         long instanceId  = reqId.ricInstanceID;
-        fprintf(stderr, "requestorId %ld\n", requestorId);
-        fprintf(stderr, "instanceId %ld\n", instanceId);
+        stampaln("requestorId %ld\n", requestorId);
+        stampaln("instanceId %ld\n", instanceId);
         reqRequestorId = requestorId;
         reqInstanceId  = instanceId;
         break;
@@ -543,7 +543,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
 
         int actionCount = actionList.list.count;
-        fprintf(stderr, "action count %d\n", actionCount);
+        stampaln("action count %d\n", actionCount);
 
         RICaction_ToBeSetup_ItemIEs_t **item_array =
             (RICaction_ToBeSetup_ItemIEs_t **)actionList.list.array;
@@ -576,18 +576,18 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     }
   }
 
-  fprintf(stderr, "After Processing Subscription Request\n");
-  fprintf(stderr, "requestorId %ld\n", reqRequestorId);
-  fprintf(stderr, "instanceId %ld\n", reqInstanceId);
+  stampaln( "After Processing Subscription Request\n");
+  stampaln( "requestorId %ld\n", reqRequestorId);
+  stampaln( "instanceId %ld\n", reqInstanceId);
 
   for (size_t i = 0; i < actionIdsAccept.size(); i++) {
-    fprintf(stderr, "Action ID %zu %ld\n", i, actionIdsAccept.at(i));
+    stampaln( "Action ID %zu %ld\n", i, actionIdsAccept.at(i));
   }
 
   // Costruisci e invia la Subscription Response (success)
   E2AP_PDU *e2ap_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
   if (e2ap_pdu == NULL) {
-    fprintf(stderr, "calloc failed for e2ap_pdu\n");
+    stampaln( "calloc failed for e2ap_pdu\n");
     return;
   }
 

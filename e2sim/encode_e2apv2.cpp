@@ -28,6 +28,7 @@
 
 #include "encode_e2apv2.hpp"
 #include "n3iwf_data.hpp"
+#include "n3iwf_utils.hpp"
 
 // Se usi un tuo helper per la KPM v3 RANfunction_Description
 extern "C" {
@@ -100,8 +101,8 @@ void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu)
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
-  fprintf(stderr, "er encoded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
+  stampaln( "er encoded is %ld\n", er.encoded);
+  stampaln( "after encoding message\n");
 
   OCTET_STRING_t *ranfuncdesc_str = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   ranfuncdesc_str->buf = (uint8_t *)calloc(1, er.encoded);
@@ -147,7 +148,7 @@ long get_function_id_from_subscription(E2AP_PDU_t *e2ap_pdu)
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
-  fprintf(stderr, "[GetFunctionIDFromSubscription] count %d\n", count);
+  stampaln( "[GetFunctionIDFromSubscription] count %d\n", count);
 
   RICsubscriptionRequest_IEs__value_PR pres;
   long func_id = -1;
@@ -178,13 +179,13 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   // CU-UP-ID (>0)
   e2gnb->gNB_CU_UP_ID = (E2AP_IEs_GNB_CU_UP_ID_t*)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
   if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, 1) != 0) {
-    fprintf(stderr, "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
+    stampaln( "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
 
   // DU-ID (>0) – opzionale secondo il tuo scenario
   e2gnb->gNB_DU_ID = (E2AP_IEs_GNB_DU_ID_t*)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
   if (asn_long2INTEGER(e2gnb->gNB_DU_ID, 1) != 0) {
-    fprintf(stderr, "asn_long2INTEGER(gNB_DU_ID) failed\n");
+    stampaln( "asn_long2INTEGER(gNB_DU_ID) failed\n");
   }
 
   GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t*)calloc(1, sizeof(*globale2nodeid));
@@ -261,7 +262,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   E2nodeComponentInterfaceE1_t *e1 =
       (E2nodeComponentInterfaceE1_t*)calloc(1, sizeof(*e1));
   if (asn_long2INTEGER(&e1->gNB_CU_UP_ID, 1) != 0) {
-    fprintf(stderr, "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
+    stampaln( "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
   compId->choice.e2nodeComponentInterfaceTypeE1 = e1;
 
@@ -362,8 +363,8 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
-  fprintf(stderr, "er encoded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
+  stampaln( "er encoded is %ld\n", er.encoded);
+  stampaln( "after encoding message\n");
 
   OCTET_STRING_t *ranfuncdesc_str = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   ranfuncdesc_str->buf = (uint8_t *)calloc(1, er.encoded);
@@ -398,7 +399,7 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
  * ========================================================================= */
 void generate_e2apv2_subscription_request(E2AP_PDU *e2ap_pdu)
 {
-  fprintf(stderr, "[generate_e2apv2_subscription_request] init function\n");
+  stampaln( "[generate_e2apv2_subscription_request] init function\n");
 
   RICsubscriptionRequest_IEs_t *ricreqid = (RICsubscriptionRequest_IEs_t *)calloc(1, sizeof(RICsubscriptionRequest_IEs_t));
   ASN_STRUCT_RESET(asn_DEF_RICsubscriptionRequest_IEs, ricreqid);
@@ -759,8 +760,8 @@ void generate_e2apv2_indication_request(E2AP_PDU *e2ap_pdu)
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            e2sm_desc, e2smbuffer, e2smbuffer_size);
 
-  fprintf(stderr, "er encoded is %ld\n", er.encoded);
-  fprintf(stderr, "after encoding message\n");
+  stampaln( "er encoded is %ld\n", er.encoded);
+  stampaln( "after encoding message\n");
 
   ricind_ies7->id = ProtocolIE_ID_id_RICindicationMessage;
   ricind_ies7->criticality = Criticality_reject;
