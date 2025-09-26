@@ -499,7 +499,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   stampaln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
   stampaln("Decoding Subscription Request...\n");
   xer_fprint(stdout, &asn_DEF_E2AP_PDU, sub_req_pdu);
-  stampln("POST XER Subscription Request\n");
+  stampaln("POST XER Subscription Request\n");
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
