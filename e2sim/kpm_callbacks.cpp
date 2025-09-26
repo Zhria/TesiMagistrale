@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
   memcpy(ranfunc_ostr->buf, e2smbuffer, ranfunc_ostr->size);
 
   // Registra la SM (FunctionID=2) e callback subscription
-  e2.register_e2sm(2, ranfunc_ostr);
-  e2.register_subscription_callback(2, &callback_kpm_subscription_request);
+  e2.register_e2sm(1, ranfunc_ostr);
+  e2.register_subscription_callback(1, &callback_kpm_subscription_request);
 
   // Self-test: decodifica della RANfunction-Description appena encodata
   E2SM_KPM_RANfunction_Description_t *check = NULL;
