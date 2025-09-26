@@ -53,7 +53,7 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   set_octet_string(&desc->ranFunction_Name.ranFunction_Description, "KPM monitor", strlen("KPM monitor"));
   set_octet_string(&desc->ranFunction_Name.ranFunction_E2SM_OID, "1.3.6.1.4.1.53148.1.1.2.2", strlen("1.3.6.1.4.1.53148.1.1.2.2"));
   desc->ranFunction_Name.ranFunction_Instance = (long *)calloc(1, sizeof(long));
-  *desc->ranFunction_Name.ranFunction_Instance = 1;
+  *desc->ranFunction_Name.ranFunction_Instance = 2;
 
   desc->ric_EventTriggerStyle_List =
       (decltype(desc->ric_EventTriggerStyle_List))calloc(1, sizeof(*desc->ric_EventTriggerStyle_List));
