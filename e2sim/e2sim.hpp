@@ -6,6 +6,10 @@
 extern "C" {
 #include "E2AP-PDU.h"
 #include "OCTET_STRING.h"
+#include "E2SM-KPM-ActionDefinition-Format1.h"
+#include "MeasurementType.h"
+#include "MeasurementInfoItem.h"
+#include "E2SM-KPM-ActionDefinition.h"
 }
 
 typedef void (*SubscriptionCallback)(E2AP_PDU_t*);

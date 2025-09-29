@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <vector>
 
 extern "C" {
 #include "E2SM-KPM-RANfunction-Description.h"
@@ -37,3 +38,5 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
                                   int target_if_pad);
                                   
 void stampaln(const char* msg, ...);
+
+std::vector<std::string> getAllowedKPI();

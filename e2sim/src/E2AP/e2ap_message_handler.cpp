@@ -164,6 +164,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
   }
 }
 
+/* Commento perchè non la utilizzo ma allo stesso tempo potrebbe essere utile per il futuro
 void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 {
 
@@ -226,7 +227,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
   {
     LOG_E("[SCTP] Unable to send RIC-INDICATION-REQUEST to peer");
   }
-}
+}*/
 
 void send_ric_service_update(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 {

@@ -33,11 +33,62 @@ extern "C" {
 #include "RICtimeToWait.h"
 }
 
+enum Direction{
+  DL=0,
+  UL=1
+};
+
+
+struct KPMMetric{
+    std::string name;
+    int64_t value=0;
+    int direction=0; // 0=DL, 1=UL
+};
+
+struct KPMMetrics{
+    std::array<KPMMetric, 20> metrics; // max 20 metriche KPM per cella
+    int count=0;
+};
+
+KPMMetrics g_metrics; // max 20 metriche KPM per cella
+
+static int64_t getKPMMetricValue(const std::string& name, Direction direction) {
+  for (const auto& metric : g_metrics.metrics) {
+        if (metric.name == name && metric.direction == direction) {
+            return metric.value;
+        }
+    }
+  // If we reach here, the metric was not found
+  //So we create a metric with value 0 and return 0
+  if(g_metrics.count < 20){
+    g_metrics.metrics[g_metrics.count++] = {name, 0, direction};
+  }
+    return 0; // Default value if not found
+}
+
+static void setKPMMetricValue(const std::string& name, int64_t value, Direction direction) {
+    for (auto& metric : g_metrics.metrics) {
+        if (metric.name == name) {
+            metric.value = value;
+            return;
+        }
+    }
+    // If we reach here, the metric was not found
+    //So we create a metric with the given value
+    if(g_metrics.count < 20){
+      g_metrics.metrics[g_metrics.count++] = {name, value, 0};
+  }
+}
+
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
+//Last metric values:
+std::vector<std::string> kpi=getAllowedKPI();
+
 // -------------------- configurazione (safe) --------------------
 static std::string g_fileName = "n3iwf_e2.json";
+static std::string g_fileNameKPM="n3iwf_e2.json.kpm.log";
 static std::string g_basePath = []{
   if (const char* p = std::getenv("E2_LOG_BASE")) return std::string(p);
   return std::string("/home/e2sim/log/");  // default nel tuo container
@@ -49,6 +100,10 @@ void setBasePath(const std::string& path) {
 }
 void setFileName(const std::string& name) {
   g_fileName = name;
+}
+
+void setFileNameKPM(const std::string& name) {
+  g_fileNameKPM = name;
 }
 
 // -------------------- util --------------------
@@ -244,3 +299,102 @@ void deinit_n3iwf_data() {
     g_gnbStore = nullptr;
   }
 }
+
+static inline double safe_div(long num, long den) {
+  if (den <= 0) return 0;
+  // round half up: (num + den/2) / den
+  return (num >= 0) ? (num + den/2) / den : (num - den/2) / den;
+};
+
+
+std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
+  std::string fullPath= joinPathFile(g_basePath, g_fileNameKPM);
+  if (!fs::exists(fullPath)) {
+    std::cerr << "[n3iwf] JSON file non trovato: " << fullPath << "\n";
+    return {};
+  }
+  auto buf = readWholeFile(fullPath);
+  if (!buf) {
+    std::cerr << "[n3iwf] Impossibile leggere: " << fullPath << "\n";
+    return {};
+  }
+  if (!json::accept(*buf)) {
+    std::cerr << "[n3iwf] JSON non valido:\n" << *buf << "\n";
+    return {};
+  }
+
+  auto j = json::parse(*buf);
+  
+  const auto& metrics = j.at("data").at("byDir");
+  const auto& ul = metrics.at("1");
+  const auto& dl = metrics.at("0");
+
+  auto get64 = [](const json& o, const char* k) -> int64_t {
+    if (!o.contains(k)) return 0;
+    if (o.at(k).is_number_integer() || o.at(k).is_number_unsigned()) return o.at(k).get<int64_t>();
+    if (o.at(k).is_string()) return std::stoll(o.at(k).get<std::string>());
+    return 0;
+  };
+
+  const int64_t cur_dl_in    = get64(dl, "incomingOctets");   // UPF -> N3IWF
+  const int64_t cur_dl_tx    = get64(dl, "transmitOctets");   // N3IWF -> UE
+
+  const int64_t cur_ul_in    = get64(ul, "incomingOctets");   // UE -> N3IWF
+  const int64_t cur_ul_tx    = get64(ul, "transmitOctets");   // N3IWF -> UPF
+
+  const int64_t cur_dl_pkt_lost=get64(dl, "incomingPkts") - get64(dl, "transmitPkts"); 
+  const int64_t cur_ul_pkt_lost=get64(ul, "incomingPkts") - get64(ul, "transmitPkts");
+
+  std::vector<std::string> kpi = getAllowedKPI();
+  //Calcolo delta metriche
+  int64_t d_dl_in   = cur_dl_in - getKPMMetricValue("incomingOctets",DL);
+  int64_t d_dl_tx   = cur_dl_tx - getKPMMetricValue("transmitOctets",DL);
+  int64_t d_dl_drop = cur_dl_pkt_lost - getKPMMetricValue("droppedPackets",DL);
+
+  int64_t d_ul_in   = cur_ul_in - getKPMMetricValue("incomingOctets",UL);
+  int64_t d_ul_tx   = cur_ul_tx - getKPMMetricValue("transmitOctets",UL);
+  int64_t d_ul_drop = cur_ul_pkt_lost - getKPMMetricValue("droppedPackets",UL);
+
+
+  //Save new values for next delta calculation
+  setKPMMetricValue("incomingOctets",cur_dl_in, DL);
+  setKPMMetricValue("transmitOctets",cur_dl_tx, DL);
+  setKPMMetricValue("droppedPackets",cur_dl_pkt_lost, DL);
+
+  setKPMMetricValue("incomingOctets",cur_ul_in, UL);
+  setKPMMetricValue("transmitOctets",cur_ul_tx, UL);
+  setKPMMetricValue("droppedPackets",cur_ul_pkt_lost, UL);
+
+  std::map<std::string, double> result;
+
+
+  for (const auto& metric : kpi) {
+    if (metric == "DRB.UEThpDl") {
+      //Il throughput è calcolato come delta octets / granularityPeriod (in secondi) perchè noi recuperiamo i valori cumulativi ogni granularityPeriod
+      result[metric] = safe_div(d_dl_tx * 8, granularityPeriod); // in bps
+      
+    } else if (metric == "DRB.UEThpUl") {
+      result[metric] = safe_div(d_ul_tx * 8, granularityPeriod); // in bps
+
+    } else if (metric == "DRB.RlcSduTransmittedVolumeDL") {
+
+      result[metric] = d_dl_tx*8/1000; // in kbits
+
+    } else if (metric == "DRB.RlcSduTransmittedVolumeUL") {
+      result[metric] = d_ul_tx*8/1000; // in kbits
+
+    } else if (metric == "DRB.RlcPacketDropRateDLDist") {
+      result[metric]= safe_div(d_dl_drop * 100, d_dl_in);
+    
+    } else if (metric == "DRB.RlcPacketLossRateULDist") {
+      result[metric]= safe_div(d_ul_drop * 100, d_ul_in);
+
+    } else {
+      std::cerr << "[n3iwf] Metrica KPM non gestita: " << metric << "\n";
+    }
+  }
+
+  return result;
+}
+
+

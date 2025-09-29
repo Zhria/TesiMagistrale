@@ -5,7 +5,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
-
+#include "n3iwf_utils.hpp"
+#include <vector>
+#include <map>
 extern "C" {
   #include "asn_application.h"
   #include "OCTET_STRING.h"
@@ -72,8 +74,6 @@ void kpm_fill_cuup_throughput(      // ex style5_parameterized(...)
     const uint8_t* sst_buf, const uint8_t* sd_buf,
     const uint8_t* plmnid_buf);
 
-    void kpm_fill_ue_rf_basic( // ex rancontainer_cucp_parameterized(...)
-    E2SM_KPM_IndicationMessage_t* indMsg,
-    long rsrp, long rsrq, long rssinr);
+void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t* indMsg,std::map<std::string, double> kpi);
 
 #endif // ENCODE_KPM_V3_HPP

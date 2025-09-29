@@ -50,38 +50,138 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/13/bits/std_abs.h /usr/include/c++/13/cassert \
- /usr/include/assert.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
- /usr/include/stdio.h /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+ /usr/include/assert.h /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
+ /usr/include/c++/13/cstdint \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
+ /usr/include/c++/13/iostream /usr/include/c++/13/bits/requires_hosted.h \
+ /usr/include/c++/13/ostream /usr/include/c++/13/ios \
+ /usr/include/c++/13/iosfwd /usr/include/c++/13/bits/stringfwd.h \
+ /usr/include/c++/13/bits/memoryfwd.h /usr/include/c++/13/bits/postypes.h \
+ /usr/include/c++/13/cwchar /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/13/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/types/wint_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/mbstate_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__mbstate_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/__FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/FILE.h \
+ /usr/include/c++/13/exception /usr/include/c++/13/bits/exception.h \
+ /usr/include/c++/13/bits/exception_ptr.h \
+ /usr/include/c++/13/bits/exception_defines.h \
+ /usr/include/c++/13/bits/cxxabi_init_exception.h \
+ /usr/include/c++/13/typeinfo /usr/include/c++/13/bits/hash_bytes.h \
+ /usr/include/c++/13/new /usr/include/c++/13/bits/move.h \
+ /usr/include/c++/13/type_traits \
+ /usr/include/c++/13/bits/nested_exception.h \
+ /usr/include/c++/13/bits/char_traits.h \
+ /usr/include/c++/13/bits/localefwd.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++locale.h \
+ /usr/include/c++/13/clocale /usr/include/locale.h \
+ /usr/include/x86_64-linux-gnu/bits/locale.h /usr/include/c++/13/cctype \
+ /usr/include/ctype.h /usr/include/c++/13/bits/ios_base.h \
+ /usr/include/c++/13/ext/atomicity.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/gthr.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/gthr-default.h \
+ /usr/include/pthread.h /usr/include/sched.h \
+ /usr/include/x86_64-linux-gnu/bits/sched.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_sched_param.h \
+ /usr/include/x86_64-linux-gnu/bits/cpu-set.h /usr/include/time.h \
+ /usr/include/x86_64-linux-gnu/bits/time.h \
+ /usr/include/x86_64-linux-gnu/bits/timex.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct_itimerspec.h \
+ /usr/include/x86_64-linux-gnu/bits/setjmp.h \
+ /usr/include/x86_64-linux-gnu/bits/types/struct___jmp_buf_tag.h \
+ /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/atomic_word.h \
+ /usr/include/x86_64-linux-gnu/sys/single_threaded.h \
+ /usr/include/c++/13/bits/locale_classes.h /usr/include/c++/13/string \
+ /usr/include/c++/13/bits/allocator.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/c++allocator.h \
+ /usr/include/c++/13/bits/new_allocator.h \
+ /usr/include/c++/13/bits/functexcept.h \
+ /usr/include/c++/13/bits/cpp_type_traits.h \
+ /usr/include/c++/13/bits/ostream_insert.h \
+ /usr/include/c++/13/bits/cxxabi_forced.h \
+ /usr/include/c++/13/bits/stl_iterator_base_funcs.h \
+ /usr/include/c++/13/bits/concept_check.h \
+ /usr/include/c++/13/debug/assertions.h \
+ /usr/include/c++/13/bits/stl_iterator_base_types.h \
+ /usr/include/c++/13/bits/stl_iterator.h \
+ /usr/include/c++/13/ext/type_traits.h \
+ /usr/include/c++/13/bits/ptr_traits.h \
+ /usr/include/c++/13/bits/stl_function.h \
+ /usr/include/c++/13/backward/binders.h \
+ /usr/include/c++/13/ext/numeric_traits.h \
+ /usr/include/c++/13/bits/stl_algobase.h \
+ /usr/include/c++/13/bits/stl_pair.h /usr/include/c++/13/bits/utility.h \
+ /usr/include/c++/13/debug/debug.h \
+ /usr/include/c++/13/bits/predefined_ops.h /usr/include/c++/13/bit \
+ /usr/include/c++/13/bits/refwrap.h /usr/include/c++/13/bits/invoke.h \
+ /usr/include/c++/13/bits/range_access.h \
+ /usr/include/c++/13/initializer_list \
+ /usr/include/c++/13/bits/basic_string.h \
+ /usr/include/c++/13/ext/alloc_traits.h \
+ /usr/include/c++/13/bits/alloc_traits.h \
+ /usr/include/c++/13/bits/stl_construct.h /usr/include/c++/13/string_view \
+ /usr/include/c++/13/bits/functional_hash.h \
+ /usr/include/c++/13/bits/string_view.tcc \
+ /usr/include/c++/13/ext/string_conversions.h /usr/include/c++/13/cstdio \
+ /usr/include/stdio.h /usr/include/x86_64-linux-gnu/bits/types/__fpos_t.h \
+ /usr/include/x86_64-linux-gnu/bits/types/__fpos64_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_FILE.h \
  /usr/include/x86_64-linux-gnu/bits/types/cookie_io_functions_t.h \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/c++/13/cerrno /usr/include/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
+ /usr/include/x86_64-linux-gnu/bits/types/error_t.h \
+ /usr/include/c++/13/bits/charconv.h \
+ /usr/include/c++/13/bits/basic_string.tcc \
+ /usr/include/c++/13/bits/memory_resource.h /usr/include/c++/13/cstddef \
+ /usr/include/c++/13/bits/uses_allocator.h \
+ /usr/include/c++/13/bits/uses_allocator_args.h /usr/include/c++/13/tuple \
+ /usr/include/c++/13/bits/locale_classes.tcc \
+ /usr/include/c++/13/system_error \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/error_constants.h \
+ /usr/include/c++/13/stdexcept /usr/include/c++/13/streambuf \
+ /usr/include/c++/13/bits/streambuf.tcc \
+ /usr/include/c++/13/bits/basic_ios.h \
+ /usr/include/c++/13/bits/locale_facets.h /usr/include/c++/13/cwctype \
+ /usr/include/wctype.h /usr/include/x86_64-linux-gnu/bits/wctype-wchar.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/ctype_base.h \
+ /usr/include/c++/13/bits/streambuf_iterator.h \
+ /usr/include/x86_64-linux-gnu/c++/13/bits/ctype_inline.h \
+ /usr/include/c++/13/bits/locale_facets.tcc \
+ /usr/include/c++/13/bits/basic_ios.tcc \
+ /usr/include/c++/13/bits/ostream.tcc /usr/include/c++/13/istream \
+ /usr/include/c++/13/bits/istream.tcc /usr/include/c++/13/vector \
+ /usr/include/c++/13/bits/stl_uninitialized.h \
+ /usr/include/c++/13/bits/stl_vector.h \
+ /usr/include/c++/13/bits/stl_bvector.h \
+ /usr/include/c++/13/bits/vector.tcc \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-RANfunction-Description.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /usr/include/c++/13/stdlib.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/13/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
  /usr/include/linux/limits.h \
- /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h /usr/include/inttypes.h \
- /usr/lib/gcc/x86_64-linux-gnu/13/include/stdint.h /usr/include/stdint.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-least.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_config.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_length.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_tag.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
  /home/zakaria/TesiMagistrale/e2sim/./der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
@@ -93,10 +193,13 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Name.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_support.h \
@@ -104,17 +207,208 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-RANfunction-Description.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Name.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SET_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
+ /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-PDU.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/InitiatingMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProcedureCode.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Criticality.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ANY.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_ioc.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-Container.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationRequired.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationConfirm.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionModificationRefuse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICQueryRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICQueryResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICQueryFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceUpdate.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceUpdateAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceUpdateFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdate.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdateAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConfigurationUpdateFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateAcknowledge.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ResetRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ResetResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceQuery.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ErrorIndication.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteRequired.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OPEN_TYPE.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/SuccessfulOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UnsuccessfulOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2setupRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-gNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMN-Identity.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-IEs_GNB-CU-UP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-IEs_GNB-DU-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-Field.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeSetup-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactionExecutionOrder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Presence.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-Admitted-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-NotAdmitted-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Cause.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseRICrequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseRICservice.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseE2node.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseTransport.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseProtocol.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CauseMisc.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscription-withCause-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICrequestID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeRemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeAddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-RemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-FailedToBeRemovedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-FailedToBeModifiedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-AddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-FailedToBeAddedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-RequiredToBeModified-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICtimeToWait.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-RequiredToBeRemoved-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ConfirmedForModification-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-RefusedToBeModified-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ConfirmedForRemoval-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-RefusedToBeRemoved-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TNLinformation.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TNLusage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateRemove-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionSetupFailed-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAddition-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentInterfaceType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfiguration.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdate-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemoval-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeTNLassociationRemoval-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAdditionAck-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigurationAck.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdateAck-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemovalAck-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionRevision.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionOID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionID-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionIDcause-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDetails.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICeventTriggerDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeSetup-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionTime.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-Admitted-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-NotAdmitted-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CriticalityDiagnostics.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TriggeringMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscription-List-withCause.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeRemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeAddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-RemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-FailedToBeRemovedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-FailedToBeModifiedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-AddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-FailedToBeAddedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-RequiredToBeModified-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-RequiredToBeRemoved-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ConfirmedForModification-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-RefusedToBeModified-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ConfirmedForRemoval-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-RefusedToBeRemoved-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationSN.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationHeader.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindicationMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcallProcessID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolHeader.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolAckRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICcontrolOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICqueryHeader.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICqueryDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICqueryOutcome.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TransactionID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctions-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAddition-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalRIC-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsID-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsIDcause-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAdditionAck-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeToWait.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateRemove-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionSetupFailed-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdate-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemoval-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeTNLassociationRemoval-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigUpdateAck-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigRemovalAck-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-ToBeSetup-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeSetup-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICeventTriggerDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-SingleContainer.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-Field.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctions-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentActionType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentAction.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentActionType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICtimeToWait.h \
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/ext/aligned_buffer.h \
+ /usr/include/c++/13/bits/node_handle.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h \
+ /usr/include/c++/13/bits/erase_if.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-EventTriggerStyle-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Type.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Name.h \
@@ -123,7 +417,6 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader-Format1.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage.h \
@@ -141,8 +434,6 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoList.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoItem.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementLabel.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMNIdentity.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/FiveQI.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/QosFlowIdentifier.h \

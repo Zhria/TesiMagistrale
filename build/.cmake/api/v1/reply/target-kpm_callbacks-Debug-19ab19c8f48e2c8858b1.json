@@ -620,179 +620,7 @@
 				490,
 				491,
 				492,
-				493,
-				494,
-				495,
-				496,
-				497,
-				498,
-				499,
-				500,
-				501,
-				502,
-				503,
-				504,
-				505,
-				506,
-				507,
-				508,
-				509,
-				510,
-				511,
-				512,
-				513,
-				514,
-				515,
-				516,
-				517,
-				518,
-				519,
-				520,
-				521,
-				522,
-				523,
-				524,
-				525,
-				526,
-				527,
-				528,
-				529,
-				530,
-				531,
-				532,
-				533,
-				534,
-				535,
-				536,
-				537,
-				538,
-				539,
-				540,
-				541,
-				542,
-				543,
-				544,
-				545,
-				546,
-				547,
-				548,
-				549,
-				550,
-				551,
-				552,
-				553,
-				554,
-				555,
-				556,
-				557,
-				558,
-				559,
-				560,
-				561,
-				562,
-				563,
-				564,
-				565,
-				566,
-				567,
-				568,
-				569,
-				570,
-				571,
-				572,
-				573,
-				574,
-				575,
-				576,
-				577,
-				578,
-				579,
-				580,
-				581,
-				582,
-				583,
-				584,
-				585,
-				586,
-				587,
-				588,
-				589,
-				590,
-				591,
-				592,
-				593,
-				594,
-				595,
-				596,
-				597,
-				598,
-				599,
-				600,
-				601,
-				602,
-				603,
-				604,
-				605,
-				606,
-				607,
-				608,
-				609,
-				610,
-				611,
-				612,
-				613,
-				614,
-				615,
-				616,
-				617,
-				618,
-				619,
-				620,
-				621,
-				622,
-				623,
-				624,
-				625,
-				626,
-				627,
-				628,
-				629,
-				630,
-				631,
-				632,
-				633,
-				634,
-				635,
-				636,
-				637,
-				638,
-				639,
-				640,
-				641,
-				642,
-				643,
-				644,
-				645,
-				646,
-				647,
-				648,
-				649,
-				650,
-				651,
-				652,
-				653,
-				654,
-				655,
-				656,
-				657,
-				658,
-				659,
-				660,
-				661,
-				662,
-				663,
-				664,
-				672
+				500
 			]
 		},
 		{
@@ -849,15 +677,15 @@
 			},
 			"sourceIndexes" : 
 			[
-				665,
-				666,
-				667,
-				668,
-				669,
-				670,
-				671,
-				673,
-				674
+				493,
+				494,
+				495,
+				496,
+				497,
+				498,
+				499,
+				501,
+				502
 			]
 		}
 	],
@@ -1411,179 +1239,7 @@
 				499,
 				500,
 				501,
-				502,
-				503,
-				504,
-				505,
-				506,
-				507,
-				508,
-				509,
-				510,
-				511,
-				512,
-				513,
-				514,
-				515,
-				516,
-				517,
-				518,
-				519,
-				520,
-				521,
-				522,
-				523,
-				524,
-				525,
-				526,
-				527,
-				528,
-				529,
-				530,
-				531,
-				532,
-				533,
-				534,
-				535,
-				536,
-				537,
-				538,
-				539,
-				540,
-				541,
-				542,
-				543,
-				544,
-				545,
-				546,
-				547,
-				548,
-				549,
-				550,
-				551,
-				552,
-				553,
-				554,
-				555,
-				556,
-				557,
-				558,
-				559,
-				560,
-				561,
-				562,
-				563,
-				564,
-				565,
-				566,
-				567,
-				568,
-				569,
-				570,
-				571,
-				572,
-				573,
-				574,
-				575,
-				576,
-				577,
-				578,
-				579,
-				580,
-				581,
-				582,
-				583,
-				584,
-				585,
-				586,
-				587,
-				588,
-				589,
-				590,
-				591,
-				592,
-				593,
-				594,
-				595,
-				596,
-				597,
-				598,
-				599,
-				600,
-				601,
-				602,
-				603,
-				604,
-				605,
-				606,
-				607,
-				608,
-				609,
-				610,
-				611,
-				612,
-				613,
-				614,
-				615,
-				616,
-				617,
-				618,
-				619,
-				620,
-				621,
-				622,
-				623,
-				624,
-				625,
-				626,
-				627,
-				628,
-				629,
-				630,
-				631,
-				632,
-				633,
-				634,
-				635,
-				636,
-				637,
-				638,
-				639,
-				640,
-				641,
-				642,
-				643,
-				644,
-				645,
-				646,
-				647,
-				648,
-				649,
-				650,
-				651,
-				652,
-				653,
-				654,
-				655,
-				656,
-				657,
-				658,
-				659,
-				660,
-				661,
-				662,
-				663,
-				664,
-				665,
-				666,
-				667,
-				668,
-				669,
-				670,
-				671,
-				672,
-				673,
-				674
+				502
 			]
 		}
 	],
@@ -1665,12 +1321,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/BIT_STRING_jer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/BIT_STRING_oer.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -1784,12 +1434,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/CallProcessBreakpoint-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/Cause.c",
 			"sourceGroupIndex" : 0
 		},
@@ -1827,24 +1471,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/CauseTransport.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/CellIdentification-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/ControlAction-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/ControlOutcome-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -2091,378 +1717,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/E2SM-KPM-RANfunction-Description.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format1-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format2-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format3-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format3.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format4-Indication-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format4-RANP-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format4-Style-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition-Format4.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ActionDefinition.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-CallProcessID-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-CallProcessID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlHeader-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlHeader-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlHeader.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage-Format1-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage-Format2-ControlAction-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage-Format2-Style-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlMessage.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format1-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format2-ControlOutcome-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format2-RANP-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format2-Style-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format3-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome-Format3.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-ControlOutcome.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format1-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format3-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format3.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format4-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format4.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger-Format5.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-EventTrigger.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationHeader-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationHeader-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationHeader-Format3.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationHeader.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format1-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format1.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format2-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format2-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format2.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format3-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format3.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format4-ItemCell.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format4-ItemUE.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format4.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format5-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format5.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format6-Indication-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format6-RANP-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format6-Style-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage-Format6.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-IndicationMessage.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/E2SM-RC-RANFunctionDefinition.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -2720,12 +1974,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/ENB-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/ENB-UE-X2AP-ID-Extension.c",
 			"sourceGroupIndex" : 0
 		},
@@ -2768,66 +2016,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-Cell-Info-Item-Choice-Group.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-Cell-Info-Item-Choice-Individual.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-Cell-Info-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-Cell-Info.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UE-Info-Item-Choice-Group.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UE-Info-Item-Choice-Individual.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UE-Info-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UE-Info.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UEevent-Info-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/EventTrigger-UEevent-Info.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/FiveGS-TAC.c",
 			"sourceGroupIndex" : 0
 		},
@@ -2853,18 +2041,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/GNB-CU-UE-F1AP-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/GNB-CU-UP-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/GNB-DU-ID.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -2924,12 +2100,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/GlobalENB-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/GlobalGNB-ID.c",
 			"sourceGroupIndex" : 0
 		},
@@ -2955,12 +2125,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/GlobalRIC-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/GlobalenGNB-ID.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3020,12 +2184,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/INTEGER_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/INTEGER_print.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3057,12 +2215,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/InitiatingMessage.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/InsertIndication-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3123,12 +2275,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/InterfaceType.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/L2Parameters-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3350,24 +2496,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/MessageType-Choice-NI.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/MessageType-Choice-RRC.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/MessageType-Choice.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/NG-RANnodeUEXnAPID.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3375,12 +2503,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/NGENB-CU-UE-W1AP-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NGENB-DU-ID.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3500,12 +2622,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NativeEnumerated_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/NativeEnumerated_uper.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3537,12 +2653,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/NativeInteger_jer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NativeInteger_oer.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3620,36 +2730,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NeighborCell-Item-Choice-E-UTRA.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NeighborCell-Item-Choice-NR.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NeighborCell-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NeighborCell-List.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/NeighborRelation-Info.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/NgENB-ID.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3710,12 +2790,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/OCTET_STRING_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/OCTET_STRING_print.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3758,12 +2832,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/OPEN_TYPE_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/OPEN_TYPE_uper.c",
 			"sourceGroupIndex" : 0
 		},
@@ -3789,18 +2857,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/PLMNIdentity.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/PolicyAction-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/PolicyCondition-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -3885,258 +2941,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/QosFlowIdentifier.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RAN-CallProcess-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Control-Action-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Control-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Control.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-EventTrigger-Breakpoint-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-EventTrigger-CallProcess-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-EventTrigger-Style-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-EventTrigger.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Insert-Indication-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Insert-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Insert.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Policy-Action-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Policy-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Policy.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Report-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANFunctionDefinition-Report.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition-Choice-LIST-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition-Choice-LIST.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition-Choice-STRUCTURE-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition-Choice-STRUCTURE.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition-Choice.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Definition.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-LIST.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Name.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-STRUCTURE-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-STRUCTURE.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-Item-Choice-ElementFalse.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-Item-Choice-ElementTrue.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-Item-Choice-List.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-Item-Choice-Structure.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-LIST.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing-STRUCTURE.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Testing.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-TestingCondition.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-Value.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ValueType-Choice-ElementFalse.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ValueType-Choice-ElementTrue.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ValueType-Choice-List.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ValueType-Choice-Structure.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RANParameter-ValueType.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -4256,66 +3060,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-CallProcessBreakpoint-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-CallProcessBreakpoint-Name.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-CallProcessType-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-CallProcessType-Name.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-ControlAction-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-ControlAction-Name.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-EventTrigger-Cell-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-EventTrigger-UE-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-EventTrigger-UEevent-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-EventTriggerCondition-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/RIC-EventTriggerStyle-Item.c",
 			"sourceGroupIndex" : 0
 		},
@@ -4323,30 +3067,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/RIC-Format-Type.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-InsertIndication-ID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-InsertIndication-Name.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-PolicyAction-RANParameter-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RIC-PolicyAction.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -4886,12 +3606,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/RRC-State.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/RRCclass-LTE.c",
 			"sourceGroupIndex" : 0
 		},
@@ -4899,12 +3613,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/RRCclass-NR.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/Report-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -5030,36 +3738,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/TriggerType-Choice-L2state.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/TriggerType-Choice-RRCstate-Item.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/TriggerType-Choice-RRCstate.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/TriggerType-Choice-UEID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/TriggerType-Choice.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/TriggeringMessage.c",
 			"sourceGroupIndex" : 0
 		},
@@ -5139,12 +3817,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/UEID.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/UEIdentification-RANParameter-Item.c",
 			"sourceGroupIndex" : 0
 		},
 		{
@@ -5288,12 +3960,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/constr_CHOICE_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/constr_CHOICE_print.c",
 			"sourceGroupIndex" : 0
 		},
@@ -5378,12 +4044,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/constr_SEQUENCE_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/constr_SEQUENCE_print.c",
 			"sourceGroupIndex" : 0
 		},
@@ -5432,12 +4092,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/constr_SET_OF_oer.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/constr_SET_OF_print.c",
 			"sourceGroupIndex" : 0
 		},
@@ -5474,12 +4128,6 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "ASN1c/converter-example.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
 			"path" : "ASN1c/der_encoder.c",
 			"sourceGroupIndex" : 0
 		},
@@ -5487,30 +4135,6 @@
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "ASN1c/jer_encoder.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/oer_decoder.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/oer_encoder.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/oer_support.c",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "ASN1c/pdu_collection.c",
 			"sourceGroupIndex" : 0
 		},
 		{

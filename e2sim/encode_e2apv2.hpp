@@ -68,7 +68,16 @@ void generate_e2apv2_subscription_response(E2AP_PDU_t *sub_resp_pdu, E2AP_PDU_t 
 
 void generate_e2apv2_indication_request(E2AP_PDU_t *ind_req_pdu);
 
-void generate_e2apv2_subscription_response_success(E2AP_PDU *e2ap_pdu, long reqActionIdsAccepted[], long reqActionIdsRejected[], int accept_size, int reject_size, long reqRequestorId, long reqInstanceId);
+void generate_e2apv2_subscription_response_success(
+    E2AP_PDU *e2ap_pdu,
+    const long *reqActionIdsAccepted,
+    const long *reqActionIdsRejected,
+    int accept_size,
+    int reject_size,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId // <--- AGGIUNTO
+);
 
 void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 
@@ -76,4 +85,12 @@ void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu);
 void build_ric_service_update(E2AP_PDU_t* pdu_out,
                                      const std::vector<ran_func_info>& funcs,
                                      long txid /* es. 2 */);
+void generate_e2apv2_subscription_failure(
+    E2AP_PDU *e2ap_pdu,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId,
+    const long *notAdmittedIds, int notAdmittedCount
+  );
+
 #endif

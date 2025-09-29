@@ -33,12 +33,11 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
   ASN_SEQUENCE_ADD(&list->list, it);
 }
 
-static inline void rec_add_int(MeasurementRecord_t *rec, long v)
+static inline void rec_add_int(MeasurementRecord_t *rec, double v)
 {
   MeasurementRecordItem_t *item = (MeasurementRecordItem_t *)calloc(1, sizeof(*item));
-  item->present = MeasurementRecordItem_PR_integer;
-  item->choice.integer = v; //(INTEGER_t*)calloc(1, sizeof(INTEGER_t));
-  // asn_long2INTEGER(item->choice.integer, v);
+  item->present = MeasurementRecordItem_PR_real;
+  item->choice.real= v;
   ASN_SEQUENCE_ADD(&rec->list, item);
 }
 
@@ -67,10 +66,10 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   et->ric_EventTriggerFormat_Type = 1; // KPM EventTrigger Format 1
   ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
-  // --- Report style: CU-UP (Type 4) con Header/Message Format 1/1
+  // --- Report style type 1 con Header/Message Format 1/1.
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
-  rs->ric_ReportStyle_Type = 4; // usa 4 se il tuo xApp lo richiede
-  set_octet_string(&rs->ric_ReportStyle_Name, "KPM v3 CU-UP", strlen("KPM v3 CU-UP"));
+  rs->ric_ReportStyle_Type = 1; // usa 4 se il tuo xApp lo richiede
+  set_octet_string(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF", strlen("KPM v3 N3IWF"));
   rs->ric_IndicationHeaderFormat_Type = 1;
   rs->ric_IndicationMessageFormat_Type = 1;
 
@@ -91,19 +90,17 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
     ASN_SEQUENCE_ADD(&rs->measInfo_Action_List.list, mi);
   };
 
-  add_meas("DRB.UEThpDl");         // Throughput downlink per UE/DRB (classico CU-UP)
-  add_meas("DRB.UEThpUl");         // Throughput uplink per UE/DRB
-  add_meas("DRB.PdcpPduVolumeDl"); // Volume PDCP downlink per UE/DRB
-  add_meas("DRB.PdcpPduVolumeUl"); // Volume PDCP
-  add_meas("PRB.UsageDl");         // PRB usage downlink (classico gNB)
-  add_meas("PRB.UsageUl");         // PRB usage uplink
+  std::vector<std::string> allowedKPI = getAllowedKPI();
+  for (const auto& kpi : allowedKPI) {
+      add_meas(kpi.c_str());
+  }
 
   // --- chiudi lo style
   ASN_SEQUENCE_ADD(&desc->ric_ReportStyle_List->list, rs);
 }
 
 // ---------------------------------------
-// Indication Header - Format 1 (minimale)
+// Indication Header - Format 1 
 // ---------------------------------------
 void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
 {
@@ -193,11 +190,12 @@ void kpm_fill_cuup_throughput(E2SM_KPM_IndicationMessage_t *indMsg,
 // ----------------------------------------------------------------------------------------------------
 // ex-STYLE1 → PRB usage per cella/slice/5QI:  DL_PRB_Usage, UL_PRB_Usage, DL_Total_PRBs, UL_Total_PRBs
 // ----------------------------------------------------------------------------------------------------
+/*
 void kpm_fill_cell_slice_qos_meas(E2SM_KPM_IndicationMessage_t *indMsg,
                                   long fiveqi,
-                                  const uint8_t * /*sst_buf*/, const uint8_t * /*sd_buf*/,
-                                  const uint8_t * /*plmnid_buf*/,
-                                  const uint8_t * /*nrcellid_buf*/,
+                                  const uint8_t * , const uint8_t *,
+                                  const uint8_t * ,
+                                  const uint8_t * ,
                                   const long *dl_prbs, const long *ul_prbs,
                                   long dl_prb_usage, long ul_prb_usage)
 {
@@ -228,9 +226,9 @@ void kpm_fill_cell_slice_qos_meas(E2SM_KPM_IndicationMessage_t *indMsg,
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
   free(fmt1);
 }
-
-void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg,
-                          long rsrp, long rsrq, long rssinr)
+*/
+// ---------------------------------------------------------------------------------
+void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
   memset(indMsg, 0, sizeof(*indMsg));
   indMsg->indicationMessage_formats.present =
@@ -239,18 +237,15 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg,
   E2SM_KPM_IndicationMessage_Format1_t *fmt1 =
       (E2SM_KPM_IndicationMessage_Format1_t *)calloc(1, sizeof(*fmt1));
 
-  // Colonne misure base UE RF
-  add_meas_name(fmt1->measInfoList, "UE_RSRP", nullptr);
-  add_meas_name(fmt1->measInfoList, "UE_RSRQ", nullptr);
-  add_meas_name(fmt1->measInfoList, "UE_RSSINR", nullptr);
-
-  // Un record con i 3 valori
   MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(*mdi));
-  rec_add_int(&mdi->measRecord, rsrp);
-  rec_add_int(&mdi->measRecord, rsrq);
-  rec_add_int(&mdi->measRecord, rssinr);
+  for(const auto& [key, value] : kpi) {
+  // Un record con i 3 valori
+      if(value != -1) {
+          add_meas_name(fmt1->measInfoList, key.c_str(), nullptr);
+          rec_add_int(&mdi->measRecord, value);
+      }
+  }
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
-
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
   free(fmt1);
 }

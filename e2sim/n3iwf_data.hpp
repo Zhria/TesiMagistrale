@@ -26,3 +26,5 @@ extern "C" {
 void init_n3iwf_data();
 
 GlobalgNB_ID_t* getGNBStore();
+
+std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod);

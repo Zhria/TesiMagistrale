@@ -218,6 +218,26 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition-Format1.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SET_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GranularityPeriod.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementTypeName.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementTypeID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoItem.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementType.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Type.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/SCTP/e2sim_sctp.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_message_handler.hpp \
@@ -225,9 +245,6 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/InitiatingMessage.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProcedureCode.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Criticality.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
@@ -235,11 +252,6 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_ioc.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProtocolIE-Container.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SET_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionFailure.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscriptionDeleteRequest.h \
@@ -286,55 +298,15 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/encode_e2apv2.hpp \
  /home/zakaria/TesiMagistrale/e2sim/encode_kpm.hpp \
  /usr/include/c++/13/cstring /usr/include/c++/13/cassert \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
+ /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
+ /usr/include/c++/13/cstdint \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-RANfunction-Description.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Name.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-EventTriggerStyle-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Type.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Name.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Format-Type.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-ReportStyle-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-List.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader-Format1.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format1.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementData.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GranularityPeriod.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format2.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementCondUEidList.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoList.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoItem.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementType.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementTypeName.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementTypeID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoList.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoList.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoItem.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementLabel.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMNIdentity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/FiveQI.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/QosFlowIdentifier.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/QCI.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementLabel.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementData.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementDataItem.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecord.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecord.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecordItem.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeReal.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NULL.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-Item.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
- /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-gNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMN-Identity.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-IEs_GNB-CU-UP-ID.h \
@@ -466,5 +438,39 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentAction.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubsequentActionType.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICtimeToWait.h \
- /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
- /usr/include/c++/13/cstdint
+ /usr/include/c++/13/map /usr/include/c++/13/bits/stl_tree.h \
+ /usr/include/c++/13/bits/stl_map.h \
+ /usr/include/c++/13/bits/stl_multimap.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-EventTriggerStyle-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Name.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Format-Type.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-ReportStyle-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_SEQUENCE_OF.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationHeader-Format1.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeStamp.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format1.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementData.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format2.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementCondUEidList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/LabelInfoItem.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementLabel.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMNIdentity.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/FiveQI.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/QosFlowIdentifier.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/QCI.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementLabel.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementData.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementDataItem.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecord.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecord.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementRecordItem.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeReal.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NULL.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-Item.h \
+ /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.hpp
