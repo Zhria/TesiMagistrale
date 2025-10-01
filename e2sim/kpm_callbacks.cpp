@@ -366,11 +366,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   stampaln("requestorId %ld\n", reqRequestorId);
   stampaln("instanceId %ld\n", reqInstanceId);
 
-  for (size_t i = 0; i < acceptedActions.size(); i++)
-  {
-    stampaln("Action ID %zu %ld\n", i, acceptedActions.at(i).first);
-  }
-
   // Costruisci e invia la Subscription Response (success)
   E2AP_PDU *e2ap_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
   if (e2ap_pdu == NULL)
@@ -387,11 +382,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
+    stampaln("At least one action not allowed, rejecting subscription\n");
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;
   }
 
+  stampaln("All actions allowed, accepting subscription\n");
   generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, 2);
   e2.encode_and_send_sctp_data(e2ap_pdu);
 

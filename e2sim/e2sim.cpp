@@ -75,11 +75,28 @@ std::unordered_map<long, OCTET_STRING_t *> E2Sim::get_registered_e2sm() {
 
 void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 {
-  uint8_t       *buf;
+  stampaln("About to encode and send SCTP data\n");
+  //uint8_t       *buf;
   sctp_buffer_t data;
 
-  data.len = e2ap_asn1c_encode_pdu(pdu, &buf);
-  memcpy(data.buffer, buf, min(data.len, MAX_SCTP_BUFFER));
+
+  auto buffer_size = MAX_SCTP_BUFFER;
+  unsigned char buffer[MAX_SCTP_BUFFER];
+
+  //data.len = e2ap_asn1c_encode_pdu(pdu, &buf);
+  //memcpy(data.buffer, buf, min(data.len, MAX_SCTP_BUFFER));
+
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu, buffer, buffer_size);
+  if(er.encoded < 0) {
+    stampaln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
+    return;
+  }
+
+  data.len = er.encoded;
+
+  stampaln("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
+
+  memcpy(data.buffer, buffer, er.encoded); 
 
   sctp_send_data(client_fd, data);
 }
