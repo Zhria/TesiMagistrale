@@ -135,51 +135,54 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 {
   long seqNum = 1;
   asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
-  std::map<std::string, double> kpi=getMetricsKPM(granularityPeriod);
+  std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
 
   // Encoder KPM v3 (RAN Container CU-CP)
   // encode_kpm_report_rancontainer_cucp_parameterized(ind_msg3, plmnid_buf, nrcellid_buf, crnti_buf, serving_buf, neighbor_buf);
   // ----- HEADER v3 (Format1) -----
-  E2SM_KPM_IndicationHeader_t hdr;
-  encode_kpm_ind_hdr_fmt1(&hdr);
-
-  uint8_t hdr_buf3[512];
-  asn_enc_rval_t ehr = asn_encode_to_buffer(
-      opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
-      &hdr, hdr_buf3, sizeof(hdr_buf3));
-  if (ehr.encoded < 0)
+  for (;;)
   {
-    stampaln("hdr enc failed\n"); /* handle */
+    std::this_thread::sleep_for(std::chrono::seconds(granularityPeriod));
+    E2SM_KPM_IndicationHeader_t hdr;
+    encode_kpm_ind_hdr_fmt1(&hdr);
+
+    uint8_t hdr_buf3[512];
+    asn_enc_rval_t ehr = asn_encode_to_buffer(
+        opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
+        &hdr, hdr_buf3, sizeof(hdr_buf3));
+    if (ehr.encoded < 0)
+    {
+      stampaln("hdr enc failed\n"); /* handle */
+    }
+
+    E2SM_KPM_IndicationMessage_t *ind_msg =
+        (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
+    // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
+    kpm_fill_ue_rf_basic(ind_msg, kpi);
+
+    uint8_t msg_buf[8192];
+    asn_enc_rval_t emr = asn_encode_to_buffer(
+        opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
+        &ind_msg, msg_buf, sizeof(msg_buf));
+    if (emr.encoded < 0)
+    {
+      stampaln("msg enc failed\n"); /* handle */
+    }
+    E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
+
+    // ----- E2AP wrapper -----
+    generate_e2apv2_indication_request_parameterized(
+        pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
+        hdr_buf3, (int)ehr.encoded, msg_buf, (int)emr.encoded);
+
+    e2.encode_and_send_sctp_data(pdu);
+    ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
+    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+    seqNum++;
   }
-
-  E2SM_KPM_IndicationMessage_t *ind_msg =
-      (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
-  // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
-  kpm_fill_ue_rf_basic(ind_msg, kpi);
-
-  uint8_t msg_buf[8192];
-  asn_enc_rval_t emr = asn_encode_to_buffer(
-      opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
-      &ind_msg, msg_buf, sizeof(msg_buf));
-  if (emr.encoded < 0)
-  {
-    stampaln("msg enc failed\n"); /* handle */
-  }
-  E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
-
-  // ----- E2AP wrapper -----
-  generate_e2apv2_indication_request_parameterized(
-      pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
-      hdr_buf3, (int)ehr.encoded, msg_buf, (int)emr.encoded);
-
-  e2.encode_and_send_sctp_data(pdu);
-  ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
-  seqNum++;
-
 }
 
-
-static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,std::vector<std::string> &out_meas,GranularityPeriod_t *granularityPeriod)
+static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def, std::vector<std::string> &out_meas, GranularityPeriod_t *granularityPeriod)
 {
   if (!act_def || !act_def->buf || act_def->size == 0)
     return false;
@@ -396,4 +399,3 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   long funcId = 2; // KPM
   run_report_loop(reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
 }
-
