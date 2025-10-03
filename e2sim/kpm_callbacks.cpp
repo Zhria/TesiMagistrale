@@ -334,7 +334,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         if (actionType != RICactionType_report)
         {
           any_metric_not_allowed = true;
-          rejectedActions.push_back({actionId});
+          rejectedActions.push_back(actionId);
           continue;
         }
         OCTET_STRING_t *act_def = next_item->value.choice.RICaction_ToBeSetup_Item.ricActionDefinition;
@@ -342,7 +342,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         if (!extract_meas_names_from_kpm_actiondef(act_def, meas_names, &granularityPeriod))
         {
           any_metric_not_allowed = true;
-          rejectedActions.push_back({actionId});
+          rejectedActions.push_back(actionId);
           continue;
         }
 
@@ -351,8 +351,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
           if (std::find(getAllowedKPI().begin(), getAllowedKPI().end(), m) == getAllowedKPI().end())
           {
             any_metric_not_allowed = true;
-            rejectedActions.push_back({actionId});
+            rejectedActions.push_back(actionId);
           }
+        }
+        if (!any_metric_not_allowed)
+        {
+          acceptedActions.push_back(actionId);
+          reqActionId = actionId; // salva l'ultimo actionId accettato
         }
       }
       break;
