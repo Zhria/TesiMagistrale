@@ -332,7 +332,16 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   }
   
   const auto& metrics = j.at("data").at("byDir");
+  if (metrics.is_discarded()) {
+    stampaln("JSON non valido (discarded):\n%s\n",buf->c_str());
+    return {};
+  }
   const auto& ul = metrics.at("1");
+  if( ul.is_discarded()) {
+    stampaln("JSON non valido (discarded) UL:\n%s\n",buf->c_str());
+    return {};
+  }
+
   const auto& dl = metrics.at("0");
 
   auto get64 = [](const json& o, const char* k) -> int64_t {
