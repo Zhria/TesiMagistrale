@@ -309,6 +309,7 @@ static inline double safe_div(long num, long den) {
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
   stampaln("Getting KPM metrics with granularityPeriod %ld seconds\n", granularityPeriod);
+  float granularityPeriodSec=granularityPeriod/1000.0; // converti in secondi
   std::string fullPath= joinPathFile(g_basePath, g_fileNameKPM);
   if (!fs::exists(fullPath)) {
     std::cerr << "[n3iwf] JSON file non trovato: " << fullPath << "\n";
@@ -386,10 +387,10 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   for (const auto& metric : kpi) {
     if (metric == "DRB.UEThpDl") {
       //Il throughput è calcolato come delta octets / granularityPeriod (in secondi) perchè noi recuperiamo i valori cumulativi ogni granularityPeriod
-      result[metric] = safe_div(d_dl_tx * 8, granularityPeriod); // in bps
+      result[metric] = safe_div(d_dl_tx * 8, granularityPeriodSec); // in bps
       
     } else if (metric == "DRB.UEThpUl") {
-      result[metric] = safe_div(d_ul_tx * 8, granularityPeriod); // in bps
+      result[metric] = safe_div(d_ul_tx * 8, granularityPeriodSec); // in bps
 
     } else if (metric == "DRB.RlcSduTransmittedVolumeDL") {
 

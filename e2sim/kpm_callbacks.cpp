@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
  * ============================================================ */
 void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod)
 {
-  stampaln("Starting report loop with period %ld seconds\n", granularityPeriod);
+  stampaln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
   long seqNum = 1;
   asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
   std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
@@ -143,7 +143,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   // ----- HEADER v3 (Format1) -----
   for (;;)
   {
-    std::this_thread::sleep_for(std::chrono::seconds(granularityPeriod));
+    std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
 

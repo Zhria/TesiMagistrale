@@ -78,7 +78,7 @@ void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
   stampaln("About to encode and send SCTP data\n");
   //uint8_t       *buf;
   sctp_buffer_t data;
-  stampaln("DATA PDU RESPONSE SUBSCRIPTION REQUEST\n");
+  stampaln("DATA PDU SEND PRE ENCODING\n");
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu);
 
 
