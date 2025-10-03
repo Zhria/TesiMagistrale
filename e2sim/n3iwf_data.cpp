@@ -308,22 +308,28 @@ static inline double safe_div(long num, long den) {
 
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
+  stampaln("Getting KPM metrics with granularityPeriod %ld seconds\n", granularityPeriod);
   std::string fullPath= joinPathFile(g_basePath, g_fileNameKPM);
   if (!fs::exists(fullPath)) {
     std::cerr << "[n3iwf] JSON file non trovato: " << fullPath << "\n";
     return {};
   }
+  stampaln("fullPath is %s\n",fullPath.c_str());
   auto buf = readWholeFile(fullPath);
   if (!buf) {
-    std::cerr << "[n3iwf] Impossibile leggere: " << fullPath << "\n";
+    stampaln("Impossibile leggere: %s\n",fullPath.c_str());
     return {};
   }
   if (!json::accept(*buf)) {
-    std::cerr << "[n3iwf] JSON non valido:\n" << *buf << "\n";
+    stampaln("JSON non valido:\n%s\n",buf->c_str());
     return {};
   }
 
   auto j = json::parse(*buf);
+  if (j.is_discarded()) {
+    stampaln("JSON non valido (discarded):\n%s\n",buf->c_str());
+    return {};
+  }
   
   const auto& metrics = j.at("data").at("byDir");
   const auto& ul = metrics.at("1");
