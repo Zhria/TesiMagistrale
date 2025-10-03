@@ -280,8 +280,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
   // std::vector<long> actionIdsAccept;
   // std::vector<long> actionIdsReject;
-  std::vector<std::pair<long, std::string>> acceptedActions; // actionId, metric
-  std::vector<std::pair<long, std::string>> rejectedActions; // actionId, metric
+  std::vector<long> acceptedActions; // actionId
+  std::vector<long> rejectedActions; // actionId
   bool any_metric_not_allowed = false;
   GranularityPeriod_t granularityPeriod = 0;
 
@@ -334,7 +334,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         if (actionType != RICactionType_report)
         {
           any_metric_not_allowed = true;
-          rejectedActions.push_back({actionId, "non-REPORT"});
+          rejectedActions.push_back({actionId});
           continue;
         }
         OCTET_STRING_t *act_def = next_item->value.choice.RICaction_ToBeSetup_Item.ricActionDefinition;
@@ -342,7 +342,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         if (!extract_meas_names_from_kpm_actiondef(act_def, meas_names, &granularityPeriod))
         {
           any_metric_not_allowed = true;
-          rejectedActions.push_back({actionId, "ActionDefinition decode failed"});
+          rejectedActions.push_back({actionId});
           continue;
         }
 
@@ -351,7 +351,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
           if (std::find(getAllowedKPI().begin(), getAllowedKPI().end(), m) == getAllowedKPI().end())
           {
             any_metric_not_allowed = true;
-            rejectedActions.push_back({actionId, m});
+            rejectedActions.push_back({actionId});
           }
         }
       }
@@ -374,8 +374,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     return;
   }
 
-  long *accept_array = NULL;
-  long *reject_array = NULL;
+  long *accept_array = acceptedActions.empty()?NULL: acceptedActions.data();
+  long *reject_array = rejectedActions.empty()?NULL: rejectedActions.data();
   int accept_size = (int)acceptedActions.size();
   int reject_size = (int)rejectedActions.size();
 
