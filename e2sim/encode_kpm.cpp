@@ -170,9 +170,9 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
       rec_add_double(&mdi->measRecord, value);
     }
   }
-  if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0)
+  if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
   {
-    stampaln("  No measurements to send in KPM Indication Message\n");
+    stampaln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
     // niente da inviare: pulisci e rientra
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
     free(mdi);
@@ -183,5 +183,6 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   }
   stampaln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
+
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
 }

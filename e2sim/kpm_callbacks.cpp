@@ -213,6 +213,15 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     stampaln("Encoded KPM indication message (Format1)\n");
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
+    char errbuf[512] = {0};
+    size_t errlen = sizeof(errbuf);
+    int rc = asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, ind_msg, errbuf, &errlen);
+    if (rc != 0) {
+      stampaln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
+      // opzionale: vai in continue
+      continue;
+    }
+
     uint8_t msg_buf[8192];
     asn_enc_rval_t emr = asn_encode_to_buffer(
         opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
