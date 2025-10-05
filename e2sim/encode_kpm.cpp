@@ -21,6 +21,7 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
                                  const MeasurementLabel_t *opt_label /* può essere nullptr */)
 {
   stampaln("  Adding measurement name function: %s\n", name);
+  if (!list) return;  // oppure assert/alloca, ma non dereferenziare
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
   it->measType.present = MeasurementType_PR_measName;
   // set_octet_string(&it->measType.choice.measName, name, strlen(name));
@@ -155,6 +156,8 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
 
   E2SM_KPM_IndicationMessage_Format1_t *fmt1 = (E2SM_KPM_IndicationMessage_Format1_t *)calloc(1, sizeof(*fmt1));
   MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(*mdi));
+  fmt1->measInfoList = (MeasurementInfoList_t*)calloc(1, sizeof(*fmt1->measInfoList));
+
   for (const auto &kv : kpi)
   {
     const char *name = kv.first.c_str();
@@ -178,6 +181,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     free(fmt1);
     return;
   }
+  stampaln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
 }
