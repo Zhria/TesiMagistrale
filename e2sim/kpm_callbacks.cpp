@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <sys/socket.h>   // shutdown()
+#include <netinet/sctp.h> // SCTP
+
 
 extern "C"
 {
@@ -31,13 +34,46 @@ extern "C"
 
 #include <nlohmann/json.hpp>
 #include "n3iwf_data.hpp"
+#include <atomic>
+#include <signal.h>
 
 struct timespec ts; // DEFINIZIONE (una sola volta in tutto l’eseguibile)
 
 using namespace std;
 using json = nlohmann::json;
 static E2Sim e2;
+static std::atomic_bool g_stop{false};
+extern int client_fd;  
 
+static void graceful_sctp_close(int fd) {
+    // 1) annuncia fine scritture -> kernel invia SHUTDOWN all peer
+    shutdown(fd, SHUT_WR);
+    // 2) drena eventuali dati in arrivo finché peer chiude
+    char buf[2048];
+    while (true) {
+        ssize_t n = recv(fd, buf, sizeof(buf), 0);
+        if (n == 0) break;         // EOF -> SHUTDOWN-ACK/COMPLETE completato
+        if (n < 0) break;          // errore -> chiudi comunque
+    }
+    // 3) chiusura definitiva della socket
+    close(fd);
+}
+
+static void on_term(int) {
+    g_stop = true;
+
+    // (opzionale) manda un E2AP Reset verso il RIC
+    // send_e2ap_reset_request(g_sctp_fd);
+
+    // chiudi TUTTE le associazioni SCTP con teardown pulito
+    graceful_sctp_close(client_fd);
+
+    // libera risorse (ASN.1, heap, thread join, ecc.)
+    // cleanup_asn1();
+    // join_threads();
+
+    _exit(0);  // uscita rapida dopo cleanup
+}
 /* ============================================================
  * MAIN
  * ============================================================ */
@@ -47,6 +83,13 @@ int main(int argc, char *argv[])
   std::this_thread::sleep_for(std::chrono::seconds(5));
   stampaln("Starting E2 Simulator with KPM Callbacks (KPM v3)\n");
   clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
+
+  struct sigaction sa{};
+    sa.sa_handler = on_term;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGTERM, &sa, nullptr);
+    sigaction(SIGINT,  &sa, nullptr);
 
   // --- RANfunction-Description KPM v3 ---
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
