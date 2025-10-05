@@ -125,11 +125,8 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
 
   // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
   // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
-  OCTET_STRING_t ts;
-  get_current_timestamp(&ts);
-  stampaln("Current timestamp for KPM Indication Header: %s\n", ts);
+  get_current_timestamp(&h1->colletStartTime);
   //set_octet_string(&h1->colletStartTime, &ts, sizeof(ts) - 1);
-  h1->colletStartTime = ts;
   // (opzionali) id_GlobalKPMnode_ID, ecc. -> lascio non settati
 
   hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1; // by value

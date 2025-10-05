@@ -193,6 +193,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     e2.encode_and_send_sctp_data(pdu);
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+
     seqNum++;
   }
 }
