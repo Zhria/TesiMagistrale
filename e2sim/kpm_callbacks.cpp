@@ -180,7 +180,6 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   stampaln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
   long seqNum = 1;
   asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
-  std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
 
   // Encoder KPM v3 (RAN Container CU-CP)
   // encode_kpm_report_rancontainer_cucp_parameterized(ind_msg3, plmnid_buf, nrcellid_buf, crnti_buf, serving_buf, neighbor_buf);
@@ -188,6 +187,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   for (;;)
   {
     stampaln("Report loop iteration with seqNum %ld\n", seqNum);
+    std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
+
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
