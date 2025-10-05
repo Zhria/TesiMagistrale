@@ -101,11 +101,16 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
 }
 
 
-void get_current_timestamp(char ts[16]) {
-    std::time_t now = std::time(nullptr);
-    std::tm gmt;
-    gmtime_r(&now, &gmt);
-    std::strftime(ts, 16, "%Y%m%d%H%M%SZ", &gmt);
+void get_current_timestamp(OCTET_STRING_t* os) {
+  uint8_t buf[8];
+  uint64_t ts = (uint64_t)time(NULL);     // secondi epoch
+
+  // scrivi ts in big-endian
+  for (int i = 0; i < 8; ++i)
+    buf[7 - i] = (uint8_t)((ts >> (8*i)) & 0xFF);
+
+  // Copia profonda nel campo ASN. Usa la funzione standard generata da asn1c.
+  OCTET_STRING_fromBuf(os, (const char*)buf, 8);
 }
 
 // ---------------------------------------
@@ -120,15 +125,15 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
 
   // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
   // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
-  char ts[16];
-  get_current_timestamp(ts);
+  OCTET_STRING_t ts;
+  get_current_timestamp(&ts);
   stampaln("Current timestamp for KPM Indication Header: %s\n", ts);
-  set_octet_string(&h1->colletStartTime, ts, sizeof(ts) - 1);
-
+  //set_octet_string(&h1->colletStartTime, &ts, sizeof(ts) - 1);
+  h1->colletStartTime = ts;
   // (opzionali) id_GlobalKPMnode_ID, ecc. -> lascio non settati
 
   hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1; // by value
-  free(h1);
+  //free(h1);
 }
 
 // --------------------------------------------------
@@ -152,7 +157,7 @@ void encode_kpm_ind_msg_fmt1(E2SM_KPM_IndicationMessage_t *indMsg)
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1; // by value
-  free(fmt1);
+  //free(fmt1);
 }
 
 // -----------------------------------------------------------------------
@@ -167,7 +172,7 @@ void encode_kpm_ind_msg_fmt2(E2SM_KPM_IndicationMessage_t *indMsg)
   // i campi specifici (measCondUEidList, ecc.). Qui lo lascio vuoto per compilare.
   E2SM_KPM_IndicationMessage_Format2_t *fmt2 = (E2SM_KPM_IndicationMessage_Format2_t *)calloc(1, sizeof(*fmt2));
   indMsg->indicationMessage_formats.choice.indicationMessage_Format2 = fmt2;
-  free(fmt2);
+  //free(fmt2);
 }
 
 // ---------------------------------------------------------------------------------
