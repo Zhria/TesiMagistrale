@@ -166,7 +166,11 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     // Un record con i 3 valori
     if (value != -1)
     {
-      add_meas_name(fmt1->measInfoList, name, NULL);
+      MeasurementLabel_t *ml = (MeasurementLabel_t *)calloc(1, sizeof(*ml));
+      ml->noLabel = (long *)calloc(1, sizeof(long));
+      *ml->noLabel = 0; // noLabel = 0 significa "nessuna etichetta"
+      // Aggiungi il nome della misura (se non c'è già) e l'etichetta (vuota)
+      add_meas_name(fmt1->measInfoList, name, ml);
       rec_add_double(&mdi->measRecord, value);
     }
   }
