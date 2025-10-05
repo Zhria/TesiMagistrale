@@ -124,8 +124,13 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
   // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
   // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
   get_current_timestamp(&h1->colletStartTime);
+  h1->senderName = (PrintableString_t *)calloc(1, sizeof(PrintableString_t));
+  OCTET_STRING_fromBuf(h1->senderName, "O-RAN N3IWF", strlen("O-RAN N3IWF"));
+  h1->fileFormatversion = (PrintableString_t *)calloc(1, sizeof(PrintableString_t));
+  OCTET_STRING_fromBuf(h1->fileFormatversion, "3.0", strlen("3.0"));
 
   hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1; // by value
+  
 }
 
 // -----------------------------------------------------------------------
