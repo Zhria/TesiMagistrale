@@ -63,6 +63,7 @@ static int64_t getKPMMetricValue(const std::string& name, Direction direction) {
   if(g_metrics.count < 20){
     g_metrics.metrics[g_metrics.count++] = {name, 0, direction};
   }
+  stampaln("Metric %s not found, creating with value 0\n", name.c_str());
     return 0; // Default value if not found
 }
 
@@ -362,6 +363,12 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
     return 0;
   };
 
+  //Print g_metrics
+  stampaln("Current saved KPM metrics:\n");
+  for(int i=0; i<g_metrics.count; i++){
+    stampaln("  %s: %ld (direction %d)\n", g_metrics.metrics[i].name.c_str(), g_metrics.metrics[i].value, g_metrics.metrics[i].direction);
+  } 
+  
   const int64_t cur_dl_in    = get64(dl, "incomingOctets");   // UPF -> N3IWF
   const int64_t cur_dl_tx    = get64(dl, "transmitOctets");   // N3IWF -> UE
   stampaln("cur_dl_in: %ld, cur_dl_tx: %ld\n", cur_dl_in, cur_dl_tx);
