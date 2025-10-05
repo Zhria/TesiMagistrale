@@ -21,7 +21,8 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
 {
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
   it->measType.present = MeasurementType_PR_measName;
-  set_octet_string(&it->measType.choice.measName, name, strlen(name));
+  //set_octet_string(&it->measType.choice.measName, name, strlen(name));
+  OCTET_STRING_fromBuf(&it->measType.choice.measName, name, (int)strlen(name));
 
   if (opt_label)
   {
@@ -255,14 +256,25 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
       (E2SM_KPM_IndicationMessage_Format1_t *)calloc(1, sizeof(*fmt1));
 
   MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(*mdi));
-  for(const auto& [key, value] : kpi) {
+  for (const auto& kv : kpi) {
+  const char* name = kv.first.c_str();
+  double value = kv.second;
   // Un record con i 3 valori
-      if(value != -1) {
-          add_meas_name(fmt1->measInfoList, key.c_str(), nullptr);
-          rec_add_int(&mdi->measRecord, value);
-      }
+  if(value != -1) {
+      add_meas_name(fmt1->measInfoList, name, NULL);
+      rec_add_int(&mdi->measRecord, value);
+  }
+  }
+    if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0) {
+    // niente da inviare: pulisci e rientra
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
+    free(mdi);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1->measInfoList);
+    free(fmt1->measInfoList);
+    free(fmt1);
+    return;
   }
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
-  free(fmt1);
+  //free(fmt1);
 }
