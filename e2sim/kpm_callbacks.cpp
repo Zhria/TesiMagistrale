@@ -223,9 +223,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     }
 
     uint8_t msg_buf[8192];
-    asn_enc_rval_t emr = asn_encode_to_buffer(
-        opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
-        &ind_msg, msg_buf, sizeof(msg_buf));
+    asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
+        ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
       stampaln("msg enc failed\n"); /* handle */
