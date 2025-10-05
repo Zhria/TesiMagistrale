@@ -150,10 +150,10 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     stampaln("Encoded KPM indication header (Format1)\n");
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
 
-    uint8_t hdr_buf3[MAX_SCTP_BUFFER];
+    uint8_t hdr_buf[MAX_SCTP_BUFFER];
     asn_enc_rval_t ehr = asn_encode_to_buffer(
         opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
-        &hdr, hdr_buf3, sizeof(hdr_buf3));
+        &hdr, hdr_buf, sizeof(hdr_buf));
     if (ehr.encoded < 0)
     {
       stampaln("hdr enc failed\n"); /* handle */
@@ -188,7 +188,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     // ----- E2AP wrapper -----
     generate_e2apv2_indication_request_parameterized(
         pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
-        hdr_buf3, (int)ehr.encoded, msg_buf, (int)emr.encoded);
+        hdr_buf, (int)ehr.encoded, msg_buf, (int)emr.encoded);
 
     e2.encode_and_send_sctp_data(pdu);
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
