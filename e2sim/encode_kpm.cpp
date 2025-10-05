@@ -200,12 +200,12 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
   //CHeck constraints
-  char errbuf[512] = {0};
-  size_t errlen;
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1, errbuf, &errlen);
-  if (errlen){
-    printf("IndicationMessage_Format1 constraints: %s\n", errbuf);
-    printf("IndicationMessage_Format1 constraints errlen=%zu\n", errlen);
+  char errbuf3[512] = {0};
+  size_t errlen3;
+  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1, errbuf3, &errlen3);
+  if (errlen3){
+    printf("IndicationMessage_Format1 constraints: %s\n", errbuf3);
+    printf("IndicationMessage_Format1 constraints errlen=%zu\n", errlen3);
   }
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
