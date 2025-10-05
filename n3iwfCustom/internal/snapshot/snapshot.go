@@ -561,6 +561,11 @@ func (s *AggStore) Snapshot() Snapshot {
 	for k, v := range s.byDir {
 		cpD[k] = *v
 	}
+	// If cpD is empty, initialize both directions to zero
+	if len(cpD) == 0 {
+		cpD[DL] = Counters{}
+		cpD[UL] = Counters{}
+	}
 
 	return Snapshot{
 		Total:    s.total,
