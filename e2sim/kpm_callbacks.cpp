@@ -90,6 +90,7 @@ int main(int argc, char *argv[])
     sa.sa_flags = 0;
     sigaction(SIGTERM, &sa, nullptr);
     sigaction(SIGINT,  &sa, nullptr);
+    sigaction(SIGSEGV, &sa, nullptr);
 
   // --- RANfunction-Description KPM v3 ---
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
