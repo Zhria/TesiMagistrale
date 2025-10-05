@@ -20,6 +20,7 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
                                  const char *name,
                                  const MeasurementLabel_t *opt_label /* può essere nullptr */)
 {
+  stampaln("  Adding measurement name function: %s\n", name);
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
   it->measType.present = MeasurementType_PR_measName;
   // set_octet_string(&it->measType.choice.measName, name, strlen(name));
@@ -38,6 +39,7 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
 
 static inline void rec_add_double(MeasurementRecord_t *rec, double v)
 {
+  stampaln("  Adding measurement record: %.2f\n", v);
   MeasurementRecordItem_t *item = (MeasurementRecordItem_t *)calloc(1, sizeof(*item));
   item->present = MeasurementRecordItem_PR_real;
   item->choice.real = v;
@@ -157,6 +159,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   {
     const char *name = kv.first.c_str();
     double value = kv.second;
+    stampaln("  Adding measurement %s = %.2f\n", name, value);
     // Un record con i 3 valori
     if (value != -1)
     {
@@ -166,6 +169,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   }
   if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0)
   {
+    stampaln("  No measurements to send in KPM Indication Message\n");
     // niente da inviare: pulisci e rientra
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
     free(mdi);
