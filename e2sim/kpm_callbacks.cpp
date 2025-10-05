@@ -143,23 +143,31 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   // ----- HEADER v3 (Format1) -----
   for (;;)
   {
+    stampaln("Report loop iteration with seqNum %ld\n", seqNum);
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
+    stampaln("Encoded KPM indication header (Format1)\n");
+    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
 
-    uint8_t hdr_buf3[512];
+    uint8_t hdr_buf3[MAX_SCTP_BUFFER];
     asn_enc_rval_t ehr = asn_encode_to_buffer(
         opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
         &hdr, hdr_buf3, sizeof(hdr_buf3));
     if (ehr.encoded < 0)
     {
       stampaln("hdr enc failed\n"); /* handle */
+      stampaln("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
+      continue;
     }
 
     E2SM_KPM_IndicationMessage_t *ind_msg =
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
     // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
+
     kpm_fill_ue_rf_basic(ind_msg, kpi);
+    stampaln("Encoded KPM indication message (Format1)\n");
+    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
     uint8_t msg_buf[8192];
     asn_enc_rval_t emr = asn_encode_to_buffer(
@@ -168,9 +176,15 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     if (emr.encoded < 0)
     {
       stampaln("msg enc failed\n"); /* handle */
+      stampaln("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
+      continue;
     }
     E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
-
+    if (pdu == NULL)
+    {
+      stampaln("calloc failed for pdu\n");
+      continue;
+    }
     // ----- E2AP wrapper -----
     generate_e2apv2_indication_request_parameterized(
         pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,

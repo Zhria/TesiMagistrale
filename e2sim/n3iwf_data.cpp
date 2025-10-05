@@ -308,7 +308,7 @@ static inline double safe_div(long num, long den) {
 
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
-  stampaln("Getting KPM metrics with granularityPeriod %ld seconds\n", granularityPeriod);
+  stampaln("Getting KPM metrics with granularityPeriod %ld milliseconds\n", granularityPeriod);
   float granularityPeriodSec=granularityPeriod/1000.0; // converti in secondi
   std::string fullPath= joinPathFile(g_basePath, g_fileNameKPM);
   if (!fs::exists(fullPath)) {
@@ -337,6 +337,16 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
     stampaln("JSON non valido (discarded):\n%s\n",buf->c_str());
     return {};
   }
+  //Can i use a try catch method to avoid the exception?
+  try {
+    if (!metrics.contains("0") || !metrics.contains("1")) {
+      stampaln("JSON non valido (missing '0' or '1' in byDir):\n%s\n",buf->c_str());
+      return {};
+    }
+  } catch (...) {
+    stampaln("Eccezione nel controllare '0' e '1' in byDir:\n%s\n",buf->c_str());
+    return {};
+  }
   const auto& ul = metrics.at("1");
   if( ul.is_discarded()) {
     stampaln("JSON non valido (discarded) UL:\n%s\n",buf->c_str());
@@ -354,22 +364,24 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
 
   const int64_t cur_dl_in    = get64(dl, "incomingOctets");   // UPF -> N3IWF
   const int64_t cur_dl_tx    = get64(dl, "transmitOctets");   // N3IWF -> UE
+  stampaln("cur_dl_in: %ld, cur_dl_tx: %ld\n", cur_dl_in, cur_dl_tx);
 
   const int64_t cur_ul_in    = get64(ul, "incomingOctets");   // UE -> N3IWF
   const int64_t cur_ul_tx    = get64(ul, "transmitOctets");   // N3IWF -> UPF
-
+  stampaln("cur_ul_in: %ld, cur_ul_tx: %ld\n", cur_ul_in, cur_ul_tx);
   const int64_t cur_dl_pkt_lost=get64(dl, "incomingPkts") - get64(dl, "transmitPkts"); 
   const int64_t cur_ul_pkt_lost=get64(ul, "incomingPkts") - get64(ul, "transmitPkts");
-
+  stampaln("cur_dl_pkt_lost: %ld, cur_ul_pkt_lost: %ld\n", cur_dl_pkt_lost, cur_ul_pkt_lost);
   std::vector<std::string> kpi = getAllowedKPI();
   //Calcolo delta metriche
   int64_t d_dl_in   = cur_dl_in - getKPMMetricValue("incomingOctets",DL);
   int64_t d_dl_tx   = cur_dl_tx - getKPMMetricValue("transmitOctets",DL);
   int64_t d_dl_drop = cur_dl_pkt_lost - getKPMMetricValue("droppedPackets",DL);
-
+  stampaln("d_dl_in: %ld, d_dl_tx: %ld, d_dl_drop: %ld\n", d_dl_in, d_dl_tx, d_dl_drop);  
   int64_t d_ul_in   = cur_ul_in - getKPMMetricValue("incomingOctets",UL);
   int64_t d_ul_tx   = cur_ul_tx - getKPMMetricValue("transmitOctets",UL);
   int64_t d_ul_drop = cur_ul_pkt_lost - getKPMMetricValue("droppedPackets",UL);
+  stampaln("d_ul_in: %ld, d_ul_tx: %ld, d_ul_drop: %ld\n", d_ul_in, d_ul_tx, d_ul_drop);
 
 
   //Save new values for next delta calculation
@@ -380,6 +392,7 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   setKPMMetricValue("incomingOctets",cur_ul_in, UL);
   setKPMMetricValue("transmitOctets",cur_ul_tx, UL);
   setKPMMetricValue("droppedPackets",cur_ul_pkt_lost, UL);
+  stampaln("Saved new KPM metric values for next delta calculation\n");
 
   std::map<std::string, double> result;
 
@@ -408,6 +421,11 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
     } else {
       std::cerr << "[n3iwf] Metrica KPM non gestita: " << metric << "\n";
     }
+  }
+
+  stampaln("KPM metrics computed:\n");
+  for (const auto& [k, v] : result) {
+    stampaln("  %s: %.2f\n", k.c_str(), v);
   }
 
   return result;

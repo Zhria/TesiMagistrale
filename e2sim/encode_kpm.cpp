@@ -1,5 +1,6 @@
 // encode_kpm.cpp
 #include "encode_kpm.hpp"
+#include <ctime>
 
 // -----------------------------
 // Utility locali
@@ -99,6 +100,14 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   ASN_SEQUENCE_ADD(&desc->ric_ReportStyle_List->list, rs);
 }
 
+
+void get_current_timestamp(char ts[16]) {
+    std::time_t now = std::time(nullptr);
+    std::tm gmt;
+    gmtime_r(&now, &gmt);
+    std::strftime(ts, 16, "%Y%m%d%H%M%SZ", &gmt);
+}
+
 // ---------------------------------------
 // Indication Header - Format 1 
 // ---------------------------------------
@@ -111,7 +120,9 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
 
   // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
   // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
-  const char ts[] = "20240620123000Z";
+  char ts[16];
+  get_current_timestamp(ts);
+  stampaln("Current timestamp for KPM Indication Header: %s\n", ts);
   set_octet_string(&h1->colletStartTime, ts, sizeof(ts) - 1);
 
   // (opzionali) id_GlobalKPMnode_ID, ecc. -> lascio non settati
@@ -230,6 +241,10 @@ void kpm_fill_cell_slice_qos_meas(E2SM_KPM_IndicationMessage_t *indMsg,
 // ---------------------------------------------------------------------------------
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
+  stampaln("Filling KPM Indication Message with KPI values:\n");
+  for(const auto& [key, value] : kpi) {
+      stampaln("  %s: %.2f\n", key.c_str(), value);
+  } 
   memset(indMsg, 0, sizeof(*indMsg));
   indMsg->indicationMessage_formats.present =
       E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;

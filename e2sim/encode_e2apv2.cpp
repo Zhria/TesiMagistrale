@@ -676,6 +676,7 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
                                                       long actionId,long seqNum,uint8_t *ind_header_buf,
                                                       int header_length,uint8_t *ind_message_buf,int message_length)
 {
+  stampaln( "[generate_e2apv2_indication_request_parameterized] init function\n");
   RICindication_IEs_t *ricind_ies  = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
   RICindication_IEs_t *ricind_ies2 = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
   RICindication_IEs_t *ricind_ies3 = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
@@ -745,9 +746,11 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
   char errbuf[512] = {0};
   size_t errlen;
   asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, errbuf, &errlen);
-  printf("constraints errlen=%zu\n", errlen);
-  if (errlen) printf("constraints: %s\n", errbuf);
-
+  if (errlen){
+    printf("constraints: %s\n", errbuf);
+    printf("constraints errlen=%zu\n", errlen);
+  }
+  stampaln( "[generate_e2apv2_indication_request_parameterized] E2AP PDU Indication Request Parameterized\n");
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, e2ap_pdu);
 }
 
