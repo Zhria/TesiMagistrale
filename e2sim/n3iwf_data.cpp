@@ -60,24 +60,21 @@ static int64_t getKPMMetricValue(const std::string& name, Direction direction) {
     }
   // If we reach here, the metric was not found
   //So we create a metric with value 0 and return 0
-  if(g_metrics.count < 20){
-    g_metrics.metrics[g_metrics.count++] = {name, 0, direction};
-  }
-  stampaln("Metric %s not found, creating with value 0\n", name.c_str());
-    return 0; // Default value if not found
+  stampaln("Metric %s not found, return  0\n", name.c_str());
+  return 0; // Default value if not found
 }
 
 static void setKPMMetricValue(const std::string& name, int64_t value, Direction direction) {
-    for (auto& metric : g_metrics.metrics) {
-        if (metric.name == name) {
-            metric.value = value;
+    for (int i=0; i < g_metrics.count; i++) {
+        if (g_metrics.metrics[i].name == name && g_metrics.metrics[i].direction == direction) {
+            g_metrics.metrics[i].value = value;
             return;
         }
     }
     // If we reach here, the metric was not found
     //So we create a metric with the given value
     if(g_metrics.count < 20){
-      g_metrics.metrics[g_metrics.count++] = {name, value, 0};
+      g_metrics.metrics[g_metrics.count++] = {name, value, direction};
   }
 }
 
@@ -301,11 +298,15 @@ void deinit_n3iwf_data() {
   }
 }
 
-static inline double safe_div(long num, long den) {
-  if (den <= 0) return 0;
+static inline double safe_div(double num, double den) {
+  if (den <= 0) return 0.0;
   // round half up: (num + den/2) / den
-  return (num >= 0) ? (num + den/2) / den : (num - den/2) / den;
+  return num/den;
 };
+
+static inline double percent_or_zero(int64_t num, int64_t den) {
+  return (den > 0) ? (100.0 * (double)num / (double)den) : 0.0;
+}
 
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
@@ -414,16 +415,16 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
 
     } else if (metric == "DRB.RlcSduTransmittedVolumeDL") {
 
-      result[metric] = d_dl_tx*8/1000; // in kbits
+      result[metric] = (double)d_dl_tx*8/1000; // in kbits
 
     } else if (metric == "DRB.RlcSduTransmittedVolumeUL") {
-      result[metric] = d_ul_tx*8/1000; // in kbits
+      result[metric] = (double)d_ul_tx*8/1000; // in kbits
 
     } else if (metric == "DRB.RlcPacketDropRateDLDist") {
-      result[metric]= safe_div(d_dl_drop * 100, d_dl_in);
+      result[metric]= percent_or_zero(d_dl_drop, d_dl_in); //%
     
     } else if (metric == "DRB.RlcPacketLossRateULDist") {
-      result[metric]= safe_div(d_ul_drop * 100, d_ul_in);
+      result[metric]= percent_or_zero(d_ul_drop, d_ul_in); //%
 
     } else {
       std::cerr << "[n3iwf] Metrica KPM non gestita: " << metric << "\n";
