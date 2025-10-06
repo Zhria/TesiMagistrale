@@ -746,12 +746,12 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
   char errbuf[512] = {0};
   size_t errlen;
   asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, errbuf, &errlen);
-  if (errlen){
-    printf("constraints: %s\n", errbuf);
-    printf("constraints errlen=%zu\n", errlen);
+  if (errlen > 0){
+    stampaln("constraints: %s\n", errbuf);
+    stampaln("constraints errlen=%zu\n", errlen);
   }
-  stampaln( "[generate_e2apv2_indication_request_parameterized] E2AP PDU Indication Request Parameterized\n");
-  xer_fprint(stderr, &asn_DEF_E2AP_PDU, e2ap_pdu);
+  //stampaln( "[generate_e2apv2_indication_request_parameterized] E2AP PDU Indication Request Parameterized\n");
+  //xer_fprint(stderr, &asn_DEF_E2AP_PDU, e2ap_pdu);
 }
 
 /* =========================================================================

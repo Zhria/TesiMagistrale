@@ -150,11 +150,6 @@ void encode_kpm_ind_msg_fmt2(E2SM_KPM_IndicationMessage_t *indMsg)
 // ---------------------------------------------------------------------------------
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
-  stampaln("Filling KPM Indication Message with KPI values:\n");
-  for (const auto &[key, value] : kpi)
-  {
-    stampaln("  %s: %.2f\n", key.c_str(), value);
-  }
   memset(indMsg, 0, sizeof(*indMsg));
   indMsg->indicationMessage_formats.present =
       E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
@@ -179,21 +174,21 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
       rec_add_double(&mdi->measRecord, value);
     }
   }
-  char errbuf[512] = {0};
-  size_t errlen;
-  asn_check_constraints(&asn_DEF_MeasurementDataItem, mdi, errbuf, &errlen);
-  if (errlen){
-    printf("MeasurementDataItem constraints: %s\n", errbuf);
-    printf("MeasurementDataItem  constraints errlen=%zu\n", errlen);
-  }
+  // char errbuf[512] = {0};
+  // size_t errlen;
+  // asn_check_constraints(&asn_DEF_MeasurementDataItem, mdi, errbuf, &errlen);
+  // if (errlen > 0){
+  //   stampaln("MeasurementDataItem constraints: %s\n", errbuf);
+  //   stampaln("MeasurementDataItem  constraints errlen=%zu\n", errlen);
+  // }
 
-  char errbuf2[512] = {0};
-  size_t errlen2;
-  asn_check_constraints(&asn_DEF_MeasurementInfoList, fmt1->measInfoList, errbuf2, &errlen2);
-  if (errlen2){
-    printf("MeasurementInfoList constraints: %s\n", errbuf2);
-    printf("MeasurementInfoList constraints errlen=%zu\n", errlen2);
-  }
+  // char errbuf2[512] = {0};
+  // size_t errlen2;
+  // asn_check_constraints(&asn_DEF_MeasurementInfoList, fmt1->measInfoList, errbuf2, &errlen2);
+  // if (errlen2){
+  //   printf("MeasurementInfoList constraints: %s\n", errbuf2);
+  //   printf("MeasurementInfoList constraints errlen=%zu\n", errlen2);
+  // }
   if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
   {
     stampaln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
@@ -208,14 +203,14 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   stampaln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
-  //CHeck constraints
-  char errbuf3[512] = {0};
-  size_t errlen3;
-  asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1, errbuf3, &errlen3);
-  if (errlen3){
-    printf("IndicationMessage_Format1 constraints: %s\n", errbuf3);
-    printf("IndicationMessage_Format1 constraints errlen=%zu\n", errlen3);
-  }
+  // //CHeck constraints
+  // char errbuf3[512] = {0};
+  // size_t errlen3;
+  // asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1, errbuf3, &errlen3);
+  // if (errlen3){
+  //   stampaln("IndicationMessage_Format1 constraints: %s\n", errbuf3);
+  //   stampaln("IndicationMessage_Format1 constraints errlen=%zu\n", errlen3);
+  // }
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
 }

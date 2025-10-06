@@ -372,14 +372,15 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   
   const int64_t cur_dl_in    = get64(dl, "incomingOctets");   // UPF -> N3IWF
   const int64_t cur_dl_tx    = get64(dl, "transmitOctets");   // N3IWF -> UE
+  const int64_t cur_dl_pkt_lost=get64(dl, "incomingPkts") - get64(dl, "transmitPkts"); 
   stampaln("cur_dl_in: %ld, cur_dl_tx: %ld\n", cur_dl_in, cur_dl_tx);
 
   const int64_t cur_ul_in    = get64(ul, "incomingOctets");   // UE -> N3IWF
   const int64_t cur_ul_tx    = get64(ul, "transmitOctets");   // N3IWF -> UPF
-  stampaln("cur_ul_in: %ld, cur_ul_tx: %ld\n", cur_ul_in, cur_ul_tx);
-  const int64_t cur_dl_pkt_lost=get64(dl, "incomingPkts") - get64(dl, "transmitPkts"); 
   const int64_t cur_ul_pkt_lost=get64(ul, "incomingPkts") - get64(ul, "transmitPkts");
-  stampaln("cur_dl_pkt_lost: %ld, cur_ul_pkt_lost: %ld\n", cur_dl_pkt_lost, cur_ul_pkt_lost);
+  stampaln("cur_ul_in: %ld, cur_ul_tx: %ld\n", cur_ul_in, cur_ul_tx);
+
+
   std::vector<std::string> kpi = getAllowedKPI();
   //Calcolo delta metriche
   int64_t d_dl_in   = cur_dl_in - getKPMMetricValue("incomingOctets",DL);

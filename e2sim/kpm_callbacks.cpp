@@ -192,8 +192,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
-    stampaln("Encoded KPM indication header (Format1)\n");
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+    //stampaln("Encoded KPM indication header (Format1)\n");
+    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
 
     uint8_t hdr_buf[MAX_SCTP_BUFFER];
     asn_enc_rval_t ehr = asn_encode_to_buffer(
@@ -211,8 +211,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 
     kpm_fill_ue_rf_basic(ind_msg, kpi);
-    stampaln("Encoded KPM indication message (Format1)\n");
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+    //stampaln("Encoded KPM indication message (Format1)\n");
+    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
     char errbuf[512] = {0};
     size_t errlen = sizeof(errbuf);
