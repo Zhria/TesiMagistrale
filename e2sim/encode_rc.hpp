@@ -5,7 +5,6 @@
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
-#include "n3iwf_utils.hpp"
 #include <vector>
 #include <map>
 extern "C" {
@@ -21,6 +20,10 @@ extern "C" {
   #include "RANFunctionDefinition-Policy.h"
   #include "RANFunctionDefinition-Control-Item.h"
   #include "RANFunctionDefinition-Control-Action-Item.h"
+  #include "RANFunctionDefinition-Insert.h"
+  #include "UEIdentification-RANParameter-Item.h"
+  #include "RANFunctionDefinition-Report-Item.h"
+  
 
 
   #include "RIC-EventTriggerStyle-Item.h"
@@ -52,6 +55,7 @@ extern "C" {
   #include "E2SM-RC-ActionDefinition.h" // or the correct header where MeasurementInfoAction_Item_t is defined
   #include "RIC-EventTriggerStyle-Item.h"
   #include "RIC-ReportStyle-Item.h"
+  
 
 }
   

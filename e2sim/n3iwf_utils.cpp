@@ -31,6 +31,7 @@ extern "C" {
 
 extern struct timespec ts;
 #include "n3iwf_utils.hpp"
+#include <map>
 
 //String ammettendo n variabili variabili
  void stampaln(const char* msg, ...) {
@@ -155,4 +156,23 @@ std::vector<std::string> getJSONKeysKPM(){
     "transmitOctets",
     "droppedOctets"
   };
+}
+
+
+std::vector<std::string> getAllowedMetricsRC(){
+    return {
+      "UE INFORMATION"
+    };
+}
+
+
+std::map<long,std::string> getUEIdentifierRC(){
+    return {
+        {1, "Supi"},
+        {2, "Guti"},
+        {3, "FiveG-S-TMSI"},
+        {4, "N3IWF-CGI"},
+        {5, "N3IWF-UE-IP-Address"},
+        {6, "N3IWF-UE-MAC-Address"}
+    };
 }

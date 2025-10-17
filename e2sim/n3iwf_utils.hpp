@@ -40,3 +40,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
 void stampaln(const char* msg, ...);
 
 std::vector<std::string> getAllowedKPI();
+
+std::vector<std::string> getAllowedMetricsRC();
+
+std::map<long,std::string> getUEIdentifierRC();
