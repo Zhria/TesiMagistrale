@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
   }
 
   asn_enc_rval_t er = asn_encode_to_buffer(
-      NULL, ATS_UNALIGNED_BASIC_PER,
+      NULL, ATS_ALIGNED_BASIC_PER,
       &asn_DEF_E2SM_KPM_RANfunction_Description,
       ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
@@ -150,7 +150,7 @@ int main(int argc, char *argv[])
 
   // Self-test: decodifica della RANfunction-Description appena encodata
   E2SM_KPM_RANfunction_Description_t *check = NULL;
-  asn_dec_rval_t dr = asn_decode(NULL, ATS_UNALIGNED_BASIC_PER,
+  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER,
                                  &asn_DEF_E2SM_KPM_RANfunction_Description,
                                  (void **)&check,
                                  ranfunc_ostr->buf, ranfunc_ostr->size);
@@ -197,7 +197,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     uint8_t hdr_buf[MAX_SCTP_BUFFER];
     asn_enc_rval_t ehr = asn_encode_to_buffer(
-        opt_cod, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
+        opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationHeader,
         &hdr, hdr_buf, sizeof(hdr_buf));
     if (ehr.encoded < 0)
     {
@@ -224,7 +224,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     }
 
     uint8_t msg_buf[8192];
-    asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
+    asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
         ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
