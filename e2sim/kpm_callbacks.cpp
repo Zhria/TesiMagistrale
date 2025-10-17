@@ -180,9 +180,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   for (;;)
   {
     stampaln("Report loop iteration with seqNum %ld\n", seqNum);
-    std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
-
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
+    std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
 

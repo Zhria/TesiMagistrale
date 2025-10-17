@@ -20,7 +20,7 @@ static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
   stampaln("  Adding measurement name function: %s\n", name);
   if (!list) return;  // oppure assert/alloca, ma non dereferenziare
-  MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
+  MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(MeasurementInfoItem_t));
   it->measType.present = MeasurementType_PR_measName;
   OCTET_STRING_fromBuf(&it->measType.choice.measName, name, (int)strlen(name));
 
