@@ -16,10 +16,8 @@ static inline void set_octet_string(OCTET_STRING_t *dst, const void *src)
     memcpy(dst->buf, src, len);
 }
 
-static inline void add_meas_name(MeasurementInfoList_t *list,
-                                 const char *name,
-                                 const MeasurementLabel_t *opt_label /* può essere nullptr */)
-{
+static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
+
   stampaln("  Adding measurement name function: %s\n", name);
   if (!list) return;  // oppure assert/alloca, ma non dereferenziare
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
@@ -27,13 +25,10 @@ static inline void add_meas_name(MeasurementInfoList_t *list,
   // set_octet_string(&it->measType.choice.measName, name, strlen(name));
   OCTET_STRING_fromBuf(&it->measType.choice.measName, name, (int)strlen(name));
 
-  if (opt_label)
-  {
-    // Copia "by value" dell'etichetta dentro un LabelInfoItem
-    LabelInfoItem *li = (LabelInfoItem *)calloc(1, sizeof(LabelInfoItem));
-    li->measLabel = *opt_label;
-    ASN_SEQUENCE_ADD(&it->labelInfoList.list, li);
-  }
+  LabelInfoItem *li = (LabelInfoItem *)calloc(1, sizeof(LabelInfoItem));
+  li->measLabel.noLabel = (long*)calloc(1, sizeof(long));
+  *li->measLabel.noLabel = 0;           // “nessuna etichetta”
+  ASN_SEQUENCE_ADD(&it->labelInfoList.list, li);
 
   ASN_SEQUENCE_ADD(&list->list, it);
 }
@@ -133,20 +128,6 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
   
 }
 
-// -----------------------------------------------------------------------
-// Indication Message - Format 2 (stub minimo: presente ma senza contenuti)
-// -----------------------------------------------------------------------
-void encode_kpm_ind_msg_fmt2(E2SM_KPM_IndicationMessage_t *indMsg)
-{
-  memset(indMsg, 0, sizeof(*indMsg));
-  indMsg->indicationMessage_formats.present = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format2;
-
-  // Se davvero ti serve il Format2 (misure condizionate/UE), riempio volentieri
-  // i campi specifici (measCondUEidList, ecc.). Qui lo lascio vuoto per compilare.
-  E2SM_KPM_IndicationMessage_Format2_t *fmt2 = (E2SM_KPM_IndicationMessage_Format2_t *)calloc(1, sizeof(*fmt2));
-  indMsg->indicationMessage_formats.choice.indicationMessage_Format2 = fmt2;
-}
-
 // ---------------------------------------------------------------------------------
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
@@ -166,11 +147,8 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     // Un record con i 3 valori
     if (value != -1)
     {
-      MeasurementLabel_t *ml = (MeasurementLabel_t *)calloc(1, sizeof(*ml));
-      ml->noLabel = (long *)calloc(1, sizeof(long));
-      *ml->noLabel = 0; // noLabel = 0 significa "nessuna etichetta"
       // Aggiungi il nome della misura (se non c'è già) e l'etichetta (vuota)
-      add_meas_name(fmt1->measInfoList, name, ml);
+      add_meas_name(fmt1->measInfoList, name);
       rec_add_double(&mdi->measRecord, value);
     }
   }
