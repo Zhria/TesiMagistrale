@@ -22,12 +22,11 @@ static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
   if (!list) return;  // oppure assert/alloca, ma non dereferenziare
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(*it));
   it->measType.present = MeasurementType_PR_measName;
-  // set_octet_string(&it->measType.choice.measName, name, strlen(name));
   OCTET_STRING_fromBuf(&it->measType.choice.measName, name, (int)strlen(name));
 
   LabelInfoItem *li = (LabelInfoItem *)calloc(1, sizeof(LabelInfoItem));
   li->measLabel.noLabel = (long*)calloc(1, sizeof(long));
-  *li->measLabel.noLabel = 0;           // “nessuna etichetta”
+  *li->measLabel.noLabel = 0; 
   ASN_SEQUENCE_ADD(&it->labelInfoList.list, li);
 
   ASN_SEQUENCE_ADD(&list->list, it);
@@ -152,22 +151,8 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
       rec_add_double(&mdi->measRecord, value);
     }
   }
-  // char errbuf[512] = {0};
-  // size_t errlen;
-  // asn_check_constraints(&asn_DEF_MeasurementDataItem, mdi, errbuf, &errlen);
-  // if (errlen > 0){
-  //   stampaln("MeasurementDataItem constraints: %s\n", errbuf);
-  //   stampaln("MeasurementDataItem  constraints errlen=%zu\n", errlen);
-  // }
 
-  // char errbuf2[512] = {0};
-  // size_t errlen2;
-  // asn_check_constraints(&asn_DEF_MeasurementInfoList, fmt1->measInfoList, errbuf2, &errlen2);
-  // if (errlen2){
-  //   printf("MeasurementInfoList constraints: %s\n", errbuf2);
-  //   printf("MeasurementInfoList constraints errlen=%zu\n", errlen2);
-  // }
-  if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
+  if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
   {
     stampaln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
     // niente da inviare: pulisci e rientra
@@ -180,15 +165,6 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   }
   stampaln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
-
-  // //CHeck constraints
-  // char errbuf3[512] = {0};
-  // size_t errlen3;
-  // asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1, errbuf3, &errlen3);
-  // if (errlen3){
-  //   stampaln("IndicationMessage_Format1 constraints: %s\n", errbuf3);
-  //   stampaln("IndicationMessage_Format1 constraints errlen=%zu\n", errlen3);
-  // }
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
 }

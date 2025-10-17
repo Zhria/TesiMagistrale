@@ -394,98 +394,11 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
   e2ap_pdu->choice.initiatingMessage = initmsg;
 }
 
-/* =========================================================================
- * RIC Subscription Request – fix memcpy e niente auto
- * ========================================================================= */
-void generate_e2apv2_subscription_request(E2AP_PDU *e2ap_pdu)
-{
-  stampaln( "[generate_e2apv2_subscription_request] init function\n");
-
-  RICsubscriptionRequest_IEs_t *ricreqid = (RICsubscriptionRequest_IEs_t *)calloc(1, sizeof(RICsubscriptionRequest_IEs_t));
-  ASN_STRUCT_RESET(asn_DEF_RICsubscriptionRequest_IEs, ricreqid);
-
-  RICsubscriptionRequest_IEs_t *ricsubrid = (RICsubscriptionRequest_IEs_t *)calloc(1, sizeof(RICsubscriptionRequest_IEs_t));
-  ASN_STRUCT_RESET(asn_DEF_RICsubscriptionRequest_IEs, ricsubrid);
-
-  // Event Trigger Definition
-  uint8_t *buf2 = (uint8_t *)"SubscriptionTriggers";
-  OCTET_STRING_t *triggerdef = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
-  triggerdef->buf = (uint8_t *)calloc(1, 20);
-  triggerdef->size = 20;
-  memcpy(triggerdef->buf, buf2, triggerdef->size);
-
-  ProtocolIE_ID_t proto_id = ProtocolIE_ID_id_RICaction_ToBeSetup_Item;
-
-  RICaction_ToBeSetup_ItemIEs__value_PR pres6;
-  pres6 = RICaction_ToBeSetup_ItemIEs__value_PR_RICaction_ToBeSetup_Item;
-
-  // Action Definition
-  uint8_t *buf5 = (uint8_t *)"ActionDef";
-  OCTET_STRING_t *actdef = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
-  actdef->buf = (uint8_t *)calloc(1, 9);
-  actdef->size = 9;
-  memcpy(actdef->buf, buf5, 9);  // FIX: prima copiava su triggerdef->buf
-
-  RICsubsequentAction_t *sa = (RICsubsequentAction_t *)calloc(1, sizeof(RICsubsequentAction_t));
-  ASN_STRUCT_RESET(asn_DEF_RICsubsequentAction, sa);
-  sa->ricTimeToWait = RICtimeToWait_w500ms;
-  sa->ricSubsequentActionType = RICsubsequentActionType_continue;
-
-  RICaction_ToBeSetup_ItemIEs_t *action_item_ies =
-      (RICaction_ToBeSetup_ItemIEs_t *)calloc(1, sizeof(RICaction_ToBeSetup_ItemIEs_t));
-  action_item_ies->id = proto_id;
-  action_item_ies->criticality = Criticality_reject;
-  action_item_ies->value.present = pres6;
-  action_item_ies->value.choice.RICaction_ToBeSetup_Item.ricActionID = 5;
-  action_item_ies->value.choice.RICaction_ToBeSetup_Item.ricActionType = RICactionType_report;
-  action_item_ies->value.choice.RICaction_ToBeSetup_Item.ricActionDefinition = actdef;
-  action_item_ies->value.choice.RICaction_ToBeSetup_Item.ricSubsequentAction = sa;
-
-  ricsubrid->id = ProtocolIE_ID_id_RICsubscriptionDetails;
-  ricsubrid->criticality = Criticality_reject;
-  ricsubrid->value.present = RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails;
-  ricsubrid->value.choice.RICsubscriptionDetails.ricEventTriggerDefinition = *triggerdef;
-  ASN_SEQUENCE_ADD(&ricsubrid->value.choice.RICsubscriptionDetails.ricAction_ToBeSetup_List.list, action_item_ies);
-
-  ricreqid->id = ProtocolIE_ID_id_RICrequestID;
-  ricreqid->criticality = Criticality_reject;
-  ricreqid->value.present = RICsubscriptionRequest_IEs__value_PR_RICrequestID;
-  ricreqid->value.choice.RICrequestID.ricRequestorID = 22;
-  ricreqid->value.choice.RICrequestID.ricInstanceID = 6;
-
-  RICsubscriptionRequest_t *ricsubreq = (RICsubscriptionRequest_t *)calloc(1, sizeof(RICsubscriptionRequest_t));
-  ASN_SEQUENCE_ADD(&ricsubreq->protocolIEs.list, ricreqid);
-  ASN_SEQUENCE_ADD(&ricsubreq->protocolIEs.list, ricsubrid);
-
-  InitiatingMessage_t *initmsg = (InitiatingMessage_t *)calloc(1, sizeof(InitiatingMessage_t));
-  initmsg->procedureCode = ProcedureCode_id_RICsubscription;
-  initmsg->criticality = Criticality_reject;
-  initmsg->value.present = InitiatingMessage__value_PR_RICsubscriptionRequest;
-  initmsg->value.choice.RICsubscriptionRequest = *ricsubreq;
-
-  e2ap_pdu->present = E2AP_PDU_PR_initiatingMessage;
-  e2ap_pdu->choice.initiatingMessage = initmsg;
-
-  char *error_buf = (char *)calloc(300, sizeof(char));
-  size_t errlen;
-  asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, error_buf, &errlen);
-  printf("error length %ld\n", errlen);
-  printf("error buf %s\n", error_buf);
-}
 
 /* =========================================================================
  * RIC Subscription Response (success) – niente auto
  * ========================================================================= */
-void generate_e2apv2_subscription_response_success(
-    E2AP_PDU *e2ap_pdu,
-    const long *reqActionIdsAccepted,
-    const long *reqActionIdsRejected,
-    int accept_size,
-    int reject_size,
-    long reqRequestorId,
-    long reqInstanceId,
-    long ranFunctionId // <--- AGGIUNTO
-){
+void generate_e2apv2_subscription_response_success(E2AP_PDU *e2ap_pdu, const long *reqActionIdsAccepted, const long *reqActionIdsRejected, int accept_size, int reject_size, long reqRequestorId, long reqInstanceId, long ranFunctionId){
   // 1) Prepara SuccessfulOutcome
   SuccessfulOutcome_t *successoutcome = (SuccessfulOutcome_t *)calloc(1, sizeof(*successoutcome));
   successoutcome->procedureCode = ProcedureCode_id_RICsubscription;

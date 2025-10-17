@@ -62,8 +62,6 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *setup_req_pdu, std:
 
 void generate_e2apv2_setup_response(E2AP_PDU_t *setup_resp_pdu);
 
-void generate_e2apv2_subscription_request(E2AP_PDU_t *sub_req_pdu);
-
 void generate_e2apv2_subscription_response(E2AP_PDU_t *sub_resp_pdu, E2AP_PDU_t *sub_req_pdu);
 
 void generate_e2apv2_indication_request(E2AP_PDU_t *ind_req_pdu);

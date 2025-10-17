@@ -150,23 +150,16 @@ int main(int argc, char *argv[])
 
   // Self-test: decodifica della RANfunction-Description appena encodata
   E2SM_KPM_RANfunction_Description_t *check = NULL;
-  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER,
-                                 &asn_DEF_E2SM_KPM_RANfunction_Description,
-                                 (void **)&check,
-                                 ranfunc_ostr->buf, ranfunc_ostr->size);
-  if (dr.code != RC_OK)
-  {
+  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_RANfunction_Description, (void **)&check, ranfunc_ostr->buf, ranfunc_ostr->size);
+  if (dr.code != RC_OK){
     stampaln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
   }
-  else
-  {
+  else {
     stampaln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
   }
 
   // Non servono più questi buffer locali
   free(e2smbuffer);
-  // (ranfunc_ostr viene mantenuto registrato dentro e2)
-
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
   return 0;
@@ -192,8 +185,6 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
-    //stampaln("Encoded KPM indication header (Format1)\n");
-    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
 
     uint8_t hdr_buf[MAX_SCTP_BUFFER];
     asn_enc_rval_t ehr = asn_encode_to_buffer(
@@ -211,8 +202,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 
     kpm_fill_ue_rf_basic(ind_msg, kpi);
-    //stampaln("Encoded KPM indication message (Format1)\n");
-    //xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+    stampaln("Encoded KPM indication message (Format1)\n");
+    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
     char errbuf[512] = {0};
     size_t errlen = sizeof(errbuf);
@@ -305,13 +296,9 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     // In genere MeasurementType_t è un campo non-pointer
     MeasurementType_t *mt = &mi->measType;
 
-    if (mt->present == MeasurementType_PR_measName &&
-        mt->choice.measName.buf &&
-        mt->choice.measName.size > 0)
+    if (mt->present == MeasurementType_PR_measName && mt->choice.measName.buf && mt->choice.measName.size > 0)
     {
-      out_meas.emplace_back(
-          (char *)mt->choice.measName.buf,
-          mt->choice.measName.size);
+      out_meas.emplace_back((char *)mt->choice.measName.buf, mt->choice.measName.size);
     }
   }
 
