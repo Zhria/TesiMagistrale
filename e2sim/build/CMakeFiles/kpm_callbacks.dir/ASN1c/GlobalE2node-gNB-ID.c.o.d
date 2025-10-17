@@ -77,14 +77,19 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalE2node-gNB-ID.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_bit_data.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_decoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMN-Identity.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/OCTET_STRING.h \
@@ -101,9 +106,10 @@ CMakeFiles/kpm_callbacks.dir/ASN1c/GlobalE2node-gNB-ID.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_CHOICE.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/constr_SEQUENCE.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2AP-IEs_GNB-CU-UP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-CU-UP-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/ASN1c/INTEGER.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2AP-IEs_GNB-DU-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/E2AP-IEs_GlobalenGNB-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/ASN1c/ENGNB-ID.h
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/GNB-DU-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/GlobalenGNB-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/PLMNIdentity.h \
+ /home/zakaria/TesiMagistrale/e2sim/ASN1c/EN-GNB-ID.h

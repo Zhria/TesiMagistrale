@@ -53,7 +53,8 @@ OPEN_TYPE_aper_get(const asn_codec_ctx_t *opt_codec_ctx,
         (char *)*memb_ptr2
         + elm->type->elements[selected.presence_index - 1].memb_offset;
 
-    rv = aper_open_type_get(opt_codec_ctx, selected.type_descriptor, NULL,
+    rv = aper_open_type_get(opt_codec_ctx, selected.type_descriptor,
+                            elm->type->elements[selected.presence_index - 1].encoding_constraints.per_constraints,
                             &inner_value, pd);
     switch(rv.code) {
     case RC_OK:
@@ -110,7 +111,7 @@ OPEN_TYPE_encode_aper(const asn_TYPE_descriptor_t *td,
         memb_ptr = (const char *)sptr + elm->memb_offset;
     }
 
-    if(aper_open_type_put(elm->type, NULL, memb_ptr, po) < 0) {
+    if(aper_open_type_put(elm->type, elm->encoding_constraints.per_constraints, memb_ptr, po) < 0) {
         ASN__ENCODE_FAILED;
     }
 
@@ -141,12 +142,17 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
     ssize_t bytes;
     int repeat;
     asn_dec_rval_t rv;
+    size_t initial_consumed = pd->moved;  /* Track initial position */
 
     rv.consumed = 0;
     rv.code = RC_FAIL;
 
     do {
         bytes = aper_get_length(pd, -1, -1, -1, &repeat);
+        if (bytes < 0) {
+            /* Invalid length - return error */
+            return rv;
+        }
         if (bytes > 10 * ASN_DUMMY_BYTES)
         {
             return rv;
@@ -158,7 +164,13 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
                 return rv;
         }
 
-        per_get_many_bits(pd, (dummy_ptr ? dummy_ptr : dummy), 0, bytes << 3);
+        if (per_get_many_bits(pd, (dummy_ptr ? dummy_ptr : dummy), 0, bytes << 3) < 0) {
+            /* Error during bit consumption */
+            if (dummy_ptr) {
+                FREEMEM(dummy_ptr);
+            }
+            return rv;
+        }
 
         if (dummy_ptr)
         {
@@ -167,7 +179,9 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
         }
     } while (repeat);
 
-     rv.code = RC_OK;
-     return rv;
+    /* Update consumed to reflect actual bits consumed */
+    rv.consumed = pd->moved - initial_consumed;
+    rv.code = RC_OK;
+    return rv;
 #undef ASN_DUMMY_BYTES
 }

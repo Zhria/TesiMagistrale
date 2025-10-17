@@ -177,13 +177,13 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   e2gnb->global_gNB_ID = *gnb;
 
   // CU-UP-ID (>0)
-  e2gnb->gNB_CU_UP_ID = (E2AP_IEs_GNB_CU_UP_ID_t*)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
+  e2gnb->gNB_CU_UP_ID = (GNB_CU_UP_ID_t*)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
   if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, 1) != 0) {
     stampaln( "asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
 
   // DU-ID (>0) – opzionale secondo il tuo scenario
-  e2gnb->gNB_DU_ID = (E2AP_IEs_GNB_DU_ID_t*)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
+  e2gnb->gNB_DU_ID = (GNB_DU_ID_t*)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
   if (asn_long2INTEGER(e2gnb->gNB_DU_ID, 1) != 0) {
     stampaln( "asn_long2INTEGER(gNB_DU_ID) failed\n");
   }
