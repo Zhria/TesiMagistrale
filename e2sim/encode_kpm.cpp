@@ -5,16 +5,6 @@
 // -----------------------------
 // Utility locali
 // -----------------------------
-static inline void set_octet_string(OCTET_STRING_t *dst, const void *src)
-{
-  size_t len = strlen((const char *)src);
-  if (!dst)
-    return;
-  dst->buf = (uint8_t *)calloc(1, len);
-  dst->size = len;
-  if (len && src)
-    memcpy(dst->buf, src, len);
-}
 
 static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
@@ -48,9 +38,9 @@ static inline void rec_add_double(MeasurementRecord_t *rec, double v)
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
 {
   // --- RANfunction-Name / OID / Instance
-  set_octet_string(&desc->ranFunction_Name.ranFunction_ShortName, "ORAN-E2SM-KPM");
-  set_octet_string(&desc->ranFunction_Name.ranFunction_Description, "KPM monitor");
-  set_octet_string(&desc->ranFunction_Name.ranFunction_E2SM_OID, "1.3.6.1.4.1.53148.1.1.2.2");
+  OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_ShortName, "ORAN-E2SM-KPM", strlen("ORAN-E2SM-KPM"));
+  OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_Description, "KPM monitor", strlen("KPM monitor"));
+  OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_E2SM_OID, "1.3.6.1.4.1.53148.1.1.2.2", strlen("1.3.6.1.4.1.53148.1.1.2.2"));
   desc->ranFunction_Name.ranFunction_Instance = (long *)calloc(1, sizeof(long));
   *desc->ranFunction_Name.ranFunction_Instance = 2;
 
@@ -62,14 +52,14 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   // --- EventTrigger style: Periodic (Format 1)
   RIC_EventTriggerStyle_Item_t *et = (RIC_EventTriggerStyle_Item_t *)calloc(1, sizeof(*et));
   et->ric_EventTriggerStyle_Type = 1;
-  set_octet_string(&et->ric_EventTriggerStyle_Name, "Periodic report");
+  OCTET_STRING_fromBuf(&et->ric_EventTriggerStyle_Name, "Periodic report",strlen("Periodic report"));
   et->ric_EventTriggerFormat_Type = 1; // KPM EventTrigger Format 1
   ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
   // --- Report style type 1 con Header/Message Format 1/1.
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
   rs->ric_ReportStyle_Type = 1; // usa 4 se il tuo xApp lo richiede
-  set_octet_string(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF");
+  OCTET_STRING_fromBuf(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF",strlen("KPM v3 N3IWF"));
   rs->ric_IndicationHeaderFormat_Type = 1;
   rs->ric_IndicationMessageFormat_Type = 1;
 
@@ -78,7 +68,7 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   auto add_meas = [&](const char *name)
   {
     MeasurementInfo_Action_Item_t *mi = (MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*mi));
-    set_octet_string(&mi->measName, name);
+    OCTET_STRING_fromBuf(&mi->measName, name, strlen(name));
     ASN_SEQUENCE_ADD(&rs->measInfo_Action_List.list, mi);
   };
 

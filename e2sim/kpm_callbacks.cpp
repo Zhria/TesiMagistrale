@@ -24,11 +24,16 @@ extern "C"
 #include "ProtocolIE-Field.h"
 #include "ProtocolIE-SingleContainer.h"
 #include "InitiatingMessage.h"
+
+
+#include "E2SM-RC-RANFunctionDefinition.h"
+#include "E2SM-RC-IndicationMessage.h"
 }
 
 #include "kpm_callbacks.hpp"
 #include "encode_kpm.hpp"
 #include "n3iwf_utils.hpp"
+#include "encode_rc.hpp"
 
 #include "encode_e2apv2.hpp"
 
@@ -147,6 +152,20 @@ int main(int argc, char *argv[])
   // Registra la SM (FunctionID=2) e callback subscription
   e2.register_e2sm(2, ranfunc_ostr);
   e2.register_subscription_callback(2, &callback_kpm_subscription_request);
+
+  //Mi occupo di integrare il setup RC qui
+  E2SM_RC_RANFunctionDefinition_t *rc_ranfunc_desc =
+      (E2SM_RC_RANFunctionDefinition_t *)calloc(1, sizeof(E2SM_RC_RANFunctionDefinition_t));
+  if (rc_ranfunc_desc == NULL)
+  {
+    stampaln("calloc failed for rc_ranfunc_desc\n");
+    return -1;
+  }
+
+  // Deve riempire i campi secondo RC v1
+  encode_rc_function_definition(rc_ranfunc_desc);
+
+
 
   // Self-test: decodifica della RANfunction-Description appena encodata
   E2SM_KPM_RANfunction_Description_t *check = NULL;
