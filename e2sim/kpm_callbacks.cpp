@@ -3,6 +3,11 @@
 #include <vector>
 #include <string>
 #include <thread>
+#include <chrono>
+#include <map>
+#include <mutex>
+#include <memory>
+#include <atomic>
 #include <time.h>
 #include <cstdio>
 #include <cstdlib>
@@ -40,6 +45,8 @@ extern "C"
 #include "n3iwf_utils.hpp"
 #include "rc_callbacks.hpp"
 #include "encode_rc.hpp"
+#include "subscription_key.hpp"
+#include "app_state.hpp"
 
 #include "encode_e2apv2.hpp"
 
@@ -53,8 +60,69 @@ struct timespec ts; // DEFINIZIONE (una sola volta in tutto l’eseguibile)
 using namespace std;
 using json = nlohmann::json;
 static E2Sim e2;
-static std::atomic_bool g_stop{false};
+std::atomic_bool g_app_stop{false};
 extern int client_fd;
+
+struct KpmWorkerCtx {
+  std::shared_ptr<std::atomic_bool> stop_flag;
+  std::thread worker;
+
+  KpmWorkerCtx() = default;
+  KpmWorkerCtx(std::thread &&thr, std::shared_ptr<std::atomic_bool> flag)
+      : stop_flag(std::move(flag)), worker(std::move(thr)) {}
+
+  KpmWorkerCtx(const KpmWorkerCtx &) = delete;
+  KpmWorkerCtx &operator=(const KpmWorkerCtx &) = delete;
+  KpmWorkerCtx(KpmWorkerCtx &&) noexcept = default;
+  KpmWorkerCtx &operator=(KpmWorkerCtx &&) noexcept = default;
+};
+
+static std::mutex g_kpm_workers_mutex;
+static std::map<SubscriptionKey, KpmWorkerCtx> g_kpm_workers;
+
+static void stop_kpm_worker(const SubscriptionKey &key) {
+  std::shared_ptr<std::atomic_bool> stop_flag;
+  std::thread worker;
+
+  {
+    std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
+    auto it = g_kpm_workers.find(key);
+    if (it == g_kpm_workers.end()) {
+      return;
+    }
+    stop_flag = it->second.stop_flag;
+    worker = std::move(it->second.worker);
+    g_kpm_workers.erase(it);
+  }
+
+  if (stop_flag) {
+    stop_flag->store(true);
+  }
+  if (worker.joinable()) {
+    worker.join();
+  }
+}
+
+static void stop_all_kpm_workers() {
+  std::vector<std::thread> workers_to_join;
+
+  {
+    std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
+    for (auto &entry : g_kpm_workers) {
+      if (entry.second.stop_flag) {
+        entry.second.stop_flag->store(true);
+      }
+      workers_to_join.emplace_back(std::move(entry.second.worker));
+    }
+    g_kpm_workers.clear();
+  }
+
+  for (auto &t : workers_to_join) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+}
 
 static void graceful_sctp_close(int fd)
 {
@@ -76,13 +144,16 @@ static void graceful_sctp_close(int fd)
 
 static void on_term(int)
 {
-  g_stop = true;
+  g_app_stop.store(true, std::memory_order_relaxed);
 
   // (opzionale) manda un E2AP Reset verso il RIC
   // send_e2ap_reset_request(g_sctp_fd);
 
   // chiudi TUTTE le associazioni SCTP con teardown pulito
   graceful_sctp_close(client_fd);
+
+  stop_all_kpm_workers();
+  stop_all_rc_workers();
 
   // libera risorse (ASN.1, heap, thread join, ecc.)
   // cleanup_asn1();
@@ -114,13 +185,15 @@ int main(int argc, char *argv[])
 
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
+  stop_all_kpm_workers();
+  stop_all_rc_workers();
   return 0;
 }
 
 /* ============================================================
  * REPORT LOOP (genera e invia Indication in base ai file JSON)
  * ============================================================ */
-void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod)
+void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod, const std::shared_ptr<std::atomic_bool> &stop_token)
 {
   stampaln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
   long seqNum = 1;
@@ -131,8 +204,22 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
   // ----- HEADER v3 (Format1) -----
   for (;;)
   {
+    if (g_app_stop.load(std::memory_order_relaxed)) {
+      break;
+    }
+    if (stop_token && stop_token->load(std::memory_order_relaxed)) {
+      break;
+    }
+
     stampaln("Report loop iteration with seqNum %ld\n", seqNum);
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
+    if (g_app_stop.load(std::memory_order_relaxed)) {
+      break;
+    }
+    if (stop_token && stop_token->load(std::memory_order_relaxed)) {
+      break;
+    }
+
     std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
@@ -193,6 +280,27 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     seqNum++;
   }
+
+  stampaln("KPM report loop exiting for requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld\n",
+           requestorId, instanceId, ranFunctionId, actionId);
+}
+
+static void start_kpm_worker(const SubscriptionKey &key,
+                             long requestorId,
+                             long instanceId,
+                             long ranFunctionId,
+                             long actionId,
+                             GranularityPeriod_t granularityPeriod) {
+  stop_kpm_worker(key);
+
+  auto stop_flag = std::make_shared<std::atomic_bool>(false);
+
+  std::thread worker([requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag]() {
+    run_report_loop(requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag);
+  });
+
+  std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
+  g_kpm_workers.emplace(key, KpmWorkerCtx{std::move(worker), stop_flag});
 }
 
 static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def, std::vector<std::string> &out_meas, GranularityPeriod_t *granularityPeriod)
@@ -404,9 +512,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, 2);
   e2.encode_and_send_sctp_data(e2ap_pdu);
 
-  // Avvia il loop di invio REPORT (sincrono in questo esempio)
   long funcId = 2; // KPM
-  run_report_loop(reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
+  if (accept_size > 0 && reqActionId >= 0) {
+    SubscriptionKey key{reqRequestorId, reqInstanceId, funcId, reqActionId};
+    start_kpm_worker(key, reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
+  } else {
+    stampaln("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
+  }
 }
 
 void registerKPMfunctionDefinition()

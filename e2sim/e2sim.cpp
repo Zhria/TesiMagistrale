@@ -31,6 +31,9 @@
 #include "encode_e2apv2.hpp"
 #include "n3iwf_data.hpp"
 #include "n3iwf_utils.hpp"
+#include <mutex>
+
+std::mutex g_sctp_send_mutex;
 
 
 using namespace std;
@@ -89,6 +92,7 @@ std::unordered_map<long, OCTET_STRING_t *> E2Sim::get_registered_e2sm() {
 
 void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 {
+  std::lock_guard<std::mutex> lock(g_sctp_send_mutex);
   stampaln("About to encode and send SCTP data\n");
   //uint8_t       *buf;
   sctp_buffer_t data;

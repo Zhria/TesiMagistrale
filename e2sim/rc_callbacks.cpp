@@ -1,5 +1,4 @@
 
-
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -16,9 +15,15 @@
 #include <signal.h>
 #include <unordered_set>
 #include <algorithm>
+#include <map>
+#include <mutex>
+#include <memory>
+#include <chrono>
 
 
 #include "rc_callbacks.hpp"
+#include "subscription_key.hpp"
+#include "app_state.hpp"
 
 extern "C"
 {
@@ -43,6 +48,14 @@ extern "C"
 #include "E2SM-RC-ActionDefinition-Format1-Item.h"
 #include "E2SM-RC-ActionDefinition-Format1.h"
 #include "E2SM-RC-ActionDefinition.h"
+#include "E2SM-RC-IndicationHeader.h"
+#include "E2SM-RC-IndicationHeader-Format1.h"
+#include "E2SM-RC-IndicationMessage.h"
+#include "E2SM-RC-IndicationMessage-Format1.h"
+#include "E2SM-RC-IndicationMessage-Format1-Item.h"
+#include "RANParameter-ValueType-Choice-ElementTrue.h"
+#include "RANParameter-Value.h"
+#include "RIC-EventTriggerCondition-ID.h"
 
 }
 
@@ -51,6 +64,7 @@ extern "C"
 
 #include "encode_rc.hpp"
 #include "encode_e2apv2.hpp"
+#include "e2sim_defs.h"
 
 
 
@@ -58,6 +72,79 @@ using namespace std;
 using json = nlohmann::json;
 static E2Sim e2;
 E2SM_RC_RANFunctionDefinition_t *g_rc_ranfunc_def = nullptr;
+
+struct RcWorkerCtx {
+  std::shared_ptr<std::atomic_bool> stop_flag;
+  std::thread worker;
+
+  RcWorkerCtx() = default;
+  RcWorkerCtx(std::thread &&thr, std::shared_ptr<std::atomic_bool> flag)
+      : stop_flag(std::move(flag)), worker(std::move(thr)) {}
+
+  RcWorkerCtx(const RcWorkerCtx &) = delete;
+  RcWorkerCtx &operator=(const RcWorkerCtx &) = delete;
+  RcWorkerCtx(RcWorkerCtx &&) noexcept = default;
+  RcWorkerCtx &operator=(RcWorkerCtx &&) noexcept = default;
+};
+
+static std::mutex g_rc_workers_mutex;
+static std::map<SubscriptionKey, RcWorkerCtx> g_rc_workers;
+
+namespace {
+
+void stop_rc_worker_internal(const SubscriptionKey &key) {
+  std::shared_ptr<std::atomic_bool> stop_flag;
+  std::thread worker;
+
+  {
+    std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
+    auto it = g_rc_workers.find(key);
+    if (it == g_rc_workers.end()) {
+      return;
+    }
+    stop_flag = it->second.stop_flag;
+    worker = std::move(it->second.worker);
+    g_rc_workers.erase(it);
+  }
+
+  if (stop_flag) {
+    stop_flag->store(true, std::memory_order_relaxed);
+  }
+  if (worker.joinable()) {
+    worker.join();
+  }
+}
+
+void stop_all_rc_workers_internal() {
+  std::vector<std::thread> to_join;
+
+  {
+    std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
+    for (auto &entry : g_rc_workers) {
+      if (entry.second.stop_flag) {
+        entry.second.stop_flag->store(true, std::memory_order_relaxed);
+      }
+      to_join.emplace_back(std::move(entry.second.worker));
+    }
+    g_rc_workers.clear();
+  }
+
+  for (auto &t : to_join) {
+    if (t.joinable()) {
+      t.join();
+    }
+  }
+}
+
+}  // namespace
+
+void stop_rc_worker(const SubscriptionKey &key) {
+  stop_rc_worker_internal(key);
+}
+
+void stop_all_rc_workers() {
+  stop_all_rc_workers_internal();
+}
 
 
 // ---------------------------------------------------------------------
@@ -242,16 +329,198 @@ bool decode_rc_actiondef_format1(const OCTET_STRING_t *ad,std::vector<long> &out
 }
 
 
-void start_rc_report_pipeline(int et_format, const std::vector<long> &ad_param_ids)
+static void run_rc_report_loop(const SubscriptionKey &key,
+                               int et_format,
+                               std::vector<long> param_ids,
+                               const std::shared_ptr<std::atomic_bool> &stop_token)
 {
-    // Implementa qui la logica per avviare il producer di report RC
-    stampaln("Starting RC report pipeline with ET format %d and %zu RAN Param IDs\n",
-             et_format, ad_param_ids.size());
+    stampaln("RC report loop start: requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld (ET format %d)",
+             key.requestorId, key.instanceId, key.ranFunctionId, key.actionId, et_format);
 
-    // Esempio: stampa gli ID richiesti
-    for (long id : ad_param_ids) {
-        stampaln("  Requested RAN Parameter ID: %ld\n", id);
+    if (param_ids.empty()) {
+        stampaln("RC report loop: no RAN Parameter IDs requested, will send heartbeat indications only");
     }
+
+    long seq_num = 1;
+    const auto period = std::chrono::milliseconds(1000);
+
+    while (true) {
+        if (g_app_stop.load(std::memory_order_relaxed)) {
+            break;
+        }
+        if (stop_token && stop_token->load(std::memory_order_relaxed)) {
+            break;
+        }
+
+        auto *hdr = (E2SM_RC_IndicationHeader_t *)calloc(1, sizeof(E2SM_RC_IndicationHeader_t));
+        auto *hdr_fmt1 = (E2SM_RC_IndicationHeader_Format1 *)calloc(1, sizeof(E2SM_RC_IndicationHeader_Format1));
+        if (!hdr || !hdr_fmt1) {
+            stampaln("RC report loop: calloc failed for IndicationHeader");
+            free(hdr);
+            free(hdr_fmt1);
+            std::this_thread::sleep_for(period);
+            continue;
+        }
+
+        hdr_fmt1->ric_eventTriggerCondition_ID =
+            (RIC_EventTriggerCondition_ID_t *)calloc(1, sizeof(RIC_EventTriggerCondition_ID_t));
+        if (hdr_fmt1->ric_eventTriggerCondition_ID) {
+            *hdr_fmt1->ric_eventTriggerCondition_ID = et_format;
+        }
+
+        hdr->ric_indicationHeader_formats.present =
+            E2SM_RC_IndicationHeader__ric_indicationHeader_formats_PR_indicationHeader_Format1;
+        hdr->ric_indicationHeader_formats.choice.indicationHeader_Format1 = hdr_fmt1;
+
+        uint8_t hdr_buf[MAX_SCTP_BUFFER];
+        asn_enc_rval_t hdr_enc = asn_encode_to_buffer(
+            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationHeader,
+            hdr, hdr_buf, sizeof(hdr_buf));
+        if (hdr_enc.encoded < 0) {
+            stampaln("RC report loop: header encode failed (%s)",
+                     hdr_enc.failed_type ? hdr_enc.failed_type->name : "unknown");
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationHeader, hdr);
+            std::this_thread::sleep_for(period);
+            continue;
+        }
+
+        E2SM_RC_IndicationMessage_t *msg =
+            (E2SM_RC_IndicationMessage_t *)calloc(1, sizeof(E2SM_RC_IndicationMessage_t));
+        auto *fmt1 = (E2SM_RC_IndicationMessage_Format1 *)calloc(1, sizeof(E2SM_RC_IndicationMessage_Format1));
+        if (!msg || !fmt1) {
+            stampaln("RC report loop: calloc failed for IndicationMessage");
+            free(fmt1);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationHeader, hdr);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage, msg);
+            std::this_thread::sleep_for(period);
+            continue;
+        }
+
+        msg->ric_indicationMessage_formats.present =
+            E2SM_RC_IndicationMessage__ric_indicationMessage_formats_PR_indicationMessage_Format1;
+        msg->ric_indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
+
+        int param_idx = 0;
+        for (long param_id : param_ids) {
+            auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
+                1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
+            if (!item) {
+                stampaln("RC report loop: calloc failed for RAN parameter item");
+                continue;
+            }
+            item->ranParameter_ID = param_id;
+            item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
+            item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
+                (RANParameter_ValueType_Choice_ElementTrue *)calloc(
+                    1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
+            if (!item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
+                stampaln("RC report loop: calloc failed for RAN parameter value");
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
+                continue;
+            }
+
+            auto *val = &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+            val->present = RANParameter_Value_PR_valueInt;
+            val->choice.valueInt = seq_num * 10 + param_idx;
+            ++param_idx;
+
+            ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
+        }
+
+        if (fmt1->ranP_Reported_List.list.count == 0) {
+            // At least add a heartbeat parameter with ID 0 if nothing else is available
+            auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
+                1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
+            if (item) {
+                item->ranParameter_ID = 0;
+                item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
+                item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
+                    (RANParameter_ValueType_Choice_ElementTrue *)calloc(
+                        1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
+                if (item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
+                    auto *val = &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+                    val->present = RANParameter_Value_PR_valueInt;
+                    val->choice.valueInt = seq_num;
+                    ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
+                } else {
+                    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
+                }
+            }
+        }
+
+        uint8_t msg_buf[MAX_SCTP_BUFFER];
+        asn_enc_rval_t msg_enc = asn_encode_to_buffer(
+            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationMessage,
+            msg, msg_buf, sizeof(msg_buf));
+        if (msg_enc.encoded < 0) {
+            stampaln("RC report loop: message encode failed (%s)",
+                     msg_enc.failed_type ? msg_enc.failed_type->name : "unknown");
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationHeader, hdr);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage, msg);
+            std::this_thread::sleep_for(period);
+            continue;
+        }
+
+        E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
+        if (!pdu) {
+            stampaln("RC report loop: calloc failed for E2AP PDU");
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationHeader, hdr);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage, msg);
+            std::this_thread::sleep_for(period);
+            continue;
+        }
+
+        generate_e2apv2_indication_request_parameterized(
+            pdu,
+            key.requestorId,
+            key.instanceId,
+            key.ranFunctionId,
+            key.actionId,
+            seq_num,
+            hdr_buf,
+            static_cast<int>(hdr_enc.encoded),
+            msg_buf,
+            static_cast<int>(msg_enc.encoded));
+
+        e2.encode_and_send_sctp_data(pdu);
+
+        ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage, msg);
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationHeader, hdr);
+
+        ++seq_num;
+        std::this_thread::sleep_for(period);
+    }
+
+    stampaln("RC report loop stop: requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld",
+             key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
+}
+
+static void start_rc_worker(const SubscriptionKey &key,
+                            int et_format,
+                            const std::vector<long> &param_ids)
+{
+    stop_rc_worker_internal(key);
+
+    auto stop_flag = std::make_shared<std::atomic_bool>(false);
+    std::thread worker([key, et_format, param_ids, stop_flag]() {
+        run_rc_report_loop(key, et_format, param_ids, stop_flag);
+    });
+
+    std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
+    g_rc_workers.emplace(key, RcWorkerCtx{std::move(worker), stop_flag});
+}
+
+
+void start_rc_report_pipeline(const SubscriptionKey &key,
+                              int et_format,
+                              const std::vector<long> &ad_param_ids)
+{
+    stampaln("Starting RC report pipeline for key[%ld:%ld:%ld:%ld] with %zu RAN Param IDs (ET format %d)",
+             key.requestorId, key.instanceId, key.ranFunctionId, key.actionId,
+             ad_param_ids.size(), et_format);
+
+    start_rc_worker(key, et_format, ad_param_ids);
 }
 
 
@@ -275,7 +544,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // --- helper outputs
   int et_format_detected = 0;     // 1..4 per RC (noi vogliamo 4 per UE change)
   int report_style_hint = 0;      // opzionale: dedotto da AD (p.es. 4 per UE Info)
-  std::vector<long> ad_param_ids; // RAN Parameter IDs richiesti dal RIC
+  std::map<long, std::vector<long>> action_param_map; // actionId -> RAN Parameter IDs richiesti dal RIC
 
   // ---- 1) parse IEs
   for (int i = 0; i < count; ++i) {
@@ -334,8 +603,8 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
             continue;
           }
 
+          action_param_map[actionId] = ids_req;
           acceptedActions.push_back(actionId);
-          ad_param_ids = std::move(ids_req); // tieni l'ultima (o accumula per multi-action)
         }
         break;
       }
@@ -368,7 +637,14 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
   e2.encode_and_send_sctp_data(rsp);
 
   // ---- 3) attiva il producer REPORT
-  start_rc_report_pipeline(et_format_detected, ad_param_ids);
+  long ranFunctionId = 3; // RC RAN Function
+  for (long actionId : acceptedActions) {
+    SubscriptionKey key{reqRequestorId, reqInstanceId, ranFunctionId, actionId};
+    const auto it = action_param_map.find(actionId);
+    const std::vector<long> empty_vec;
+    const std::vector<long> &params = (it != action_param_map.end()) ? it->second : empty_vec;
+    start_rc_report_pipeline(key, et_format_detected, params);
+  }
 }
 
 
