@@ -21,7 +21,7 @@ private:
 
   std::unordered_map<long, OCTET_STRING_t*> ran_functions_registered;
   std::unordered_map<long, SubscriptionCallback> subscription_callbacks;
-  
+  std::unordered_map<long, PrintableString_t*> ran_function_oids;  
 public:
 
   SubscriptionCallback get_subscription_callback(long func_id);
@@ -35,6 +35,10 @@ public:
   int run_loop(int argc, char* argv[]);
 
   std::unordered_map<long, OCTET_STRING_t *> get_registered_e2sm();
+
+  void register_e2sm_oid(long func_id, PrintableString_t* oid);
+
+  PrintableString_t* get_e2sm_oid(long func_id);
 
 };
 

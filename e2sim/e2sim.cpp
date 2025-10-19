@@ -57,6 +57,20 @@ SubscriptionCallback E2Sim::get_subscription_callback(long func_id) {
 
 }
 
+void E2Sim::register_e2sm_oid(long func_id, PrintableString_t* oid) {
+  //Error conditions:
+  //If we already have an entry for func_id
+  
+  printf("%%%%about to register e2sm func oid for %ld\n", func_id);
+
+  ran_function_oids[func_id] = oid;
+
+}
+
+PrintableString_t* E2Sim::get_e2sm_oid(long func_id) {
+  return ran_function_oids[func_id];
+}
+
 void E2Sim::register_e2sm(long func_id, OCTET_STRING_t *ostr) {
 
   //Error conditions:
@@ -120,9 +134,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   
   std::vector<ran_func_info> all_funcs;
 
-  const char* oid = "1.3.6.1.4.1.53148.1.1.2.2"; // usa il tuo valore OID
-  PrintableString_t* ranFunctionOIDe = (PrintableString_t*)calloc(1, sizeof(PrintableString_t));
-  set_octet_string(ranFunctionOIDe, oid, strlen(oid));
   //Loop through RAN function definitions that are registered
 
     //Loop through RAN function definitions that are registered
@@ -131,7 +142,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
       next_func.ranFunctionId = elem.first;
       next_func.ranFunctionDesc = elem.second;
       next_func.ranFunctionRev = (long)2;
-      next_func.ranFunctionOId = ranFunctionOIDe;
+      next_func.ranFunctionOId = get_e2sm_oid(elem.first);
       all_funcs.push_back(next_func);
     }
  

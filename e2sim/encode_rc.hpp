@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <vector>
+#include <string> 
 #include <map>
 extern "C" {
   #include "asn_application.h"
@@ -23,6 +24,7 @@ extern "C" {
   #include "RANFunctionDefinition-Insert.h"
   #include "UEIdentification-RANParameter-Item.h"
   #include "RANFunctionDefinition-Report-Item.h"
+  #include "Report-RANParameter-Item.h"
   
 
 
@@ -63,9 +65,9 @@ extern "C" {
 void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* ranfunc_desc);
 
 // --- Indication Header/Message (nuovi formati v3)
-void encode_rc_ind_hdr_fmt1(E2SM_RC_IndicationHeader_t* hdr);
+//void encode_rc_ind_hdr_fmt1(E2SM_RC_IndicationHeader_t* hdr);
 
-void rc_fill_ue_rf_basic(E2SM_RC_IndicationMessage_t* indMsg,std::map<std::string, double> kpi);
+//void rc_fill_ue_rf_basic(E2SM_RC_IndicationMessage_t* indMsg,std::map<std::string, double> kpi);
 
 
 #endif // ENCODE_RC_V3_HPP

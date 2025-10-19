@@ -10,7 +10,6 @@
 #include <sys/socket.h>   // shutdown()
 #include <netinet/sctp.h> // SCTP
 
-
 extern "C"
 {
 #include "OCTET_STRING.h"
@@ -25,14 +24,21 @@ extern "C"
 #include "ProtocolIE-SingleContainer.h"
 #include "InitiatingMessage.h"
 
-
 #include "E2SM-RC-RANFunctionDefinition.h"
 #include "E2SM-RC-IndicationMessage.h"
+#include "E2SM-RC-EventTrigger.h"
+#include "E2SM-RC-EventTrigger-Format1.h"
+#include "E2SM-RC-EventTrigger-Format2.h"
+#include "E2SM-RC-EventTrigger-Format3.h"
+#include "E2SM-RC-EventTrigger-Format4.h"
+#include "E2SM-RC-ActionDefinition-Format1-Item.h"
+#include "E2SM-RC-ActionDefinition-Format1.h"
 }
 
 #include "kpm_callbacks.hpp"
 #include "encode_kpm.hpp"
 #include "n3iwf_utils.hpp"
+#include "rc_callbacks.hpp"
 #include "encode_rc.hpp"
 
 #include "encode_e2apv2.hpp"
@@ -48,36 +54,41 @@ using namespace std;
 using json = nlohmann::json;
 static E2Sim e2;
 static std::atomic_bool g_stop{false};
-extern int client_fd;  
+extern int client_fd;
 
-static void graceful_sctp_close(int fd) {
-    // 1) annuncia fine scritture -> kernel invia SHUTDOWN all peer
-    shutdown(fd, SHUT_WR);
-    // 2) drena eventuali dati in arrivo finché peer chiude
-    char buf[2048];
-    while (true) {
-        ssize_t n = recv(fd, buf, sizeof(buf), 0);
-        if (n == 0) break;         // EOF -> SHUTDOWN-ACK/COMPLETE completato
-        if (n < 0) break;          // errore -> chiudi comunque
-    }
-    // 3) chiusura definitiva della socket
-    close(fd);
+static void graceful_sctp_close(int fd)
+{
+  // 1) annuncia fine scritture -> kernel invia SHUTDOWN all peer
+  shutdown(fd, SHUT_WR);
+  // 2) drena eventuali dati in arrivo finché peer chiude
+  char buf[2048];
+  while (true)
+  {
+    ssize_t n = recv(fd, buf, sizeof(buf), 0);
+    if (n == 0)
+      break; // EOF -> SHUTDOWN-ACK/COMPLETE completato
+    if (n < 0)
+      break; // errore -> chiudi comunque
+  }
+  // 3) chiusura definitiva della socket
+  close(fd);
 }
 
-static void on_term(int) {
-    g_stop = true;
+static void on_term(int)
+{
+  g_stop = true;
 
-    // (opzionale) manda un E2AP Reset verso il RIC
-    // send_e2ap_reset_request(g_sctp_fd);
+  // (opzionale) manda un E2AP Reset verso il RIC
+  // send_e2ap_reset_request(g_sctp_fd);
 
-    // chiudi TUTTE le associazioni SCTP con teardown pulito
-    graceful_sctp_close(client_fd);
+  // chiudi TUTTE le associazioni SCTP con teardown pulito
+  graceful_sctp_close(client_fd);
 
-    // libera risorse (ASN.1, heap, thread join, ecc.)
-    // cleanup_asn1();
-    // join_threads();
+  // libera risorse (ASN.1, heap, thread join, ecc.)
+  // cleanup_asn1();
+  // join_threads();
 
-    _exit(0);  // uscita rapida dopo cleanup
+  _exit(0); // uscita rapida dopo cleanup
 }
 /* ============================================================
  * MAIN
@@ -90,95 +101,17 @@ int main(int argc, char *argv[])
   clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
 
   struct sigaction sa{};
-    sa.sa_handler = on_term;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGTERM, &sa, nullptr);
-    sigaction(SIGINT,  &sa, nullptr);
-    sigaction(SIGSEGV, &sa, nullptr);
+  sa.sa_handler = on_term;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGTERM, &sa, nullptr);
+  sigaction(SIGINT, &sa, nullptr);
+  sigaction(SIGSEGV, &sa, nullptr);
 
-  // --- RANfunction-Description KPM v3 ---
-  E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
-      (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
-  if (ranfunc_desc == NULL)
-  {
-    stampaln("calloc failed for ranfunc_desc\n");
-    return -1;
-  }
+  registerKPMfunctionDefinition();
 
-  // Deve riempire i campi secondo KPM v3
-  encode_kpm_function_description(ranfunc_desc);
+  registerRCfunctionDefinition(e2);
 
-  // Codifica della RANfunction-Description
-  const size_t e2smbuffer_size = 16384;
-  uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
-  if (e2smbuffer == NULL)
-  {
-    stampaln("calloc failed for e2smbuffer\n");
-    return -1;
-  }
-
-  asn_enc_rval_t er = asn_encode_to_buffer(
-      NULL, ATS_ALIGNED_BASIC_PER,
-      &asn_DEF_E2SM_KPM_RANfunction_Description,
-      ranfunc_desc, e2smbuffer, e2smbuffer_size);
-
-  if (er.encoded < 0)
-  {
-    stampaln("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
-    free(e2smbuffer);
-    return -1;
-  }
-
-  // Crea OCTET_STRING per registrazione nel simulatore
-  OCTET_STRING_t *ranfunc_ostr = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
-  if (ranfunc_ostr == NULL)
-  {
-    stampaln("calloc failed for ranfunc_ostr\n");
-    free(e2smbuffer);
-    return -1;
-  }
-  ranfunc_ostr->buf = (uint8_t *)calloc(1, (size_t)er.encoded);
-  ranfunc_ostr->size = (er.encoded > 0) ? (size_t)er.encoded : 0;
-  if (ranfunc_ostr->buf == NULL)
-  {
-    stampaln("calloc failed for ranfunc_ostr->buf\n");
-    free(ranfunc_ostr);
-    free(e2smbuffer);
-    return -1;
-  }
-  memcpy(ranfunc_ostr->buf, e2smbuffer, ranfunc_ostr->size);
-
-  // Registra la SM (FunctionID=2) e callback subscription
-  e2.register_e2sm(2, ranfunc_ostr);
-  e2.register_subscription_callback(2, &callback_kpm_subscription_request);
-
-  //Mi occupo di integrare il setup RC qui
-  E2SM_RC_RANFunctionDefinition_t *rc_ranfunc_desc =
-      (E2SM_RC_RANFunctionDefinition_t *)calloc(1, sizeof(E2SM_RC_RANFunctionDefinition_t));
-  if (rc_ranfunc_desc == NULL)
-  {
-    stampaln("calloc failed for rc_ranfunc_desc\n");
-    return -1;
-  }
-
-  // Deve riempire i campi secondo RC v1
-  encode_rc_function_definition(rc_ranfunc_desc);
-
-
-
-  // Self-test: decodifica della RANfunction-Description appena encodata
-  E2SM_KPM_RANfunction_Description_t *check = NULL;
-  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_RANfunction_Description, (void **)&check, ranfunc_ostr->buf, ranfunc_ostr->size);
-  if (dr.code != RC_OK){
-    stampaln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
-  }
-  else {
-    stampaln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
-  }
-
-  // Non servono più questi buffer locali
-  free(e2smbuffer);
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
   return 0;
@@ -226,7 +159,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     char errbuf[512] = {0};
     size_t errlen = sizeof(errbuf);
     int rc = asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, ind_msg, errbuf, &errlen);
-    if (rc != 0) {
+    if (rc != 0)
+    {
       stampaln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
       // opzionale: vai in continue
       continue;
@@ -234,7 +168,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     uint8_t msg_buf[8192];
     asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
-        ind_msg, msg_buf, sizeof(msg_buf));
+                                              ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
       stampaln("msg enc failed\n"); /* handle */
@@ -328,8 +262,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 
 /* ============================================================
  * SUBSCRIPTION CALLBACK
- * Accetta il primo actionType==REPORT, rifiuta le altre
- * (niente auto; KPM v3 a livello E2SM è gestito dagli encoder)
  * ============================================================ */
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
@@ -342,7 +274,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
   int count = orig_req.protocolIEs.list.count;
 
-  
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
@@ -455,8 +386,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     return;
   }
 
-  long *accept_array = acceptedActions.empty()?NULL: acceptedActions.data();
-  long *reject_array = rejectedActions.empty()?NULL: rejectedActions.data();
+  long *accept_array = acceptedActions.empty() ? NULL : acceptedActions.data();
+  long *reject_array = rejectedActions.empty() ? NULL : rejectedActions.data();
   int accept_size = (int)acceptedActions.size();
   int reject_size = (int)rejectedActions.size();
 
@@ -476,4 +407,82 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Avvia il loop di invio REPORT (sincrono in questo esempio)
   long funcId = 2; // KPM
   run_report_loop(reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
+}
+
+void registerKPMfunctionDefinition()
+{
+  // --- RANfunction-Description KPM v3 ---
+  E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
+      (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
+  if (ranfunc_desc == NULL)
+  {
+    stampaln("calloc failed for ranfunc_desc\n");
+    return;
+  }
+
+  // Deve riempire i campi secondo KPM v3
+  encode_kpm_function_description(ranfunc_desc);
+
+  // Codifica della RANfunction-Description
+  const size_t e2smbuffer_size = 16384;
+  uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
+  if (e2smbuffer == NULL)
+  {
+    stampaln("calloc failed for e2smbuffer\n");
+    return;
+  }
+
+  asn_enc_rval_t er = asn_encode_to_buffer(
+      NULL, ATS_ALIGNED_BASIC_PER,
+      &asn_DEF_E2SM_KPM_RANfunction_Description,
+      ranfunc_desc, e2smbuffer, e2smbuffer_size);
+
+  if (er.encoded < 0)
+  {
+    stampaln("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
+    free(e2smbuffer);
+    return;
+  }
+
+  // Crea OCTET_STRING per registrazione nel simulatore
+  OCTET_STRING_t *ranfunc_ostr = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
+  if (ranfunc_ostr == NULL)
+  {
+    stampaln("calloc failed for ranfunc_ostr\n");
+    free(e2smbuffer);
+    return;
+  }
+  ranfunc_ostr->buf = (uint8_t *)calloc(1, (size_t)er.encoded);
+  ranfunc_ostr->size = (er.encoded > 0) ? (size_t)er.encoded : 0;
+  if (ranfunc_ostr->buf == NULL)
+  {
+    stampaln("calloc failed for ranfunc_ostr->buf\n");
+    free(ranfunc_ostr);
+    free(e2smbuffer);
+    return;
+  }
+  memcpy(ranfunc_ostr->buf, e2smbuffer, ranfunc_ostr->size);
+
+  // Registra la SM (FunctionID=2) e callback subscription
+  e2.register_e2sm(2, ranfunc_ostr);
+  e2.register_subscription_callback(2, &callback_kpm_subscription_request);
+  const char* oid = "1.3.6.1.4.1.53148.1.1.2.2"; 
+  PrintableString_t* ranFunctionOIDe = (PrintableString_t*)calloc(1, sizeof(PrintableString_t));
+  OCTET_STRING_fromBuf(ranFunctionOIDe, oid, strlen(oid));
+  e2.register_e2sm_oid(2, ranFunctionOIDe);
+
+  // Self-test: decodifica della RANfunction-Description appena encodata
+  E2SM_KPM_RANfunction_Description_t *check = NULL;
+  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_RANfunction_Description, (void **)&check, ranfunc_ostr->buf, ranfunc_ostr->size);
+  if (dr.code != RC_OK)
+  {
+    stampaln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+  }
+  else
+  {
+    stampaln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+  }
+
+  // Non servono più questi buffer locali
+  free(e2smbuffer);
 }

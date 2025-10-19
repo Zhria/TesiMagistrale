@@ -6,15 +6,24 @@
 // -----------------------------
 // Utility locali
 // -----------------------------
-static int add_event_trigger(RANFunctionDefinition_EventTrigger *ev){
+static void add_event_trigger(RANFunctionDefinition_EventTrigger *ev){
     //ADD EVENT TRIGGER STYLE
     RIC_EventTriggerStyle_Item_t *et = (RIC_EventTriggerStyle_Item_t*)calloc(1, sizeof(RIC_EventTriggerStyle_Item_t));
-    if(!et) return -1;
+    if(!et) return;
     et->ric_EventTriggerStyle_Type = 4;
     OCTET_STRING_fromBuf(&et->ric_EventTriggerStyle_Name,"UE Information Change", strlen("UE Information Change"));
     et->ric_EventTriggerFormat_Type = 4;
     ASN_SEQUENCE_ADD(&ev->ric_EventTriggerStyle_List.list, et);
 
+/*
+    //Periodic report also
+    RIC_EventTriggerStyle_Item_t *et2 = (RIC_EventTriggerStyle_Item_t*)calloc(1, sizeof(RIC_EventTriggerStyle_Item_t));
+    if(!et2) return -1;
+    et2->ric_EventTriggerStyle_Type = 1;
+    OCTET_STRING_fromBuf(&et2->ric_EventTriggerStyle_Name,"Periodic Report", strlen("Periodic Report"));
+    et2->ric_EventTriggerFormat_Type = 1;
+    ASN_SEQUENCE_ADD(&ev->ric_EventTriggerStyle_List.list, et2);
+*/
     ev->ran_UEIdentificationParameters_List = (RANFunctionDefinition_EventTrigger::RANFunctionDefinition_EventTrigger__ran_UEIdentificationParameters_List *) calloc(1, sizeof(*ev->ran_UEIdentificationParameters_List));
 
 
@@ -29,7 +38,7 @@ static int add_event_trigger(RANFunctionDefinition_EventTrigger *ev){
 }
 
 
-static int add_report_style(RANFunctionDefinition_Report *rep){
+static void add_report_style(RANFunctionDefinition_Report *rep){
 
     RANFunctionDefinition_Report_Item *rs =(RANFunctionDefinition_Report_Item*)calloc(1, sizeof(RANFunctionDefinition_Report_Item));
     rs->ric_ReportStyle_Type = 4; //UE Info
@@ -41,35 +50,37 @@ static int add_report_style(RANFunctionDefinition_Report *rep){
 
     rs->ran_ReportParameters_List = (RANFunctionDefinition_Report_Item::RANFunctionDefinition_Report_Item__ran_ReportParameters_List *) calloc(1, sizeof(*rs->ran_ReportParameters_List));
 
-    std::vector<std::string>  list=getAllowedMetricsRC(); //See chapter 8.2.4
+    std::map<long,std::string> list=getAllowedMetricsRC(); //See chapter 8.2.4
     for (const auto &kpi : list)
     {
-        MeasurementInfo_Action_Item_t *mi = (MeasurementInfo_Action_Item_t *)calloc(1, sizeof(*mi));
-        OCTET_STRING_fromBuf(&mi->measName, kpi.c_str(), strlen(kpi.c_str()));
-        ASN_SEQUENCE_ADD(&rs->measInfo_Action_List.list, mi);
+        Report_RANParameter_Item *mi = (Report_RANParameter_Item *)calloc(1, sizeof(Report_RANParameter_Item));
+        mi->ranParameter_ID = kpi.first;
+        OCTET_STRING_fromBuf(&mi->ranParameter_name, kpi.second.c_str(), strlen(kpi.second.c_str()));
+        ASN_SEQUENCE_ADD(&rs->ran_ReportParameters_List->list, mi);
     }
 
-
-    return ASN_SEQUENCE_ADD(&rep->ric_ReportStyle_List.list, rs);
+    ASN_SEQUENCE_ADD(&rep->ric_ReportStyle_List.list, rs);
+    return;
 }
 
-static int add_control_style(RANFunctionDefinition_Control *ctl){
-    RANFunctionDefinition_Control_Item *ci = (RANFunctionDefinition_Control_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Item));
-    ci->ric_ControlStyle_Type = 1;
-    OCTET_STRING_fromBuf(&ci->ric_ControlStyle_Name,"RC Control Style 1",strlen("RC Control Style 1"));
-    ci->ric_ControlHeaderFormat_Type  = 1;                              // Header fmt
-    ci->ric_ControlMessageFormat_Type = 1;                              // Message fmt
-    // ci->ric_CallProcessIDFormat_Type = 1;                            // (se richiesto)
-    return ASN_SEQUENCE_ADD(&ctl->ric_ControlStyle_List.list, ci);
+static void add_control_style(RANFunctionDefinition_Control *ctl){
+    RANFunctionDefinition_Control_Item *ctrl = (RANFunctionDefinition_Control_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Item));
+    ctrl->ric_ControlStyle_Type = 1;
+    OCTET_STRING_fromBuf(&ctrl->ric_ControlStyle_Name,"Handover Control", 17);
+    ctrl->ric_ControlHeaderFormat_Type  = 1;  // header con Cell/UE info
+    ctrl->ric_ControlMessageFormat_Type = 1;  // payload con target cell etc.
+    ctrl->ric_ControlOutcomeFormat_Type = 1;  // outcome ACK/FAIL
+    ASN_SEQUENCE_ADD(&ctl->ric_ControlStyle_List.list, ctrl);
+    return;
 }
 
 
-static int add_insert_style(RANFunctionDefinition_Insert *insert){
-
+static void add_insert_style(RANFunctionDefinition_Insert *insert){
+//Estendibile in futuro
 }
 
-static int add_policy_style(RANFunctionDefinition_Policy *policy){
-
+static void add_policy_style(RANFunctionDefinition_Policy *policy){
+//Estendibile in futuro
 }
 
 void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* desc){

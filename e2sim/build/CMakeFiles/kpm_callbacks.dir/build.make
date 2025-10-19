@@ -9421,10 +9421,24 @@ CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/zakaria/TesiMagistrale/e2sim/encode_kpm.cpp -o CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.s
 
+CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
+CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o: /home/zakaria/TesiMagistrale/e2sim/encode_rc.cpp
+CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_669) "Building CXX object CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o -MF CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/encode_rc.cpp
+
+CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/zakaria/TesiMagistrale/e2sim/encode_rc.cpp > CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.i
+
+CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/zakaria/TesiMagistrale/e2sim/encode_rc.cpp -o CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.s
+
 CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o: /home/zakaria/TesiMagistrale/e2sim/kpm_callbacks.cpp
 CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_669) "Building CXX object CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_670) "Building CXX object CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o -MF CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/kpm_callbacks.cpp
 
 CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.i: cmake_force
@@ -9438,7 +9452,7 @@ CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.s: cmake_force
 CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.cpp
 CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_670) "Building CXX object CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_671) "Building CXX object CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o -MF CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.cpp
 
 CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.i: cmake_force
@@ -9452,7 +9466,7 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.s: cmake_force
 CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o: /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.cpp
 CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_671) "Building CXX object CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_672) "Building CXX object CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o -MF CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.cpp
 
 CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.i: cmake_force
@@ -9463,10 +9477,24 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.s"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.cpp -o CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.s
 
+CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
+CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o: /home/zakaria/TesiMagistrale/e2sim/rc_callbacks.cpp
+CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_673) "Building CXX object CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o -MF CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/rc_callbacks.cpp
+
+CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.i"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/zakaria/TesiMagistrale/e2sim/rc_callbacks.cpp > CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.i
+
+CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.s"
+	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/zakaria/TesiMagistrale/e2sim/rc_callbacks.cpp -o CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.s
+
 CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o: /home/zakaria/TesiMagistrale/e2sim/src/DEF/e2sim_defs.cpp
 CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_672) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_674) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o -MF CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/DEF/e2sim_defs.cpp
 
 CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.i: cmake_force
@@ -9480,7 +9508,7 @@ CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.s: cmake_force
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: /home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_asn1c_codec.c
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_673) "Building C object CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_675) "Building C object CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o"
 	/usr/bin/cc $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o -MF CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o.d -o CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o -c /home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_asn1c_codec.c
 
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.i: cmake_force
@@ -9494,7 +9522,7 @@ CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.s: cmake_force
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o: /home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_message_handler.cpp
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_674) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_676) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o -MF CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_message_handler.cpp
 
 CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.i: cmake_force
@@ -9508,7 +9536,7 @@ CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.s: cmake_force
 CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: CMakeFiles/kpm_callbacks.dir/flags.make
 CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: /home/zakaria/TesiMagistrale/e2sim/src/SCTP/e2sim_sctp.cpp
 CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: CMakeFiles/kpm_callbacks.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_675) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_677) "Building CXX object CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o"
 	/usr/bin/g++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o -MF CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o.d -o CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/SCTP/e2sim_sctp.cpp
 
 CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.i: cmake_force
@@ -10189,9 +10217,11 @@ kpm_callbacks_OBJECTS = \
 "CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/encode_e2apv2.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o" \
+"CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o" \
+"CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o" \
 "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o" \
 "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o" \
@@ -10868,9 +10898,11 @@ kpm_callbacks: CMakeFiles/kpm_callbacks.dir/ASN1c/xer_support.c.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/encode_e2apv2.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/encode_kpm.cpp.o
+kpm_callbacks: CMakeFiles/kpm_callbacks.dir/encode_rc.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/kpm_callbacks.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o
+kpm_callbacks: CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o
@@ -10880,7 +10912,7 @@ kpm_callbacks: /usr/lib/x86_64-linux-gnu/libsctp.so
 kpm_callbacks: /usr/lib/x86_64-linux-gnu/libcurl.so
 kpm_callbacks: /home/zakaria/anaconda3/lib/libyaml-cpp.so.0.7.0
 kpm_callbacks: CMakeFiles/kpm_callbacks.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_676) "Linking CXX executable kpm_callbacks"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/zakaria/TesiMagistrale/e2sim/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_678) "Linking CXX executable kpm_callbacks"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/kpm_callbacks.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

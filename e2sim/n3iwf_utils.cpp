@@ -158,21 +158,35 @@ std::vector<std::string> getJSONKeysKPM(){
   };
 }
 
-
-std::vector<std::string> getAllowedMetricsRC(){
+std::map<long,std::string> getAllowedMetricsRC(){
     return {
-      "UE INFORMATION"
+        // L3 / UE context
+        {41001, "UE ID"},             // (IE referenziato in 9.3.10; qui come RAN param per AD/IM)
+        {41002, "Old UE ID"},         // UE ID precedente (Style 4)
+        {41003, "RRC State"},         // vedi 7.3.5 (RRC state change)
+
+        // Messaggio che ha causato il cambio UE ID (context)
+        {41010, "Triggering NI/RRC Message"},
+
+        {42001, "UE RSRP"},
+
+        // Variabili L2 UE (raggruppo esempi comuni: PDCP/RLC/MAC)
+        {43001, "PDCP UL Throughput"},
+        {43002, "PDCP DL Throughput"},
+
+
+        // Traffico aggregato per-UE
+        {44001, "UL Data Volume"},
+        {44002, "DL Data Volume"}
     };
 }
 
 
 std::map<long,std::string> getUEIdentifierRC(){
     return {
-        {1, "Supi"},
-        {2, "Guti"},
-        {3, "FiveG-S-TMSI"},
-        {4, "N3IWF-CGI"},
-        {5, "N3IWF-UE-IP-Address"},
-        {6, "N3IWF-UE-MAC-Address"}
+        {35010, "S-NSSAI"},     // STRUCTURE
+        {35011, "SST"},        // ELEMENT (SST)
+        {35012, "SD"},         // ELEMENT (SD)
+        {35091, "UE ID"}       // ELEMENT (OCTET STRING) – vedi 9.3.10
     };
 }

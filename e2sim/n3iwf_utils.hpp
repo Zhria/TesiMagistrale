@@ -4,6 +4,11 @@
 #include <iostream>
 #include <vector>
 
+
+//Include std map
+#include <map>
+
+
 extern "C" {
 #include "E2SM-KPM-RANfunction-Description.h"
 #include "e2ap_asn1c_codec.h"
@@ -41,6 +46,6 @@ void stampaln(const char* msg, ...);
 
 std::vector<std::string> getAllowedKPI();
 
-std::vector<std::string> getAllowedMetricsRC();
+std::map<long,std::string> getAllowedMetricsRC();
 
 std::map<long,std::string> getUEIdentifierRC();

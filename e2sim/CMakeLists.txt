@@ -52,7 +52,10 @@ find_package(nlohmann_json REQUIRED)     # se lo usi come target
 file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/e2sim.cpp"
   "${E2SIM_ROOT}/encode_kpm.cpp"
+  "${E2SIM_ROOT}/encode_rc.cpp"
+
   "${E2SIM_ROOT}/kpm_callbacks.cpp"
+  "${E2SIM_ROOT}/rc_callbacks.cpp"
   "${E2SIM_ROOT}/encode_e2apv2.cpp" 
   "${E2SIM_ROOT}/n3iwf_data.cpp"
   "${E2SIM_ROOT}/n3iwf_utils.cpp"
