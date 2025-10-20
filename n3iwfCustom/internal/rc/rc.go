@@ -27,10 +27,11 @@ var (
 
 // HostapdOptions definisce i parametri usati per interrogare hostapd.
 type HostapdOptions struct {
-	Command    string
-	ControlDir string
-	Interfaces []string
-	Timeout    time.Duration
+	Command       string
+	CommandPrefix []string
+	ControlDir    string
+	Interfaces    []string
+	Timeout       time.Duration
 }
 
 // DefaultHostapdOptions costruisce un set di opzioni utilizzando eventuali variabili
@@ -47,6 +48,7 @@ func DefaultHostapdOptions() HostapdOptions {
 	if list := os.Getenv("HOSTAPD_INTERFACES"); list != "" {
 		opts.Interfaces = splitInterfaceList(list)
 	}
+	opts.CommandPrefix = splitCommandList(os.Getenv("HOSTAPD_COMMAND_PREFIX"))
 	if timeoutStr := strings.TrimSpace(os.Getenv("HOSTAPD_TIMEOUT")); timeoutStr != "" {
 		if dur, err := time.ParseDuration(timeoutStr); err == nil {
 			opts.Timeout = dur
@@ -95,14 +97,14 @@ func CollectHostapdSnapshot(ctx context.Context, options HostapdOptions) (snapsh
 	now := time.Now()
 	for _, iface := range interfaces {
 		args := opts.buildAllStaArgs(iface)
-		commandString := buildCommandString(opts.Command, args)
+		commandString := buildCommandString(opts.CommandPrefix, opts.Command, args)
 
 		cmdCtx := ctx
 		cancel := func() {}
 		if opts.Timeout > 0 {
 			cmdCtx, cancel = context.WithTimeout(ctx, opts.Timeout)
 		}
-		output, runErr := runCommand(cmdCtx, opts.Command, args)
+		output, runErr := runCommand(cmdCtx, opts, args)
 		cancel()
 
 		ifaceSnap := snapshot.RCInterfaceSnapshot{
@@ -159,8 +161,16 @@ func (o HostapdOptions) buildAllStaArgs(iface string) []string {
 	return args
 }
 
-func runCommand(ctx context.Context, bin string, args []string) (string, error) {
-	cmd := exec.CommandContext(ctx, bin, args...)
+func runCommand(ctx context.Context, opts HostapdOptions, args []string) (string, error) {
+	argv := make([]string, 0, len(opts.CommandPrefix)+1+len(args))
+	argv = append(argv, opts.CommandPrefix...)
+	argv = append(argv, opts.Command)
+	argv = append(argv, args...)
+	if len(argv) == 0 {
+		return "", fmt.Errorf("hostapd_cli command not configured")
+	}
+
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	out, err := cmd.CombinedOutput()
 	output := string(out)
 	if err != nil {
@@ -173,14 +183,14 @@ func runCommand(ctx context.Context, bin string, args []string) (string, error) 
 	return output, nil
 }
 
-func buildCommandString(bin string, args []string) string {
-	parts := make([]string, 0, len(args)+1)
+func buildCommandString(prefix []string, bin string, args []string) string {
+	parts := make([]string, 0, len(prefix)+len(args)+1)
+	parts = append(parts, prefix...)
 	parts = append(parts, bin)
-	for _, arg := range args {
+	parts = append(parts, args...)
+	for i, arg := range parts {
 		if strings.ContainsAny(arg, " \t") {
-			parts = append(parts, strconv.Quote(arg))
-		} else {
-			parts = append(parts, arg)
+			parts[i] = strconv.Quote(arg)
 		}
 	}
 	return strings.Join(parts, " ")
@@ -284,4 +294,12 @@ func splitInterfaceList(value string) []string {
 		}
 	}
 	return out
+}
+
+func splitCommandList(value string) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+	return strings.Fields(value)
 }

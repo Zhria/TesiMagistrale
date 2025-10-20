@@ -11,8 +11,8 @@ ENV F5GC_MODULE=n3iwf
 # Install debug tools ~ 100MB
 RUN apk add --no-cache vim strace net-tools curl netcat-openbsd
 
-#Install N3IWF dependencies
-RUN apk add --no-cache iproute2 hostapd
+# Install N3IWF dependencies
+RUN apk add --no-cache iproute2 hostapd util-linux
 
 # Set working dir
 WORKDIR /free5gc
