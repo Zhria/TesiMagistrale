@@ -127,6 +127,7 @@ func action(cliCtx *cli.Context) error {
 	}
 
 	logger.InitCustomLogger(factory.N3iwfE2DefaultLogPath, 100)
+	logger.InitRCLogger("./log/n3iwf_e2_rc.json")
 
 	go startSnapshot(n3iwfApp)
 

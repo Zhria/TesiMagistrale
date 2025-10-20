@@ -258,7 +258,7 @@ services:
       GIN_MODE: release
       HOSTAPD_CTRL_PATH: /var/run/hostapd
       # Imposta la lista di interfacce hostapd da interrogare (separatore: spazio o virgola)
-      HOSTAPD_INTERFACES: wlan0
+      HOSTAPD_INTERFACES: wlp6s0
     cap_add:
       - NET_ADMIN
     networks:

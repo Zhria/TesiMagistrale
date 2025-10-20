@@ -20,7 +20,7 @@ func InitRCLogger(logPath string) error {
 	var err error
 
 	// File per RC
-	fileRC, err = os.OpenFile(logPath+".rc.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	fileRC, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
