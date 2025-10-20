@@ -259,12 +259,12 @@ services:
       HOSTAPD_CTRL_PATH: /var/run/hostapd
       # Imposta la lista di interfacce hostapd da interrogare (separatore: spazio o virgola)
       HOSTAPD_INTERFACES: wlp6s0
-      # Esegui hostapd_cli nel namespace di rete dell'host (richiede pid: "host")
+      # Esegui hostapd_cli con un wrapper personalizzabile
       HOSTAPD_COMMAND_PREFIX: nsenter -t 1 -n
       HOSTAPD_TIMEOUT: 10s
     cap_add:
+      - SYS_ADMIN
       - NET_ADMIN
-    pid: "host"
     networks:
       privnet:
         ipv4_address: 10.100.200.15
