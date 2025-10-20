@@ -254,6 +254,8 @@ services:
       - ./cert/n3iwf.pem:/free5gc/cert/n3iwf.pem
       - ./n3iwf_e2logger:/free5gc/log/:rw
       - /var/run/hostapd:/var/run/hostapd
+      - /run/hostapd:/run/hostapd   # aggiungi anche questo alias: /var/run -> /run
+
     environment:
       GIN_MODE: release
       HOSTAPD_CTRL_PATH: /var/run/hostapd
@@ -264,6 +266,8 @@ services:
     cap_add:
       - SYS_ADMIN
       - NET_ADMIN
+      - NET_RAW
+
     networks:
       privnet:
         ipv4_address: 10.100.200.15
@@ -271,6 +275,7 @@ services:
           - n3iwf.free5gc.org
       macvlan10:
         ipv4_address: 192.168.10.254
+    userns_mode: host
     depends_on:
       - free5gc-amf
       - free5gc-smf
