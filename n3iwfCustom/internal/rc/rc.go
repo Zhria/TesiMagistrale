@@ -96,46 +96,11 @@ func CollectHostapdSnapshot(ctx context.Context, options HostapdOptions) (snapsh
 
 	now := time.Now()
 	for _, iface := range interfaces {
-		args := opts.buildAllStaArgs(iface)
-		commandString := buildCommandString(opts.CommandPrefix, opts.Command, args)
-
-		cmdCtx := ctx
-		cancel := func() {}
-		if opts.Timeout > 0 {
-			cmdCtx, cancel = context.WithTimeout(ctx, opts.Timeout)
+		_, snap, errList := collectStations(ctx, opts, iface)
+		if errList != nil {
+			errs = append(errs, errList...)
 		}
-		output, runErr := runCommand(cmdCtx, opts, args)
-		cancel()
-
-		ifaceSnap := snapshot.RCInterfaceSnapshot{
-			Interface: iface,
-			Raw:       output,
-			Command:   []string{commandString},
-		}
-
-		if runErr != nil {
-			ifaceSnap.Error = runErr.Error()
-			errs = append(errs, fmt.Sprintf("%s: %v", commandString, runErr))
-			ifaceSnaps = append(ifaceSnaps, ifaceSnap)
-			continue
-		}
-
-		detected := iface
-		if detected == "" {
-			if parsed := detectSelectedInterface(output); parsed != "" {
-				detected = parsed
-			}
-		}
-		ifaceSnap.Interface = detected
-
-		stations, parseErr := parseHostapdAllSta(output)
-		ifaceSnap.Stations = stations
-		if parseErr != nil {
-			ifaceSnap.Error = parseErr.Error()
-			errs = append(errs, fmt.Sprintf("%s parse: %v", commandString, parseErr))
-		}
-
-		ifaceSnaps = append(ifaceSnaps, ifaceSnap)
+		ifaceSnaps = append(ifaceSnaps, snap)
 	}
 
 	snap := snapshot.RCSnapshot{
@@ -158,6 +123,30 @@ func (o HostapdOptions) buildAllStaArgs(iface string) []string {
 		args = append(args, "-i", iface)
 	}
 	args = append(args, "all_sta")
+	return args
+}
+
+func (o HostapdOptions) buildListStaArgs(iface string) []string {
+	args := make([]string, 0, 6)
+	if o.ControlDir != "" {
+		args = append(args, "-p", o.ControlDir)
+	}
+	if iface != "" {
+		args = append(args, "-i", iface)
+	}
+	args = append(args, "list_sta")
+	return args
+}
+
+func (o HostapdOptions) buildStaArgs(iface, mac string) []string {
+	args := make([]string, 0, 7)
+	if o.ControlDir != "" {
+		args = append(args, "-p", o.ControlDir)
+	}
+	if iface != "" {
+		args = append(args, "-i", iface)
+	}
+	args = append(args, "sta", strings.ToLower(mac))
 	return args
 }
 
@@ -188,11 +177,6 @@ func buildCommandString(prefix []string, bin string, args []string) string {
 	parts = append(parts, prefix...)
 	parts = append(parts, bin)
 	parts = append(parts, args...)
-	for i, arg := range parts {
-		if strings.ContainsAny(arg, " \t") {
-			parts[i] = strconv.Quote(arg)
-		}
-	}
 	return strings.Join(parts, " ")
 }
 
@@ -302,4 +286,164 @@ func splitCommandList(value string) []string {
 		return nil
 	}
 	return strings.Fields(value)
+}
+
+func collectStations(ctx context.Context, opts HostapdOptions, iface string) ([]snapshot.RCStation, snapshot.RCInterfaceSnapshot, []string) {
+	args := opts.buildAllStaArgs(iface)
+	commandString := buildCommandString(opts.CommandPrefix, opts.Command, args)
+
+	output, runErr := runWithTimeout(ctx, opts, args)
+
+	ifaceSnap := snapshot.RCInterfaceSnapshot{
+		Interface: iface,
+		Raw:       output,
+		Command:   []string{commandString},
+	}
+
+	var errorList []string
+
+	if runErr == nil {
+		if detected := detectSelectedInterface(output); detected != "" {
+			ifaceSnap.Interface = detected
+		}
+		stations, parseErr := parseHostapdAllSta(output)
+		if parseErr == nil {
+			ifaceSnap.Stations = stations
+			return stations, ifaceSnap, nil
+		}
+		ifaceSnap.Error = parseErr.Error()
+		errorList = append(errorList, fmt.Sprintf("%s parse: %v", commandString, parseErr))
+	} else {
+		ifaceSnap.Error = runErr.Error()
+		errorList = append(errorList, fmt.Sprintf("%s: %v", commandString, runErr))
+	}
+
+	fallbackStations, fallbackRaw, fallbackCmds, fallbackErrs := collectStationsViaListSta(ctx, opts, iface)
+	ifaceSnap.Raw = appendRaw(ifaceSnap.Raw, fallbackRaw)
+	if len(fallbackCmds) > 0 {
+		ifaceSnap.Command = append(ifaceSnap.Command, fallbackCmds...)
+	}
+	if len(fallbackStations) > 0 {
+		ifaceSnap.Stations = fallbackStations
+	}
+
+	if len(fallbackErrs) == 0 {
+		ifaceSnap.Error = ""
+		return fallbackStations, ifaceSnap, errorList
+	}
+
+	if ifaceSnap.Error == "" {
+		ifaceSnap.Error = strings.Join(fallbackErrs, "; ")
+	}
+	errorList = append(errorList, fallbackErrs...)
+	return fallbackStations, ifaceSnap, errorList
+}
+
+func collectStationsViaListSta(ctx context.Context, opts HostapdOptions, iface string) ([]snapshot.RCStation, string, []string, []string) {
+	var rawParts []string
+	var commands []string
+	var errorList []string
+
+	run := func(args []string) (string, error) {
+		return runWithTimeout(ctx, opts, args)
+	}
+
+	listArgs := opts.buildListStaArgs(iface)
+	listCmd := buildCommandString(opts.CommandPrefix, opts.Command, listArgs)
+	listOut, listErr := run(listArgs)
+	commands = append(commands, listCmd)
+	rawParts = append(rawParts, formatCommandOutput(listCmd, listOut))
+	if listErr != nil {
+		errorList = append(errorList, fmt.Sprintf("%s: %v", listCmd, listErr))
+		return nil, strings.Join(rawParts, "\n"), commands, errorList
+	}
+
+	macs := parseListSta(listOut)
+	if len(macs) == 0 {
+		return []snapshot.RCStation{}, strings.Join(rawParts, "\n"), commands, errorList
+	}
+
+	stations := make([]snapshot.RCStation, 0, len(macs))
+	for _, mac := range macs {
+		staArgs := opts.buildStaArgs(iface, mac)
+		staCmd := buildCommandString(opts.CommandPrefix, opts.Command, staArgs)
+		staOut, staErr := run(staArgs)
+		commands = append(commands, staCmd)
+		rawParts = append(rawParts, formatCommandOutput(staCmd, staOut))
+		if staErr != nil {
+			errorList = append(errorList, fmt.Sprintf("%s: %v", staCmd, staErr))
+			continue
+		}
+		stations = append(stations, parseHostapdSta(mac, staOut))
+	}
+
+	return stations, strings.Join(rawParts, "\n"), commands, errorList
+}
+
+func runWithTimeout(ctx context.Context, opts HostapdOptions, args []string) (string, error) {
+	cmdCtx := ctx
+	cancel := func() {}
+	if opts.Timeout > 0 {
+		cmdCtx, cancel = context.WithTimeout(ctx, opts.Timeout)
+	}
+	defer cancel()
+	return runCommand(cmdCtx, opts, args)
+}
+
+func parseListSta(output string) []string {
+	var macs []string
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if macRegex.MatchString(line) {
+			macs = append(macs, strings.ToLower(line))
+		}
+	}
+	return macs
+}
+
+func parseHostapdSta(mac string, output string) snapshot.RCStation {
+	station := snapshot.RCStation{
+		MAC:           strings.ToLower(mac),
+		Fields:        make(map[string]string),
+		OrderedFields: make([]snapshot.RCField, 0, 32),
+	}
+
+	scanner := bufio.NewScanner(strings.NewReader(output))
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(strings.ToLower(line), "selected interface") {
+			continue
+		}
+		key, value := parseKeyValue(line)
+		if key != "" {
+			station.Fields[key] = value
+		}
+		station.OrderedFields = append(station.OrderedFields, snapshot.RCField{
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	return station
+}
+
+func appendRaw(base, extra string) string {
+	base = strings.TrimSpace(base)
+	extra = strings.TrimSpace(extra)
+	switch {
+	case base == "":
+		return extra
+	case extra == "":
+		return base
+	default:
+		return base + "\n---\n" + extra
+	}
+}
+
+func formatCommandOutput(cmd, output string) string {
+	return fmt.Sprintf("$ %s\n%s", cmd, strings.TrimSpace(output))
 }
