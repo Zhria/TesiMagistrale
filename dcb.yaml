@@ -253,8 +253,12 @@ services:
       - ./cert/n3iwf.key:/free5gc/cert/n3iwf.key
       - ./cert/n3iwf.pem:/free5gc/cert/n3iwf.pem
       - ./n3iwf_e2logger:/free5gc/log/:rw
+      - /var/run/hostapd:/var/run/hostapd
     environment:
       GIN_MODE: release
+      HOSTAPD_CTRL_PATH: /var/run/hostapd
+      # Imposta la lista di interfacce hostapd da interrogare (separatore: spazio o virgola)
+      HOSTAPD_INTERFACES: wlan0
     cap_add:
       - NET_ADMIN
     networks:

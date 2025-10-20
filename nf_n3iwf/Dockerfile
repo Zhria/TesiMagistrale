@@ -2,17 +2,17 @@ FROM n3iwf_local
 FROM alpine:3.15
 
 LABEL description="Free5GC open source 5G Core Network" \
-    version="Stage 3"
+    version="KPMv3.0-RCv1.0.3"
 
 ENV F5GC_MODULE=n3iwf
 
 #ARG DEBUG_TOOLS
 
 # Install debug tools ~ 100MB
-RUN apk add -U vim strace net-tools curl netcat-openbsd 
+RUN apk add --no-cache vim strace net-tools curl netcat-openbsd
 
-# Install N3IWF dependencies
-RUN apk add -U iproute2
+#Install N3IWF dependencies
+RUN apk add --no-cache iproute2 hostapd
 
 # Set working dir
 WORKDIR /free5gc

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -584,9 +585,10 @@ func (s *AggStore) SnapshotJSON() []byte {
 	return b
 }
 
+/*
 func (s *AggStore) getSnapshot() Snapshot {
 	return s.Snapshot()
-}
+}*/
 
 type Query struct {
 	BucketS *int64
@@ -639,19 +641,26 @@ func containsToken(s, token string) bool {
 func containsWithSep(s, token string) bool {
 	// key composta con '|' come separatore
 	// "b=...|ip=...|..." => cerca "|token" o "token|" o inizio/fine
-	return (len(s) >= len(token) && ( // naive, va benone qui
-	s == token ||
-		hasPrefixToken(s, token) ||
-		hasSuffixToken(s, token) ||
-		hasMidToken(s, token)))
+	if len(s) < len(token) || token == "" {
+		return false
+	}
+	if s == token || hasPrefixToken(s, token) || hasSuffixToken(s, token) {
+		return true
+	}
+	return hasMidToken(s, token)
 }
 func hasPrefixToken(s, token string) bool { return len(s) >= len(token) && s[:len(token)] == token }
 func hasSuffixToken(s, token string) bool {
 	return len(s) >= len(token) && s[len(s)-len(token):] == token
 }
 func hasMidToken(s, token string) bool {
-	return ("|"+s+"|") != "" && ("|"+s+"|") != "" && ("|"+s+"|") != "" && ("|"+s+"|") != ""
-} // lasciata semplice
+	if token == "" {
+		return false
+	}
+	padded := "|" + s + "|"
+	needle := "|" + token + "|"
+	return strings.Contains(padded, needle)
+}
 
 var Agg = NewAggStore()
 

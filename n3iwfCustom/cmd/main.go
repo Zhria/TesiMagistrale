@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/free5gc/n3iwf/internal/logger"
+	"github.com/free5gc/n3iwf/internal/rc"
 	"github.com/free5gc/n3iwf/internal/snapshot"
 	"github.com/free5gc/n3iwf/pkg/factory"
 	"github.com/free5gc/n3iwf/pkg/service"
@@ -131,6 +132,7 @@ func action(cliCtx *cli.Context) error {
 
 	//Avvio un altro thread per il kpm metrics logger.
 	go startKPMLogger()
+	go startRCLogger(n3iwfApp)
 
 	n3iwfApp.Start()
 
@@ -185,4 +187,26 @@ func startKPMLogger() {
 		time.Sleep(500 * time.Millisecond) // Sleep for 500 milliseconds
 	}
 	// This function will continuously log KPM metrics every 500 milliseconds.
+}
+
+func startRCLogger(app *service.N3iwfApp) {
+	logger.MainLog.Infof("INIT RC Logger")
+	opts := rc.DefaultHostapdOptions()
+	ticker := time.NewTicker(500 * time.Millisecond)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		snap, err := rc.CollectHostapdSnapshot(context.Background(), opts)
+		if err != nil {
+			logger.MainLog.Debugf("hostapd snapshot error: %v", err)
+		}
+		metrics := snapshot.Agg.Snapshot()
+		var ueSnapshot *snapshot.N3iwfAppSnapshot
+		if app != nil {
+			ueSnapshot = snapshot.MakeN3IWFContextSnapshotFull(app.Context())
+		}
+		rc.EnrichSnapshot(&snap, metrics, ueSnapshot)
+		snapshot.RCAgg.Update(snap)
+		logger.LogRCMetrics(snapshot.RCAgg.Snapshot())
+	}
 }
