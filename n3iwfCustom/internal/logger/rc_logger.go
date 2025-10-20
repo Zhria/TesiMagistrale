@@ -44,8 +44,13 @@ func LogRCMetrics(data any) {
 		return
 	}
 
-	// Scrittura su file KPM
+	// Scrittura su file RC
 	if err := fileRC.Truncate(0); err != nil {
+		fileRC.Close()
+		fileRC = nil
+		return
+	}
+	if _, err := fileRC.Seek(0, 0); err != nil {
 		fileRC.Close()
 		fileRC = nil
 		return

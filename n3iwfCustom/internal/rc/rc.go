@@ -17,7 +17,7 @@ import (
 
 const (
 	defaultHostapdCLI = "hostapd_cli"
-	defaultTimeout    = 2 * time.Second
+	defaultTimeout    = 5 * time.Second
 )
 
 var (
@@ -46,6 +46,13 @@ func DefaultHostapdOptions() HostapdOptions {
 	}
 	if list := os.Getenv("HOSTAPD_INTERFACES"); list != "" {
 		opts.Interfaces = splitInterfaceList(list)
+	}
+	if timeoutStr := strings.TrimSpace(os.Getenv("HOSTAPD_TIMEOUT")); timeoutStr != "" {
+		if dur, err := time.ParseDuration(timeoutStr); err == nil {
+			opts.Timeout = dur
+		} else if ms, err := strconv.Atoi(timeoutStr); err == nil {
+			opts.Timeout = time.Duration(ms) * time.Millisecond
+		}
 	}
 	return opts
 }
