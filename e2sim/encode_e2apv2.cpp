@@ -283,7 +283,9 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_global);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_ranf);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_txid);
-  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_add);
+  
+  //Rimosso per testing
+  //ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_add);
 
   // ========= Wrap nell'InitiatingMessage =========
   InitiatingMessage_t *init = (InitiatingMessage_t*)calloc(1, sizeof(*init));
