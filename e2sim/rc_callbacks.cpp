@@ -709,6 +709,18 @@ void registerRCfunctionDefinition(E2Sim &e2){
   OCTET_STRING_fromBuf(ranFunctionOIDe, oid, strlen(oid));
   e2.register_e2sm_oid(3, ranFunctionOIDe);
   g_rc_ranfunc_def = rc_ranfunc_desc;
+
+  E2SM_RC_RANFunctionDefinition *check = NULL;
+  asn_dec_rval_t dr = asn_decode(NULL, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_RANFunctionDefinition, (void **)&check, ranfunc_ostr_rc->buf, ranfunc_ostr_rc->size);
+  if (dr.code != RC_OK)
+  {
+    stampaln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+  }
+  else
+  {
+    stampaln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+  }
+
   return;
 
 }
