@@ -374,7 +374,7 @@ static void run_rc_report_loop(const SubscriptionKey &key,
 
         uint8_t hdr_buf[MAX_SCTP_BUFFER];
         asn_enc_rval_t hdr_enc = asn_encode_to_buffer(
-            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationHeader,
+            nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationHeader,
             hdr, hdr_buf, sizeof(hdr_buf));
         if (hdr_enc.encoded < 0) {
             stampaln("RC report loop: header encode failed (%s)",
@@ -450,7 +450,7 @@ static void run_rc_report_loop(const SubscriptionKey &key,
 
         uint8_t msg_buf[MAX_SCTP_BUFFER];
         asn_enc_rval_t msg_enc = asn_encode_to_buffer(
-            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationMessage,
+            nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationMessage,
             msg, msg_buf, sizeof(msg_buf));
         if (msg_enc.encoded < 0) {
             stampaln("RC report loop: message encode failed (%s)",
@@ -672,7 +672,7 @@ void registerRCfunctionDefinition(E2Sim &e2){
   }
 
   asn_enc_rval_t er_rc = asn_encode_to_buffer(
-      NULL, ATS_ALIGNED_BASIC_PER,
+      NULL, ATS_UNALIGNED_BASIC_PER,
       &asn_DEF_E2SM_RC_RANFunctionDefinition,
       rc_ranfunc_desc, e2smbuffer_rc, e2smbuffer_size);
 
