@@ -366,9 +366,10 @@ services:
     privileged: true              
     command: sh -lc 'apk add --no-cache python3 py3-pip iw iproute2 ethtool hostapd && python3 /app/exporter.py'
     volumes:
-      - /var/run/hostapd:/var/run/hostapd
       - ./wifi_metrics/exporter.py:/app/exporter.py:ro
       - ./wifi_metrics:/wifi-metrics:rw 
+      - /run/hostapd:/run/hostapd:rw
+      - /run/hostapd:/var/run/hostapd:rw   # mantiene retrocompatibilità con gli script
     environment:
       HOSTAPD_CTRL_PATH: /var/run/hostapd
       HOSTAPD_IFACES: "wlp6s0"
