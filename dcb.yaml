@@ -253,8 +253,6 @@ services:
       - ./cert/n3iwf.key:/free5gc/cert/n3iwf.key
       - ./cert/n3iwf.pem:/free5gc/cert/n3iwf.pem
       - ./n3iwf_e2logger:/free5gc/log/:rw
-      - /var/run/hostapd:/var/run/hostapd
-      - /run/hostapd:/run/hostapd   # aggiungi anche questo alias: /var/run -> /run
 
     environment:
       GIN_MODE: release
@@ -369,7 +367,7 @@ services:
     command: sh -lc 'apk add --no-cache python3 py3-pip iw iproute2 ethtool hostapd && python3 /app/exporter.py'
     volumes:
       - /var/run/hostapd:/var/run/hostapd
-      - ./exporter.py:/app/exporter.py:ro
+      - ./wifi_metrics/exporter.py:/app/exporter.py:ro
       - ./wifi_metrics:/wifi-metrics:rw 
     environment:
       HOSTAPD_CTRL_PATH: /var/run/hostapd

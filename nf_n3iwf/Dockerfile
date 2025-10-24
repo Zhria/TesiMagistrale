@@ -12,7 +12,7 @@ RUN apk update
 RUN apk add --no-cache vim strace net-tools curl netcat-openbsd
 
 # Install N3IWF dependencies
-RUN apk add --no-cache iproute2 hostapd util-linux
+RUN apk add --no-cache iproute2 util-linux
 
 # Set working dir
 WORKDIR /free5gc

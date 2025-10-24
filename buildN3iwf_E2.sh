@@ -5,7 +5,7 @@ sudo docker compose -f dcb.yaml build;
 
 sudo chmod +x ./e2sim/build_e2sim;
 
-#Build di E2 Node
-cd ./e2sim
-./build_e2sim --clean;
+#Build di E2 Node --Non necessario visto che builda all'interno del container
+#cd ./e2sim
+#./build_e2sim --clean;
 #./build_e2sim;
