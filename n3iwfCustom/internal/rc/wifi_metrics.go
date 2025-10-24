@@ -41,33 +41,19 @@ func CollectWiFiMetricsSnapshot(path string) (snapshot.RCSnapshot, error) {
 		}, err
 	}
 
-	interfaces := make([]snapshot.RCInterfaceSnapshot, 0, len(payload))
+	stations := make([]snapshot.RCStation, 0, len(payload)*4)
 	for name, metrics := range payload {
-		ifaceSnap := snapshot.RCInterfaceSnapshot{
-			Interface: strings.TrimSpace(name),
-		}
-		if metrics.TS > 0 {
-			ifaceSnap.MetricsTS = time.Unix(metrics.TS, 0).UTC()
-		}
-		ifaceSnap.Survey = convertSliceMap(metrics.Survey)
-		ifaceSnap.Ethtool = convertMapAnyToString(metrics.Ethtool)
+		ifName := strings.TrimSpace(name)
 
 		// Costruisci la lista di station combinando hostapd e iw station dump
 		hostapdStations := normalizeStationMap(metrics.Hostapd.Stations)
 		iwStations := normalizeStationMap(metrics.StationDump)
-		ifaceSnap.Stations = buildStationsFromMetrics(hostapdStations, iwStations)
-
-		interfaces = append(interfaces, ifaceSnap)
+		stations = append(stations, buildStationsFromMetrics(ifName, hostapdStations, iwStations)...)
 	}
 
-	// Ordina per nome interfaccia per avere output deterministico
-	sort.SliceStable(interfaces, func(i, j int) bool {
-		return interfaces[i].Interface < interfaces[j].Interface
-	})
-
 	return snapshot.RCSnapshot{
-		Timestamp:  time.Now(),
-		Interfaces: interfaces,
+		Timestamp: time.Now(),
+		Stations:  stations,
 	}, nil
 }
 
@@ -84,7 +70,7 @@ type wifiHostapdMetrics struct {
 	Stations map[string]map[string]string `json:"stations"`
 }
 
-func buildStationsFromMetrics(hostapd, stationDump map[string]map[string]string) []snapshot.RCStation {
+func buildStationsFromMetrics(iface string, hostapd, stationDump map[string]map[string]string) []snapshot.RCStation {
 	allMACs := make(map[string]struct{})
 	for mac := range hostapd {
 		allMACs[mac] = struct{}{}
@@ -139,6 +125,7 @@ func buildStationsFromMetrics(hostapd, stationDump map[string]map[string]string)
 		}
 
 		stations = append(stations, snapshot.RCStation{
+			Interface:   iface,
 			MAC:         mac,
 			IP:          ip,
 			Fields:      fields,

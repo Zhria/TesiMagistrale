@@ -91,21 +91,26 @@ func CollectHostapdSnapshot(ctx context.Context, options HostapdOptions) (snapsh
 		interfaces = []string{""}
 	}
 
-	var ifaceSnaps []snapshot.RCInterfaceSnapshot
+	var stationsAll []snapshot.RCStation
 	var errs []string
 
 	now := time.Now()
 	for _, iface := range interfaces {
-		_, snap, errList := collectStations(ctx, opts, iface)
+		stations, snap, errList := collectStations(ctx, opts, iface)
 		if errList != nil {
 			errs = append(errs, errList...)
 		}
-		ifaceSnaps = append(ifaceSnaps, snap)
+		for i := range stations {
+			if stations[i].Interface == "" {
+				stations[i].Interface = snap.Interface
+			}
+		}
+		stationsAll = append(stationsAll, stations...)
 	}
 
 	snap := snapshot.RCSnapshot{
-		Timestamp:  now,
-		Interfaces: ifaceSnaps,
+		Timestamp: now,
+		Stations:  stationsAll,
 	}
 	if len(errs) > 0 {
 		snap.Errors = errs

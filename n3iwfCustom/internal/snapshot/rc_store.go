@@ -7,6 +7,7 @@ import (
 
 // RCStation contiene le informazioni per un singolo client collegato all'access point.
 type RCStation struct {
+	Interface   string            `json:"interface,omitempty"`
 	MAC         string            `json:"mac"`
 	IP          string            `json:"ip,omitempty"`
 	Fields      map[string]string `json:"fields,omitempty"`
@@ -17,7 +18,8 @@ type RCStation struct {
 // DeepCopy crea una copia indipendente di RCStation.
 func (s RCStation) DeepCopy() RCStation {
 	out := RCStation{
-		MAC: s.MAC,
+		Interface: s.Interface,
+		MAC:       s.MAC,
 	}
 	if s.IP != "" {
 		out.IP = s.IP
@@ -98,6 +100,7 @@ func (s RCInterfaceSnapshot) DeepCopy() RCInterfaceSnapshot {
 // RCSnapshot contiene lo stato complessivo del collector RC.
 type RCSnapshot struct {
 	Timestamp    time.Time             `json:"timestamp"`
+	Stations     []RCStation           `json:"stations,omitempty"`
 	Interfaces   []RCInterfaceSnapshot `json:"interfaces,omitempty"`
 	Errors       []string              `json:"errors,omitempty"`
 	Associations []RCUEAssociation     `json:"associations,omitempty"`
@@ -111,6 +114,12 @@ func (s RCSnapshot) DeepCopy() RCSnapshot {
 	if len(s.Errors) > 0 {
 		out.Errors = make([]string, len(s.Errors))
 		copy(out.Errors, s.Errors)
+	}
+	if len(s.Stations) > 0 {
+		out.Stations = make([]RCStation, len(s.Stations))
+		for i, st := range s.Stations {
+			out.Stations[i] = st.DeepCopy()
+		}
 	}
 	if len(s.Interfaces) > 0 {
 		out.Interfaces = make([]RCInterfaceSnapshot, len(s.Interfaces))

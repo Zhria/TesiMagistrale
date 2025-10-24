@@ -35,64 +35,63 @@ func EnrichSnapshot(rcSnap *snapshot.RCSnapshot, metrics snapshot.Snapshot, ctx 
 	n3iwfID := n3iwfIdentifier()
 
 	var associations []snapshot.RCUEAssociation
-	for _, iface := range rcSnap.Interfaces {
-		for _, station := range iface.Stations {
-			assocStation := station.DeepCopy()
-			assoc := snapshot.RCUEAssociation{
-				Interface: iface.Interface,
-				MAC:       station.MAC,
-				Station:   assocStation,
-			}
-
-			ip := extractIPFromStation(station)
-			if ip == "" {
-				ip = strings.TrimSpace(arpMap[strings.ToLower(station.MAC)])
-			}
-			assoc.UEIP = ip
-			if assoc.UEIP != "" {
-				if assocStation.Fields == nil {
-					assocStation.Fields = make(map[string]string)
-				}
-				assocStation.Fields["ip"] = assoc.UEIP
-				assocStation.IP = assoc.UEIP
-			}
-
-			if counters, ok := ipMetrics[ip]; ok {
-				assoc.Counters = counters
-			}
-
-			var matchedUE context.N3IWFRanUe
-			var ok bool
-			if ue, found := ueByIP[ip]; found && ip != "" {
-				matchedUE = ue
-				ok = true
-			} else if ue, found := ueByMAC[strings.ToLower(station.MAC)]; found {
-				matchedUE = ue
-				ok = true
-				if assoc.UEIP == "" {
-					if v4 := strings.TrimSpace(matchedUE.RanUeSharedCtx.IPAddrv4); v4 != "" {
-						assoc.UEIP = v4
-						assocStation.Fields["ip"] = v4
-						assocStation.IP = v4
-					} else if v6 := strings.TrimSpace(matchedUE.RanUeSharedCtx.IPAddrv6); v6 != "" {
-						assoc.UEIP = v6
-						assocStation.Fields["ip"] = v6
-						assocStation.IP = v6
-					}
-				}
-			}
-
-			if ok {
-				assoc.UE = buildUEInfo(matchedUE, ikeByRan[matchedUE.RanUeSharedCtx.RanUeNgapId], n3iwfID)
-			} else if assoc.UEIP != "" && len(ipMetrics) > 0 {
-				assoc.Mismatches = append(assoc.Mismatches, "ue_not_found")
-			}
-
-			associations = append(associations, assoc)
+	for _, station := range rcSnap.Stations {
+		assocStation := station.DeepCopy()
+		assoc := snapshot.RCUEAssociation{
+			Interface: station.Interface,
+			MAC:       station.MAC,
+			Station:   assocStation,
 		}
+
+		ip := extractIPFromStation(station)
+		if ip == "" {
+			ip = strings.TrimSpace(arpMap[strings.ToLower(station.MAC)])
+		}
+		assoc.UEIP = ip
+		if assoc.UEIP != "" {
+			if assocStation.Fields == nil {
+				assocStation.Fields = make(map[string]string)
+			}
+			assocStation.Fields["ip"] = assoc.UEIP
+			assocStation.IP = assoc.UEIP
+		}
+
+		if counters, ok := ipMetrics[ip]; ok {
+			assoc.Counters = counters
+		}
+
+		var matchedUE context.N3IWFRanUe
+		var ok bool
+		if ue, found := ueByIP[ip]; found && ip != "" {
+			matchedUE = ue
+			ok = true
+		} else if ue, found := ueByMAC[strings.ToLower(station.MAC)]; found {
+			matchedUE = ue
+			ok = true
+			if assoc.UEIP == "" {
+				if v4 := strings.TrimSpace(matchedUE.RanUeSharedCtx.IPAddrv4); v4 != "" {
+					assoc.UEIP = v4
+					assocStation.Fields["ip"] = v4
+					assocStation.IP = v4
+				} else if v6 := strings.TrimSpace(matchedUE.RanUeSharedCtx.IPAddrv6); v6 != "" {
+					assoc.UEIP = v6
+					assocStation.Fields["ip"] = v6
+					assocStation.IP = v6
+				}
+			}
+		}
+
+		if ok {
+			assoc.UE = buildUEInfo(matchedUE, ikeByRan[matchedUE.RanUeSharedCtx.RanUeNgapId], n3iwfID)
+		} else if assoc.UEIP != "" && len(ipMetrics) > 0 {
+			assoc.Mismatches = append(assoc.Mismatches, "ue_not_found")
+		}
+
+		associations = append(associations, assoc)
 	}
 
 	rcSnap.Associations = associations
+	rcSnap.Stations = nil
 }
 
 func buildUEMap(ctx *snapshot.N3iwfAppSnapshot) map[string]context.N3IWFRanUe {
