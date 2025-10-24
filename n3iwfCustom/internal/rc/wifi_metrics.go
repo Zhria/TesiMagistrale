@@ -49,9 +49,6 @@ func CollectWiFiMetricsSnapshot(path string) (snapshot.RCSnapshot, error) {
 		if metrics.TS > 0 {
 			ifaceSnap.MetricsTS = time.Unix(metrics.TS, 0).UTC()
 		}
-		if len(metrics.Hostapd.Status) > 0 {
-			ifaceSnap.HostapdStatus = copyStringMap(metrics.Hostapd.Status)
-		}
 		ifaceSnap.Survey = convertSliceMap(metrics.Survey)
 		ifaceSnap.Ethtool = convertMapAnyToString(metrics.Ethtool)
 
@@ -111,15 +108,17 @@ func buildStationsFromMetrics(hostapd, stationDump map[string]map[string]string)
 		hostData := copyStringMap(hostapd[mac])
 		iwData := copyStringMap(stationDump[mac])
 
-		fields := make(map[string]string, len(hostData)+len(iwData))
-		ordered := make([]snapshot.RCField, 0, len(hostData)+len(iwData))
+		fields := make(map[string]string, len(hostData)+len(iwData)+1)
+		var ip string
 
 		if len(hostData) > 0 {
 			keys := sortedKeys(hostData)
 			for _, k := range keys {
 				v := hostData[k]
 				fields[k] = v
-				ordered = append(ordered, snapshot.RCField{Key: k, Value: v})
+				if ip == "" && (k == "ip" || k == "ip_addr" || k == "ipv4") {
+					ip = strings.TrimSpace(v)
+				}
 			}
 		}
 
@@ -129,16 +128,22 @@ func buildStationsFromMetrics(hostapd, stationDump map[string]map[string]string)
 				v := iwData[k]
 				prefKey := "iw." + k
 				fields[prefKey] = v
-				ordered = append(ordered, snapshot.RCField{Key: prefKey, Value: v})
+				if ip == "" && (k == "ip" || k == "ipv4_addr" || k == "addr") {
+					ip = strings.TrimSpace(v)
+				}
 			}
 		}
 
+		if ip != "" {
+			fields["ip"] = ip
+		}
+
 		stations = append(stations, snapshot.RCStation{
-			MAC:           mac,
-			Fields:        fields,
-			OrderedFields: ordered,
-			Hostapd:       hostData,
-			StationDump:   iwData,
+			MAC:         mac,
+			IP:          ip,
+			Fields:      fields,
+			Hostapd:     hostData,
+			StationDump: iwData,
 		})
 	}
 

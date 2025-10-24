@@ -5,25 +5,22 @@ import (
 	"time"
 )
 
-// RCField rappresenta una coppia chiave/valore estratta dall'output di hostapd_cli.
-type RCField struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
-}
-
 // RCStation contiene le informazioni per un singolo client collegato all'access point.
 type RCStation struct {
-	MAC           string            `json:"mac"`
-	Fields        map[string]string `json:"fields,omitempty"`
-	OrderedFields []RCField         `json:"orderedFields,omitempty"`
-	Hostapd       map[string]string `json:"hostapd,omitempty"`
-	StationDump   map[string]string `json:"stationDump,omitempty"`
+	MAC         string            `json:"mac"`
+	IP          string            `json:"ip,omitempty"`
+	Fields      map[string]string `json:"fields,omitempty"`
+	Hostapd     map[string]string `json:"hostapd,omitempty"`
+	StationDump map[string]string `json:"stationDump,omitempty"`
 }
 
 // DeepCopy crea una copia indipendente di RCStation.
 func (s RCStation) DeepCopy() RCStation {
 	out := RCStation{
 		MAC: s.MAC,
+	}
+	if s.IP != "" {
+		out.IP = s.IP
 	}
 	if len(s.Fields) > 0 {
 		out.Fields = make(map[string]string, len(s.Fields))
@@ -43,24 +40,19 @@ func (s RCStation) DeepCopy() RCStation {
 			out.StationDump[k] = v
 		}
 	}
-	if len(s.OrderedFields) > 0 {
-		out.OrderedFields = make([]RCField, len(s.OrderedFields))
-		copy(out.OrderedFields, s.OrderedFields)
-	}
 	return out
 }
 
 // RCInterfaceSnapshot rappresenta i dati raccolti da hostapd_cli per una specifica interfaccia.
 type RCInterfaceSnapshot struct {
-	Interface     string              `json:"interface"`
-	Stations      []RCStation         `json:"stations,omitempty"`
-	HostapdStatus map[string]string   `json:"hostapdStatus,omitempty"`
-	Survey        []map[string]string `json:"survey,omitempty"`
-	Ethtool       map[string]string   `json:"ethtool,omitempty"`
-	MetricsTS     time.Time           `json:"metricsTimestamp,omitempty"`
-	Raw           string              `json:"raw,omitempty"`
-	Error         string              `json:"error,omitempty"`
-	Command       []string            `json:"command,omitempty"`
+	Interface string              `json:"interface"`
+	Stations  []RCStation         `json:"stations,omitempty"`
+	Survey    []map[string]string `json:"survey,omitempty"`
+	Ethtool   map[string]string   `json:"ethtool,omitempty"`
+	MetricsTS time.Time           `json:"metricsTimestamp,omitempty"`
+	Raw       string              `json:"raw,omitempty"`
+	Error     string              `json:"error,omitempty"`
+	Command   []string            `json:"command,omitempty"`
 }
 
 // DeepCopy crea una copia indipendente dell'RCInterfaceSnapshot.
@@ -79,12 +71,6 @@ func (s RCInterfaceSnapshot) DeepCopy() RCInterfaceSnapshot {
 		out.Stations = make([]RCStation, len(s.Stations))
 		for i, st := range s.Stations {
 			out.Stations[i] = st.DeepCopy()
-		}
-	}
-	if len(s.HostapdStatus) > 0 {
-		out.HostapdStatus = make(map[string]string, len(s.HostapdStatus))
-		for k, v := range s.HostapdStatus {
-			out.HostapdStatus[k] = v
 		}
 	}
 	if len(s.Survey) > 0 {
@@ -200,6 +186,17 @@ func (a RCUEAssociation) DeepCopy() RCUEAssociation {
 			ueCopy.PduSessions = make([]RCPDUSessionInfo, len(a.UE.PduSessions))
 			copy(ueCopy.PduSessions, a.UE.PduSessions)
 		}
+		if len(a.UE.ChildSAs) > 0 {
+			ueCopy.ChildSAs = make([]RCChildSAInfo, len(a.UE.ChildSAs))
+			for i, sa := range a.UE.ChildSAs {
+				ueCopy.ChildSAs[i] = sa
+				if len(sa.PduSessionIds) > 0 {
+					ps := make([]int64, len(sa.PduSessionIds))
+					copy(ps, sa.PduSessionIds)
+					ueCopy.ChildSAs[i].PduSessionIds = ps
+				}
+			}
+		}
 		out.UE = &ueCopy
 	}
 	return out
@@ -207,12 +204,22 @@ func (a RCUEAssociation) DeepCopy() RCUEAssociation {
 
 // RCAssociatedUE contiene le informazioni del contesto N3IWF/AMF rilevanti per l'UE.
 type RCAssociatedUE struct {
-	RanUeNgapId int64              `json:"ranUeNgapId"`
-	AmfUeNgapId int64              `json:"amfUeNgapId"`
-	Guti        string             `json:"guti,omitempty"`
-	IPAddrv4    string             `json:"ipAddrV4,omitempty"`
-	IPAddrv6    string             `json:"ipAddrV6,omitempty"`
-	PduSessions []RCPDUSessionInfo `json:"pduSessions,omitempty"`
+	RanUeNgapId    int64              `json:"ranUeNgapId"`
+	AmfUeNgapId    int64              `json:"amfUeNgapId"`
+	Guti           string             `json:"guti,omitempty"`
+	GUAMI          string             `json:"guami,omitempty"`
+	N3IwfID        string             `json:"n3iwfId,omitempty"`
+	AmfName        string             `json:"amfName,omitempty"`
+	AmfSCTP        string             `json:"amfSctp,omitempty"`
+	IPAddrv4       string             `json:"ipAddrV4,omitempty"`
+	IPAddrv6       string             `json:"ipAddrV6,omitempty"`
+	IKELocalSPI    uint64             `json:"ikeLocalSpi,omitempty"`
+	IKERemoteSPI   uint64             `json:"ikeRemoteSpi,omitempty"`
+	IKEState       uint8              `json:"ikeState,omitempty"`
+	UeBehindNAT    bool               `json:"ueBehindNat,omitempty"`
+	N3iwfBehindNAT bool               `json:"n3iwfBehindNat,omitempty"`
+	PduSessions    []RCPDUSessionInfo `json:"pduSessions,omitempty"`
+	ChildSAs       []RCChildSAInfo    `json:"childSa,omitempty"`
 }
 
 // RCPDUSessionInfo riassume una PDU session del contesto N3IWF.
@@ -223,4 +230,18 @@ type RCPDUSessionInfo struct {
 	IncomingTEID uint32  `json:"incomingTeid,omitempty"`
 	OutgoingTEID uint32  `json:"outgoingTeid,omitempty"`
 	UPFIP        string  `json:"upfIp,omitempty"`
+}
+
+// RCChildSAInfo riassume le informazioni sul tunnel IPsec associato all'UE.
+type RCChildSAInfo struct {
+	InboundSPI        uint32  `json:"inboundSpi,omitempty"`
+	OutboundSPI       uint32  `json:"outboundSpi,omitempty"`
+	TunnelIface       string  `json:"tunnelIface,omitempty"`
+	PeerPublicIP      string  `json:"peerPublicIp,omitempty"`
+	LocalPublicIP     string  `json:"localPublicIp,omitempty"`
+	N3IWFPort         int     `json:"n3iwfPort,omitempty"`
+	NATPort           int     `json:"natPort,omitempty"`
+	EnableEncapsulate bool    `json:"enableEncapsulate,omitempty"`
+	SelectedIPProto   uint8   `json:"selectedIpProto,omitempty"`
+	PduSessionIds     []int64 `json:"pduSessionIds,omitempty"`
 }

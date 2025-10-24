@@ -216,10 +216,9 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 				stations = append(stations, *current)
 			}
 			current = &snapshot.RCStation{
-				MAC:           strings.ToLower(line),
-				Fields:        make(map[string]string),
-				Hostapd:       make(map[string]string),
-				OrderedFields: make([]snapshot.RCField, 0, 32),
+				MAC:     strings.ToLower(line),
+				Fields:  make(map[string]string),
+				Hostapd: make(map[string]string),
 			}
 
 		case strings.HasPrefix(strings.ToLower(line), "station="):
@@ -229,10 +228,9 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 					stations = append(stations, *current)
 				}
 				current = &snapshot.RCStation{
-					MAC:           strings.ToLower(mac),
-					Fields:        make(map[string]string),
-					Hostapd:       make(map[string]string),
-					OrderedFields: make([]snapshot.RCField, 0, 32),
+					MAC:     strings.ToLower(mac),
+					Fields:  make(map[string]string),
+					Hostapd: make(map[string]string),
 				}
 			}
 
@@ -244,11 +242,10 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 			if key != "" {
 				current.Fields[key] = value
 				current.Hostapd[key] = value
+				if key == "ip" || key == "ip_addr" || key == "ipv4" {
+					current.IP = strings.TrimSpace(value)
+				}
 			}
-			current.OrderedFields = append(current.OrderedFields, snapshot.RCField{
-				Key:   key,
-				Value: value,
-			})
 		}
 	}
 
@@ -407,10 +404,9 @@ func parseListSta(output string) []string {
 
 func parseHostapdSta(mac string, output string) snapshot.RCStation {
 	station := snapshot.RCStation{
-		MAC:           strings.ToLower(mac),
-		Fields:        make(map[string]string),
-		Hostapd:       make(map[string]string),
-		OrderedFields: make([]snapshot.RCField, 0, 32),
+		MAC:     strings.ToLower(mac),
+		Fields:  make(map[string]string),
+		Hostapd: make(map[string]string),
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(output))
@@ -426,11 +422,10 @@ func parseHostapdSta(mac string, output string) snapshot.RCStation {
 		if key != "" {
 			station.Fields[key] = value
 			station.Hostapd[key] = value
+			if station.IP == "" && (key == "ip" || key == "ip_addr" || key == "ipv4") {
+				station.IP = strings.TrimSpace(value)
+			}
 		}
-		station.OrderedFields = append(station.OrderedFields, snapshot.RCField{
-			Key:   key,
-			Value: value,
-		})
 	}
 
 	return station
