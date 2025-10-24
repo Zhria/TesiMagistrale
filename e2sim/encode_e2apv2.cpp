@@ -234,8 +234,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
     if (rf.ranFunctionOId && rf.ranFunctionOId->buf && rf.ranFunctionOId->size > 0) {
       OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
-                           (const char*)rf.ranFunctionOId->buf,
-                           (int)rf.ranFunctionOId->size);
+                           (const char*)rf.ranFunctionOId->buf,(int)rf.ranFunctionOId->size);
     }
 
     ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, item);
@@ -281,9 +280,9 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
   // ========= Build E2setupRequest =========
   E2setupRequest_t *req = (E2setupRequest_t*)calloc(1, sizeof(*req));
-  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_txid);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_global);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_ranf);
+  ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_txid);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_add);
 
   // ========= Wrap nell'InitiatingMessage =========
