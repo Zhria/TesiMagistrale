@@ -181,9 +181,9 @@ int main(int argc, char *argv[])
 
   registerKPMfunctionDefinition();
 
-  registerRCfunctionDefinition(e2);
+  //registerRCfunctionDefinition(e2);
   
-  
+
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
   return 0;
