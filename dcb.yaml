@@ -253,14 +253,10 @@ services:
       - ./cert/n3iwf.key:/free5gc/cert/n3iwf.key
       - ./cert/n3iwf.pem:/free5gc/cert/n3iwf.pem
       - ./n3iwf_e2logger:/free5gc/log/:rw
+      - ./wifi_metrics:/free5gc/wifi_metrics:ro
 
     environment:
       GIN_MODE: release
-      HOSTAPD_CTRL_PATH: /var/run/hostapd
-      # Imposta la lista di interfacce hostapd da interrogare (separatore: spazio o virgola)
-      HOSTAPD_INTERFACES: wlp6s0
-      # Esegui hostapd_cli con un wrapper personalizzabile
-      HOSTAPD_TIMEOUT: 10s
     cap_add:
       - NET_ADMIN
 
@@ -369,8 +365,8 @@ services:
       - ./wifi_metrics/exporter.py:/app/exporter.py:ro
       - ./wifi_metrics:/wifi-metrics:rw 
       - /run/hostapd:/run/hostapd:rw
-      - /run/hostapd:/var/run/hostapd:rw   # mantiene retrocompatibilità con gli script
-      - /tmp:/tmp   # hostapd_cli crea socket temporanei in /tmp, montalo dal nodo host
+      - /run/hostapd:/var/run/hostapd:rw   
+      - /tmp:/tmp   
     environment:
       HOSTAPD_CTRL_PATH: /var/run/hostapd
       HOSTAPD_IFACES: "wlp6s0"

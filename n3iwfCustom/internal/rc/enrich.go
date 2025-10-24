@@ -65,13 +65,28 @@ func buildUEMap(ctx *snapshot.N3iwfAppSnapshot) map[string]context.N3IWFRanUe {
 }
 
 func extractIPFromStation(station snapshot.RCStation) string {
-	if station.Fields == nil {
+	searchMaps := []map[string]string{
+		station.Fields,
+		station.Hostapd,
+		station.StationDump,
+	}
+	for _, m := range searchMaps {
+		if ip := extractIPFromMap(m); ip != "" {
+			return ip
+		}
+	}
+	return ""
+}
+
+func extractIPFromMap(m map[string]string) string {
+	if len(m) == 0 {
 		return ""
 	}
 	candidates := []string{
-		station.Fields["ip_addr"],
-		station.Fields["ip"],
-		station.Fields["ipv4"],
+		m["ip_addr"],
+		m["ip"],
+		m["ipv4"],
+		m["addr"],
 	}
 	for _, val := range candidates {
 		if val == "" {

@@ -133,7 +133,7 @@ func action(cliCtx *cli.Context) error {
 
 	//Avvio un altro thread per il kpm metrics logger.
 	go startKPMLogger()
-	//go startRCLogger(n3iwfApp)
+	go startRCLogger(n3iwfApp)
 
 	n3iwfApp.Start()
 
@@ -193,13 +193,33 @@ func startKPMLogger() {
 func startRCLogger(app *service.N3iwfApp) {
 	logger.MainLog.Infof("INIT RC Logger")
 	opts := rc.DefaultHostapdOptions()
+	metricsPath := os.Getenv("WIFI_METRICS_PATH")
+	if metricsPath == "" {
+		metricsPath = "/free5gc/wifi_metrics/metrics.json"
+	}
 	ticker := time.NewTicker(500 * time.Millisecond)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		snap, err := rc.CollectHostapdSnapshot(context.Background(), opts)
+		snap, err := rc.CollectWiFiMetricsSnapshot(metricsPath)
 		if err != nil {
-			logger.MainLog.Debugf("hostapd snapshot error: %v", err)
+			logger.MainLog.Debugf("wifi metrics snapshot error: %v", err)
+			fallbackSnap, fbErr := rc.CollectHostapdSnapshot(context.Background(), opts)
+			if fbErr != nil {
+				logger.MainLog.Debugf("hostapd fallback snapshot error: %v", fbErr)
+				combined := fallbackSnap.Errors
+				if len(combined) == 0 {
+					combined = nil
+				}
+				combined = append(combined, "wifi metrics: "+err.Error())
+				if fbErr != nil {
+					combined = append(combined, "hostapd fallback: "+fbErr.Error())
+				}
+				fallbackSnap.Errors = combined
+			} else {
+				fallbackSnap.Errors = append(fallbackSnap.Errors, "wifi metrics: "+err.Error())
+			}
+			snap = fallbackSnap
 		}
 		metrics := snapshot.Agg.Snapshot()
 		var ueSnapshot *snapshot.N3iwfAppSnapshot

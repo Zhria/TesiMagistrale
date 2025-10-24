@@ -218,6 +218,7 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 			current = &snapshot.RCStation{
 				MAC:           strings.ToLower(line),
 				Fields:        make(map[string]string),
+				Hostapd:       make(map[string]string),
 				OrderedFields: make([]snapshot.RCField, 0, 32),
 			}
 
@@ -230,6 +231,7 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 				current = &snapshot.RCStation{
 					MAC:           strings.ToLower(mac),
 					Fields:        make(map[string]string),
+					Hostapd:       make(map[string]string),
 					OrderedFields: make([]snapshot.RCField, 0, 32),
 				}
 			}
@@ -241,6 +243,7 @@ func parseHostapdAllSta(output string) ([]snapshot.RCStation, error) {
 			key, value := parseKeyValue(line)
 			if key != "" {
 				current.Fields[key] = value
+				current.Hostapd[key] = value
 			}
 			current.OrderedFields = append(current.OrderedFields, snapshot.RCField{
 				Key:   key,
@@ -406,6 +409,7 @@ func parseHostapdSta(mac string, output string) snapshot.RCStation {
 	station := snapshot.RCStation{
 		MAC:           strings.ToLower(mac),
 		Fields:        make(map[string]string),
+		Hostapd:       make(map[string]string),
 		OrderedFields: make([]snapshot.RCField, 0, 32),
 	}
 
@@ -421,6 +425,7 @@ func parseHostapdSta(mac string, output string) snapshot.RCStation {
 		key, value := parseKeyValue(line)
 		if key != "" {
 			station.Fields[key] = value
+			station.Hostapd[key] = value
 		}
 		station.OrderedFields = append(station.OrderedFields, snapshot.RCField{
 			Key:   key,

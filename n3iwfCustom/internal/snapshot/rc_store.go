@@ -16,6 +16,8 @@ type RCStation struct {
 	MAC           string            `json:"mac"`
 	Fields        map[string]string `json:"fields,omitempty"`
 	OrderedFields []RCField         `json:"orderedFields,omitempty"`
+	Hostapd       map[string]string `json:"hostapd,omitempty"`
+	StationDump   map[string]string `json:"stationDump,omitempty"`
 }
 
 // DeepCopy crea una copia indipendente di RCStation.
@@ -29,6 +31,18 @@ func (s RCStation) DeepCopy() RCStation {
 			out.Fields[k] = v
 		}
 	}
+	if len(s.Hostapd) > 0 {
+		out.Hostapd = make(map[string]string, len(s.Hostapd))
+		for k, v := range s.Hostapd {
+			out.Hostapd[k] = v
+		}
+	}
+	if len(s.StationDump) > 0 {
+		out.StationDump = make(map[string]string, len(s.StationDump))
+		for k, v := range s.StationDump {
+			out.StationDump[k] = v
+		}
+	}
 	if len(s.OrderedFields) > 0 {
 		out.OrderedFields = make([]RCField, len(s.OrderedFields))
 		copy(out.OrderedFields, s.OrderedFields)
@@ -38,17 +52,22 @@ func (s RCStation) DeepCopy() RCStation {
 
 // RCInterfaceSnapshot rappresenta i dati raccolti da hostapd_cli per una specifica interfaccia.
 type RCInterfaceSnapshot struct {
-	Interface string      `json:"interface"`
-	Stations  []RCStation `json:"stations,omitempty"`
-	Raw       string      `json:"raw,omitempty"`
-	Error     string      `json:"error,omitempty"`
-	Command   []string    `json:"command,omitempty"`
+	Interface     string              `json:"interface"`
+	Stations      []RCStation         `json:"stations,omitempty"`
+	HostapdStatus map[string]string   `json:"hostapdStatus,omitempty"`
+	Survey        []map[string]string `json:"survey,omitempty"`
+	Ethtool       map[string]string   `json:"ethtool,omitempty"`
+	MetricsTS     time.Time           `json:"metricsTimestamp,omitempty"`
+	Raw           string              `json:"raw,omitempty"`
+	Error         string              `json:"error,omitempty"`
+	Command       []string            `json:"command,omitempty"`
 }
 
 // DeepCopy crea una copia indipendente dell'RCInterfaceSnapshot.
 func (s RCInterfaceSnapshot) DeepCopy() RCInterfaceSnapshot {
 	out := RCInterfaceSnapshot{
 		Interface: s.Interface,
+		MetricsTS: s.MetricsTS,
 		Raw:       s.Raw,
 		Error:     s.Error,
 	}
@@ -60,6 +79,31 @@ func (s RCInterfaceSnapshot) DeepCopy() RCInterfaceSnapshot {
 		out.Stations = make([]RCStation, len(s.Stations))
 		for i, st := range s.Stations {
 			out.Stations[i] = st.DeepCopy()
+		}
+	}
+	if len(s.HostapdStatus) > 0 {
+		out.HostapdStatus = make(map[string]string, len(s.HostapdStatus))
+		for k, v := range s.HostapdStatus {
+			out.HostapdStatus[k] = v
+		}
+	}
+	if len(s.Survey) > 0 {
+		out.Survey = make([]map[string]string, len(s.Survey))
+		for i, entry := range s.Survey {
+			if len(entry) == 0 {
+				continue
+			}
+			copyEntry := make(map[string]string, len(entry))
+			for k, v := range entry {
+				copyEntry[k] = v
+			}
+			out.Survey[i] = copyEntry
+		}
+	}
+	if len(s.Ethtool) > 0 {
+		out.Ethtool = make(map[string]string, len(s.Ethtool))
+		for k, v := range s.Ethtool {
+			out.Ethtool[k] = v
 		}
 	}
 	return out
