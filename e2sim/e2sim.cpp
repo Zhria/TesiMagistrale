@@ -145,7 +145,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
       ran_func_info next_func;
       next_func.ranFunctionId = elem.first;
       next_func.ranFunctionDesc = elem.second;
-      next_func.ranFunctionRev = (long)2;
+      next_func.ranFunctionRev = (long)3;
       next_func.ranFunctionOId = get_e2sm_oid(elem.first);
       all_funcs.push_back(next_func);
     }

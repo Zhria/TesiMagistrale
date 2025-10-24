@@ -223,7 +223,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
     // ID & Revision (KPM v3)
     item->value.choice.RANfunction_Item.ranFunctionID       = rf.ranFunctionId;
-    item->value.choice.RANfunction_Item.ranFunctionRevision = 3;
+    item->value.choice.RANfunction_Item.ranFunctionRevision = rf.ranFunctionRev;
 
     // Definition (deep copy)
     OCTET_STRING_fromBuf(
@@ -232,10 +232,11 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
       (int)rf.ranFunctionDesc->size
     );
 
-    // OID (consigliato)
-    const char* oid = "1.3.6.1.4.1.53148.1.1.2.2";
-    OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
-                         oid, (int)strlen(oid));
+    if (rf.ranFunctionOId && rf.ranFunctionOId->buf && rf.ranFunctionOId->size > 0) {
+      OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
+                           (const char*)rf.ranFunctionOId->buf,
+                           (int)rf.ranFunctionOId->size);
+    }
 
     ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, item);
   }
@@ -699,15 +700,17 @@ void build_ric_service_update(E2AP_PDU_t* pdu_out,
     item->value.present = RANfunction_ItemIEs__value_PR_RANfunction_Item;
 
     item->value.choice.RANfunction_Item.ranFunctionID       = rf.ranFunctionId;
-    item->value.choice.RANfunction_Item.ranFunctionRevision = 3;
+    item->value.choice.RANfunction_Item.ranFunctionRevision = rf.ranFunctionRev;
 
     OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionDefinition,
                          (const char*)rf.ranFunctionDesc->buf,
                          (int)rf.ranFunctionDesc->size);
 
-    const char* oid = "1.3.6.1.4.1.53148.1.1.2.2";
-    OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
-                         oid, (int)strlen(oid));
+    if (rf.ranFunctionOId && rf.ranFunctionOId->buf && rf.ranFunctionOId->size > 0) {
+      OCTET_STRING_fromBuf(&item->value.choice.RANfunction_Item.ranFunctionOID,
+                           (const char*)rf.ranFunctionOId->buf,
+                           (int)rf.ranFunctionOId->size);
+    }
 
     ASN_SEQUENCE_ADD(&ie_added->value.choice.RANfunctions_List.list, item);
   }
