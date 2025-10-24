@@ -3,7 +3,6 @@ package logger
 import (
 	"encoding/json"
 	"os"
-	"time"
 )
 
 var (
@@ -33,12 +32,7 @@ func LogRCMetrics(data any) {
 		return
 	}
 
-	entry := RCLogEntry{
-		Timestamp: time.Now().Format("2006-01-02 15:04:05"),
-		Data:      data,
-	}
-
-	jsonBytes, err := json.Marshal(entry)
+	jsonBytes, err := json.Marshal(data)
 	if err != nil {
 		// Se fallisce la serializzazione, non scrive niente
 		return

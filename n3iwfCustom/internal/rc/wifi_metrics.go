@@ -163,38 +163,6 @@ func copyStringMap(in map[string]string) map[string]string {
 	return out
 }
 
-func convertSliceMap(in []map[string]any) []map[string]string {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make([]map[string]string, 0, len(in))
-	for _, entry := range in {
-		if len(entry) == 0 {
-			continue
-		}
-		outMap := make(map[string]string, len(entry))
-		for k, v := range entry {
-			outMap[k] = fmt.Sprint(v)
-		}
-		out = append(out, outMap)
-	}
-	if len(out) == 0 {
-		return nil
-	}
-	return out
-}
-
-func convertMapAnyToString(in map[string]any) map[string]string {
-	if len(in) == 0 {
-		return nil
-	}
-	out := make(map[string]string, len(in))
-	for k, v := range in {
-		out[k] = fmt.Sprint(v)
-	}
-	return out
-}
-
 func sortedKeys(m map[string]string) []string {
 	if len(m) == 0 {
 		return nil

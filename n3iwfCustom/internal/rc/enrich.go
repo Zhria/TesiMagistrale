@@ -256,9 +256,6 @@ func buildIKEByRanID(ctx *snapshot.N3iwfAppSnapshot) map[int64]*snapshot.UEIKESn
 	spiMap := make(map[uint64]*snapshot.UEIKESnapshot)
 	for i := range ctx.N3IWFContext.IKEUePool {
 		item := &ctx.N3IWFContext.IKEUePool[i]
-		if item == nil {
-			continue
-		}
 		if spi := item.N3IWFIKESecurityAssociation.LocalSPI; spi != 0 {
 			spiMap[spi] = item
 		}
