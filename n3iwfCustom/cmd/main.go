@@ -133,7 +133,7 @@ func action(cliCtx *cli.Context) error {
 
 	//Avvio un altro thread per il kpm metrics logger.
 	go startKPMLogger()
-	go startRCLogger(n3iwfApp)
+	//go startRCLogger(n3iwfApp)
 
 	n3iwfApp.Start()
 
