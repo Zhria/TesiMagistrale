@@ -185,8 +185,6 @@ int main(int argc, char *argv[])
 
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
-  stop_all_kpm_workers();
-  stop_all_rc_workers();
   return 0;
 }
 

@@ -76,7 +76,25 @@ static void add_control_style(RANFunctionDefinition_Control *ctl){
 
 
 static void add_insert_style(RANFunctionDefinition_Insert *insert){
-//Estendibile in futuro
+    if (!insert) {
+        return;
+    }
+
+    RANFunctionDefinition_Insert_Item *item =
+        (RANFunctionDefinition_Insert_Item *)calloc(1, sizeof(RANFunctionDefinition_Insert_Item));
+    if (!item) {
+        return;
+    }
+
+    item->ric_InsertStyle_Type = 1;
+    OCTET_STRING_fromBuf(&item->ric_InsertStyle_Name, "UE Context Insert", strlen("UE Context Insert"));
+    item->ric_SupportedEventTriggerStyle_Type = 4;
+    item->ric_ActionDefinitionFormat_Type = 4;
+    item->ric_IndicationHeaderFormat_Type = 2;
+    item->ric_IndicationMessageFormat_Type = 6;
+    item->ric_CallProcessIDFormat_Type = 1;
+
+    ASN_SEQUENCE_ADD(&insert->ric_InsertStyle_List.list, item);
 }
 
 static void add_policy_style(RANFunctionDefinition_Policy *policy){
