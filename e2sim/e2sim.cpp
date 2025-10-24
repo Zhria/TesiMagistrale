@@ -106,7 +106,7 @@ void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
   //data.len = e2ap_asn1c_encode_pdu(pdu, &buf);
   //memcpy(data.buffer, buf, min(data.len, MAX_SCTP_BUFFER));
 
-  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu, buffer, buffer_size);
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu, buffer, buffer_size);
   if(er.encoded < 0) {
     stampaln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
     return;
@@ -176,8 +176,8 @@ int E2Sim::run_loop(int argc, char* argv[]){
     return -1;
   }
 
-  stampaln("ASN ENCODE TO BUFFER IN ATS_UNALIGNED_BASIC_PER\n");
-  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);
+  stampaln("ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);
   if(er.encoded < 0) {
     stampaln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
     return -1;

@@ -183,7 +183,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 
   sctp_buffer_t data2;
 
-  auto er2 = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
+  auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
   data2.len = er2.encoded;
 
   stampaln( "er encded is %ld\n", er2.encoded);
@@ -212,7 +212,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 
   sctp_buffer_t data;
 
-  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
   data.len = er.encoded;
 
   stampaln( "er encoded is %ld\n", er.encoded);
