@@ -7,7 +7,7 @@ LABEL description="Free5GC open source 5G Core Network" \
 ENV F5GC_MODULE=n3iwf
 
 #ARG DEBUG_TOOLS
-
+RUN apk update
 # Install debug tools ~ 100MB
 RUN apk add --no-cache vim strace net-tools curl netcat-openbsd
 
