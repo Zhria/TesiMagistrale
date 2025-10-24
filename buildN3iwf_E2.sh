@@ -8,4 +8,4 @@ sudo chmod +x ./e2sim/build_e2sim;
 #Build di E2 Node
 cd ./e2sim
 ./build_e2sim --clean;
-./build_e2sim;
+#./build_e2sim;

@@ -360,7 +360,7 @@ services:
       - free5gc-amf
       - free5gc-smf
 
-    wifi-metrics-exporter:
+  wifi-metrics-exporter:
     image: alpine:3.19
     container_name: wifi-metrics-exporter
     network_mode: host 
