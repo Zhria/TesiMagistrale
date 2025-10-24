@@ -97,7 +97,7 @@ void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu)
 
   asn_enc_rval_t er =
       asn_encode_to_buffer(NULL,
-                           ATS_ALIGNED_BASIC_PER,
+                           ATS_UNALIGNED_BASIC_PER,
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
@@ -360,7 +360,7 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
 
   asn_enc_rval_t er =
       asn_encode_to_buffer(NULL,
-                           ATS_ALIGNED_BASIC_PER,
+                           ATS_UNALIGNED_BASIC_PER,
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 

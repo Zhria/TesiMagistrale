@@ -37,7 +37,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
   stampaln("[E2AP HANDLE SCTP DATA] decoding...");
 
   stampaln("[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
-  auto rval = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **)&pdu, data.buffer, data.len);
+  auto rval = asn_decode(NULL, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **)&pdu, data.buffer, data.len);
 
   switch (rval.code)
   {
@@ -183,7 +183,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 
   sctp_buffer_t data2;
 
-  auto er2 = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
+  auto er2 = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_resp, buffer2, buffer_size2);
   data2.len = er2.encoded;
 
   stampaln( "er encded is %ld\n", er2.encoded);
@@ -212,7 +212,7 @@ void e2ap_handle_RICSubscriptionRequest(E2AP_PDU_t *pdu, int &socket_fd)
 
   sctp_buffer_t data;
 
-  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
+  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_ind, buffer, buffer_size);
   data.len = er.encoded;
 
   stampaln( "er encoded is %ld\n", er.encoded);
@@ -251,7 +251,7 @@ void send_ric_service_update(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 
   // encoda e invia con PPID=70
   unsigned char buf[2048];
-  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
+  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER,
                                  &asn_DEF_E2AP_PDU, pdu_update, buf, sizeof(buf));
   if (er.encoded > 0)
   {

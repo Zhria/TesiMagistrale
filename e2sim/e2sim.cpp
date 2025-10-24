@@ -145,7 +145,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
       ran_func_info next_func;
       next_func.ranFunctionId = elem.first;
       next_func.ranFunctionDesc = elem.second;
-      next_func.ranFunctionRev = (long)3;
+      next_func.ranFunctionRev = (long)elem.first;
       next_func.ranFunctionOId = get_e2sm_oid(elem.first);
       all_funcs.push_back(next_func);
     }
@@ -188,8 +188,6 @@ int E2Sim::run_loop(int argc, char* argv[]){
   stampaln("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
 
   memcpy(data.buffer, buffer, er.encoded); 
-
-  stampaln("after encoding message\n");
   client_fd = sctp_start_client(ops.server_ip, ops.server_port, ops.local_ip);
 
   if(client_fd == -1) {
