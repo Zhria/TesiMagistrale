@@ -37,7 +37,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
   stampaln("[E2AP HANDLE SCTP DATA] decoding...");
 
   stampaln("[E2AP HANDLE SCTP DATA] full buffer\n%s\n", data.buffer);
-  auto rval = asn_decode(NULL, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **)&pdu, data.buffer, data.len);
+  auto rval = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, (void **)&pdu, data.buffer, data.len);
 
   switch (rval.code)
   {
@@ -251,7 +251,7 @@ void send_ric_service_update(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 
   // encoda e invia con PPID=70
   unsigned char buf[2048];
-  auto er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER,
+  auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
                                  &asn_DEF_E2AP_PDU, pdu_update, buf, sizeof(buf));
   if (er.encoded > 0)
   {
