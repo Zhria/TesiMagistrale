@@ -44,8 +44,14 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
                                   
 void logln(const char* msg, ...);
 
+// Returns the list of KPI names supported by the KPM indication loop.
 std::vector<std::string> getAllowedKPI();
 
-std::map<long,std::string> getAllowedMetricsRC();
+// Returns the RAN Parameter IDs exposed by the RC REPORT style.
+std::map<long,std::string> getAllowedReportMetricsRC();
 
+// Returns the RC control action/outcome parameter IDs.
+std::map<long,std::string> getAllowedControlMetricsRC();
+
+// Returns the UE identification parameters advertised by the RC event trigger.
 std::map<long,std::string> getUEIdentifierRC();

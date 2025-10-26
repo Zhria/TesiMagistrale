@@ -11,6 +11,7 @@ extern "C" {
 }
 
 void callback_rc_subscription_request(E2AP_PDU_t *pdu);
+void callback_rc_control_request(E2AP_PDU_t *pdu);
 void registerRCfunctionDefinition(E2Sim &e2);
 void stop_rc_worker(const SubscriptionKey &key);
 void stop_all_rc_workers();

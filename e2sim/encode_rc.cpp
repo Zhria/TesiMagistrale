@@ -1,7 +1,16 @@
 #include "encode_rc.hpp"
 #include "n3iwf_utils.hpp"
 
-
+namespace {
+constexpr long kRcControlStyleType = 1;
+constexpr long kRcControlActionIdHandover = 1;
+constexpr long kRcParamUeId = 41001;
+constexpr long kRcParamTargetCellPci = 45001;
+constexpr long kRcParamTargetGNbId = 45002;
+constexpr long kRcParamHoCause = 45010;
+constexpr long kRcOutcomeStatus = 50001;
+constexpr long kRcOutcomeNotes = 50002;
+}
 
 // -----------------------------
 // Utility locali
@@ -50,7 +59,7 @@ static void add_report_style(RANFunctionDefinition_Report *rep){
 
     rs->ran_ReportParameters_List = (RANFunctionDefinition_Report_Item::RANFunctionDefinition_Report_Item__ran_ReportParameters_List *) calloc(1, sizeof(*rs->ran_ReportParameters_List));
 
-    std::map<long,std::string> list=getAllowedMetricsRC(); //See chapter 8.2.4
+    std::map<long,std::string> list=getAllowedReportMetricsRC(); //See chapter 8.2.4
     for (const auto &kpi : list)
     {
         Report_RANParameter_Item *mi = (Report_RANParameter_Item *)calloc(1, sizeof(Report_RANParameter_Item));
@@ -63,13 +72,51 @@ static void add_report_style(RANFunctionDefinition_Report *rep){
     return;
 }
 
+// Populates the RC control section with the single supported handover style.
 static void add_control_style(RANFunctionDefinition_Control *ctl){
     RANFunctionDefinition_Control_Item *ctrl = (RANFunctionDefinition_Control_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Item));
-    ctrl->ric_ControlStyle_Type = 1;
+    ctrl->ric_ControlStyle_Type = kRcControlStyleType;
     OCTET_STRING_fromBuf(&ctrl->ric_ControlStyle_Name,"Handover Control", 17);
-    ctrl->ric_ControlHeaderFormat_Type  = 1;  // header con Cell/UE info
-    ctrl->ric_ControlMessageFormat_Type = 1;  // payload con target cell etc.
+    ctrl->ric_ControlHeaderFormat_Type  = 1;  // header carries UE/Cell information
+    ctrl->ric_ControlMessageFormat_Type = 1;  // payload describes the handover target
     ctrl->ric_ControlOutcomeFormat_Type = 1;  // outcome ACK/FAIL
+
+    ctrl->ric_ControlAction_List = (decltype(ctrl->ric_ControlAction_List))calloc(1, sizeof(*ctrl->ric_ControlAction_List));
+    if (ctrl->ric_ControlAction_List) {
+        auto *action = (RANFunctionDefinition_Control_Action_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Action_Item));
+        action->ric_ControlAction_ID = kRcControlActionIdHandover;
+        OCTET_STRING_fromBuf(&action->ric_ControlAction_Name, "Handover Decision", strlen("Handover Decision"));
+
+        action->ran_ControlActionParameters_List = (decltype(action->ran_ControlActionParameters_List))calloc(1, sizeof(*action->ran_ControlActionParameters_List));
+        if (action->ran_ControlActionParameters_List) {
+            auto add_param = [&](long id, const char *name) {
+                ControlAction_RANParameter_Item *param = (ControlAction_RANParameter_Item*)calloc(1, sizeof(ControlAction_RANParameter_Item));
+                if (!param) return;
+                param->ranParameter_ID = id;
+                OCTET_STRING_fromBuf(&param->ranParameter_name, name, strlen(name));
+                ASN_SEQUENCE_ADD(&action->ran_ControlActionParameters_List->list, param);
+            };
+            add_param(kRcParamUeId, "UE ID");
+            add_param(kRcParamTargetCellPci, "Target PCI");
+            add_param(kRcParamTargetGNbId, "Target gNB ID");
+            add_param(kRcParamHoCause, "Handover Cause");
+        }
+        ASN_SEQUENCE_ADD(&ctrl->ric_ControlAction_List->list, action);
+    }
+
+    ctrl->ran_ControlOutcomeParameters_List = (decltype(ctrl->ran_ControlOutcomeParameters_List))calloc(1, sizeof(*ctrl->ran_ControlOutcomeParameters_List));
+    if (ctrl->ran_ControlOutcomeParameters_List) {
+        auto add_out_param = [&](long id, const char *name) {
+            ControlOutcome_RANParameter_Item *param = (ControlOutcome_RANParameter_Item*)calloc(1, sizeof(ControlOutcome_RANParameter_Item));
+            if (!param) return;
+            param->ranParameter_ID = id;
+            OCTET_STRING_fromBuf(&param->ranParameter_name, name, strlen(name));
+            ASN_SEQUENCE_ADD(&ctrl->ran_ControlOutcomeParameters_List->list, param);
+        };
+        add_out_param(kRcOutcomeStatus, "Execution Status");
+        add_out_param(kRcOutcomeNotes, "Execution Notes");
+    }
+
     ASN_SEQUENCE_ADD(&ctl->ric_ControlStyle_List.list, ctrl);
     return;
 }

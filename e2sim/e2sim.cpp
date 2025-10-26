@@ -60,6 +60,20 @@ SubscriptionCallback E2Sim::get_subscription_callback(long func_id) {
 
 }
 
+void E2Sim::register_control_callback(long func_id, ControlCallback cb) {
+  printf("%%%%about to register callback for control for func_id %ld\n", func_id);
+  control_callbacks[func_id] = cb;
+}
+
+ControlCallback E2Sim::get_control_callback(long func_id) {
+  printf("%%%%we are getting the control callback for func id %ld\n", func_id);
+  auto it = control_callbacks.find(func_id);
+  if (it == control_callbacks.end()) {
+    return nullptr;
+  }
+  return it->second;
+}
+
 void E2Sim::register_e2sm_oid(long func_id, PrintableString_t* oid) {
   //Error conditions:
   //If we already have an entry for func_id

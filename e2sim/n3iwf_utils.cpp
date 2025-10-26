@@ -86,7 +86,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
 
   if (total_bits > max_bits) {
     // Non tronchiamo: meglio segnalare errore
-    stampaln("gNB ID too long: %d bits (max %d)\n", total_bits, max_bits);
+    logln("gNB ID too long: %d bits (max %d)\n", total_bits, max_bits);
     return -1;
   }
 
@@ -135,6 +135,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
 }
 
 
+// List of KPIs that the simulator can populate in KPM indications.
 std::vector<std::string> getAllowedKPI() {
     return {
         "DRB.UEThpDl",         // Throughput downlink per UE/DRB (classico CU-UP)
@@ -158,7 +159,8 @@ std::vector<std::string> getJSONKeysKPM(){
   };
 }
 
-std::map<long,std::string> getAllowedMetricsRC(){
+// RAN Parameters that are declared as part of the RC report style.
+std::map<long,std::string> getAllowedReportMetricsRC(){
     return {
         // L3 / UE context
         {41001, "UE ID"},             // (IE referenziato in 9.3.10; qui come RAN param per AD/IM)
@@ -181,7 +183,20 @@ std::map<long,std::string> getAllowedMetricsRC(){
     };
 }
 
+// RAN Parameters consumed/produced by RC control actions.
+std::map<long,std::string> getAllowedControlMetricsRC(){
+    return {
+        {41001, "UE ID"},
+        {45001, "Target PCI"},
+        {45002, "Target gNB ID"},
+        {45010, "Handover Cause"},
+        {50001, "Execution Status"},
+        {50002, "Execution Notes"}
+    };
+}
 
+
+// UE identification parameters referenced in the RC event trigger definition.
 std::map<long,std::string> getUEIdentifierRC(){
     return {
         {35010, "S-NSSAI"},     // STRUCTURE

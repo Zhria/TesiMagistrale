@@ -40,6 +40,7 @@ extern "C" {
   //#include "e2sim_defs.h"
 #include "E2AP-PDU.h"
 #include "asn_application.h"
+#include "Cause.h"
 
 
 }
@@ -52,6 +53,7 @@ struct ran_func_info {
 };
 
 long get_function_id_from_subscription(E2AP_PDU_t *e2ap_pdu);
+long get_function_id_from_control(E2AP_PDU_t *e2ap_pdu);
 
 void buildSubsReq(E2AP_PDU_t *pdu);
 
@@ -90,5 +92,25 @@ void generate_e2apv2_subscription_failure(
     long ranFunctionId,
     const long *notAdmittedIds, int notAdmittedCount
   );
+
+void generate_e2apv2_control_ack(
+    E2AP_PDU_t *e2ap_pdu,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId,
+    const OCTET_STRING_t *ricCallProcessId,
+    const uint8_t *outcome_buf,
+    size_t outcome_len);
+
+void generate_e2apv2_control_failure(
+    E2AP_PDU_t *e2ap_pdu,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId,
+    Cause_PR causeType,
+    long causeValue,
+    const OCTET_STRING_t *ricCallProcessId,
+    const uint8_t *outcome_buf,
+    size_t outcome_len);
 
 #endif

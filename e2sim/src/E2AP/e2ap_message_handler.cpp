@@ -156,6 +156,42 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     }
     break;
 
+  case ProcedureCode_id_RICcontrol:
+    switch (index)
+    {
+    case E2AP_PDU_PR_initiatingMessage:
+    {
+      logln("[E2AP] Received RIC-CONTROL-REQUEST");
+      long func_id = get_function_id_from_control(pdu);
+      if (func_id < 0)
+      {
+        logln("[E2AP] Unable to extract RANfunctionID from RIC-CONTROL-REQUEST");
+        break;
+      }
+      ControlCallback ctrl_cb = e2sim ? e2sim->get_control_callback(func_id) : nullptr;
+      if (ctrl_cb)
+      {
+        ctrl_cb(pdu);
+      }
+      else
+      {
+        logln("[E2AP] No control callback registered for RANfunctionID=%ld", func_id);
+      }
+      break;
+    }
+    case E2AP_PDU_PR_successfulOutcome:
+      logln("[E2AP] Received RIC-CONTROL-ACKNOWLEDGE");
+      break;
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      logln("[E2AP] Received RIC-CONTROL-FAILURE");
+      break;
+    default:
+      logln("[E2AP] Invalid message index=%d in E2AP-PDU %d", index,
+                (int)ProcedureCode_id_RICcontrol);
+      break;
+    }
+    break;
+
   default:
 
     logln("[E2AP] No available handler for procedureCode=%d", procedureCode);

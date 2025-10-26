@@ -21,6 +21,8 @@ extern "C" {
   #include "RANFunctionDefinition-Policy.h"
   #include "RANFunctionDefinition-Control-Item.h"
   #include "RANFunctionDefinition-Control-Action-Item.h"
+  #include "ControlAction-RANParameter-Item.h"
+  #include "ControlOutcome-RANParameter-Item.h"
   #include "RANFunctionDefinition-Insert.h"
   #include "RANFunctionDefinition-Insert-Item.h"
   #include "UEIdentification-RANParameter-Item.h"
