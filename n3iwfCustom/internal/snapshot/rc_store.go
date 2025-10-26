@@ -3,6 +3,8 @@ package snapshot
 import (
 	"sync"
 	"time"
+
+	"github.com/free5gc/n3iwf/internal/context"
 )
 
 // RCStation contiene le informazioni per un singolo client collegato all'access point.
@@ -190,55 +192,21 @@ func (a RCUEAssociation) DeepCopy() RCUEAssociation {
 		copy(out.Mismatches, a.Mismatches)
 	}
 	if a.UE != nil {
-		ueCopy := *a.UE
-		if len(a.UE.PduSessions) > 0 {
-			ueCopy.PduSessions = make([]RCPDUSessionInfo, len(a.UE.PduSessions))
-			copy(ueCopy.PduSessions, a.UE.PduSessions)
-		}
-		if len(a.UE.ChildSAs) > 0 {
-			ueCopy.ChildSAs = make([]RCChildSAInfo, len(a.UE.ChildSAs))
-			for i, sa := range a.UE.ChildSAs {
-				ueCopy.ChildSAs[i] = sa
-				if len(sa.PduSessionIds) > 0 {
-					ps := make([]int64, len(sa.PduSessionIds))
-					copy(ps, sa.PduSessionIds)
-					ueCopy.ChildSAs[i].PduSessionIds = ps
-				}
-			}
-		}
-		out.UE = &ueCopy
+		out.UE = a.UE.DeepCopy()
 	}
 	return out
 }
 
 // RCAssociatedUE contiene le informazioni del contesto N3IWF/AMF rilevanti per l'UE.
 type RCAssociatedUE struct {
-	RanUeNgapId    int64              `json:"ranUeNgapId"`
-	AmfUeNgapId    int64              `json:"amfUeNgapId"`
-	Guti           string             `json:"guti,omitempty"`
-	GUAMI          string             `json:"guami,omitempty"`
-	N3IwfID        string             `json:"n3iwfId,omitempty"`
-	AmfName        string             `json:"amfName,omitempty"`
-	AmfSCTP        string             `json:"amfSctp,omitempty"`
-	IPAddrv4       string             `json:"ipAddrV4,omitempty"`
-	IPAddrv6       string             `json:"ipAddrV6,omitempty"`
-	IKELocalSPI    uint64             `json:"ikeLocalSpi,omitempty"`
-	IKERemoteSPI   uint64             `json:"ikeRemoteSpi,omitempty"`
-	IKEState       uint8              `json:"ikeState,omitempty"`
-	UeBehindNAT    bool               `json:"ueBehindNat,omitempty"`
-	N3iwfBehindNAT bool               `json:"n3iwfBehindNat,omitempty"`
-	PduSessions    []RCPDUSessionInfo `json:"pduSessions,omitempty"`
-	ChildSAs       []RCChildSAInfo    `json:"childSa,omitempty"`
-}
-
-// RCPDUSessionInfo riassume una PDU session del contesto N3IWF.
-type RCPDUSessionInfo struct {
-	ID           int64   `json:"id"`
-	SNSSAI       string  `json:"snssai,omitempty"`
-	QFIs         []uint8 `json:"qfis,omitempty"`
-	IncomingTEID uint32  `json:"incomingTeid,omitempty"`
-	OutgoingTEID uint32  `json:"outgoingTeid,omitempty"`
-	UPFIP        string  `json:"upfIp,omitempty"`
+	context.N3IWFRanUe
+	N3IwfID        string          `json:"n3iwfId,omitempty"`
+	IKELocalSPI    uint64          `json:"ikeLocalSpi,omitempty"`
+	IKERemoteSPI   uint64          `json:"ikeRemoteSpi,omitempty"`
+	IKEState       uint8           `json:"ikeState,omitempty"`
+	UeBehindNAT    bool            `json:"ueBehindNat,omitempty"`
+	N3iwfBehindNAT bool            `json:"n3iwfBehindNat,omitempty"`
+	ChildSAs       []RCChildSAInfo `json:"childSa,omitempty"`
 }
 
 // RCChildSAInfo riassume le informazioni sul tunnel IPsec associato all'UE.
@@ -253,4 +221,67 @@ type RCChildSAInfo struct {
 	EnableEncapsulate bool    `json:"enableEncapsulate,omitempty"`
 	SelectedIPProto   uint8   `json:"selectedIpProto,omitempty"`
 	PduSessionIds     []int64 `json:"pduSessionIds,omitempty"`
+}
+
+// DeepCopy crea una copia indipendente dell'UE associato.
+func (ue *RCAssociatedUE) DeepCopy() *RCAssociatedUE {
+	if ue == nil {
+		return nil
+	}
+	copyUE := *ue
+	copyUE.N3IWFRanUe = cloneRanUe(copyUE.N3IWFRanUe)
+	if len(ue.ChildSAs) > 0 {
+		copyUE.ChildSAs = make([]RCChildSAInfo, len(ue.ChildSAs))
+		for i, sa := range ue.ChildSAs {
+			copyUE.ChildSAs[i] = sa
+			if len(sa.PduSessionIds) > 0 {
+				ps := make([]int64, len(sa.PduSessionIds))
+				copy(ps, sa.PduSessionIds)
+				copyUE.ChildSAs[i].PduSessionIds = ps
+			}
+		}
+	}
+	return &copyUE
+}
+
+func cloneRanUe(src context.N3IWFRanUe) context.N3IWFRanUe {
+	dst := context.N3IWFRanUe{
+		RanUeSharedCtx:                  src.RanUeSharedCtx,
+		TemporaryCachedNASMessage:       append([]byte(nil), src.TemporaryCachedNASMessage...),
+		IsNASTCPConnEstablished:         src.IsNASTCPConnEstablished,
+		IsNASTCPConnEstablishedComplete: src.IsNASTCPConnEstablishedComplete,
+		TCPConnection:                   src.TCPConnection,
+	}
+
+	dst.RanUeSharedCtx.N3iwfCtx = nil
+
+	if len(src.RanUeSharedCtx.PduSessionList) > 0 {
+		dst.RanUeSharedCtx.PduSessionList = make(map[int64]*context.PDUSession, len(src.RanUeSharedCtx.PduSessionList))
+		for id, session := range src.RanUeSharedCtx.PduSessionList {
+			if session == nil {
+				continue
+			}
+			sessCopy := *session
+			if session.GTPConnInfo != nil {
+				connCopy := *session.GTPConnInfo
+				sessCopy.GTPConnInfo = &connCopy
+			}
+			if len(session.QFIList) > 0 {
+				sessCopy.QFIList = append([]uint8(nil), session.QFIList...)
+			}
+			if len(session.QosFlows) > 0 {
+				sessCopy.QosFlows = make(map[int64]*context.QosFlow, len(session.QosFlows))
+				for qid, flow := range session.QosFlows {
+					if flow == nil {
+						continue
+					}
+					flowCopy := *flow
+					sessCopy.QosFlows[qid] = &flowCopy
+				}
+			}
+			dst.RanUeSharedCtx.PduSessionList[id] = &sessCopy
+		}
+	}
+
+	return dst
 }

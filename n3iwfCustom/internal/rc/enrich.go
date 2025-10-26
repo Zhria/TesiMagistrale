@@ -25,7 +25,7 @@ func EnrichSnapshot(rcSnap *snapshot.RCSnapshot, metrics snapshot.Snapshot, ctx 
 	ipMetrics := metrics.ByUEIP
 	ueByIP := buildUEMap(ctx)
 	arpMap := loadARPTable()
-	ueByMAC := make(map[string]context.N3IWFRanUe)
+	ueByMAC := make(map[string]*context.N3IWFRanUe)
 	for mac, ip := range arpMap {
 		if ue, ok := ueByIP[ip]; ok {
 			ueByMAC[mac] = ue
@@ -60,7 +60,7 @@ func EnrichSnapshot(rcSnap *snapshot.RCSnapshot, metrics snapshot.Snapshot, ctx 
 			assoc.Counters = counters
 		}
 
-		var matchedUE context.N3IWFRanUe
+		var matchedUE *context.N3IWFRanUe
 		var ok bool
 		if ue, found := ueByIP[ip]; found && ip != "" {
 			matchedUE = ue
@@ -91,15 +91,19 @@ func EnrichSnapshot(rcSnap *snapshot.RCSnapshot, metrics snapshot.Snapshot, ctx 
 	}
 
 	rcSnap.Associations = associations
+	if ctx != nil {
+		rcSnap.UEs = buildAllUEInfos(ctx, ikeByRan, n3iwfID)
+	}
 	rcSnap.Stations = nil
 }
 
-func buildUEMap(ctx *snapshot.N3iwfAppSnapshot) map[string]context.N3IWFRanUe {
-	result := make(map[string]context.N3IWFRanUe)
+func buildUEMap(ctx *snapshot.N3iwfAppSnapshot) map[string]*context.N3IWFRanUe {
+	result := make(map[string]*context.N3IWFRanUe)
 	if ctx == nil {
 		return result
 	}
-	for _, ue := range ctx.UEs {
+	for i := range ctx.UEs {
+		ue := &ctx.UEs[i]
 		if ip := strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv4); ip != "" {
 			result[ip] = ue
 		}
@@ -153,14 +157,17 @@ func extractIPFromMap(m map[string]string) string {
 
 func buildUEInfo(ue context.N3IWFRanUe, ike *snapshot.UEIKESnapshot, n3iwfID string) *snapshot.RCAssociatedUE {
 	info := &snapshot.RCAssociatedUE{
-		RanUeNgapId:    ue.RanUeSharedCtx.RanUeNgapId,
-		AmfUeNgapId:    ue.RanUeSharedCtx.AmfUeNgapId,
-		Guti:           strings.TrimSpace(ue.RanUeSharedCtx.Guti),
-		IPAddrv4:       strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv4),
-		IPAddrv6:       strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv6),
-		N3IwfID:        n3iwfID,
-		UeBehindNAT:    false,
-		N3iwfBehindNAT: false,
+		RanUeNgapId:          ue.RanUeSharedCtx.RanUeNgapId,
+		AmfUeNgapId:          ue.RanUeSharedCtx.AmfUeNgapId,
+		Guti:                 strings.TrimSpace(ue.RanUeSharedCtx.Guti),
+		IPAddrv4:             strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv4),
+		IPAddrv6:             strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv6),
+		PortNumber:           ue.RanUeSharedCtx.PortNumber,
+		N3IwfID:              n3iwfID,
+		UeBehindNAT:          false,
+		N3iwfBehindNAT:       false,
+		MaskedIMEISV:         ue.RanUeSharedCtx.MaskedIMEISV,
+		SecurityCapabilities: ue.RanUeSharedCtx.SecurityCapabilities,
 	}
 
 	if ue.RanUeSharedCtx.Guami != nil {
@@ -200,6 +207,20 @@ func buildUEInfo(ue context.N3IWFRanUe, ike *snapshot.UEIKESnapshot, n3iwfID str
 	}
 
 	return info
+}
+
+func buildAllUEInfos(ctx *snapshot.N3iwfAppSnapshot, ikeByRan map[int64]*snapshot.UEIKESnapshot, n3iwfID string) []snapshot.RCAssociatedUE {
+	if ctx == nil || len(ctx.UEs) == 0 {
+		return nil
+	}
+	out := make([]snapshot.RCAssociatedUE, 0, len(ctx.UEs))
+	for _, ue := range ctx.UEs {
+		info := buildUEInfo(ue, ikeByRan[ue.RanUeSharedCtx.RanUeNgapId], n3iwfID)
+		if info != nil {
+			out = append(out, *info)
+		}
+	}
+	return out
 }
 
 func snssaiToString(snssai ngapType.SNSSAI) string {
