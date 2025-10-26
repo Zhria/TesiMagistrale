@@ -3,6 +3,7 @@ package rc
 import (
 	"bufio"
 	"fmt"
+	"net"
 	"os"
 	"sort"
 	"strings"
@@ -91,9 +92,6 @@ func EnrichSnapshot(rcSnap *snapshot.RCSnapshot, metrics snapshot.Snapshot, ctx 
 	}
 
 	rcSnap.Associations = associations
-	if ctx != nil {
-		rcSnap.UEs = buildAllUEInfos(ctx, ikeByRan, n3iwfID)
-	}
 	rcSnap.Stations = nil
 }
 
@@ -155,45 +153,21 @@ func extractIPFromMap(m map[string]string) string {
 	return ""
 }
 
-func buildUEInfo(ue context.N3IWFRanUe, ike *snapshot.UEIKESnapshot, n3iwfID string) *snapshot.RCAssociatedUE {
+func buildUEInfo(ue *context.N3IWFRanUe, ike *snapshot.UEIKESnapshot, n3iwfID string) *snapshot.RCAssociatedUE {
+	if ue == nil {
+		return nil
+	}
+	shared := makeRCRanUeSharedCtx(ue)
 	info := &snapshot.RCAssociatedUE{
-		RanUeNgapId:          ue.RanUeSharedCtx.RanUeNgapId,
-		AmfUeNgapId:          ue.RanUeSharedCtx.AmfUeNgapId,
-		Guti:                 strings.TrimSpace(ue.RanUeSharedCtx.Guti),
-		IPAddrv4:             strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv4),
-		IPAddrv6:             strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv6),
-		PortNumber:           ue.RanUeSharedCtx.PortNumber,
-		N3IwfID:              n3iwfID,
-		UeBehindNAT:          false,
-		N3iwfBehindNAT:       false,
-		MaskedIMEISV:         ue.RanUeSharedCtx.MaskedIMEISV,
-		SecurityCapabilities: ue.RanUeSharedCtx.SecurityCapabilities,
+		RCRanUeSharedCtx: shared,
+		N3IwfID:          n3iwfID,
+		AmfName:          "",
 	}
 
-	if ue.RanUeSharedCtx.Guami != nil {
-		info.GUAMI = formatGUAMI(*ue.RanUeSharedCtx.Guami)
-	}
 	if ue.RanUeSharedCtx.AMF != nil {
 		info.AmfSCTP = ue.RanUeSharedCtx.AMF.SCTPAddr
 		if ue.RanUeSharedCtx.AMF.AMFName != nil {
 			info.AmfName = string(ue.RanUeSharedCtx.AMF.AMFName.Value)
-		}
-	}
-
-	if len(ue.RanUeSharedCtx.PduSessionList) > 0 {
-		info.PduSessions = make([]snapshot.RCPDUSessionInfo, 0, len(ue.RanUeSharedCtx.PduSessionList))
-		for _, session := range ue.RanUeSharedCtx.PduSessionList {
-			pdu := snapshot.RCPDUSessionInfo{
-				ID:     session.Id,
-				SNSSAI: snssaiToString(session.Snssai),
-				QFIs:   append([]uint8(nil), session.QFIList...),
-			}
-			if session.GTPConnInfo != nil {
-				pdu.IncomingTEID = session.GTPConnInfo.IncomingTEID
-				pdu.OutgoingTEID = session.GTPConnInfo.OutgoingTEID
-				pdu.UPFIP = session.GTPConnInfo.UPFIPAddr
-			}
-			info.PduSessions = append(info.PduSessions, pdu)
 		}
 	}
 
@@ -207,32 +181,6 @@ func buildUEInfo(ue context.N3IWFRanUe, ike *snapshot.UEIKESnapshot, n3iwfID str
 	}
 
 	return info
-}
-
-func buildAllUEInfos(ctx *snapshot.N3iwfAppSnapshot, ikeByRan map[int64]*snapshot.UEIKESnapshot, n3iwfID string) []snapshot.RCAssociatedUE {
-	if ctx == nil || len(ctx.UEs) == 0 {
-		return nil
-	}
-	out := make([]snapshot.RCAssociatedUE, 0, len(ctx.UEs))
-	for _, ue := range ctx.UEs {
-		info := buildUEInfo(ue, ikeByRan[ue.RanUeSharedCtx.RanUeNgapId], n3iwfID)
-		if info != nil {
-			out = append(out, *info)
-		}
-	}
-	return out
-}
-
-func snssaiToString(snssai ngapType.SNSSAI) string {
-	var sst uint8
-	if len(snssai.SST.Value) > 0 {
-		sst = snssai.SST.Value[0]
-	}
-	sd := 0
-	if len(snssai.SD.Value) == 3 {
-		sd = int(snssai.SD.Value[0])<<16 | int(snssai.SD.Value[1])<<8 | int(snssai.SD.Value[2])
-	}
-	return fmt.Sprintf("%d-%06x", sst, sd)
 }
 
 func loadARPTable() map[string]string {
@@ -311,8 +259,8 @@ func convertChildSAs(child map[uint32]snapshot.ChildSecurityAssociationSnapshot)
 			InboundSPI:        item.InboundSPI,
 			OutboundSPI:       item.OutboundSPI,
 			TunnelIface:       ifaceName(item.XfrmIface),
-			PeerPublicIP:      item.PeerPublicIPAddr.String(),
-			LocalPublicIP:     item.LocalPublicIPAddr.String(),
+			PeerPublicIP:      ipString(item.PeerPublicIPAddr),
+			LocalPublicIP:     ipString(item.LocalPublicIPAddr),
 			N3IWFPort:         item.N3IWFPort,
 			NATPort:           item.NATPort,
 			EnableEncapsulate: item.EnableEncapsulate,
@@ -324,6 +272,113 @@ func convertChildSAs(child map[uint32]snapshot.ChildSecurityAssociationSnapshot)
 		result = append(result, info)
 	}
 	return result
+}
+
+func makeRCRanUeSharedCtx(ue *context.N3IWFRanUe) snapshot.RCRanUeSharedCtx {
+	if ue == nil {
+		return snapshot.RCRanUeSharedCtx{}
+	}
+	shared := snapshot.RCRanUeSharedCtx{
+		RanUeNgapId:                      ue.RanUeSharedCtx.RanUeNgapId,
+		AmfUeNgapId:                      ue.RanUeSharedCtx.AmfUeNgapId,
+		IPAddrv4:                         strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv4),
+		IPAddrv6:                         strings.TrimSpace(ue.RanUeSharedCtx.IPAddrv6),
+		PortNumber:                       ue.RanUeSharedCtx.PortNumber,
+		MaskedIMEISV:                     ue.RanUeSharedCtx.MaskedIMEISV,
+		Guti:                             strings.TrimSpace(ue.RanUeSharedCtx.Guti),
+		Guami:                            ue.RanUeSharedCtx.Guami,
+		IndexToRfsp:                      ue.RanUeSharedCtx.IndexToRfsp,
+		Ambr:                             ue.RanUeSharedCtx.Ambr,
+		AllowedNssai:                     ue.RanUeSharedCtx.AllowedNssai,
+		RadioCapability:                  ue.RanUeSharedCtx.RadioCapability,
+		CoreNetworkAssistanceInformation: ue.RanUeSharedCtx.CoreNetworkAssistanceInformation,
+		IMSVoiceSupported:                ue.RanUeSharedCtx.IMSVoiceSupported,
+		RRCEstablishmentCause:            ue.RanUeSharedCtx.RRCEstablishmentCause,
+		PduSessionReleaseList:            ue.RanUeSharedCtx.PduSessionReleaseList,
+		UeCtxRelState:                    bool(ue.RanUeSharedCtx.UeCtxRelState),
+		PduSessResRelState:               bool(ue.RanUeSharedCtx.PduSessResRelState),
+	}
+	if len(ue.RanUeSharedCtx.PduSessionList) > 0 {
+		shared.PduSessionList = make(map[int64]snapshot.RCPDUSession, len(ue.RanUeSharedCtx.PduSessionList))
+		for id, sess := range ue.RanUeSharedCtx.PduSessionList {
+			shared.PduSessionList[id] = makeRCPDUSession(sess)
+		}
+	}
+	return shared
+}
+
+func makeRCPDUSession(sess *context.PDUSession) snapshot.RCPDUSession {
+	if sess == nil {
+		return snapshot.RCPDUSession{}
+	}
+	out := snapshot.RCPDUSession{
+		ID:                               sess.Id,
+		Type:                             sess.Type,
+		Ambr:                             sess.Ambr,
+		SNSSAI:                           sess.Snssai,
+		NetworkInstance:                  sess.NetworkInstance,
+		SecurityCipher:                   sess.SecurityCipher,
+		SecurityIntegrity:                sess.SecurityIntegrity,
+		MaximumIntegrityDataRateUplink:   sess.MaximumIntegrityDataRateUplink,
+		MaximumIntegrityDataRateDownlink: sess.MaximumIntegrityDataRateDownlink,
+	}
+	if len(sess.QFIList) > 0 {
+		out.QFIList = append([]uint8(nil), sess.QFIList...)
+	}
+	if len(sess.QosFlows) > 0 {
+		out.QosFlows = make(map[int64]snapshot.RCQosFlow, len(sess.QosFlows))
+		for id, flow := range sess.QosFlows {
+			if flow == nil {
+				continue
+			}
+			out.QosFlows[id] = snapshot.RCQosFlow{
+				Identifier: flow.Identifier,
+				Parameters: flow.Parameters,
+			}
+		}
+	}
+	if sess.GTPConnInfo != nil {
+		out.GTPConnInfo = makeRCGTPConnectionInfo(sess.GTPConnInfo)
+	}
+	return out
+}
+
+func makeRCGTPConnectionInfo(info *context.GTPConnectionInfo) *snapshot.RCGTPConnectionInfo {
+	if info == nil {
+		return nil
+	}
+	rc := &snapshot.RCGTPConnectionInfo{
+		UPFIPAddr:    info.UPFIPAddr,
+		IncomingTEID: info.IncomingTEID,
+		OutgoingTEID: info.OutgoingTEID,
+	}
+	if info.UPFUDPAddr != nil {
+		rc.UPFUDPAddr = makeRCUDPAddr(info.UPFUDPAddr)
+	}
+	return rc
+}
+
+func makeRCUDPAddr(addr net.Addr) *snapshot.RCUDPAddr {
+	if addr == nil {
+		return nil
+	}
+	switch v := addr.(type) {
+	case *net.UDPAddr:
+		return &snapshot.RCUDPAddr{
+			IP:   v.IP.String(),
+			Port: v.Port,
+			Zone: v.Zone,
+		}
+	default:
+		return &snapshot.RCUDPAddr{Raw: addr.String()}
+	}
+}
+
+func ipString(ip net.IP) string {
+	if ip == nil || len(ip) == 0 {
+		return ""
+	}
+	return ip.String()
 }
 
 func ifaceName(lnk netlink.Link) string {

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/ngap/ngapType"
 )
 
 // RCStation contiene le informazioni per un singolo client collegato all'access point.
@@ -199,14 +199,54 @@ func (a RCUEAssociation) DeepCopy() RCUEAssociation {
 
 // RCAssociatedUE contiene le informazioni del contesto N3IWF/AMF rilevanti per l'UE.
 type RCAssociatedUE struct {
-	context.N3IWFRanUe
+	RCRanUeSharedCtx
 	N3IwfID        string          `json:"n3iwfId,omitempty"`
+	AmfName        string          `json:"amfName,omitempty"`
+	AmfSCTP        string          `json:"amfSctp,omitempty"`
 	IKELocalSPI    uint64          `json:"ikeLocalSpi,omitempty"`
 	IKERemoteSPI   uint64          `json:"ikeRemoteSpi,omitempty"`
 	IKEState       uint8           `json:"ikeState,omitempty"`
 	UeBehindNAT    bool            `json:"ueBehindNat,omitempty"`
 	N3iwfBehindNAT bool            `json:"n3iwfBehindNat,omitempty"`
 	ChildSAs       []RCChildSAInfo `json:"childSa,omitempty"`
+}
+
+// RCRanUeSharedCtx è la versione RC-friendly di RanUeSharedCtx.
+type RCRanUeSharedCtx struct {
+	RanUeNgapId                      int64                                         `json:"ranUeNgapId"`
+	AmfUeNgapId                      int64                                         `json:"amfUeNgapId"`
+	IPAddrv4                         string                                        `json:"ipAddrV4,omitempty"`
+	IPAddrv6                         string                                        `json:"ipAddrV6,omitempty"`
+	PortNumber                       int32                                         `json:"portNumber,omitempty"`
+	MaskedIMEISV                     *ngapType.MaskedIMEISV                        `json:"maskedImeisv,omitempty"`
+	Guti                             string                                        `json:"guti,omitempty"`
+	Guami                            *ngapType.GUAMI                               `json:"guami,omitempty"`
+	IndexToRfsp                      int64                                         `json:"indexToRfsp,omitempty"`
+	Ambr                             *ngapType.UEAggregateMaximumBitRate           `json:"ambr,omitempty"`
+	AllowedNssai                     *ngapType.AllowedNSSAI                        `json:"allowedNssai,omitempty"`
+	RadioCapability                  *ngapType.UERadioCapability                   `json:"radioCapability,omitempty"`
+	CoreNetworkAssistanceInformation *ngapType.CoreNetworkAssistanceInformation    `json:"coreNetworkAssistanceInformation,omitempty"`
+	IMSVoiceSupported                int32                                         `json:"imsVoiceSupported,omitempty"`
+	RRCEstablishmentCause            int16                                         `json:"rrcEstablishmentCause,omitempty"`
+	PduSessionReleaseList            ngapType.PDUSessionResourceReleasedListRelRes `json:"pduSessionReleaseList,omitempty"`
+	UeCtxRelState                    bool                                          `json:"ueCtxRelState,omitempty"`
+	PduSessResRelState               bool                                          `json:"pduSessResRelState,omitempty"`
+	PduSessionList                   map[int64]RCPDUSession                        `json:"pduSessionList,omitempty"`
+}
+
+type RCPDUSession struct {
+	ID                               int64                                       `json:"id"`
+	Type                             *ngapType.PDUSessionType                    `json:"type,omitempty"`
+	Ambr                             *ngapType.PDUSessionAggregateMaximumBitRate `json:"ambr,omitempty"`
+	SNSSAI                           ngapType.SNSSAI                             `json:"snssai"`
+	NetworkInstance                  *ngapType.NetworkInstance                   `json:"networkInstance,omitempty"`
+	SecurityCipher                   bool                                        `json:"securityCipher"`
+	SecurityIntegrity                bool                                        `json:"securityIntegrity"`
+	MaximumIntegrityDataRateUplink   *ngapType.MaximumIntegrityProtectedDataRate `json:"maximumIntegrityDataRateUplink,omitempty"`
+	MaximumIntegrityDataRateDownlink *ngapType.MaximumIntegrityProtectedDataRate `json:"maximumIntegrityDataRateDownlink,omitempty"`
+	GTPConnInfo                      *RCGTPConnectionInfo                        `json:"gtpConnInfo,omitempty"`
+	QFIList                          []uint8                                     `json:"qfiList,omitempty"`
+	QosFlows                         map[int64]RCQosFlow                         `json:"qosFlows,omitempty"`
 }
 
 // RCChildSAInfo riassume le informazioni sul tunnel IPsec associato all'UE.
@@ -223,13 +263,32 @@ type RCChildSAInfo struct {
 	PduSessionIds     []int64 `json:"pduSessionIds,omitempty"`
 }
 
+type RCGTPConnectionInfo struct {
+	UPFIPAddr    string     `json:"upfIpAddr,omitempty"`
+	UPFUDPAddr   *RCUDPAddr `json:"upfUdpAddr,omitempty"`
+	IncomingTEID uint32     `json:"incomingTeid,omitempty"`
+	OutgoingTEID uint32     `json:"outgoingTeid,omitempty"`
+}
+
+type RCUDPAddr struct {
+	IP   string `json:"ip,omitempty"`
+	Port int    `json:"port,omitempty"`
+	Zone string `json:"zone,omitempty"`
+	Raw  string `json:"raw,omitempty"`
+}
+
+type RCQosFlow struct {
+	Identifier int64                              `json:"identifier"`
+	Parameters ngapType.QosFlowLevelQosParameters `json:"parameters"`
+}
+
 // DeepCopy crea una copia indipendente dell'UE associato.
 func (ue *RCAssociatedUE) DeepCopy() *RCAssociatedUE {
 	if ue == nil {
 		return nil
 	}
 	copyUE := *ue
-	copyUE.N3IWFRanUe = cloneRanUe(copyUE.N3IWFRanUe)
+	copyUE.RCRanUeSharedCtx = cloneRCRanUeSharedCtx(ue.RCRanUeSharedCtx)
 	if len(ue.ChildSAs) > 0 {
 		copyUE.ChildSAs = make([]RCChildSAInfo, len(ue.ChildSAs))
 		for i, sa := range ue.ChildSAs {
@@ -244,44 +303,35 @@ func (ue *RCAssociatedUE) DeepCopy() *RCAssociatedUE {
 	return &copyUE
 }
 
-func cloneRanUe(src context.N3IWFRanUe) context.N3IWFRanUe {
-	dst := context.N3IWFRanUe{
-		RanUeSharedCtx:                  src.RanUeSharedCtx,
-		TemporaryCachedNASMessage:       append([]byte(nil), src.TemporaryCachedNASMessage...),
-		IsNASTCPConnEstablished:         src.IsNASTCPConnEstablished,
-		IsNASTCPConnEstablishedComplete: src.IsNASTCPConnEstablishedComplete,
-		TCPConnection:                   src.TCPConnection,
-	}
-
-	dst.RanUeSharedCtx.N3iwfCtx = nil
-
-	if len(src.RanUeSharedCtx.PduSessionList) > 0 {
-		dst.RanUeSharedCtx.PduSessionList = make(map[int64]*context.PDUSession, len(src.RanUeSharedCtx.PduSessionList))
-		for id, session := range src.RanUeSharedCtx.PduSessionList {
-			if session == nil {
-				continue
-			}
-			sessCopy := *session
-			if session.GTPConnInfo != nil {
-				connCopy := *session.GTPConnInfo
-				sessCopy.GTPConnInfo = &connCopy
-			}
-			if len(session.QFIList) > 0 {
-				sessCopy.QFIList = append([]uint8(nil), session.QFIList...)
-			}
-			if len(session.QosFlows) > 0 {
-				sessCopy.QosFlows = make(map[int64]*context.QosFlow, len(session.QosFlows))
-				for qid, flow := range session.QosFlows {
-					if flow == nil {
-						continue
-					}
-					flowCopy := *flow
-					sessCopy.QosFlows[qid] = &flowCopy
-				}
-			}
-			dst.RanUeSharedCtx.PduSessionList[id] = &sessCopy
+func cloneRCRanUeSharedCtx(src RCRanUeSharedCtx) RCRanUeSharedCtx {
+	dst := src
+	if len(src.PduSessionList) > 0 {
+		dst.PduSessionList = make(map[int64]RCPDUSession, len(src.PduSessionList))
+		for id, sess := range src.PduSessionList {
+			dst.PduSessionList[id] = cloneRCPDUSession(sess)
 		}
 	}
+	return dst
+}
 
+func cloneRCPDUSession(src RCPDUSession) RCPDUSession {
+	dst := src
+	if len(src.QFIList) > 0 {
+		dst.QFIList = append([]uint8(nil), src.QFIList...)
+	}
+	if len(src.QosFlows) > 0 {
+		dst.QosFlows = make(map[int64]RCQosFlow, len(src.QosFlows))
+		for k, v := range src.QosFlows {
+			dst.QosFlows[k] = v
+		}
+	}
+	if src.GTPConnInfo != nil {
+		c := *src.GTPConnInfo
+		if src.GTPConnInfo.UPFUDPAddr != nil {
+			addr := *src.GTPConnInfo.UPFUDPAddr
+			c.UPFUDPAddr = &addr
+		}
+		dst.GTPConnInfo = &c
+	}
 	return dst
 }
