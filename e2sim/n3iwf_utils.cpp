@@ -34,7 +34,7 @@ extern struct timespec ts;
 #include <map>
 
 //String ammettendo n variabili variabili
- void stampaln(const char* msg, ...) {
+ void logln(const char* msg, ...) {
     struct timespec now;
     clock_gettime(CLOCK_REALTIME, &now);
     long seconds = now.tv_sec - ts.tv_sec;

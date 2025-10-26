@@ -8,7 +8,7 @@
 
 static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
-  stampaln("  Adding measurement name function: %s\n", name);
+  logln("  Adding measurement name function: %s\n", name);
   if (!list) return;  // oppure assert/alloca, ma non dereferenziare
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(MeasurementInfoItem_t));
   it->measType.present = MeasurementType_PR_measName;
@@ -24,7 +24,7 @@ static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
 static inline void rec_add_double(MeasurementRecord_t *rec, double v)
 {
-  stampaln("  Adding measurement record: %.2f\n", v);
+  logln("  Adding measurement record: %.2f\n", v);
   MeasurementRecordItem_t *item = (MeasurementRecordItem_t *)calloc(1, sizeof(*item));
   item->present = MeasurementRecordItem_PR_real;
   item->choice.real = v;
@@ -132,7 +132,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   {
     const char *name = kv.first.c_str();
     double value = kv.second;
-    stampaln("  Adding measurement %s = %.2f\n", name, value);
+    logln("  Adding measurement %s = %.2f\n", name, value);
     // Un record con i 3 valori
     if (value != -1)
     {
@@ -144,7 +144,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
 
   if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
   {
-    stampaln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
+    logln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
     // niente da inviare: pulisci e rientra
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
     free(mdi);
@@ -153,7 +153,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     free(fmt1);
     return;
   }
-  stampaln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
+  logln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;

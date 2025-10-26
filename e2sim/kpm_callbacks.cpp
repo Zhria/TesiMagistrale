@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
 {
   // pausa per permettere al n3iwf di avviarsi e iniziare a loggare
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  stampaln("Starting E2 Simulator with KPM Callbacks (KPM v3)\n");
+  logln("Starting E2 Simulator with KPM Callbacks (KPM v3)\n");
   clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
 
   struct sigaction sa{};
@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
  * ============================================================ */
 void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod, const std::shared_ptr<std::atomic_bool> &stop_token)
 {
-  stampaln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
+  logln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
   long seqNum = 1;
   asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
 
@@ -210,7 +210,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       break;
     }
 
-    stampaln("Report loop iteration with seqNum %ld\n", seqNum);
+    logln("Report loop iteration with seqNum %ld\n", seqNum);
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
     if (g_app_stop.load(std::memory_order_relaxed)) {
       break;
@@ -229,8 +229,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
         &hdr, hdr_buf, sizeof(hdr_buf));
     if (ehr.encoded < 0)
     {
-      stampaln("hdr enc failed\n"); /* handle */
-      stampaln("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
+      logln("hdr enc failed\n"); /* handle */
+      logln("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
       continue;
     }
 
@@ -239,7 +239,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 
     kpm_fill_ue_rf_basic(ind_msg, kpi);
-    stampaln("Encoded KPM indication message (Format1)\n");
+    logln("Encoded KPM indication message (Format1)\n");
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
     char errbuf[512] = {0};
@@ -247,7 +247,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     int rc = asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, ind_msg, errbuf, &errlen);
     if (rc != 0)
     {
-      stampaln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
+      logln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
       // opzionale: vai in continue
       continue;
     }
@@ -257,14 +257,14 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
                                               ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
-      stampaln("msg enc failed\n"); /* handle */
-      stampaln("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
+      logln("msg enc failed\n"); /* handle */
+      logln("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
       continue;
     }
     E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (pdu == NULL)
     {
-      stampaln("calloc failed for pdu\n");
+      logln("calloc failed for pdu\n");
       continue;
     }
     // ----- E2AP wrapper -----
@@ -280,7 +280,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     seqNum++;
   }
 
-  stampaln("KPM report loop exiting for requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld\n",
+  logln("KPM report loop exiting for requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld\n",
            requestorId, instanceId, ranFunctionId, actionId);
 }
 
@@ -372,10 +372,10 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
  * ============================================================ */
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
-  stampaln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
-  stampaln("Decoding Subscription Request...\n");
+  logln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
+  logln("Decoding Subscription Request...\n");
   xer_fprint(stdout, &asn_DEF_E2AP_PDU, sub_req_pdu);
-  stampaln("POST XER Subscription Request\n");
+  logln("POST XER Subscription Request\n");
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
@@ -384,7 +384,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
-  stampaln("Processing Subscription Request...count %d\n", count);
+  logln("Processing Subscription Request...count %d\n", count);
 
   RICsubscriptionRequest_IEs__value_PR pres;
 
@@ -404,7 +404,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     RICsubscriptionRequest_IEs_t *next_ie = ies[i];
     pres = next_ie->value.present;
 
-    stampaln("next present value %d\n", pres);
+    logln("next present value %d\n", pres);
 
     switch (pres)
     {
@@ -413,8 +413,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       RICrequestID_t reqId = next_ie->value.choice.RICrequestID;
       long requestorId = reqId.ricRequestorID;
       long instanceId = reqId.ricInstanceID;
-      stampaln("requestorId %ld\n", requestorId);
-      stampaln("instanceId %ld\n", instanceId);
+      logln("requestorId %ld\n", requestorId);
+      logln("instanceId %ld\n", instanceId);
       reqRequestorId = requestorId;
       reqInstanceId = instanceId;
       break;
@@ -430,7 +430,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
 
       int actionCount = actionList.list.count;
-      stampaln("action count %d\n", actionCount);
+      logln("action count %d\n", actionCount);
 
       RICaction_ToBeSetup_ItemIEs_t **item_array =
           (RICaction_ToBeSetup_ItemIEs_t **)actionList.list.array;
@@ -481,15 +481,15 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     }
   }
 
-  stampaln("After Processing Subscription Request\n");
-  stampaln("requestorId %ld\n", reqRequestorId);
-  stampaln("instanceId %ld\n", reqInstanceId);
+  logln("After Processing Subscription Request\n");
+  logln("requestorId %ld\n", reqRequestorId);
+  logln("instanceId %ld\n", reqInstanceId);
 
   // Costruisci e invia la Subscription Response (success)
   E2AP_PDU *e2ap_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
   if (e2ap_pdu == NULL)
   {
-    stampaln("calloc failed for e2ap_pdu\n");
+    logln("calloc failed for e2ap_pdu\n");
     return;
   }
 
@@ -501,13 +501,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
-    stampaln("At least one action not allowed, rejecting subscription\n");
+    logln("At least one action not allowed, rejecting subscription\n");
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;
   }
 
-  stampaln("All actions allowed, accepting subscription\n");
+  logln("All actions allowed, accepting subscription\n");
   generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, 2);
   e2.encode_and_send_sctp_data(e2ap_pdu);
 
@@ -516,7 +516,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     SubscriptionKey key{reqRequestorId, reqInstanceId, funcId, reqActionId};
     start_kpm_worker(key, reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
   } else {
-    stampaln("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
+    logln("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
   }
 }
 
@@ -527,7 +527,7 @@ void registerKPMfunctionDefinition()
       (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
   if (ranfunc_desc == NULL)
   {
-    stampaln("calloc failed for ranfunc_desc\n");
+    logln("calloc failed for ranfunc_desc\n");
     return;
   }
 
@@ -539,7 +539,7 @@ void registerKPMfunctionDefinition()
   uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
   if (e2smbuffer == NULL)
   {
-    stampaln("calloc failed for e2smbuffer\n");
+    logln("calloc failed for e2smbuffer\n");
     return;
   }
 
@@ -550,7 +550,7 @@ void registerKPMfunctionDefinition()
 
   if (er.encoded < 0)
   {
-    stampaln("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
+    logln("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
     free(e2smbuffer);
     return;
   }
@@ -559,7 +559,7 @@ void registerKPMfunctionDefinition()
   OCTET_STRING_t *ranfunc_ostr = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   if (ranfunc_ostr == NULL)
   {
-    stampaln("calloc failed for ranfunc_ostr\n");
+    logln("calloc failed for ranfunc_ostr\n");
     free(e2smbuffer);
     return;
   }
@@ -567,7 +567,7 @@ void registerKPMfunctionDefinition()
   ranfunc_ostr->size = (er.encoded > 0) ? (size_t)er.encoded : 0;
   if (ranfunc_ostr->buf == NULL)
   {
-    stampaln("calloc failed for ranfunc_ostr->buf\n");
+    logln("calloc failed for ranfunc_ostr->buf\n");
     free(ranfunc_ostr);
     free(e2smbuffer);
     return;
@@ -587,11 +587,11 @@ void registerKPMfunctionDefinition()
   asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_RANfunction_Description, (void **)&check, ranfunc_ostr->buf, ranfunc_ostr->size);
   if (dr.code != RC_OK)
   {
-    stampaln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+    logln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
   }
   else
   {
-    stampaln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+    logln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
   }
 
   // Non servono più questi buffer locali

@@ -98,38 +98,38 @@ void sctp_print_events(int fd)
                 state_str = "UNKNOWN";
                 break;
             }
-            stampaln("[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
+            logln("[SCTP_EVENT] ASSOC_CHANGE: %s (assoc=0x%x)\n",
                      state_str, sac->sac_assoc_id);
             break;
         }
         case SCTP_SHUTDOWN_EVENT:
         {
             struct sctp_shutdown_event *sse = &snp->sn_shutdown_event;
-            stampaln("[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
+            logln("[SCTP_EVENT] SHUTDOWN (assoc=0x%x)\n", sse->sse_assoc_id);
             break;
         }
         case SCTP_SEND_FAILED_EVENT:
         {
-            stampaln("[SCTP_EVENT] SEND_FAILED\n");
+            logln("[SCTP_EVENT] SEND_FAILED\n");
             break;
         }
         case SCTP_ADAPTATION_INDICATION:
         {
-            stampaln("[SCTP_EVENT] ADAPTATION_INDICATION\n");
+            logln("[SCTP_EVENT] ADAPTATION_INDICATION\n");
             break;
         }
         case SCTP_PARTIAL_DELIVERY_EVENT:
         {
-            stampaln("[SCTP_EVENT] PARTIAL_DELIVERY\n");
+            logln("[SCTP_EVENT] PARTIAL_DELIVERY\n");
             break;
         }
         case SCTP_REMOTE_ERROR:
         {
-            stampaln("[SCTP_EVENT] REMOTE_ERROR\n");
+            logln("[SCTP_EVENT] REMOTE_ERROR\n");
             break;
         }
         default:
-            stampaln("[SCTP_EVENT] Unknown type %u\n", snp->sn_header.sn_type);
+            logln("[SCTP_EVENT] Unknown type %u\n", snp->sn_header.sn_type);
             break;
         }
     }
@@ -140,7 +140,7 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
 {
     sockaddr_in peer4{};  // solo IPv4 per semplicità
     if (inet_pton(AF_INET, server_ip_str, &peer4.sin_addr) != 1) {
-        stampaln("[SCTP] inet_pton failed for '%s'\n", server_ip_str);
+        logln("[SCTP] inet_pton failed for '%s'\n", server_ip_str);
         return -1;
     }
     peer4.sin_family = AF_INET;
@@ -156,12 +156,12 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
         local.sin_family = AF_INET;
         local.sin_port   = htons(0);             // porta effimera
         if (inet_pton(AF_INET, local_ip, &local.sin_addr) != 1) {
-            stampaln("[SCTP] invalid local ip: %s\n", local_ip);
+            logln("[SCTP] invalid local ip: %s\n", local_ip);
             close(fd);
             return -1;
         }
         if (bind(fd, (sockaddr*)&local, sizeof(local)) < 0) {
-            stampaln("[SCTP] bind(%s) failed: errno=%d (%s)\n", local_ip, errno, strerror(errno));
+            logln("[SCTP] bind(%s) failed: errno=%d (%s)\n", local_ip, errno, strerror(errno));
             close(fd);
             return -1;
         }
@@ -190,16 +190,16 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
     ev.sctp_authentication_event    = 1;
     (void)setsockopt(fd, IPPROTO_SCTP, SCTP_EVENTS, &ev, sizeof(ev));
 
-    stampaln("[SCTP] Connecting %s:%d (local=%s)... ",
+    logln("[SCTP] Connecting %s:%d (local=%s)... ",
              server_ip_str, server_port, (local_ip && *local_ip) ? local_ip : "auto");
 
     // connect bloccante con poll per robustezza
     if (connect(fd, (sockaddr*)&peer4, sizeof(peer4)) == 0) {
-        stampaln("OK (immediato)\n");
+        logln("OK (immediato)\n");
         return fd;
     }
     if (errno != EINPROGRESS && errno != EINTR) {
-        stampaln("FAILED (errno=%d: %s)\n", errno, strerror(errno));
+        logln("FAILED (errno=%d: %s)\n", errno, strerror(errno));
         close(fd);
         return -1;
     }
@@ -207,7 +207,7 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
     struct pollfd p{.fd = fd, .events = POLLOUT, .revents = 0};
     int rc = poll(&p, 1, -1);
     if (rc <= 0) {
-        stampaln("FAILED (poll rc=%d, errno=%d: %s)\n", rc, errno, strerror(errno));
+        logln("FAILED (poll rc=%d, errno=%d: %s)\n", rc, errno, strerror(errno));
         close(fd);
         return -1;
     }
@@ -219,23 +219,23 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
         return -1;
     }
     if (soerr) {
-        stampaln("FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
+        logln("FAILED (SO_ERROR=%d: %s)\n", soerr, strerror(soerr));
         close(fd);
         return -1;
     }
 
-    stampaln("OK\n");
+    logln("OK\n");
     return fd;
 }
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
-    stampaln("in sctp send data func\n");
-    stampaln("data.len is %d\n", data.len);
+    logln("in sctp send data func\n");
+    logln("data.len is %d\n", data.len);
 
     if (socket_fd < 0)
     {
-        stampaln("[SCTP] Invalid socket\n");
+        logln("[SCTP] Invalid socket\n");
         return -1;
     }
 
@@ -254,7 +254,7 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
         0            // context
     );
 
-    stampaln("after getting sent_len: %d\n", sent_len);
+    logln("after getting sent_len: %d\n", sent_len);
 
     if (sent_len == -1)
     {
@@ -299,7 +299,7 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     }
     if (recv_len == 0)
     {
-        stampaln("[SCTP] Connection closed by peer\n");
+        logln("[SCTP] Connection closed by peer\n");
         close(socket_fd);
         return SCTP_RECV_ERR;
     }
@@ -313,36 +313,36 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
         case SCTP_ASSOC_CHANGE:
         {
             struct sctp_assoc_change *sac = &snp->sn_assoc_change;
-            stampaln("[SCTP_EVENT] ASSOC_CHANGE state=%d error=%d out=%u in=%u",
+            logln("[SCTP_EVENT] ASSOC_CHANGE state=%d error=%d out=%u in=%u",
                      sac->sac_state, sac->sac_error, sac->sac_outbound_streams, sac->sac_inbound_streams);
             break;
         }
         case SCTP_SHUTDOWN_EVENT:
         {
-            stampaln("[SCTP_EVENT] SHUTDOWN\n");
+            logln("[SCTP_EVENT] SHUTDOWN\n");
             break;
         }
         case SCTP_REMOTE_ERROR:
         {
             struct sctp_remote_error *se = &snp->sn_remote_error;
             uint16_t cause = ntohs(se->sre_error);
-            stampaln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
+            logln("[SCTP_EVENT] REMOTE_ERROR / ABORT, cause=%u (len=%u)", cause, ntohs(se->sre_length));
             break;
         }
         case SCTP_SEND_FAILED_EVENT:
         {
-            stampaln("[SCTP_EVENT] SEND_FAILED\n");
+            logln("[SCTP_EVENT] SEND_FAILED\n");
             break;
         }
         case SCTP_PEER_ADDR_CHANGE: {
             struct sctp_paddr_change *pc = (struct sctp_paddr_change *)snp;
-            stampaln("[SCTP_EVENT] PEER_ADDR_CHANGE state=%d error=%d",
+            logln("[SCTP_EVENT] PEER_ADDR_CHANGE state=%d error=%d",
             pc->spc_state, pc->spc_error);
            break;
         }
         default:
         {
-            stampaln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
+            logln("[SCTP_EVENT] type=%u\n", snp->sn_header.sn_type);
             break;
         }
         }
@@ -351,7 +351,7 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
 
     // Caso 2: è un vero DATA chunk
     uint32_t ppid = ntohl(sinfo.sinfo_ppid);
-    stampaln("[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
+    logln("[SCTP] Received DATA len=%d, PPID=%u, stream=%u\n",
              recv_len, ppid, sinfo.sinfo_stream);
 
     // salviamo il dato
@@ -365,7 +365,7 @@ int sctp_receive_data(int &socket_fd, sctp_buffer_t &data)
     }
     else
     {
-        stampaln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
+        logln("[SCTP] Non-E2AP payload (PPID=%u), ignoro\n", ppid);
         return SCTP_RECV_SKIP;
     }
 }

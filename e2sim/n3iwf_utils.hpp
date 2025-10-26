@@ -42,7 +42,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
                                   int max_bits,
                                   int target_if_pad);
                                   
-void stampaln(const char* msg, ...);
+void logln(const char* msg, ...);
 
 std::vector<std::string> getAllowedKPI();
 
