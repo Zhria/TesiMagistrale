@@ -23,6 +23,11 @@
 #include <cstdint>
 #include <sstream>
 #include <utility>
+#include <unordered_map>
+#include <cmath>
+#include <limits>
+#include <functional>
+#include <cctype>
 
 
 #include "rc_callbacks.hpp"
@@ -110,6 +115,212 @@ static std::mutex g_rc_workers_mutex;
 static std::map<SubscriptionKey, RcWorkerCtx> g_rc_workers;
 
 namespace {
+
+constexpr size_t kMaxReportedAssociations = 8;
+constexpr int64_t kSignalUnknown = std::numeric_limits<int64_t>::min();
+
+struct RcRateState {
+  RcCountersSnapshot counters{};
+  std::chrono::steady_clock::time_point timestamp{};
+};
+
+struct RcDerivedMetrics {
+  double ul_volume_kbits{0.0};
+  double dl_volume_kbits{0.0};
+  double ul_throughput_bps{0.0};
+  double dl_throughput_bps{0.0};
+  int64_t signal_dbm{kSignalUnknown};
+};
+
+static std::string normalize_mac_string(const std::string &mac) {
+  if (mac.empty()) {
+    return {};
+  }
+  std::string out;
+  out.reserve(mac.size());
+  for (char c : mac) {
+    if (c == ':' || c == '-' || c == '.') {
+      continue;
+    }
+    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+  }
+  return out;
+}
+
+static std::string build_assoc_key(const RcAssociationSnapshot &assoc) {
+  if (!assoc.mac.empty()) {
+    return normalize_mac_string(assoc.mac);
+  }
+  if (!assoc.ue_ip.empty()) {
+    return assoc.ue_ip;
+  }
+  if (!assoc.station.mac.empty()) {
+    return normalize_mac_string(assoc.station.mac);
+  }
+  if (!assoc.station.ip.empty()) {
+    return assoc.station.ip;
+  }
+  return {};
+}
+
+static uint64_t delta_or_zero(uint64_t current, uint64_t previous) {
+  return (current >= previous) ? (current - previous) : 0;
+}
+
+static long clamp_double_to_long(double value) {
+  if (!std::isfinite(value)) {
+    return 0;
+  }
+  if (value > static_cast<double>(std::numeric_limits<long>::max())) {
+    return std::numeric_limits<long>::max();
+  }
+  if (value < static_cast<double>(std::numeric_limits<long>::min())) {
+    return std::numeric_limits<long>::min();
+  }
+  return static_cast<long>(std::llround(value));
+}
+
+static bool parse_first_integer(const std::string &text, int64_t &out) {
+  if (text.empty()) {
+    return false;
+  }
+  std::istringstream iss(text);
+  long long value = 0;
+  iss >> value;
+  if (iss.fail()) {
+    return false;
+  }
+  out = static_cast<int64_t>(value);
+  return true;
+}
+
+static bool extract_signal_from_map(const std::map<std::string, std::string> &source,
+                                    std::initializer_list<const char *> keys,
+                                    int64_t &out) {
+  for (const char *key : keys) {
+    auto it = source.find(key);
+    if (it == source.end()) {
+      continue;
+    }
+    if (parse_first_integer(it->second, out)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static int64_t extract_signal_dbm(const RcAssociationSnapshot &assoc) {
+  int64_t value = 0;
+  if (extract_signal_from_map(assoc.station.fields, {"iw.signal", "signal", "iw.signal_avg", "signal_avg"}, value)) {
+    return value;
+  }
+  if (extract_signal_from_map(assoc.station.hostapd, {"signal"}, value)) {
+    return value;
+  }
+  if (extract_signal_from_map(assoc.station.station_dump, {"signal", "signal_avg"}, value)) {
+    return value;
+  }
+  return kSignalUnknown;
+}
+
+static RcDerivedMetrics build_derived_metrics(
+    const RcAssociationSnapshot &assoc,
+    const std::chrono::steady_clock::time_point &now,
+    std::unordered_map<std::string, RcRateState> &rate_state) {
+  RcDerivedMetrics derived;
+  derived.ul_volume_kbits = static_cast<double>(assoc.counters.incoming_octets) * 8.0 / 1000.0;
+  derived.dl_volume_kbits = static_cast<double>(assoc.counters.transmit_octets) * 8.0 / 1000.0;
+  derived.signal_dbm = extract_signal_dbm(assoc);
+
+  const std::string key = build_assoc_key(assoc);
+  if (!key.empty()) {
+    auto &entry = rate_state[key];
+    if (entry.timestamp.time_since_epoch().count() != 0) {
+      double elapsed = std::chrono::duration<double>(now - entry.timestamp).count();
+      if (elapsed > 0.0) {
+        const auto delta_ul = delta_or_zero(assoc.counters.incoming_octets, entry.counters.incoming_octets);
+        derived.ul_throughput_bps = static_cast<double>(delta_ul) * 8.0 / elapsed;
+
+        const auto delta_dl = delta_or_zero(assoc.counters.transmit_octets, entry.counters.transmit_octets);
+        derived.dl_throughput_bps = static_cast<double>(delta_dl) * 8.0 / elapsed;
+      }
+    }
+    entry.counters = assoc.counters;
+    entry.timestamp = now;
+  }
+
+  return derived;
+}
+
+static bool map_param_to_value(long param_id,
+                               const RcAssociationSnapshot &assoc,
+                               const RcDerivedMetrics &metrics,
+                               long &out_value) {
+  switch (param_id) {
+    case 41001: {
+      if (assoc.ue.ran_ue_ngap_id >= 0) {
+        out_value = assoc.ue.ran_ue_ngap_id;
+        return true;
+      }
+      if (assoc.ue.amf_ue_ngap_id >= 0) {
+        out_value = assoc.ue.amf_ue_ngap_id;
+        return true;
+      }
+      const std::string key = build_assoc_key(assoc);
+      if (!key.empty()) {
+        out_value = static_cast<long>(std::hash<std::string>{}(key) & 0x7fffffff);
+        return true;
+      }
+      return false;
+    }
+    case 41003:
+      out_value = assoc.ue.rrc_establishment_cause;
+      return true;
+    case 42001:
+      out_value = (metrics.signal_dbm != kSignalUnknown) ? metrics.signal_dbm : 0;
+      return true;
+    case 43001:
+      out_value = clamp_double_to_long(metrics.ul_throughput_bps);
+      return true;
+    case 43002:
+      out_value = clamp_double_to_long(metrics.dl_throughput_bps);
+      return true;
+    case 44001:
+      out_value = clamp_double_to_long(metrics.ul_volume_kbits);
+      return true;
+    case 44002:
+      out_value = clamp_double_to_long(metrics.dl_volume_kbits);
+      return true;
+    default:
+      return false;
+  }
+}
+
+static bool append_param_item(E2SM_RC_IndicationMessage_Format1_t *fmt1, long param_id, long value) {
+  if (!fmt1) {
+    return false;
+  }
+  auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
+      1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
+  if (!item) {
+    return false;
+  }
+  item->ranParameter_ID = param_id;
+  item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
+  item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
+      (RANParameter_ValueType_Choice_ElementTrue *)calloc(
+          1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
+  if (!item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
+    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
+    return false;
+  }
+  auto *val =
+      &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+  val->present = RANParameter_Value_PR_valueInt;
+  val->choice.valueInt = value;
+  ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
+  return true;
+}
 
 void stop_rc_worker_internal(const SubscriptionKey &key) {
   std::shared_ptr<std::atomic_bool> stop_flag;
@@ -679,6 +890,7 @@ static void run_rc_report_loop(const SubscriptionKey &key,
         logln("RC report loop: no RAN Parameter IDs requested, will send heartbeat indications only");
     }
 
+    std::unordered_map<std::string, RcRateState> rate_state;
     long seq_num = 1;
     const auto period = std::chrono::milliseconds(1000);
 
@@ -738,31 +950,30 @@ static void run_rc_report_loop(const SubscriptionKey &key,
             E2SM_RC_IndicationMessage__ric_indicationMessage_formats_PR_indicationMessage_Format1;
         msg->ric_indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
 
-        int param_idx = 0;
-        for (long param_id : param_ids) {
-            auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
-                1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
-            if (!item) {
-                logln("RC report loop: calloc failed for RAN parameter item");
-                continue;
-            }
-            item->ranParameter_ID = param_id;
-            item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
-            item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
-                (RANParameter_ValueType_Choice_ElementTrue *)calloc(
-                    1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
-            if (!item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
-                logln("RC report loop: calloc failed for RAN parameter value");
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
-                continue;
-            }
+        const auto now = std::chrono::steady_clock::now();
 
-            auto *val = &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
-            val->present = RANParameter_Value_PR_valueInt;
-            val->choice.valueInt = seq_num * 10 + param_idx;
-            ++param_idx;
-
-            ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
+        if (!param_ids.empty()) {
+            auto associations = getRcAssociations();
+            size_t reported = 0;
+            for (const auto &assoc : associations) {
+                if (reported >= kMaxReportedAssociations) {
+                    break;
+                }
+                RcDerivedMetrics metrics = build_derived_metrics(assoc, now, rate_state);
+                bool added = false;
+                for (long param_id : param_ids) {
+                    long value = 0;
+                    if (!map_param_to_value(param_id, assoc, metrics, value)) {
+                        continue;
+                    }
+                    if (append_param_item(fmt1, param_id, value)) {
+                        added = true;
+                    }
+                }
+                if (added) {
+                    ++reported;
+                }
+            }
         }
 
         if (fmt1->ranP_Reported_List.list.count == 0) {
