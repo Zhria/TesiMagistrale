@@ -8,11 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/free5gc/aper"
 	"github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/snapshot"
 	"github.com/free5gc/n3iwf/pkg/factory"
-	"github.com/free5gc/ngap/ngapType"
 	"github.com/vishvananda/netlink"
 )
 
@@ -375,7 +373,7 @@ func makeRCUDPAddr(addr net.Addr) *snapshot.RCUDPAddr {
 }
 
 func ipString(ip net.IP) string {
-	if ip == nil || len(ip) == 0 {
+	if ip == nil {
 		return ""
 	}
 	return ip.String()
@@ -390,51 +388,6 @@ func ifaceName(lnk netlink.Link) string {
 		return ""
 	}
 	return attrs.Name
-}
-
-func formatGUAMI(guami ngapType.GUAMI) string {
-	plmn := decodePLMN(guami.PLMNIdentity.Value)
-	region := bitStringToUint(guami.AMFRegionID.Value)
-	setID := bitStringToUint(guami.AMFSetID.Value)
-	pointer := bitStringToUint(guami.AMFPointer.Value)
-	return fmt.Sprintf("%s-%d-%d-%d", plmn, region, setID, pointer)
-}
-
-func decodePLMN(value []byte) string {
-	if len(value) < 3 {
-		return ""
-	}
-	d1 := value[0] & 0x0F
-	d2 := (value[0] >> 4) & 0x0F
-	d3 := value[1] & 0x0F
-	mcc := fmt.Sprintf("%d%d%d", d1, d2, d3)
-
-	d4 := (value[1] >> 4) & 0x0F
-	d5 := value[2] & 0x0F
-	d6 := (value[2] >> 4) & 0x0F
-
-	if d6 == 0x0F {
-		return fmt.Sprintf("%s-%d%d", mcc, d5, d4)
-	}
-	return fmt.Sprintf("%s-%d%d%d", mcc, d5, d4, d6)
-}
-
-func bitStringToUint(bs aper.BitString) uint64 {
-	var result uint64
-	length := int(bs.BitLength)
-	if length == 0 {
-		return 0
-	}
-	for i := 0; i < length; i++ {
-		byteIdx := i / 8
-		bitIdx := 7 - (i % 8)
-		if byteIdx >= len(bs.Bytes) {
-			break
-		}
-		bit := (bs.Bytes[byteIdx] >> bitIdx) & 0x01
-		result = (result << 1) | uint64(bit)
-	}
-	return result
 }
 
 func n3iwfIdentifier() string {

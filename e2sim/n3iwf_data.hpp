@@ -1,4 +1,12 @@
 
+#pragma once
+
+#include <cstdint>
+#include <map>
+#include <optional>
+#include <string>
+#include <vector>
+
 extern "C" {
 #include "e2ap_asn1c_codec.h"
 #include "GlobalE2node-ID.h"
@@ -22,9 +30,79 @@ extern "C" {
 #include "RICtimeToWait.h"
 }
 
-
-void init_n3iwf_data();
+int init_n3iwf_data();
 
 GlobalgNB_ID_t* getGNBStore();
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod);
+
+struct RcCountersSnapshot {
+    uint64_t incoming_octets{0};
+    uint64_t transmit_octets{0};
+    uint64_t incoming_pkts{0};
+    uint64_t transmit_pkts{0};
+    uint64_t dropped_octets{0};
+};
+
+struct RcChildSaInfoSnapshot {
+    uint32_t inbound_spi{0};
+    uint32_t outbound_spi{0};
+    std::string tunnel_iface;
+    std::string peer_public_ip;
+    std::string local_public_ip;
+    int n3iwf_port{0};
+    int nat_port{0};
+    bool enable_encapsulate{false};
+    uint8_t selected_ip_proto{0};
+    std::vector<int64_t> pdu_session_ids;
+};
+
+struct RcUeInfoSnapshot {
+    int64_t ran_ue_ngap_id{-1};
+    int64_t amf_ue_ngap_id{-1};
+    std::string ip_addr_v4;
+    std::string ip_addr_v6;
+    int32_t port_number{0};
+    std::string guti;
+    std::string n3iwf_id;
+    std::string amf_name;
+    std::string amf_sctp;
+    int16_t rrc_establishment_cause{0};
+    uint64_t ike_local_spi{0};
+    uint64_t ike_remote_spi{0};
+    uint8_t ike_state{0};
+    bool ue_behind_nat{false};
+    bool n3iwf_behind_nat{false};
+    std::vector<RcChildSaInfoSnapshot> child_sa;
+    std::map<std::string, std::string> extra_fields;
+};
+
+struct RcStationSnapshot {
+    std::string interface_name;
+    std::string mac;
+    std::string ip;
+    std::map<std::string, std::string> fields;
+    std::map<std::string, std::string> hostapd;
+    std::map<std::string, std::string> station_dump;
+};
+
+struct RcAssociationSnapshot {
+    std::string interface_name;
+    std::string mac;
+    std::string ue_ip;
+    RcStationSnapshot station;
+    RcCountersSnapshot counters;
+    RcUeInfoSnapshot ue;
+    std::vector<std::string> mismatches;
+};
+
+struct RcSnapshot {
+    std::string timestamp;
+    std::vector<RcAssociationSnapshot> associations;
+};
+
+bool loadRcSnapshot(RcSnapshot &out);
+std::vector<RcAssociationSnapshot> getRcAssociations();
+std::optional<RcAssociationSnapshot> findRcAssociationByRanUeId(int64_t ran_ue_ngap_id);
+std::optional<RcAssociationSnapshot> findRcAssociationByMac(const std::string &mac);
+void setRcLogFileName(const std::string &name);

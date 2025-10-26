@@ -1,12 +1,15 @@
+#include <cctype>
 #include <iostream>
-#include <string>
 #include <map>
 #include <fstream>
 #include <optional>
 #include <filesystem>
+#include <sstream>
+#include <string>
 #include <nlohmann/json.hpp>
 
 #include "encode_e2apv2.hpp"
+#include "n3iwf_data.hpp"
 #include "n3iwf_utils.hpp"
 
 extern "C" {
@@ -87,6 +90,7 @@ std::vector<std::string> kpi=getAllowedKPI();
 // -------------------- configurazione (safe) --------------------
 static std::string g_fileName = "n3iwf_e2.json";
 static std::string g_fileNameKPM="n3iwf_e2.json.kpm.log";
+static std::string g_rcFileName = "n3iwf_e2_rc.json";
 static std::string g_basePath = []{
   if (const char* p = std::getenv("E2_LOG_BASE")) return std::string(p);
   return std::string("/home/e2sim/log/");  // default nel tuo container
@@ -102,6 +106,12 @@ void setFileName(const std::string& name) {
 
 void setFileNameKPM(const std::string& name) {
   g_fileNameKPM = name;
+}
+
+void setRcLogFileName(const std::string& name) {
+  if (!name.empty()) {
+    g_rcFileName = name;
+  }
 }
 
 // -------------------- util --------------------
@@ -120,6 +130,200 @@ static std::optional<std::string> readWholeFile(const std::string& fullpath) {
   f.seekg(0, std::ios::beg);
   f.read(&data[0], static_cast<std::streamsize>(data.size()));
   return data;
+}
+
+static std::string json_to_string(const json& value) {
+  if (value.is_string()) return value.get<std::string>();
+  if (value.is_boolean()) return value.get<bool>() ? "true" : "false";
+  if (value.is_number_integer()) return std::to_string(value.get<int64_t>());
+  if (value.is_number_unsigned()) return std::to_string(value.get<uint64_t>());
+  if (value.is_number_float()) {
+    std::ostringstream oss;
+    oss << value.get<double>();
+    return oss.str();
+  }
+  if (value.is_null()) return "";
+  return value.dump();
+}
+
+static uint64_t json_to_u64(const json& value) {
+  if (value.is_number_unsigned()) return value.get<uint64_t>();
+  if (value.is_number_integer()) {
+    auto v = value.get<int64_t>();
+    return v < 0 ? 0 : static_cast<uint64_t>(v);
+  }
+  if (value.is_number_float()) {
+    double v = value.get<double>();
+    return v < 0 ? 0 : static_cast<uint64_t>(v);
+  }
+  if (value.is_string()) {
+    try {
+      return std::stoull(value.get<std::string>(), nullptr, 0);
+    } catch (...) {
+      return 0;
+    }
+  }
+  if (value.is_boolean()) {
+    return value.get<bool>() ? 1 : 0;
+  }
+  return 0;
+}
+
+static int64_t json_to_i64(const json& value) {
+  if (value.is_number_integer()) return value.get<int64_t>();
+  if (value.is_number_unsigned()) return static_cast<int64_t>(value.get<uint64_t>());
+  if (value.is_number_float()) return static_cast<int64_t>(value.get<double>());
+  if (value.is_string()) {
+    try {
+      return std::stoll(value.get<std::string>(), nullptr, 0);
+    } catch (...) {
+      return 0;
+    }
+  }
+  if (value.is_boolean()) return value.get<bool>() ? 1 : 0;
+  return 0;
+}
+
+static bool json_to_bool(const json& value) {
+  if (value.is_boolean()) return value.get<bool>();
+  if (value.is_number_integer()) return value.get<int64_t>() != 0;
+  if (value.is_number_unsigned()) return value.get<uint64_t>() != 0;
+  if (value.is_string()) {
+    auto str = value.get<std::string>();
+    std::string lower;
+    lower.reserve(str.size());
+    for (char c : str) {
+      lower.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+    }
+    return lower == "true" || lower == "1" || lower == "yes";
+  }
+  return false;
+}
+
+static std::vector<int64_t> json_to_int64_vector(const json& value) {
+  std::vector<int64_t> out;
+  if (!value.is_array()) return out;
+  out.reserve(value.size());
+  for (const auto& entry : value) {
+    out.push_back(json_to_i64(entry));
+  }
+  return out;
+}
+
+static std::map<std::string, std::string> json_to_string_map(const json& value) {
+  std::map<std::string, std::string> out;
+  if (!value.is_object()) return out;
+  for (const auto& [key, val] : value.items()) {
+    out.emplace(key, json_to_string(val));
+  }
+  return out;
+}
+
+static RcCountersSnapshot parse_rc_counters(const json& counters) {
+  RcCountersSnapshot out;
+  if (!counters.is_object()) return out;
+  if (auto it = counters.find("incomingOctets"); it != counters.end()) out.incoming_octets = json_to_u64(*it);
+  if (auto it = counters.find("transmitOctets"); it != counters.end()) out.transmit_octets = json_to_u64(*it);
+  if (auto it = counters.find("incomingPkts"); it != counters.end()) out.incoming_pkts = json_to_u64(*it);
+  if (auto it = counters.find("transmitPkts"); it != counters.end()) out.transmit_pkts = json_to_u64(*it);
+  if (auto it = counters.find("droppedOctets"); it != counters.end()) out.dropped_octets = json_to_u64(*it);
+  return out;
+}
+
+static RcChildSaInfoSnapshot parse_child_sa(const json& child) {
+  RcChildSaInfoSnapshot out;
+  if (!child.is_object()) return out;
+  if (auto it = child.find("inboundSpi"); it != child.end()) out.inbound_spi = static_cast<uint32_t>(json_to_u64(*it));
+  if (auto it = child.find("outboundSpi"); it != child.end()) out.outbound_spi = static_cast<uint32_t>(json_to_u64(*it));
+  if (auto it = child.find("tunnelIface"); it != child.end()) out.tunnel_iface = json_to_string(*it);
+  if (auto it = child.find("peerPublicIp"); it != child.end()) out.peer_public_ip = json_to_string(*it);
+  if (auto it = child.find("localPublicIp"); it != child.end()) out.local_public_ip = json_to_string(*it);
+  if (auto it = child.find("n3iwfPort"); it != child.end()) out.n3iwf_port = static_cast<int>(json_to_i64(*it));
+  if (auto it = child.find("natPort"); it != child.end()) out.nat_port = static_cast<int>(json_to_i64(*it));
+  if (auto it = child.find("enableEncapsulate"); it != child.end()) out.enable_encapsulate = json_to_bool(*it);
+  if (auto it = child.find("selectedIpProto"); it != child.end()) out.selected_ip_proto = static_cast<uint8_t>(json_to_u64(*it));
+  if (auto it = child.find("pduSessionIds"); it != child.end()) out.pdu_session_ids = json_to_int64_vector(*it);
+  return out;
+}
+
+static RcStationSnapshot parse_station_snapshot(const json& station,
+                                                const std::string& fallback_iface,
+                                                const std::string& fallback_mac,
+                                                const std::string& fallback_ip) {
+  RcStationSnapshot out;
+  out.interface_name = fallback_iface;
+  out.mac = fallback_mac;
+  out.ip = fallback_ip;
+  if (!station.is_object()) return out;
+  out.interface_name = station.value("interface", out.interface_name);
+  out.mac = station.value("mac", out.mac);
+  out.ip = station.value("ip", out.ip);
+  if (auto it = station.find("fields"); it != station.end()) out.fields = json_to_string_map(*it);
+  if (auto it = station.find("hostapd"); it != station.end()) out.hostapd = json_to_string_map(*it);
+  if (auto it = station.find("stationDump"); it != station.end()) out.station_dump = json_to_string_map(*it);
+  return out;
+}
+
+static RcUeInfoSnapshot parse_ue_snapshot(const json& ue) {
+  RcUeInfoSnapshot out;
+  if (!ue.is_object()) return out;
+  if (auto it = ue.find("ranUeNgapId"); it != ue.end()) out.ran_ue_ngap_id = json_to_i64(*it);
+  if (auto it = ue.find("amfUeNgapId"); it != ue.end()) out.amf_ue_ngap_id = json_to_i64(*it);
+  if (auto it = ue.find("ipAddrV4"); it != ue.end()) out.ip_addr_v4 = json_to_string(*it);
+  if (auto it = ue.find("ipAddrV6"); it != ue.end()) out.ip_addr_v6 = json_to_string(*it);
+  if (auto it = ue.find("portNumber"); it != ue.end()) out.port_number = static_cast<int32_t>(json_to_i64(*it));
+  if (auto it = ue.find("guti"); it != ue.end()) out.guti = json_to_string(*it);
+  if (auto it = ue.find("n3iwfId"); it != ue.end()) out.n3iwf_id = json_to_string(*it);
+  if (auto it = ue.find("amfName"); it != ue.end()) out.amf_name = json_to_string(*it);
+  if (auto it = ue.find("amfSctp"); it != ue.end()) out.amf_sctp = json_to_string(*it);
+  if (auto it = ue.find("rrcEstablishmentCause"); it != ue.end()) out.rrc_establishment_cause = static_cast<int16_t>(json_to_i64(*it));
+  if (auto it = ue.find("ikeLocalSpi"); it != ue.end()) out.ike_local_spi = json_to_u64(*it);
+  if (auto it = ue.find("ikeRemoteSpi"); it != ue.end()) out.ike_remote_spi = json_to_u64(*it);
+  if (auto it = ue.find("ikeState"); it != ue.end()) out.ike_state = static_cast<uint8_t>(json_to_u64(*it));
+  if (auto it = ue.find("ueBehindNat"); it != ue.end()) out.ue_behind_nat = json_to_bool(*it);
+  if (auto it = ue.find("n3iwfBehindNat"); it != ue.end()) out.n3iwf_behind_nat = json_to_bool(*it);
+  if (auto it = ue.find("childSa"); it != ue.end() && it->is_array()) {
+    for (const auto& sa : *it) {
+      out.child_sa.push_back(parse_child_sa(sa));
+    }
+  }
+  for (const auto& [key, val] : ue.items()) {
+    out.extra_fields[key] = json_to_string(val);
+  }
+  return out;
+}
+
+static RcAssociationSnapshot parse_rc_association(const json& assoc) {
+  RcAssociationSnapshot out;
+  if (!assoc.is_object()) return out;
+  out.interface_name = assoc.value("interface", std::string{});
+  out.mac = assoc.value("mac", std::string{});
+  out.ue_ip = assoc.value("ueIp", std::string{});
+  if (auto it = assoc.find("station"); it != assoc.end()) {
+    out.station = parse_station_snapshot(*it, out.interface_name, out.mac, out.ue_ip);
+  } else {
+    out.station = parse_station_snapshot(json{}, out.interface_name, out.mac, out.ue_ip);
+  }
+  if (auto it = assoc.find("counters"); it != assoc.end()) out.counters = parse_rc_counters(*it);
+  if (auto it = assoc.find("ue"); it != assoc.end()) out.ue = parse_ue_snapshot(*it);
+  if (auto it = assoc.find("mismatches"); it != assoc.end() && it->is_array()) {
+    for (const auto& mismatch : *it) {
+      if (mismatch.is_string()) {
+        out.mismatches.push_back(mismatch.get<std::string>());
+      }
+    }
+  }
+  return out;
+}
+
+static std::string normalize_mac(const std::string& mac) {
+  std::string out;
+  out.reserve(mac.size());
+  for (char c : mac) {
+    if (c == ':' || c == '-' || c == '.') continue;
+    out.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+  }
+  return out;
 }
 
 // -------------------- JSON I/O --------------------
@@ -440,4 +644,71 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   return result;
 }
 
+bool loadRcSnapshot(RcSnapshot &out) {
+  const std::string full = joinPathFile(g_basePath, g_rcFileName);
+  if (!fs::exists(full)) {
+    std::cerr << "[n3iwf] RC JSON file non trovato: " << full << "\n";
+    return false;
+  }
+  auto buf = readWholeFile(full);
+  if (!buf) {
+    std::cerr << "[n3iwf] Impossibile leggere RC JSON: " << full << "\n";
+    return false;
+  }
+  if (!json::accept(*buf)) {
+    std::cerr << "[n3iwf] RC JSON non valido:\n" << *buf << "\n";
+    return false;
+  }
+  json j;
+  try {
+    j = json::parse(*buf);
+  } catch (const std::exception &e) {
+    std::cerr << "[n3iwf] Eccezione nel parse RC JSON: " << e.what() << "\n";
+    return false;
+  }
 
+  out.timestamp = j.value("timestamp", std::string{});
+  out.associations.clear();
+  if (auto it = j.find("associations"); it != j.end() && it->is_array()) {
+    out.associations.reserve(it->size());
+    for (const auto &entry : *it) {
+      out.associations.emplace_back(parse_rc_association(entry));
+    }
+  }
+  return true;
+}
+
+std::vector<RcAssociationSnapshot> getRcAssociations() {
+  RcSnapshot snap;
+  if (!loadRcSnapshot(snap)) {
+    return {};
+  }
+  return snap.associations;
+}
+
+std::optional<RcAssociationSnapshot> findRcAssociationByRanUeId(int64_t ran_ue_ngap_id) {
+  if (ran_ue_ngap_id < 0) {
+    return std::nullopt;
+  }
+  auto associations = getRcAssociations();
+  for (const auto &assoc : associations) {
+    if (assoc.ue.ran_ue_ngap_id == ran_ue_ngap_id) {
+      return assoc;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<RcAssociationSnapshot> findRcAssociationByMac(const std::string &mac) {
+  if (mac.empty()) {
+    return std::nullopt;
+  }
+  const std::string target = normalize_mac(mac);
+  auto associations = getRcAssociations();
+  for (const auto &assoc : associations) {
+    if (normalize_mac(assoc.mac) == target) {
+      return assoc;
+    }
+  }
+  return std::nullopt;
+}
