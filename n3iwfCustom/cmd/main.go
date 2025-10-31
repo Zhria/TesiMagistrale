@@ -133,6 +133,7 @@ func action(cliCtx *cli.Context) error {
 
 	//Avvio un altro thread per il kpm metrics logger.
 	go startKPMLogger()
+	rc.SetHandoverAlertHandler(rc.NewHandoverAlertHandler(n3iwfApp.Context(), n3iwfApp))
 	go startRCLogger(n3iwfApp)
 
 	n3iwfApp.Start()

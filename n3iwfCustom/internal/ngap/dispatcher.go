@@ -62,6 +62,8 @@ func (s *Server) NGAPDispatch(conn *sctp.SCTPConn, msg []byte) {
 			s.HandleUERadioCapabilityCheckRequest(amf, pdu)
 		case ngapType.ProcedureCodeAMFConfigurationUpdate:
 			s.HandleAMFConfigurationUpdate(amf, pdu)
+		case ngapType.ProcedureCodeHandoverResourceAllocation:
+			s.HandleHandoverRequest(amf, pdu)
 		case ngapType.ProcedureCodeDownlinkRANConfigurationTransfer:
 			s.HandleDownlinkRANConfigurationTransfer(pdu)
 		case ngapType.ProcedureCodeDownlinkRANStatusTransfer:

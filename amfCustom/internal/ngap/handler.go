@@ -1604,7 +1604,8 @@ func handleHandoverRequiredMain(ran *context.AmfRan,
 		return
 	}
 
-	if targetID.Present != ngapType.TargetIDPresentTargetRANNodeID {
+	//Include N3IWF support so Present can be either TargetIDPresentChoiceExtensions or TargetIDPresentTargetRANNodeID
+	if targetID.Present != ngapType.TargetIDPresentTargetRANNodeID && targetID.Present != ngapType.TargetIDPresentChoiceExtensions {
 		hoFailCause = business_metrics.HANDOVER_TARGET_ID_NOT_SUPPORTED_ERR
 		ran.Log.Errorf("targetID type[%d] is not supported", targetID.Present)
 		return
@@ -1626,7 +1627,20 @@ func handleHandoverRequiredMain(ran *context.AmfRan,
 		return
 	}
 	aMFSelf := context.GetSelf()
-	targetRanNodeId := ngapConvert.RanIdToModels(targetID.TargetRANNodeID.GlobalRANNodeID)
+	var targetRanNodeId models.GlobalRanNodeId
+	switch targetID.Present {
+	case ngapType.TargetIDPresentTargetRANNodeID:
+		if targetID.TargetRANNodeID == nil {
+			hoFailCause = business_metrics.HANDOVER_TARGET_ID_NOT_SUPPORTED_ERR
+			ran.Log.Error("TargetRANNodeID is nil in TargetID")
+			return
+		}
+		targetRanNodeId = ngapConvert.RanIdToModels(targetID.TargetRANNodeID.GlobalRANNodeID)
+	case ngapType.TargetIDPresentChoiceExtensions:
+		hoFailCause = business_metrics.HANDOVER_TARGET_ID_NOT_SUPPORTED_ERR
+		ran.Log.Error("TargetID choice extensions not supported")
+		return
+	}
 	targetRan, ok := aMFSelf.AmfRanFindByRanID(targetRanNodeId)
 	if !ok {
 		// [todo] add metric for different amf
@@ -1640,10 +1654,14 @@ func handleHandoverRequiredMain(ran *context.AmfRan,
 	} else {
 		// Handover in same AMF
 		sourceUe.HandOverType.Value = handoverType.Value
-		tai := ngapConvert.TaiToModels(targetID.TargetRANNodeID.SelectedTAI)
+		var targetTai *models.Tai
+		if targetID.TargetRANNodeID != nil {
+			tai := ngapConvert.TaiToModels(targetID.TargetRANNodeID.SelectedTAI)
+			targetTai = &tai
+		}
 		targetId := models.NgRanTargetId{
 			RanNodeId: &targetRanNodeId,
-			Tai:       &tai,
+			Tai:       targetTai,
 		}
 
 		var pduSessionReqList ngapType.PDUSessionResourceSetupListHOReq

@@ -2826,6 +2826,8 @@ func (s *Server) HandleEvent(ngapEvent n3iwf_context.NgapEvt) {
 		s.HandleSendUplinkNASTransport(ngapEvent)
 	case n3iwf_context.SendInitialContextSetupResponse:
 		s.HandleSendInitialContextSetupResponse(ngapEvent)
+	case n3iwf_context.SendHandoverRequired:
+		s.HandleSendHandoverRequired(ngapEvent)
 	default:
 		ngapLog.Errorf("Undefine NGAP event type")
 		return
@@ -3260,6 +3262,98 @@ func (s *Server) HandleSendInitialContextSetupResponse(
 	}
 
 	message.SendInitialContextSetupResponse(ranUe, evt.ResponseList, evt.FailedList, evt.CriticalityDiagnostics)
+}
+
+func (s *Server) HandleSendHandoverRequired(
+	ngapEvent n3iwf_context.NgapEvt,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Trace("Handle SendHandoverRequired Event")
+
+	evt := ngapEvent.(*n3iwf_context.TriggerHandoverEvt)
+	ranUeNgapId := evt.RanUeNgapId
+	n3iwfCtx := s.Context()
+
+	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapId)
+	if !ok {
+		ngapLog.Errorf("Cannot get RanUE from ranUeNgapId : %+v", ranUeNgapId)
+		return
+	}
+
+	sharedCtx := ranUe.GetSharedCtx()
+	if sharedCtx.AMF == nil {
+		ngapLog.Errorf("RanUE[%d] has no associated AMF", ranUeNgapId)
+		return
+	}
+
+	pkt, err := message.BuildHandoverRequired(ranUe, evt)
+	if err != nil {
+		ngapLog.Errorf("Build Handover Required failed: %+v", err)
+		return
+	}
+
+	message.SendToAmf(sharedCtx.AMF, pkt)
+}
+
+func (s *Server) HandleHandoverRequest(
+	amf *n3iwf_context.N3IWFAMF,
+	pdu *ngapType.NGAPPDU,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Infoln("Handle Handover Request")
+
+	if amf == nil {
+		ngapLog.Error("Corresponding AMF context not found")
+		return
+	}
+
+	if pdu == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+
+	initiatingMessage := pdu.InitiatingMessage
+	if initiatingMessage == nil {
+		ngapLog.Error("Initiating Message is nil")
+		return
+	}
+
+	handoverRequest := initiatingMessage.Value.HandoverRequest
+	if handoverRequest == nil {
+		ngapLog.Error("HandoverRequest is nil")
+		return
+	}
+
+	var amfUeNgapID *ngapType.AMFUENGAPID
+
+	for _, ie := range handoverRequest.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+			amfUeNgapID = ie.Value.AMFUENGAPID
+		}
+	}
+
+	if amfUeNgapID == nil {
+		ngapLog.Error("AMF UE NGAP ID missing in HandoverRequest")
+		return
+	}
+
+	cause := message.BuildCause(
+		ngapType.CausePresentRadioNetwork,
+		ngapType.CauseRadioNetworkPresentHoTargetNotAllowed,
+	)
+	if cause == nil {
+		ngapLog.Error("Failed to build default cause for HandoverPreparationFailure")
+		return
+	}
+
+	pkt, err := message.BuildHandoverPreparationFailure(amfUeNgapID.Value, nil, *cause)
+	if err != nil {
+		ngapLog.Errorf("Build HandoverPreparationFailure failed: %+v", err)
+		return
+	}
+
+	message.SendToAmf(amf, pkt)
 }
 
 func (s *Server) HandleSendSendUEContextRelease(
