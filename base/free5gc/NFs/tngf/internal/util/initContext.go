@@ -332,6 +332,13 @@ func GetInterfaceName(ipAddress string) (interfaceName string, err error) {
 		return "nil", err
 	}
 
+	res, err := net.ResolveIPAddr("ip4", ipAddress)
+	if err != nil {
+		return "", fmt.Errorf("error resolving address [%s]: %v", ipAddress, err)
+	}
+
+	ipAddress = res.String()
+
 	for _, inter := range interfaces {
 		addrs, addr_err := inter.Addrs()
 		if addr_err != nil {
@@ -343,5 +350,5 @@ func GetInterfaceName(ipAddress string) (interfaceName string, err error) {
 			}
 		}
 	}
-	return "", fmt.Errorf("Cannot find interface name")
+	return "", fmt.Errorf("cannot find interface name")
 }

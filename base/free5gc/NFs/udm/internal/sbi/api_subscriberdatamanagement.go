@@ -11,6 +11,7 @@ import (
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (s *Server) getSubscriberDataManagementRoutes() []Route {
@@ -28,7 +29,7 @@ func (s *Server) getSubscriberDataManagementRoutes() []Route {
 func (s *Server) HandleGetAmData(c *gin.Context) {
 	query := url.Values{}
 	query.Set("plmn-id", c.Query("plmn-id"))
-	query.Set("supported-features", c.Query("plmn-id"))
+	query.Set("supported-features", c.Query("supported-features"))
 
 	logger.SdmLog.Infof("Handle GetAmData")
 
@@ -36,6 +37,7 @@ func (s *Server) HandleGetAmData(c *gin.Context) {
 
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -87,6 +89,7 @@ func (s *Server) HandleGetSmfSelectData(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -118,6 +121,7 @@ func (s *Server) HandleGetSupi(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -135,7 +139,12 @@ func (s *Server) HandleGetSharedData(c *gin.Context) {
 	sharedDataIds := c.QueryArray("shared-data-ids")
 	supportedFeatures := c.QueryArray("supported-features")
 
-	s.Processor().GetSharedDataProcedure(c, sharedDataIds, supportedFeatures[0])
+	supportedFeature := ""
+	if len(supportedFeatures) > 0 {
+		supportedFeature = supportedFeatures[0]
+	}
+
+	s.Processor().GetSharedDataProcedure(c, sharedDataIds, supportedFeature)
 }
 
 // SubscribeToSharedData - subscribe to notifications for shared data
@@ -151,6 +160,7 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -164,7 +174,8 @@ func (s *Server) HandleSubscribeToSharedData(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.SdmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -186,6 +197,7 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -199,7 +211,8 @@ func (s *Server) HandleSubscribe(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.SdmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -239,6 +252,7 @@ func (s *Server) HandleModify(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -252,7 +266,8 @@ func (s *Server) HandleModify(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.SdmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -276,6 +291,7 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 			Cause:  "SYSTEM_FAILURE",
 		}
 		logger.SdmLog.Errorf("Get Request Body error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetail)
 		return
 	}
@@ -289,7 +305,8 @@ func (s *Server) HandleModifyForSharedData(c *gin.Context) {
 			Detail: problemDetail,
 		}
 		logger.SdmLog.Errorln(problemDetail)
-		c.JSON(http.StatusBadRequest, rsp)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(int(rsp.Status)))
+		c.JSON(int(rsp.Status), rsp)
 		return
 	}
 
@@ -337,6 +354,7 @@ func (s *Server) HandleGetNssai(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -359,6 +377,7 @@ func (s *Server) HandleGetSmData(c *gin.Context) {
 	supi := c.Params.ByName("supi")
 	plmnIDStruct, problemDetails := s.getPlmnIDStruct(query)
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}

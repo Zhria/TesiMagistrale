@@ -8,6 +8,7 @@ import (
 	"github.com/free5gc/ausf/internal/logger"
 	"github.com/free5gc/openapi/models"
 	Nudm_UEAU "github.com/free5gc/openapi/udm/UEAuthentication"
+	sbi_metrics "github.com/free5gc/util/metrics/sbi"
 )
 
 type nudmService struct {
@@ -31,6 +32,7 @@ func (s *nudmService) getUdmUeauClient(uri string) *Nudm_UEAU.APIClient {
 
 	configuration := Nudm_UEAU.NewConfiguration()
 	configuration.SetBasePath(uri)
+	configuration.SetMetrics(sbi_metrics.SbiMetricHook)
 	client = Nudm_UEAU.NewAPIClient(configuration)
 
 	s.ueauMu.RUnlock()
@@ -83,12 +85,12 @@ func (s *nudmService) GenerateAuthDataApi(
 	udmUrl string,
 	supiOrSuci string,
 	authInfoReq models.AuthenticationInfoRequest,
-) (*models.UdmUeauAuthenticationInfoResult, error, *models.ProblemDetails) {
+) (*models.UdmUeauAuthenticationInfoResult, *models.ProblemDetails, error) {
 	client := s.getUdmUeauClient(udmUrl)
 
 	ctx, pd, err := ausf_context.GetSelf().GetTokenCtx(models.ServiceName_NUDM_UEAU, models.NrfNfManagementNfType_UDM)
 	if err != nil {
-		return nil, err, pd
+		return nil, pd, err
 	}
 
 	udmAuthInfoReq := models.UdmUeauAuthenticationInfoRequest{
@@ -115,7 +117,7 @@ func (s *nudmService) GenerateAuthDataApi(
 		} else {
 			problemDetails.Cause = "UPSTREAM_SERVER_ERROR"
 		}
-		return nil, err, &problemDetails
+		return nil, &problemDetails, err
 	}
 	authInfoResult := rsp.UdmUeauAuthenticationInfoResult
 

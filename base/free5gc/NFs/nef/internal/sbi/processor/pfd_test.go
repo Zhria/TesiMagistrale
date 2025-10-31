@@ -2,20 +2,25 @@ package processor
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
 	nef_context "github.com/free5gc/nef/internal/context"
 	"github.com/free5gc/nef/internal/sbi/consumer"
 	"github.com/free5gc/nef/internal/sbi/notifier"
+	"github.com/free5gc/nef/pkg/app"
 	"github.com/free5gc/nef/pkg/factory"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
 )
 
 type nefTestApp struct {
+	app.App
+
 	cfg      *factory.Config
 	nefCtx   *nef_context.NefContext
 	consumer *consumer.Consumer
@@ -212,8 +217,13 @@ func TestGetPFDManagementTransactions(t *testing.T) {
 			afPfdTr.AddExtAppID("app2")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().GetPFDManagementTransactions(tc.afID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetPFDManagementTransactions(c, tc.afID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -255,8 +265,13 @@ func TestDeletePFDManagementTransactions(t *testing.T) {
 			af.PfdTrans[afPfdTr.TransID] = afPfdTr
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().DeletePFDManagementTransactions(tc.afID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().DeletePFDManagementTransactions(c, tc.afID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -360,8 +375,13 @@ func TestPostPFDManagementTransactions(t *testing.T) {
 			nefApp.Context().AddAf(af)
 			defer nefApp.Context().DeleteAf("af1")
 
-			rsp := nefApp.Processor().PostPFDManagementTransactions(tc.afID, tc.pfdManagement)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PostPFDManagementTransactions(c, tc.afID, tc.pfdManagement)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -428,8 +448,13 @@ func TestGetIndividualPFDManagementTransaction(t *testing.T) {
 			afPfdTr.AddExtAppID("app2")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().GetIndividualPFDManagementTransaction(tc.afID, tc.transID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetIndividualPFDManagementTransaction(c, tc.afID, tc.transID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -474,8 +499,13 @@ func TestDeleteIndividualPFDManagementTransaction(t *testing.T) {
 			af.PfdTrans[afPfdTr.TransID] = afPfdTr
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().DeleteIndividualPFDManagementTransaction(tc.afID, tc.transID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().DeleteIndividualPFDManagementTransaction(c, tc.afID, tc.transID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -588,8 +618,13 @@ func TestPutIndividualPFDManagementTransaction(t *testing.T) {
 			af.PfdTrans[afPfdTr.TransID] = afPfdTr
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().PutIndividualPFDManagementTransaction(tc.afID, tc.transID, tc.pfdManagement)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PutIndividualPFDManagementTransaction(c, tc.afID, tc.transID, tc.pfdManagement)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -646,8 +681,13 @@ func TestGetIndividualApplicationPFDManagement(t *testing.T) {
 			afPfdTr.AddExtAppID("app1")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().GetIndividualApplicationPFDManagement(tc.afID, tc.transID, tc.appID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetIndividualApplicationPFDManagement(c, tc.afID, tc.transID, tc.appID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -696,8 +736,13 @@ func TestDeleteIndividualApplicationPFDManagement(t *testing.T) {
 			afPfdTr.AddExtAppID("app1")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().DeleteIndividualApplicationPFDManagement(tc.afID, tc.transID, tc.appID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().DeleteIndividualApplicationPFDManagement(c, tc.afID, tc.transID, tc.appID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -787,8 +832,13 @@ func TestPutIndividualApplicationPFDManagement(t *testing.T) {
 			afPfdTr.AddExtAppID("app1")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().PutIndividualApplicationPFDManagement(tc.afID, tc.transID, tc.appID, tc.pfdData)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PutIndividualApplicationPFDManagement(c, tc.afID, tc.transID, tc.appID, tc.pfdData)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -880,9 +930,14 @@ func TestPatchIndividualApplicationPFDManagement(t *testing.T) {
 			afPfdTr.AddExtAppID("app1")
 			af.Mu.Unlock()
 
-			rsp := nefApp.Processor().PatchIndividualApplicationPFDManagement(
-				tc.afID, tc.transID, tc.appID, tc.pfdData)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PatchIndividualApplicationPFDManagement(
+				c, tc.afID, tc.transID, tc.appID, tc.pfdData)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -1184,7 +1239,7 @@ func TestPatchModifyPfdData(t *testing.T) {
 }
 
 func initNRFNfmStub() {
-	nrfRegisterInstanceRsp := models.NfProfile{
+	nrfRegisterInstanceRsp := models.NrfNfDiscoveryNfProfile{
 		NfInstanceId: "nef-pfd-unit-testing",
 	}
 	gock.New("http://127.0.0.10:8000/nnrf-nfm/v1").
@@ -1199,7 +1254,7 @@ func initNRFNfmStub() {
 func initNRFDiscUDRStub() {
 	searchResult := &models.SearchResult{
 		ValidityPeriod: 100,
-		NfInstances: []models.NfProfile{
+		NfInstances: []models.NrfNfDiscoveryNfProfile{
 			{
 				NfInstanceId: "nef-unit-testing",
 				NfType:       "UDR",
@@ -1209,11 +1264,11 @@ func initNRFDiscUDRStub() {
 						"SUBSCRIPTION",
 					},
 				},
-				NfServices: &[]models.NfService{
+				NfServices: []models.NrfNfDiscoveryNfService{
 					{
 						ServiceInstanceId: "datarepository",
 						ServiceName:       "nudr-dr",
-						Versions: &[]models.NfServiceVersion{
+						Versions: []models.NfServiceVersion{
 							{
 								ApiVersionInUri: "v1",
 								ApiFullVersion:  "1.0.0",
@@ -1221,7 +1276,7 @@ func initNRFDiscUDRStub() {
 						},
 						Scheme:          "http",
 						NfServiceStatus: "REGISTERED",
-						IpEndPoints: &[]models.IpEndPoint{
+						IpEndPoints: []models.IpEndPoint{
 							{
 								Ipv4Address: "127.0.0.4",
 								Transport:   "TCP",
@@ -1247,7 +1302,7 @@ func initNRFDiscUDRStub() {
 func initNRFDiscPCFStub() {
 	searchResult := &models.SearchResult{
 		ValidityPeriod: 100,
-		NfInstances: []models.NfProfile{
+		NfInstances: []models.NrfNfDiscoveryNfProfile{
 			{
 				NfInstanceId: "nef-unit-testing",
 				NfType:       "PCF",
@@ -1261,11 +1316,11 @@ func initNRFDiscPCFStub() {
 						"internet",
 					},
 				},
-				NfServices: &[]models.NfService{
+				NfServices: []models.NrfNfDiscoveryNfService{
 					{
 						ServiceInstanceId: "1",
 						ServiceName:       "npcf-policyauthorization",
-						Versions: &[]models.NfServiceVersion{
+						Versions: []models.NfServiceVersion{
 							{
 								ApiVersionInUri: "v1",
 								ApiFullVersion:  "1.0.0",
@@ -1273,7 +1328,7 @@ func initNRFDiscPCFStub() {
 						},
 						Scheme:          "http",
 						NfServiceStatus: "REGISTERED",
-						IpEndPoints: &[]models.IpEndPoint{
+						IpEndPoints: []models.IpEndPoint{
 							{
 								Ipv4Address: "127.0.0.7",
 								Transport:   "TCP",

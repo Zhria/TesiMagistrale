@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) getOamEndpoints() []Endpoint {
-	return []Endpoint{
+func (s *Server) getOamRoutes() []Route {
+	return []Route{
 		{
 			Method:  http.MethodGet,
 			Pattern: "/",
@@ -17,6 +17,5 @@ func (s *Server) getOamEndpoints() []Endpoint {
 }
 
 func (s *Server) apiGetOamIndex(gc *gin.Context) {
-	hdlRsp := s.Processor().GetOamIndex()
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetOamIndex(gc)
 }

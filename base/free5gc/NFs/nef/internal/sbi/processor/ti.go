@@ -7,43 +7,47 @@ import (
 	"github.com/free5gc/nef/pkg/factory"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/models_nef"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
 func (p *Processor) GetTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID string,
-) *HandlerResponse {
+) {
 	logger.TrafInfluLog.Infof("GetTrafficInfluenceSubscription - afID[%s]", afID)
 
 	af := p.Context().GetAf(afID)
 	if af == nil {
 		pd := openapi.ProblemDetailsDataNotFound("AF is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.RLock()
 	defer af.Mu.RUnlock()
 
-	var tiSubs []models_nef.TrafficInfluSub
+	var tiSubs []models.NefTrafficInfluSub
 	for _, sub := range af.Subs {
 		if sub.TiSub == nil {
 			continue
 		}
 		tiSubs = append(tiSubs, *sub.TiSub)
 	}
-	return &HandlerResponse{http.StatusOK, nil, &tiSubs}
+	c.JSON(http.StatusOK, &tiSubs)
 }
 
 func (p *Processor) PostTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID string,
-	tiSub *models_nef.TrafficInfluSub,
-) *HandlerResponse {
+	tiSub *models.NefTrafficInfluSub,
+) {
 	logger.TrafInfluLog.Infof("PostTrafficInfluenceSubscription - afID[%s]", afID)
 
 	rsp := validateTrafficInfluenceData(tiSub)
 	if rsp != nil {
-		return rsp
+		c.JSON(rsp.Status, rsp.Body)
+		return
 	}
 
 	nefCtx := p.Context()
@@ -52,7 +56,8 @@ func (p *Processor) PostTrafficInfluenceSubscription(
 		af = nefCtx.NewAf(afID)
 		if af == nil {
 			pd := openapi.ProblemDetailsSystemFailure("No resource can be allocated")
-			return &HandlerResponse{int(pd.Status), nil, pd}
+			c.JSON(int(pd.Status), pd)
+			return
 		}
 	}
 
@@ -63,7 +68,8 @@ func (p *Processor) PostTrafficInfluenceSubscription(
 	afSub := af.NewSub(correID, tiSub)
 	if afSub == nil {
 		pd := openapi.ProblemDetailsSystemFailure("No resource can be allocated")
-		return &HandlerResponse{int(pd.Status), nil, pd}
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	if len(tiSub.Gpsi) > 0 || len(tiSub.Ipv4Addr) > 0 || len(tiSub.Ipv6Addr) > 0 {
@@ -71,7 +77,8 @@ func (p *Processor) PostTrafficInfluenceSubscription(
 		asc := p.convertTrafficInfluSubToAppSessionContext(tiSub, afSub.NotifCorreID)
 		rspStatus, rspBody, appSessID := p.Consumer().PostAppSessions(asc)
 		if rspStatus != http.StatusCreated {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 		afSub.AppSessID = appSessID
 	} else if len(tiSub.ExternalGroupId) > 0 || tiSub.AnyUeInd {
@@ -82,12 +89,14 @@ func (p *Processor) PostTrafficInfluenceSubscription(
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusCreated &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	} else {
 		// Invalid case. Return Error
 		pd := openapi.ProblemDetailsMalformedReqSyntax("Not individual UE case, nor group case")
-		return &HandlerResponse{int(pd.Status), nil, pd}
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	af.Subs[afSub.SubID] = afSub
@@ -100,18 +109,27 @@ func (p *Processor) PostTrafficInfluenceSubscription(
 	headers := map[string][]string{
 		"Location": {tiSub.Self},
 	}
-	return &HandlerResponse{http.StatusCreated, headers, tiSub}
+
+	for hdrName, hdrValues := range headers {
+		for _, hdrValue := range hdrValues {
+			c.Header(hdrName, hdrValue)
+		}
+	}
+	af.Log.Infoln("Convert TI 3")
+	c.JSON(http.StatusCreated, tiSub)
 }
 
 func (p *Processor) GetIndividualTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID, subID string,
-) *HandlerResponse {
+) {
 	logger.TrafInfluLog.Infof("GetIndividualTrafficInfluenceSubscription - afID[%s], subID[%s]", afID, subID)
 
 	af := p.Context().GetAf(afID)
 	if af == nil {
 		pd := openapi.ProblemDetailsDataNotFound("AF is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.RLock()
@@ -120,27 +138,31 @@ func (p *Processor) GetIndividualTrafficInfluenceSubscription(
 	afSub, ok := af.Subs[subID]
 	if !ok {
 		pd := openapi.ProblemDetailsDataNotFound("Subscription is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
-	return &HandlerResponse{http.StatusOK, nil, afSub.TiSub}
+	c.JSON(http.StatusOK, afSub.TiSub)
 }
 
 func (p *Processor) PutIndividualTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID, subID string,
-	tiSub *models_nef.TrafficInfluSub,
-) *HandlerResponse {
+	tiSub *models.NefTrafficInfluSub,
+) {
 	logger.TrafInfluLog.Infof("PutIndividualTrafficInfluenceSubscription - afID[%s], subID[%s]", afID, subID)
 
 	rsp := validateTrafficInfluenceData(tiSub)
 	if rsp != nil {
-		return rsp
+		c.JSON(rsp.Status, rsp.Body)
+		return
 	}
 
 	af := p.Context().GetAf(afID)
 	if af == nil {
 		pd := openapi.ProblemDetailsDataNotFound("AF is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.Lock()
@@ -149,7 +171,8 @@ func (p *Processor) PutIndividualTrafficInfluenceSubscription(
 	afSub, ok := af.Subs[subID]
 	if !ok {
 		pd := openapi.ProblemDetailsDataNotFound("Subscription is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	afSub.TiSub = tiSub
@@ -157,7 +180,8 @@ func (p *Processor) PutIndividualTrafficInfluenceSubscription(
 		asc := p.convertTrafficInfluSubToAppSessionContext(tiSub, afSub.NotifCorreID)
 		rspStatus, rspBody, appSessID := p.Consumer().PostAppSessions(asc)
 		if rspStatus != http.StatusCreated {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 		afSub.AppSessID = appSessID
 	} else if afSub.InfluID != "" {
@@ -166,26 +190,30 @@ func (p *Processor) PutIndividualTrafficInfluenceSubscription(
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusCreated &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	} else {
 		pd := openapi.ProblemDetailsDataNotFound("No AppSessID or InfluID")
-		return &HandlerResponse{int(pd.Status), nil, pd}
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
-	return &HandlerResponse{http.StatusOK, nil, afSub.TiSub}
+	c.JSON(http.StatusOK, afSub.TiSub)
 }
 
 func (p *Processor) PatchIndividualTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID, subID string,
-	tiSubPatch *models_nef.TrafficInfluSubPatch,
-) *HandlerResponse {
+	tiSubPatch *models.NefTrafficInfluSubPatch,
+) {
 	logger.TrafInfluLog.Infof("PatchIndividualTrafficInfluenceSubscription - afID[%s], subID[%s]", afID, subID)
 
 	af := p.Context().GetAf(afID)
 	if af == nil {
 		pd := openapi.ProblemDetailsDataNotFound("AF is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.Lock()
@@ -194,7 +222,8 @@ func (p *Processor) PatchIndividualTrafficInfluenceSubscription(
 	afSub, ok := af.Subs[subID]
 	if !ok {
 		pd := openapi.ProblemDetailsDataNotFound("Subscription is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	if afSub.AppSessID != "" {
@@ -202,33 +231,38 @@ func (p *Processor) PatchIndividualTrafficInfluenceSubscription(
 		rspStatus, rspBody := p.Consumer().PatchAppSession(afSub.AppSessID, ascUpdateData)
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	} else if afSub.InfluID != "" {
 		tiDataPatch := p.convertTrafficInfluSubPatchToTrafficInfluDataPatch(tiSubPatch)
 		rspStatus, rspBody := p.Consumer().AppDataInfluenceDataPatch(afSub.InfluID, tiDataPatch)
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	} else {
 		pd := openapi.ProblemDetailsDataNotFound("No AppSessID or InfluID")
-		return &HandlerResponse{int(pd.Status), nil, pd}
+		c.JSON(int(pd.Status), pd)
+		return
 	}
 
 	afSub.PatchTiSubData(tiSubPatch)
-	return &HandlerResponse{http.StatusOK, nil, afSub.TiSub}
+	c.JSON(http.StatusOK, afSub.TiSub)
 }
 
 func (p *Processor) DeleteIndividualTrafficInfluenceSubscription(
+	c *gin.Context,
 	afID, subID string,
-) *HandlerResponse {
+) {
 	logger.TrafInfluLog.Infof("DeleteIndividualTrafficInfluenceSubscription - afID[%s], subID[%s]", afID, subID)
 
 	af := p.Context().GetAf(afID)
 	if af == nil {
 		pd := openapi.ProblemDetailsDataNotFound("AF is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.Lock()
@@ -237,28 +271,31 @@ func (p *Processor) DeleteIndividualTrafficInfluenceSubscription(
 	sub, ok := af.Subs[subID]
 	if !ok {
 		pd := openapi.ProblemDetailsDataNotFound("Subscription is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	if sub.AppSessID != "" {
 		rspStatus, rspBody := p.Consumer().DeleteAppSession(sub.AppSessID)
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	} else {
 		rspStatus, rspBody := p.Consumer().AppDataInfluenceDataDelete(sub.InfluID)
 		if rspStatus != http.StatusOK &&
 			rspStatus != http.StatusNoContent {
-			return &HandlerResponse{rspStatus, nil, rspBody}
+			c.JSON(rspStatus, rspBody)
+			return
 		}
 	}
 	delete(af.Subs, subID)
-	return &HandlerResponse{http.StatusNoContent, nil, nil}
+	c.JSON(http.StatusNoContent, nil)
 }
 
 func validateTrafficInfluenceData(
-	tiSub *models_nef.TrafficInfluSub,
+	tiSub *models.NefTrafficInfluSub,
 ) *HandlerResponse {
 	// TS29.522: One of "afAppId", "trafficFilters" or "ethTrafficFilters" shall be included.
 	if tiSub.AfAppId == "" &&
@@ -299,7 +336,7 @@ func (p *Processor) genNotificationUri() string {
 }
 
 func (p *Processor) convertTrafficInfluSubToAppSessionContext(
-	tiSub *models_nef.TrafficInfluSub,
+	tiSub *models.NefTrafficInfluSub,
 	notifCorreID string,
 ) *models.AppSessionContext {
 	asc := &models.AppSessionContext{
@@ -332,7 +369,7 @@ func (p *Processor) convertTrafficInfluSubToAppSessionContext(
 }
 
 func (p *Processor) convertTrafficInfluSubPatchToAppSessionContextUpdateData(
-	tiSubPatch *models_nef.TrafficInfluSubPatch,
+	tiSubPatch *models.NefTrafficInfluSubPatch,
 ) *models.AppSessionContextUpdateData {
 	ascUpdate := &models.AppSessionContextUpdateData{
 		AfRoutReq: &models.AfRoutingRequirementRm{
@@ -345,7 +382,7 @@ func (p *Processor) convertTrafficInfluSubPatchToAppSessionContextUpdateData(
 }
 
 func (p *Processor) convertTrafficInfluSubToTrafficInfluData(
-	tiSub *models_nef.TrafficInfluSub,
+	tiSub *models.NefTrafficInfluSub,
 	notifCorreID string,
 ) *models.TrafficInfluData {
 	tiData := &models.TrafficInfluData{
@@ -378,7 +415,7 @@ func (p *Processor) convertTrafficInfluSubToTrafficInfluData(
 }
 
 func (p *Processor) convertTrafficInfluSubPatchToTrafficInfluDataPatch(
-	tiSubPatch *models_nef.TrafficInfluSubPatch,
+	tiSubPatch *models.NefTrafficInfluSubPatch,
 ) *models.TrafficInfluDataPatch {
 	tiDataPatch := &models.TrafficInfluDataPatch{
 		AppReloInd:        tiSubPatch.AppReloInd,

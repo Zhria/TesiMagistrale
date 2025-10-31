@@ -362,6 +362,12 @@ func DecodePlainNasNoIntegrityCheck(payload []byte) (*nas.Message, error) {
 	}
 
 	msg := new(nas.Message)
+
+	// A plain NAS message must have a minimum length of 2 bytes.
+	if len(payload) < 2 {
+		return nil, fmt.Errorf("NAS payload is too short")
+	}
+
 	msg.SecurityHeaderType = nas.GetSecurityHeaderType(payload) & SecurityHeaderTypeMask
 	if msg.SecurityHeaderType == nas.SecurityHeaderTypeIntegrityProtectedAndCiphered ||
 		msg.SecurityHeaderType == nas.SecurityHeaderTypeIntegrityProtectedAndCipheredWithNew5gNasSecurityContext {
@@ -381,11 +387,12 @@ func DecodePlainNasNoIntegrityCheck(payload []byte) (*nas.Message, error) {
 }
 
 func GetBearerType(accessType models.AccessType) uint8 {
-	if accessType == models.AccessType__3_GPP_ACCESS {
+	switch accessType {
+	case models.AccessType__3_GPP_ACCESS:
 		return security.Bearer3GPP
-	} else if accessType == models.AccessType_NON_3_GPP_ACCESS {
+	case models.AccessType_NON_3_GPP_ACCESS:
 		return security.BearerNon3GPP
-	} else {
+	default:
 		return security.OnlyOneBearer
 	}
 }

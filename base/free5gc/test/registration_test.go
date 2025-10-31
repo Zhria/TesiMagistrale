@@ -36,7 +36,6 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/pcf/PolicyAuthorization"
 	"github.com/free5gc/util/httpwrapper"
-	"github.com/free5gc/util/milenage"
 )
 
 const ranN2Ipv4Addr string = "127.0.0.1"
@@ -83,7 +82,7 @@ func TestRegistration(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -94,10 +93,10 @@ func TestRegistration(t *testing.T) {
 	// insert UE data to MongoDB
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()
@@ -288,7 +287,7 @@ func TestDeregistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -299,10 +298,10 @@ func TestDeregistration(t *testing.T) {
 	// insert UE data to MongoDB
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -462,7 +461,7 @@ func TestServiceRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -473,10 +472,10 @@ func TestServiceRequest(t *testing.T) {
 	// insert UE data to MongoDB
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -664,7 +663,7 @@ func TestGUTIRegistration(t *testing.T) {
 	require.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -675,10 +674,10 @@ func TestGUTIRegistration(t *testing.T) {
 	// insert UE data to MongoDB
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	SUCI5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -804,7 +803,7 @@ func TestGUTIRegistration(t *testing.T) {
 
 	// ========================= Second Registration - Register with GUTI =========================
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	// innerRegistrationRequest will be encapsulated in the registrationRequest
 	ue.AmfUeNgapId = 2
 	innerRegistrationRequest := nasTestpacket.GetRegistrationRequest(nasMessage.RegistrationType5GSInitialRegistration,
@@ -960,7 +959,7 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -971,10 +970,10 @@ func TestPDUSessionReleaseRequest(t *testing.T) {
 	// insert UE data to MongoDB
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -1141,7 +1140,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -1185,10 +1184,10 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 		assert.NotNil(t, getData)
 	}
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -1334,7 +1333,7 @@ func TestPDUSessionReleaseAbnormal(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Just test registration no occur panic
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	sendMsg, err = test.GetInitialUEMessage(ue.RanUeNgapId, registrationRequest, "")
 	assert.Nil(t, err)
 	_, err = conn.Write(sendMsg)
@@ -1393,7 +1392,7 @@ func TestXnHandover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -1404,10 +1403,10 @@ func TestXnHandover(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -1560,7 +1559,7 @@ func TestPaging(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -1571,10 +1570,10 @@ func TestPaging(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -1812,7 +1811,7 @@ func TestN2Handover(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -1823,10 +1822,10 @@ func TestN2Handover(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -2119,9 +2118,9 @@ func TestDuplicateRegistration(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0, models.AccessType__3_GPP_ACCESS)
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0, models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
@@ -2131,10 +2130,10 @@ func TestDuplicateRegistration(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -2361,9 +2360,9 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0, models.AccessType__3_GPP_ACCESS)
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA0, models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
 		TestGenAuthData.MilenageTestSet19.OPC,
@@ -2373,10 +2372,10 @@ func TestAFInfluenceOnTrafficRouting(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 	ueSecurityCapability := ue.GetUESecurityCapability()
 	registrationRequest := nasTestpacket.GetRegistrationRequest(
@@ -2533,8 +2532,8 @@ func TestReSynchronization(t *testing.T) {
 	assert.Nil(t, err)
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -2545,10 +2544,10 @@ func TestReSynchronization(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()
@@ -2591,8 +2590,8 @@ func TestReSynchronization(t *testing.T) {
 	// Build AUTS
 	AK, MAC_S := make([]byte, 6), make([]byte, 8)
 	AMF, _ := hex.DecodeString("0000") // Re-Sync AMF
-	milenage.F1(OPC, K, rand[:], randomSqnMs[:], AMF, nil, MAC_S)
-	milenage.F2345(OPC, K, rand[:], nil, nil, nil, nil, AK)
+	test.MilenageF1(OPC, K, rand[:], randomSqnMs[:], AMF, nil, MAC_S)
+	test.MilenageF2345(OPC, K, rand[:], nil, nil, nil, nil, AK)
 	SQNmsxorAK := make([]byte, 6)
 	for i := 0; i < 6; i++ {
 		SQNmsxorAK[i] = randomSqnMs[i] ^ AK[i]
@@ -2625,7 +2624,7 @@ func TestReSynchronization(t *testing.T) {
 	rand = nasPdu.AuthenticationRequest.GetRANDValue()
 
 	// After re-synchronization, check if the SQN is updated
-	milenage.F2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
+	test.MilenageF2345(OPC, K, rand[:], nil, nil, nil, AK, nil)
 	autn := nasPdu.AuthenticationRequest.GetAUTN()
 	SQNxorAK := autn[:6]
 
@@ -2800,8 +2799,8 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -2812,10 +2811,10 @@ func TestRequestTwoPDUSessions(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()
@@ -3104,8 +3103,8 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA0, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetEAPAKAPrimeAuthSubscription(
@@ -3117,10 +3116,10 @@ func TestEAPAKAPrimeAuthentication(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()
@@ -3330,8 +3329,8 @@ func TestMultiAmfRegistration(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -3342,10 +3341,10 @@ func TestMultiAmfRegistration(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()
@@ -3540,8 +3539,8 @@ func TestNasReroute(t *testing.T) {
 	assert.True(t, ngapPdu.Present == ngapType.NGAPPDUPresentSuccessfulOutcome && ngapPdu.SuccessfulOutcome.ProcedureCode.Value == ngapType.ProcedureCodeNGSetup, "No NGSetupResponse received.")
 
 	// New UE
-	// ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
-	ue := test.NewRanUeContext("imsi-2089300007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
+	// ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2, models.AccessType__3_GPP_ACCESS)
+	ue := test.NewRanUeContext("imsi-208930000007487", 1, security.AlgCiphering128NEA2, security.AlgIntegrity128NIA2,
 		models.AccessType__3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = test.GetAuthSubscription(TestGenAuthData.MilenageTestSet19.K,
@@ -3552,10 +3551,10 @@ func TestNasReroute(t *testing.T) {
 	servingPlmnId := "20893"
 	test.InsertUeToMongoDB(t, ue, servingPlmnId)
 
-	// send InitialUeMessage(Registration Request)(imsi-2089300007487)
+	// send InitialUeMessage(Registration Request)(imsi-208930000007487)
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	ueSecurityCapability := ue.GetUESecurityCapability()

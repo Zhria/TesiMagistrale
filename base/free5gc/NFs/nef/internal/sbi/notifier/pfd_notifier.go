@@ -3,17 +3,19 @@ package notifier
 import (
 	"context"
 	"errors"
+	"net/http"
 	"runtime/debug"
 	"strconv"
 	"sync"
 
 	"github.com/free5gc/nef/internal/logger"
-	"github.com/free5gc/openapi/Nnef_PFDmanagement"
+	// "github.com/free5gc/openapi/Nnef_PFDmanagement"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/nef/PFDmanagement"
 )
 
 type PfdChangeNotifier struct {
-	clientPfdManagement *Nnef_PFDmanagement.APIClient
+	clientPfdManagement *PFDmanagement.APIClient
 	mu                  sync.RWMutex
 
 	numPfdSubID   uint64
@@ -42,8 +44,9 @@ func (n *PfdChangeNotifier) initPfdManagementApiClient() {
 		return
 	}
 
-	config := Nnef_PFDmanagement.NewConfiguration()
-	n.clientPfdManagement = Nnef_PFDmanagement.NewAPIClient(config)
+	config := PFDmanagement.NewConfiguration()
+	config.SetHTTPClient(http.DefaultClient)
+	n.clientPfdManagement = PFDmanagement.NewAPIClient(config)
 }
 
 func (n *PfdChangeNotifier) AddPfdSub(pfdSub *models.PfdSubscription) string {
@@ -71,7 +74,7 @@ func (n *PfdChangeNotifier) DeletePfdSub(subID string) error {
 	defer n.mu.Unlock()
 
 	if _, exist := n.subIdToURI[subID]; !exist {
-		return errors.New("Subscription not found")
+		return errors.New("subscription not found")
 	}
 	delete(n.subIdToURI, subID)
 	for _, subIDs := range n.appIdToSubIDs {
@@ -127,8 +130,12 @@ func (nc *PfdNotifyContext) FlushNotifications() {
 				}
 			}()
 
-			_, _, err := nc.notifier.clientPfdManagement.NotificationApi.NotificationPost(
-				context.TODO(), nc.notifier.getSubURI(id), pfdChangeNotifications)
+			notifyReq := &PFDmanagement.NnefPFDmanagementNotifyRequest{
+				PfdChangeNotification: pfdChangeNotifications,
+			}
+
+			_, err := nc.notifier.clientPfdManagement.PFDSubscriptionsApi.NnefPFDmanagementNotify(
+				context.TODO(), nc.notifier.getSubURI(id), notifyReq)
 			if err != nil {
 				logger.PFDManageLog.Fatal(err)
 			}

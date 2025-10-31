@@ -10,77 +10,78 @@ import (
 	"sync"
 	"time"
 
-	"github.com/antihax/optional"
+	nef_context "github.com/free5gc/nef/internal/context"
 	"github.com/free5gc/nef/internal/logger"
 	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/Nnrf_NFDiscovery"
-	"github.com/free5gc/openapi/Nnrf_NFManagement"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/nrf/NFDiscovery"
+	"github.com/free5gc/openapi/nrf/NFManagement"
 )
 
 const (
 	RetryRegisterNrfDuration = 2 * time.Second
 )
 
-var serviceNfType map[models.ServiceName]models.NfType
+var serviceNfType map[models.ServiceName]models.NrfNfManagementNfType
 
 func init() {
-	serviceNfType = make(map[models.ServiceName]models.NfType)
-	serviceNfType[models.ServiceName_NNRF_NFM] = models.NfType_NRF
-	serviceNfType[models.ServiceName_NNRF_DISC] = models.NfType_NRF
-	serviceNfType[models.ServiceName_NUDM_SDM] = models.NfType_UDM
-	serviceNfType[models.ServiceName_NUDM_UECM] = models.NfType_UDM
-	serviceNfType[models.ServiceName_NUDM_UEAU] = models.NfType_UDM
-	serviceNfType[models.ServiceName_NUDM_EE] = models.NfType_UDM
-	serviceNfType[models.ServiceName_NUDM_PP] = models.NfType_UDM
-	serviceNfType[models.ServiceName_NAMF_COMM] = models.NfType_AMF
-	serviceNfType[models.ServiceName_NAMF_EVTS] = models.NfType_AMF
-	serviceNfType[models.ServiceName_NAMF_MT] = models.NfType_AMF
-	serviceNfType[models.ServiceName_NAMF_LOC] = models.NfType_AMF
-	serviceNfType[models.ServiceName_NSMF_PDUSESSION] = models.NfType_SMF
-	serviceNfType[models.ServiceName_NSMF_EVENT_EXPOSURE] = models.NfType_SMF
-	serviceNfType[models.ServiceName_NAUSF_AUTH] = models.NfType_AUSF
-	serviceNfType[models.ServiceName_NAUSF_SORPROTECTION] = models.NfType_AUSF
-	serviceNfType[models.ServiceName_NAUSF_UPUPROTECTION] = models.NfType_AUSF
-	serviceNfType[models.ServiceName_NNEF_PFDMANAGEMENT] = models.NfType_NEF
-	serviceNfType[models.ServiceName_NPCF_AM_POLICY_CONTROL] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NPCF_SMPOLICYCONTROL] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NPCF_POLICYAUTHORIZATION] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NPCF_BDTPOLICYCONTROL] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NPCF_EVENTEXPOSURE] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NPCF_UE_POLICY_CONTROL] = models.NfType_PCF
-	serviceNfType[models.ServiceName_NSMSF_SMS] = models.NfType_SMSF
-	serviceNfType[models.ServiceName_NNSSF_NSSELECTION] = models.NfType_NSSF
-	serviceNfType[models.ServiceName_NNSSF_NSSAIAVAILABILITY] = models.NfType_NSSF
-	serviceNfType[models.ServiceName_NUDR_DR] = models.NfType_UDR
-	serviceNfType[models.ServiceName_NLMF_LOC] = models.NfType_LMF
-	serviceNfType[models.ServiceName_N5G_EIR_EIC] = models.NfType__5_G_EIR
-	serviceNfType[models.ServiceName_NBSF_MANAGEMENT] = models.NfType_BSF
-	serviceNfType[models.ServiceName_NCHF_SPENDINGLIMITCONTROL] = models.NfType_CHF
-	serviceNfType[models.ServiceName_NCHF_CONVERGEDCHARGING] = models.NfType_CHF
-	serviceNfType[models.ServiceName_NNWDAF_EVENTSSUBSCRIPTION] = models.NfType_NWDAF
-	serviceNfType[models.ServiceName_NNWDAF_ANALYTICSINFO] = models.NfType_NWDAF
+	serviceNfType = make(map[models.ServiceName]models.NrfNfManagementNfType)
+	serviceNfType[models.ServiceName_NNRF_NFM] = models.NrfNfManagementNfType_NRF
+	serviceNfType[models.ServiceName_NNRF_DISC] = models.NrfNfManagementNfType_NRF
+	serviceNfType[models.ServiceName_NUDM_SDM] = models.NrfNfManagementNfType_UDM
+	serviceNfType[models.ServiceName_NUDM_UECM] = models.NrfNfManagementNfType_UDM
+	serviceNfType[models.ServiceName_NUDM_UEAU] = models.NrfNfManagementNfType_UDM
+	serviceNfType[models.ServiceName_NUDM_EE] = models.NrfNfManagementNfType_UDM
+	serviceNfType[models.ServiceName_NUDM_PP] = models.NrfNfManagementNfType_UDM
+	serviceNfType[models.ServiceName_NAMF_COMM] = models.NrfNfManagementNfType_AMF
+	serviceNfType[models.ServiceName_NAMF_EVTS] = models.NrfNfManagementNfType_AMF
+	serviceNfType[models.ServiceName_NAMF_MT] = models.NrfNfManagementNfType_AMF
+	serviceNfType[models.ServiceName_NAMF_LOC] = models.NrfNfManagementNfType_AMF
+	serviceNfType[models.ServiceName_NSMF_PDUSESSION] = models.NrfNfManagementNfType_SMF
+	serviceNfType[models.ServiceName_NSMF_EVENT_EXPOSURE] = models.NrfNfManagementNfType_SMF
+	serviceNfType[models.ServiceName_NAUSF_AUTH] = models.NrfNfManagementNfType_AUSF
+	serviceNfType[models.ServiceName_NAUSF_SORPROTECTION] = models.NrfNfManagementNfType_AUSF
+	serviceNfType[models.ServiceName_NAUSF_UPUPROTECTION] = models.NrfNfManagementNfType_AUSF
+	serviceNfType[models.ServiceName_NNEF_PFDMANAGEMENT] = models.NrfNfManagementNfType_NEF
+	serviceNfType[models.ServiceName_NPCF_AM_POLICY_CONTROL] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NPCF_SMPOLICYCONTROL] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NPCF_POLICYAUTHORIZATION] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NPCF_BDTPOLICYCONTROL] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NPCF_EVENTEXPOSURE] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NPCF_UE_POLICY_CONTROL] = models.NrfNfManagementNfType_PCF
+	serviceNfType[models.ServiceName_NSMSF_SMS] = models.NrfNfManagementNfType_SMSF
+	serviceNfType[models.ServiceName_NNSSF_NSSELECTION] = models.NrfNfManagementNfType_NSSF
+	serviceNfType[models.ServiceName_NNSSF_NSSAIAVAILABILITY] = models.NrfNfManagementNfType_NSSF
+	serviceNfType[models.ServiceName_NUDR_DR] = models.NrfNfManagementNfType_UDR
+	serviceNfType[models.ServiceName_NLMF_LOC] = models.NrfNfManagementNfType_LMF
+	serviceNfType[models.ServiceName_N5G_EIR_EIC] = models.NrfNfManagementNfType__5_G_EIR
+	serviceNfType[models.ServiceName_NBSF_MANAGEMENT] = models.NrfNfManagementNfType_BSF
+	serviceNfType[models.ServiceName_NCHF_SPENDINGLIMITCONTROL] = models.NrfNfManagementNfType_CHF
+	serviceNfType[models.ServiceName_NCHF_CONVERGEDCHARGING] = models.NrfNfManagementNfType_CHF
+	serviceNfType[models.ServiceName_NNWDAF_EVENTSSUBSCRIPTION] = models.NrfNfManagementNfType_NWDAF
+	serviceNfType[models.ServiceName_NNWDAF_ANALYTICSINFO] = models.NrfNfManagementNfType_NWDAF
 }
 
 type nnrfService struct {
 	consumer *Consumer
 
 	nfDiscMu      sync.RWMutex
-	nfDiscClients map[string]*Nnrf_NFDiscovery.APIClient
+	nfDiscClients map[string]*NFDiscovery.APIClient
 
 	nfMngmntMu      sync.RWMutex
-	nfMngmntClients map[string]*Nnrf_NFManagement.APIClient
+	nfMngmntClients map[string]*NFManagement.APIClient
 }
 
-func (s *nnrfService) getNFDiscoveryClient(uri string) *Nnrf_NFDiscovery.APIClient {
+func (s *nnrfService) getNFDiscoveryClient(uri string) *NFDiscovery.APIClient {
 	s.nfDiscMu.RLock()
 	if client, ok := s.nfDiscClients[uri]; ok {
 		defer s.nfDiscMu.RUnlock()
 		return client
 	} else {
-		configuration := Nnrf_NFDiscovery.NewConfiguration()
+		configuration := NFDiscovery.NewConfiguration()
 		configuration.SetBasePath(uri)
-		cli := Nnrf_NFDiscovery.NewAPIClient(configuration)
+		configuration.SetHTTPClient(http.DefaultClient)
+		cli := NFDiscovery.NewAPIClient(configuration)
 
 		s.nfDiscMu.RUnlock()
 		s.nfDiscMu.Lock()
@@ -90,15 +91,15 @@ func (s *nnrfService) getNFDiscoveryClient(uri string) *Nnrf_NFDiscovery.APIClie
 	}
 }
 
-func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APIClient {
+func (s *nnrfService) getNFManagementClient(uri string) *NFManagement.APIClient {
 	s.nfMngmntMu.RLock()
 	if client, ok := s.nfMngmntClients[uri]; ok {
 		defer s.nfMngmntMu.RUnlock()
 		return client
 	} else {
-		configuration := Nnrf_NFManagement.NewConfiguration()
+		configuration := NFManagement.NewConfiguration()
 		configuration.SetBasePath(uri)
-		cli := Nnrf_NFManagement.NewAPIClient(configuration)
+		cli := NFManagement.NewAPIClient(configuration)
 
 		s.nfMngmntMu.RUnlock()
 		s.nfMngmntMu.Lock()
@@ -108,42 +109,40 @@ func (s *nnrfService) getNFManagementClient(uri string) *Nnrf_NFManagement.APICl
 	}
 }
 
-func (s *nnrfService) RegisterNFInstance() error {
-	var rsp *http.Response
-	var nf models.NfProfile
-	var err error
-
-	client := s.getNFManagementClient(s.consumer.Config().NrfUri())
+func (s *nnrfService) RegisterNFInstance(ctx context.Context, nefCtx *nef_context.NefContext) (
+	resourceNrfUri string, retrieveNfInstanceId string, err error,
+) {
+	nfInstID := s.consumer.Context().NfInstID()
 	nfProfile, err := s.buildNfProfile()
 	if err != nil {
-		return fmt.Errorf("RegisterNFInstance err: %+v", err)
+		return "", "", fmt.Errorf("failed to build NRF profile: %+v", err)
 	}
+	client := s.getNFManagementClient(s.consumer.Config().NrfUri())
 
-	for {
-		nf, rsp, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(
-			context.TODO(), s.consumer.Context().NfInstID(), *nfProfile)
-		if rsp != nil && rsp.Body != nil {
-			if bodyCloseErr := rsp.Body.Close(); bodyCloseErr != nil {
-				logger.ConsumerLog.Errorf("response body cannot close: %+v", bodyCloseErr)
+	var nf models.NrfNfManagementNfProfile
+	var res *NFManagement.RegisterNFInstanceResponse
+	finish := false
+	for !finish {
+		select {
+		case <-ctx.Done():
+			return "", "", fmt.Errorf("registration cancelled due to context cancellation")
+		default:
+			req := &NFManagement.RegisterNFInstanceRequest{
+				NfInstanceID:             &nfInstID,
+				NrfNfManagementNfProfile: nfProfile,
 			}
-		}
 
-		if err != nil || rsp == nil {
-			logger.ConsumerLog.Infof("NEF register to NRF Error[%v], sleep 2s and retry", err)
-			time.Sleep(RetryRegisterNrfDuration)
-			continue
-		}
+			res, err = client.NFInstanceIDDocumentApi.RegisterNFInstance(ctx, req)
+			if err != nil || res == nil {
+				logger.ConsumerLog.Infof("NEF register to NRF Error[%v]", err.Error())
+				time.Sleep(RetryRegisterNrfDuration)
+				continue
+			}
 
-		status := rsp.StatusCode
-		if status == http.StatusOK {
-			// NFUpdate
-			logger.ConsumerLog.Infof("NFRegister Update")
-			break
-		} else if status == http.StatusCreated {
-			// NFRegister
-			resourceUri := rsp.Header.Get("Location")
-			// resouceNrfUri := resourceUri[:strings.Index(resourceUri, "/nnrf-nfm/")]
-			s.consumer.Context().SetNfInstID(resourceUri[strings.LastIndex(resourceUri, "/")+1:])
+			resourceUri := res.Location
+			resourceNrfUri, _, _ = strings.Cut(resourceUri, "/nnrf-nfm/")
+			retrieveNfInstanceId = resourceUri[strings.LastIndex(resourceUri, "/")+1:]
+			nf = res.NrfNfManagementNfProfile
 
 			oauth2 := false
 			if nf.CustomInfo != nil {
@@ -157,22 +156,20 @@ func (s *nnrfService) RegisterNFInstance() error {
 			if oauth2 && s.consumer.Context().Config().NrfCertPem() == "" {
 				logger.CfgLog.Error("OAuth2 enable but no nrfCertPem provided in config.")
 			}
-
-			logger.ConsumerLog.Infof("NFRegister Created")
-			break
-		} else {
-			logger.ConsumerLog.Infof("NRF return wrong status: %d", status)
+			finish = true
 		}
 	}
-	return nil
+	return resourceNrfUri, retrieveNfInstanceId, err
 }
 
-func (s *nnrfService) buildNfProfile() (*models.NfProfile, error) {
-	profile := &models.NfProfile{
-		NfInstanceId: s.consumer.Context().NfInstID(),
-		NfType:       models.NfType_NEF,
-		NfStatus:     models.NfStatus_REGISTERED,
-	}
+func (s *nnrfService) buildNfProfile() (
+	profile *models.NrfNfManagementNfProfile, err error,
+) {
+	profile = &models.NrfNfManagementNfProfile{}
+
+	profile.NfInstanceId = s.consumer.Context().NfInstID()
+	profile.NfType = models.NrfNfManagementNfType_NEF
+	profile.NfStatus = models.NrfNfManagementNfStatus_REGISTERED
 
 	cfg := s.consumer.Config()
 	profile.Ipv4Addresses = append(profile.Ipv4Addresses, cfg.SbiRegisterIP())
@@ -180,84 +177,89 @@ func (s *nnrfService) buildNfProfile() (*models.NfProfile, error) {
 	if len(nfServices) == 0 {
 		return nil, fmt.Errorf("buildNfProfile err: NFServices is Empty")
 	}
-	profile.NfServices = &nfServices
+	profile.NfServices = nfServices
 	return profile, nil
 }
 
-func (s *nnrfService) DeregisterNFInstance() error {
+func (s *nnrfService) DeregisterNFInstance() (problemDetails *models.ProblemDetails, err error) {
 	logger.ConsumerLog.Infof("DeregisterNFInstance")
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NfType_NRF)
+	ctx, pd, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NrfNfManagementNfType_NEF)
 	if err != nil {
-		return nil
+		return pd, err
 	}
 
 	client := s.getNFManagementClient(s.consumer.Config().NrfUri())
 
-	rsp, err := client.NFInstanceIDDocumentApi.DeregisterNFInstance(
-		ctx, s.consumer.Context().NfInstID())
-	if rsp != nil && rsp.Body != nil {
-		if bodyCloseErr := rsp.Body.Close(); bodyCloseErr != nil {
-			logger.ConsumerLog.Errorf("response body cannot close: %+v", bodyCloseErr)
-		}
+	nfInstanceId := s.consumer.Context().NfInstID()
+	req := &NFManagement.DeregisterNFInstanceRequest{
+		NfInstanceID: &nfInstanceId,
 	}
+
+	_, err = client.NFInstanceIDDocumentApi.DeregisterNFInstance(ctx, req)
 	if err != nil {
-		if rsp == nil {
-			return fmt.Errorf("DeregisterNFInstance Error: server no response")
-		} else if rsp.Status != err.Error() {
-			return fmt.Errorf("DeregisterNFInstance Error[%+v]", err)
+		switch apiErr := err.(type) {
+		// API error
+		case openapi.GenericOpenAPIError:
+			switch errModel := apiErr.Model().(type) {
+			case NFManagement.DeregisterNFInstanceError:
+				problemDetails = &errModel.ProblemDetails
+			case error:
+				problemDetails = openapi.ProblemDetailsSystemFailure(errModel.Error())
+			default:
+				err = openapi.ReportError("openapi error")
+			}
+		case error:
+			problemDetails = openapi.ProblemDetailsSystemFailure(apiErr.Error())
+		default:
+			err = openapi.ReportError("server no response")
 		}
-		pd := err.(openapi.GenericOpenAPIError).Model().(models.ProblemDetails)
-		return fmt.Errorf("DeregisterNFInstance Failed: Problem[%+v]", pd)
 	}
-	return nil
+	return problemDetails, err
 }
 
-func (s *nnrfService) SearchNFInstances(
-	nrfUri string,
-	srvName models.ServiceName,
-	param *Nnrf_NFDiscovery.SearchNFInstancesParamOpts,
-) (*models.NfProfile, string, error) {
-	if param == nil {
-		param = &Nnrf_NFDiscovery.SearchNFInstancesParamOpts{}
-	}
-	param.ServiceNames = optional.NewInterface([]models.ServiceName{srvName})
-
+func (s *nnrfService) SearchNFInstances(nrfUri string, srvName models.ServiceName, targetNfType,
+	requestNfType models.NrfNfManagementNfType, param *NFDiscovery.SearchNFInstancesRequest,
+) (*models.NrfNfDiscoveryNfProfile, string, error) {
 	client := s.getNFDiscoveryClient(nrfUri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_NFM, models.NfType_NRF)
+	if client == nil {
+		return nil, "", openapi.ReportError("nrf not found")
+	}
+
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NNRF_DISC, models.NrfNfManagementNfType_NRF)
 	if err != nil {
 		return nil, "", err
 	}
 
-	res, rsp, err := client.NFInstancesStoreApi.SearchNFInstances(ctx,
-		serviceNfType[srvName], models.NfType_NEF, param)
-	if rsp != nil && rsp.Body != nil {
-		if bodyCloseErr := rsp.Body.Close(); bodyCloseErr != nil {
-			logger.ConsumerLog.Errorf("SearchNFInstances err: response body cannot close: %+v", bodyCloseErr)
-		}
-	}
-	if rsp != nil && rsp.StatusCode == http.StatusTemporaryRedirect {
-		err = fmt.Errorf("SearchNFInstances err: Temporary Redirect")
-	}
+	param.TargetNfType = &targetNfType
+	param.RequesterNfType = &requestNfType
+	res, err := client.NFInstancesStoreApi.SearchNFInstances(ctx, param)
+	var result *models.SearchResult
 	if err != nil {
+		logger.ConsumerLog.Errorf("SearchNFInstances failed: %+v", err)
 		return nil, "", err
 	}
+	if res != nil {
+		result = &res.SearchResult
+	}
 
-	nfProf, uri, err := getProfileAndUri(res.NfInstances, srvName)
+	nfProf, uri, err := getProfileAndUri(result, srvName)
 	if err != nil {
-		logger.ConsumerLog.Errorf(err.Error())
+		logger.ConsumerLog.Errorf("%s", err.Error())
 		return nil, "", err
 	}
 	return nfProf, uri, nil
 }
 
-func getProfileAndUri(nfInstances []models.NfProfile, srvName models.ServiceName) (*models.NfProfile, string, error) {
+func getProfileAndUri(resp *models.SearchResult, srvName models.ServiceName) (
+	*models.NrfNfDiscoveryNfProfile, string, error,
+) {
 	// select the first ServiceName
 	// TODO: select base on other info
-	var profile *models.NfProfile
+	var profile *models.NrfNfDiscoveryNfProfile
 	var uri string
-	for _, nfProfile := range nfInstances {
+	for _, nfProfile := range resp.NfInstances {
 		profile = &nfProfile
 		uri = searchNFServiceUri(nfProfile, srvName, models.NfServiceStatus_REGISTERED)
 		if uri != "" {
@@ -271,7 +273,7 @@ func getProfileAndUri(nfInstances []models.NfProfile, srvName models.ServiceName
 }
 
 // searchNFServiceUri returns NF Uri derived from NfProfile with corresponding service
-func searchNFServiceUri(nfProfile models.NfProfile, serviceName models.ServiceName,
+func searchNFServiceUri(nfProfile models.NrfNfDiscoveryNfProfile, serviceName models.ServiceName,
 	nfServiceStatus models.NfServiceStatus,
 ) string {
 	if nfProfile.NfServices == nil {
@@ -279,7 +281,7 @@ func searchNFServiceUri(nfProfile models.NfProfile, serviceName models.ServiceNa
 	}
 
 	nfUri := ""
-	for _, service := range *nfProfile.NfServices {
+	for _, service := range nfProfile.NfServices {
 		if service.ServiceName == serviceName && service.NfServiceStatus == nfServiceStatus {
 			if service.Fqdn != "" {
 				nfUri = string(service.Scheme) + "://" + service.Fqdn
@@ -291,10 +293,8 @@ func searchNFServiceUri(nfProfile models.NfProfile, serviceName models.ServiceNa
 					return nfUri
 				}
 				nfUri = u.Scheme + "://" + u.Host
-			} else if len(*service.IpEndPoints) != 0 {
-				// Select the first IpEndPoint
-				// TODO: select others when failure
-				point := (*service.IpEndPoints)[0]
+			} else if service.IpEndPoints != nil {
+				point := (service.IpEndPoints)[0]
 				if point.Ipv4Address != "" {
 					nfUri = getUriFromIpEndPoint(service.Scheme, point.Ipv4Address, point.Port)
 				} else if len(nfProfile.Ipv4Addresses) != 0 {

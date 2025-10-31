@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/free5gc/nef/internal/logger"
-	"github.com/free5gc/openapi/models_nef"
+	"github.com/free5gc/openapi/models"
 	"github.com/sirupsen/logrus"
 )
 
@@ -20,7 +20,7 @@ type AfData struct {
 	Log        *logrus.Entry
 }
 
-func (a *AfData) NewSub(numCorreID uint64, tiSub *models_nef.TrafficInfluSub) *AfSubscription {
+func (a *AfData) NewSub(numCorreID uint64, tiSub *models.NefTrafficInfluSub) *AfSubscription {
 	a.NumSubscID++
 	sub := AfSubscription{
 		NotifCorreID: strconv.FormatUint(numCorreID, 10),

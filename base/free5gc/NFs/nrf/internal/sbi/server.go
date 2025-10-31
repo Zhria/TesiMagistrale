@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/free5gc/util/metrics"
 )
 
 type ServerNrf interface {
@@ -40,6 +41,7 @@ func NewServer(nrf ServerNrf, tlsKeyLogPath string) (*Server, error) {
 		ServerNrf: nrf,
 		router:    logger_util.NewGinWithLogrus(logger.GinLog),
 	}
+	s.router.Use(metrics.InboundMetrics())
 	cfg := s.Config()
 	bindAddr := cfg.GetSbiBindingAddr()
 	logger.SBILog.Infof("Binding addr: [%s]", bindAddr)
@@ -122,15 +124,16 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	serverScheme := cfg.GetSbiScheme()
 
 	var err error
-	if serverScheme == "http" {
+	switch serverScheme {
+	case "http":
 		err = s.httpServer.ListenAndServe()
-	} else if serverScheme == "https" {
+	case "https":
 		// TODO: support TLS mutual authentication for OAuth
 		err = s.httpServer.ListenAndServeTLS(
 			cfg.GetNrfCertPemPath(),
 			cfg.GetNrfPrivKeyPath())
-	} else {
-		err = fmt.Errorf("No support this scheme[%s]", serverScheme)
+	default:
+		err = fmt.Errorf("not support this scheme[%s]", serverScheme)
 	}
 
 	if err != nil && err != http.ErrServerClosed {

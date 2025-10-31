@@ -22,6 +22,7 @@ import (
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/free5gc/util/metrics"
 )
 
 type ServerAusf interface {
@@ -60,6 +61,7 @@ func NewServer(ausf ServerAusf, tlsKeyLogPath string) (*Server, error) {
 
 func newRouter(s *Server) *gin.Engine {
 	router := logger_util.NewGinWithLogrus(logger.GinLog)
+	router.Use(metrics.InboundMetrics())
 
 	for _, serviceName := range factory.AusfConfig.Configuration.ServiceNameList {
 		switch models.ServiceName(serviceName) {
@@ -141,14 +143,15 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	var err error
 	cfg := s.Config()
 	scheme := cfg.GetSbiScheme()
-	if scheme == "http" {
+	switch scheme {
+	case "http":
 		err = s.httpServer.ListenAndServe()
-	} else if scheme == "https" {
+	case "https":
 		err = s.httpServer.ListenAndServeTLS(
 			cfg.GetCertPemPath(),
 			cfg.GetCertKeyPath())
-	} else {
-		err = fmt.Errorf("No support this scheme[%s]", scheme)
+	default:
+		err = fmt.Errorf("no support this scheme[%s]", scheme)
 	}
 
 	if err != nil && err != http.ErrServerClosed {

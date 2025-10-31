@@ -149,7 +149,7 @@ func tngfGenerateKeyForIKESA(ikeSecurityAssociation *context.IKESecurityAssociat
 	length_SK_d = 20
 	length_SK_ai = 20
 	length_SK_ar = length_SK_ai
-	length_SK_ei = 32
+	length_SK_ei = 0
 	length_SK_er = length_SK_ei
 	length_SK_pi, length_SK_pr = length_SK_d, length_SK_d
 	totalKeyLength = length_SK_d + length_SK_ai + length_SK_ar + length_SK_ei + length_SK_er + length_SK_pi + length_SK_pr
@@ -356,7 +356,7 @@ func tngfBuildEAP5GANParameters(mobileIdentity5GS nasType.MobileIdentity5GS) []b
 	// Build UE ID
 	anParameter = make([]byte, 3)
 	anParameter[0] = radiusMessage.ANParametersTypeUEIdentity
-	anParameter[1] = byte(15)
+	anParameter[1] = byte(16)
 	anParameter[2] = mobileIdentity5GS.GetIei()
 	anParameterLength := make([]byte, 2)
 	binary.BigEndian.PutUint16(anParameterLength, mobileIdentity5GS.GetLen())
@@ -881,13 +881,13 @@ func GetMessageAuthenticator(message *radiusMessage.RadiusMessage) []byte {
 
 func TestTngfUE(t *testing.T) {
 	// New UE
-	ue := NewRanUeContext("imsi-2089300007487", 1, nasSecurity.AlgCiphering128NEA0, nasSecurity.AlgIntegrity128NIA2,
+	ue := NewRanUeContext("imsi-208930000007487", 1, nasSecurity.AlgCiphering128NEA0, nasSecurity.AlgIntegrity128NIA2,
 		models.AccessType_NON_3_GPP_ACCESS)
 	ue.AmfUeNgapId = 1
 	ue.AuthenticationSubs = getAuthSubscription()
 	mobileIdentity5GS := nasType.MobileIdentity5GS{
-		Len:    12, // suci
-		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
+		Len:    13, // suci
+		Buffer: []uint8{0x01, 0x02, 0xf8, 0x39, 0xf0, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x47, 0x78},
 	}
 
 	// Used to save IPsec/IKE related data
@@ -1253,11 +1253,9 @@ func TestTngfUE(t *testing.T) {
 	// Security Association
 	securityAssociation := ikeMessage.Payloads.BuildSecurityAssociation()
 	// Proposal 1
-	proposal := securityAssociation.Proposals.BuildProposal(1, message.TypeESP, nil)
+	proposal := securityAssociation.Proposals.BuildProposal(1, message.TypeIKE, nil)
 	// ENCR
-	var attributeType uint16 = message.AttributeTypeKeyLength
-	var keyLength uint16 = 256
-	proposal.EncryptionAlgorithm.BuildTransform(message.TypeEncryptionAlgorithm, message.ENCR_AES_CBC, &attributeType, &keyLength, nil)
+	proposal.EncryptionAlgorithm.BuildTransform(message.TypeEncryptionAlgorithm, message.ENCR_NULL, nil, nil, nil)
 	// INTEG
 	proposal.IntegrityAlgorithm.BuildTransform(message.TypeIntegrityAlgorithm, message.AUTH_HMAC_SHA1_96, nil, nil, nil)
 	// PRF
@@ -1367,7 +1365,7 @@ func TestTngfUE(t *testing.T) {
 	inboundSPI := tngfGenerateSPI(tngfue)
 	proposal = securityAssociation.Proposals.BuildProposal(1, message.TypeESP, inboundSPI)
 	// ENCR (use null encryption for ESP)
-	proposal.EncryptionAlgorithm.BuildTransform(message.TypeEncryptionAlgorithm, message.ENCR_NULL, &attributeType, &keyLength, nil)
+	proposal.EncryptionAlgorithm.BuildTransform(message.TypeEncryptionAlgorithm, message.ENCR_NULL, nil, nil, nil)
 	// INTEG
 	proposal.IntegrityAlgorithm.BuildTransform(message.TypeIntegrityAlgorithm, message.AUTH_HMAC_SHA1_96, nil, nil, nil)
 	// ESN

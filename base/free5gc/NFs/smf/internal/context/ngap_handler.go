@@ -49,17 +49,38 @@ func HandlePDUSessionResourceSetupResponseTransfer(b []byte, ctx *SMContext) err
 	}
 
 	QosFlowPerTNLInformation := resourceSetupResponseTransfer.DLQosFlowPerTNLInformation
+	var DCQosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
+	DCQosFlowPerTNLInformation := resourceSetupResponseTransfer.AdditionalDLQosFlowPerTNLInformation
+	if DCQosFlowPerTNLInformation != nil && len(DCQosFlowPerTNLInformation.List) > 0 {
+		ctx.NrdcIndicator = true
+		DCQosFlowPerTNLInformationItem = DCQosFlowPerTNLInformation.List[0]
+	}
 
 	if QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
 		ngapType.UPTransportLayerInformationPresentGTPTunnel {
 		return errors.New("resourceSetupResponseTransfer.QosFlowPerTNLInformation.UPTransportLayerInformation.Present")
 	}
+	if ctx.NrdcIndicator && DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
+		ngapType.UPTransportLayerInformationPresentGTPTunnel {
+		return errors.New(
+			"resourceSetupResponseTransfer.AdditionalQosFlowPerTNLInformation." +
+				"QosFlowPerTNLInformation.UPTransportLayerInformation.Present")
+	}
 
 	GTPTunnel := QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
+	DCGTPTunnel := &ngapType.GTPTunnel{}
+	if ctx.NrdcIndicator {
+		DCGTPTunnel = DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
+	}
 
 	ctx.Tunnel.UpdateANInformation(
 		GTPTunnel.TransportLayerAddress.Value.Bytes,
 		binary.BigEndian.Uint32(GTPTunnel.GTPTEID.Value))
+	if ctx.NrdcIndicator {
+		ctx.DCTunnel.UpdateANInformation(
+			DCGTPTunnel.TransportLayerAddress.Value.Bytes,
+			binary.BigEndian.Uint32(DCGTPTunnel.GTPTEID.Value))
+	}
 
 	ctx.UpCnxState = models.UpCnxState_ACTIVATED
 	for _, qos := range ctx.AdditonalQosFlows {
@@ -99,6 +120,38 @@ func HandlePDUSessionResourceModifyResponseTransfer(b []byte, ctx *SMContext) er
 
 			ctx.AdditonalQosFlows[qfi].State = QoSFlowUnset
 		}
+	}
+
+	return nil
+}
+
+func HandlePDUSessionResourceModifyIndicationTransfer(b []byte, ctx *SMContext) error {
+	resourceModifyIndicationTransfer := ngapType.PDUSessionResourceModifyIndicationTransfer{}
+
+	if err := aper.UnmarshalWithParams(b, &resourceModifyIndicationTransfer, "valueExt"); err != nil {
+		return err
+	}
+
+	var DCQosFlowPerTNLInformationItem ngapType.QosFlowPerTNLInformationItem
+	DCQosFlowPerTNLInformation := resourceModifyIndicationTransfer.AdditionalDLQosFlowPerTNLInformation
+	if DCQosFlowPerTNLInformation != nil && len(DCQosFlowPerTNLInformation.List) > 0 {
+		ctx.NrdcIndicator = true
+		DCQosFlowPerTNLInformationItem = DCQosFlowPerTNLInformation.List[0]
+	}
+
+	if ctx.NrdcIndicator && DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.Present !=
+		ngapType.UPTransportLayerInformationPresentGTPTunnel {
+		return errors.New(
+			"resourceModifyIndicationTransfer.AdditionalQosFlowPerTNLInformation." +
+				"QosFlowPerTNLInformation.UPTransportLayerInformation.Present")
+	}
+
+	DCGTPTunnel := &ngapType.GTPTunnel{}
+	if ctx.NrdcIndicator {
+		DCGTPTunnel = DCQosFlowPerTNLInformationItem.QosFlowPerTNLInformation.UPTransportLayerInformation.GTPTunnel
+		ctx.DCTunnel.UpdateANInformation(
+			DCGTPTunnel.TransportLayerAddress.Value.Bytes,
+			binary.BigEndian.Uint32(DCGTPTunnel.GTPTEID.Value))
 	}
 
 	return nil
@@ -244,7 +297,8 @@ func HandleHandoverRequestAcknowledgeTransfer(b []byte, ctx *SMContext) error {
 		return nil
 	}
 
-	if ctx.DLForwardingType == IndirectForwarding {
+	switch ctx.DLForwardingType {
+	case IndirectForwarding:
 		DLForwardingGTPTunnel := DLForwardingInfo.GTPTunnel
 
 		ctx.IndirectForwardingTunnel = NewDataPath()
@@ -292,7 +346,7 @@ func HandleHandoverRequestAcknowledgeTransfer(b []byte, ctx *SMContext) error {
 				},
 			}
 		}
-	} else if ctx.DLForwardingType == DirectForwarding {
+	case DirectForwarding:
 		ctx.DLDirectForwardingTunnel = DLForwardingInfo
 	}
 

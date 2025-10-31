@@ -3,10 +3,12 @@ package processor
 import (
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
 )
@@ -40,8 +42,13 @@ func TestGetApplicationsPFD(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().GetApplicationsPFD(tc.appIDs)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetApplicationsPFD(c, tc.appIDs)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -75,8 +82,13 @@ func TestGetIndividualApplicationPFD(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().GetIndividualApplicationPFD(tc.appID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetIndividualApplicationPFD(c, tc.appID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -107,8 +119,13 @@ func TestPostPFDSubscriptions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().PostPFDSubscriptions(tc.subscription)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PostPFDSubscriptions(c, tc.subscription)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -130,8 +147,13 @@ func TestDeleteIndividualPFDSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().DeleteIndividualPFDSubscription(tc.subscriptionID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().DeleteIndividualPFDSubscription(c, tc.subscriptionID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 }
@@ -174,11 +196,11 @@ func TestPostPfdChangeReports(t *testing.T) {
 
 	subsID1 := nefApp.Notifier().PfdChangeNotifier.AddPfdSub(&models.PfdSubscription{
 		ApplicationIds: []string{"app1"},
-		NotifyUri:      "http://pfdSub2URI",
+		NotifyUri:      "http://pfdSub2URI/notify",
 	})
 	subsID2 := nefApp.Notifier().PfdChangeNotifier.AddPfdSub(&models.PfdSubscription{
 		ApplicationIds: []string{"app1", "app2"},
-		NotifyUri:      "http://pfdSub3URI",
+		NotifyUri:      "http://pfdSub3URI/notify",
 	})
 	defer func() {
 		if err := nefApp.Notifier().PfdChangeNotifier.DeletePfdSub(subsID1); err != nil {
@@ -191,13 +213,13 @@ func TestPostPfdChangeReports(t *testing.T) {
 
 	testCases := []struct {
 		description           string
-		triggerFunc           func()
+		triggerFunc           func(c *gin.Context)
 		expectedNotifications map[string][]models.PfdChangeNotification
 	}{
 		{
 			description: "Update app1, should send notification for subscription 2 and 3",
-			triggerFunc: func() {
-				nefApp.Processor().PutIndividualApplicationPFDManagement("af1", "1", "app1", &models.PfdData{
+			triggerFunc: func(c *gin.Context) {
+				nefApp.Processor().PutIndividualApplicationPFDManagement(c, "af1", "1", "app1", &models.PfdData{
 					ExternalAppId: "app1",
 					Pfds: map[string]models.Pfd{
 						"pfd1": pfd1,
@@ -225,8 +247,8 @@ func TestPostPfdChangeReports(t *testing.T) {
 		},
 		{
 			description: "Delete app2, should send notification for subscription 3",
-			triggerFunc: func() {
-				nefApp.Processor().DeleteIndividualApplicationPFDManagement("af1", "1", "app2")
+			triggerFunc: func(c *gin.Context) {
+				nefApp.Processor().DeleteIndividualApplicationPFDManagement(c, "af1", "1", "app2")
 			},
 			expectedNotifications: map[string][]models.PfdChangeNotification{
 				"http://pfdSub3URI/notify": {
@@ -241,7 +263,10 @@ func TestPostPfdChangeReports(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			tc.triggerFunc()
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			tc.triggerFunc(c)
 			for i := 0; i < len(tc.expectedNotifications); i++ {
 				r := <-notifChan
 

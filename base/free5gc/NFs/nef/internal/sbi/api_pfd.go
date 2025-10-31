@@ -3,12 +3,14 @@ package sbi
 import (
 	"net/http"
 
+	"github.com/free5gc/nef/internal/logger"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) getPFDManagementEndpoints() []Endpoint {
-	return []Endpoint{
+func (s *Server) getPFDManagementRoutes() []Route {
+	return []Route{
 		{
 			Method:  http.MethodGet,
 			Pattern: "/:scsAsID/transactions",
@@ -63,111 +65,116 @@ func (s *Server) getPFDManagementEndpoints() []Endpoint {
 }
 
 func (s *Server) apiGetPFDManagementTransactions(gc *gin.Context) {
-	hdlRsp := s.Processor().GetPFDManagementTransactions(
-		gc.Param("scsAsID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetPFDManagementTransactions(gc, gc.Param("scsAsID"))
 }
 
 func (s *Server) apiPostPFDManagementTransactions(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var pfdMng models.PfdManagement
-	if err := s.deserializeData(gc, &pfdMng, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PostPFDManagementTransactions(
-		gc.Param("scsAsID"), &pfdMng)
+	err = openapi.Deserialize(&pfdMng, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PostPFDManagementTransactions(gc, gc.Param("scsAsID"), &pfdMng)
 }
 
 func (s *Server) apiDeletePFDManagementTransactions(gc *gin.Context) {
-	hdlRsp := s.Processor().DeletePFDManagementTransactions(
-		gc.Param("scsAsID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().DeletePFDManagementTransactions(gc, gc.Param("scsAsID"))
 }
 
 func (s *Server) apiGetIndividualPFDManagementTransaction(gc *gin.Context) {
-	hdlRsp := s.Processor().GetIndividualPFDManagementTransaction(
-		gc.Param("scsAsID"), gc.Param("transID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetIndividualPFDManagementTransaction(
+		gc, gc.Param("scsAsID"), gc.Param("transID"))
 }
 
 func (s *Server) apiPutIndividualPFDManagementTransaction(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var pfdMng models.PfdManagement
-	if err := s.deserializeData(gc, &pfdMng, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PutIndividualPFDManagementTransaction(
-		gc.Param("scsAsID"), gc.Param("transID"), &pfdMng)
+	err = openapi.Deserialize(&pfdMng, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PutIndividualPFDManagementTransaction(
+		gc, gc.Param("scsAsID"), gc.Param("transID"), &pfdMng)
 }
 
 func (s *Server) apiDeleteIndividualPFDManagementTransaction(gc *gin.Context) {
-	hdlRsp := s.Processor().DeleteIndividualPFDManagementTransaction(
-		gc.Param("scsAsID"), gc.Param("transID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().DeleteIndividualPFDManagementTransaction(
+		gc, gc.Param("scsAsID"), gc.Param("transID"))
 }
 
 func (s *Server) apiGetIndividualApplicationPFDManagement(gc *gin.Context) {
-	hdlRsp := s.Processor().GetIndividualApplicationPFDManagement(
-		gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetIndividualApplicationPFDManagement(
+		gc, gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"))
 }
 
 func (s *Server) apiDeleteIndividualApplicationPFDManagement(gc *gin.Context) {
-	hdlRsp := s.Processor().DeleteIndividualApplicationPFDManagement(
-		gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().DeleteIndividualApplicationPFDManagement(
+		gc, gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"))
 }
 
 func (s *Server) apiPutIndividualApplicationPFDManagement(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var pfdData models.PfdData
-	if err := s.deserializeData(gc, &pfdData, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PutIndividualApplicationPFDManagement(
-		gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"), &pfdData)
+	err = openapi.Deserialize(&pfdData, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PutIndividualApplicationPFDManagement(
+		gc, gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"), &pfdData)
 }
 
 func (s *Server) apiPatchIndividualApplicationPFDManagement(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var pfdData models.PfdData
-	if err := s.deserializeData(gc, &pfdData, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PatchIndividualApplicationPFDManagement(
-		gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"), &pfdData)
+	err = openapi.Deserialize(&pfdData, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PatchIndividualApplicationPFDManagement(
+		gc, gc.Param("scsAsID"), gc.Param("transID"), gc.Param("appID"), &pfdData)
 }

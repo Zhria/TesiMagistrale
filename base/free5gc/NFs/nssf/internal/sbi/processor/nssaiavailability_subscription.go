@@ -19,6 +19,7 @@ import (
 	"github.com/free5gc/nssf/internal/util"
 	"github.com/free5gc/nssf/pkg/factory"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 // Get available subscription ID from configuration
@@ -34,7 +35,7 @@ func getUnusedSubscriptionID() (string, error) {
 		}
 		if uint32(tempID) == idx {
 			if idx == math.MaxUint32 {
-				return "", fmt.Errorf("No available subscription ID")
+				return "", fmt.Errorf("no available subscription ID")
 			}
 			idx++
 		} else {
@@ -50,21 +51,21 @@ func (p *Processor) NssaiAvailabilitySubscriptionCreate(
 	createData models.NssfEventSubscriptionCreateData,
 ) {
 	var (
-		response       *models.NssfEventSubscriptionCreatedData = &models.NssfEventSubscriptionCreatedData{}
+		response       = &models.NssfEventSubscriptionCreatedData{}
 		problemDetails *models.ProblemDetails
 	)
 
 	var subscription factory.Subscription
 	tempID, err := getUnusedSubscriptionID()
 	if err != nil {
-		logger.NssaiavailLog.Warnf(err.Error())
+		logger.NssaiavailLog.Warn(err)
 
 		problemDetails = &models.ProblemDetails{
 			Title:  util.UNSUPPORTED_RESOURCE,
 			Status: http.StatusNotFound,
 			Detail: err.Error(),
 		}
-
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Title)
 		util.GinProblemJson(c, problemDetails)
 		return
 	}
@@ -76,7 +77,7 @@ func (p *Processor) NssaiAvailabilitySubscriptionCreate(
 	factory.NssfConfig.Subscriptions = append(factory.NssfConfig.Subscriptions, subscription)
 
 	response.SubscriptionId = subscription.SubscriptionId
-	if !subscription.SubscriptionData.Expiry.IsZero() {
+	if subscription.SubscriptionData.Expiry != nil && !subscription.SubscriptionData.Expiry.IsZero() {
 		response.Expiry = new(time.Time)
 		*response.Expiry = *subscription.SubscriptionData.Expiry
 	}
@@ -106,6 +107,6 @@ func (p *Processor) NssaiAvailabilitySubscriptionUnsubscribe(c *gin.Context, sub
 		Status: http.StatusNotFound,
 		Detail: fmt.Sprintf("Subscription ID '%s' is not available", subscriptionId),
 	}
-
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Title)
 	util.GinProblemJson(c, problemDetails)
 }

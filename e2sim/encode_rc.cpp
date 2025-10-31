@@ -165,10 +165,10 @@ void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* desc){
 
   desc->ranFunctionDefinition_Control = (RANFunctionDefinition_Control*)calloc(1, sizeof(RANFunctionDefinition_Control));
   add_control_style(desc->ranFunctionDefinition_Control);
-
+/* 
   desc->ranFunctionDefinition_Insert=(RANFunctionDefinition_Insert*)calloc(1,sizeof(RANFunctionDefinition_Insert));
   add_insert_style(desc->ranFunctionDefinition_Insert);
-/*
+
   desc->ranFunctionDefinition_Policy=(RANFunctionDefinition_Policy*)calloc(1,sizeof(RANFunctionDefinition_Policy));
   add_policy_style(desc->ranFunctionDefinition_Policy);
 */

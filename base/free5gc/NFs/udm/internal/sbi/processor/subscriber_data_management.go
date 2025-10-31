@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
@@ -13,11 +14,13 @@ import (
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	udm_context "github.com/free5gc/udm/internal/context"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -29,6 +32,7 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -37,10 +41,12 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -60,6 +66,7 @@ func (p *Processor) GetAmDataProcedure(c *gin.Context, supi string, plmnID strin
 func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 	}
 	var idTranslationResult models.IdTranslationResult
@@ -70,6 +77,7 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(gpsi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -80,11 +88,13 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if getIdTransError, ok2 := apiErr.Model().(Nudr_DataRepository.GetIdentityDataError); ok2 {
 				problem := getIdTransError.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -99,6 +109,7 @@ func (p *Processor) GetIdTranslationResultProcedure(c *gin.Context, gpsi string)
 			Status: http.StatusNotFound,
 			Cause:  "DATA_NOT_FOUND",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 	}
 }
@@ -111,6 +122,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -120,6 +132,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 			Cause:  "BAD_REQUEST",
 			Detail: "datasetNames must have at least 2 elements",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -127,6 +140,7 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -159,10 +173,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -184,10 +200,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -211,10 +229,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -261,10 +281,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -290,10 +312,12 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 		if err != nil {
 			apiError, ok := err.(openapi.GenericOpenAPIError)
 			if ok {
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 				c.JSON(apiError.ErrorStatus, apiError.RawBody)
 				return
 			}
 			problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -317,12 +341,14 @@ func (p *Processor) GetSupiProcedure(c *gin.Context,
 func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR("")
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -337,11 +363,13 @@ func (p *Processor) GetSharedDataProcedure(c *gin.Context, sharedDataIds []strin
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if getShareDataError, ok2 := apiErr.Model().(Nudr_DataRepository.GetSharedDataError); ok2 {
 				problem := getShareDataError.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -361,6 +389,7 @@ func (p *Processor) GetSmDataProcedure(
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -370,16 +399,24 @@ func (p *Processor) GetSmDataProcedure(
 	if err != nil {
 		logger.ProcLog.Errorf("CreateUDMClientToUDR Error: %+v", err)
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
 
 	var modelSnassai models.Snssai
-	if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
-		logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
-		problemDetails := openapi.ProblemDetailsSystemFailure(errUnmarshal.Error())
-		c.JSON(int(problemDetails.Status), problemDetails)
-		return
+	if Snssai != "" {
+		if errUnmarshal := json.Unmarshal([]byte(Snssai), &modelSnassai); errUnmarshal != nil {
+			logger.ProcLog.Errorf("modelSnassai Unmarshal Error: %+v", errUnmarshal)
+			problemDetail := models.ProblemDetails{
+				Status: http.StatusBadRequest,
+				Detail: "The 'single-nssai' parameter is malformed.",
+				Cause:  "INVALID_IE_VALUE",
+			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
+			c.JSON(int(problemDetail.Status), problemDetail)
+			return
+		}
 	}
 
 	var querySmDataRequest Nudr_DataRepository.QuerySmDataRequest
@@ -393,10 +430,12 @@ func (p *Processor) GetSmDataProcedure(
 		logger.ProcLog.Errorf("QuerySmData Error: %+v", err)
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -438,6 +477,7 @@ func (p *Processor) GetSmDataProcedure(
 func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -450,6 +490,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -459,10 +500,12 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -480,6 +523,7 @@ func (p *Processor) GetNssaiProcedure(c *gin.Context, supi string, plmnID string
 func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnID string, supportedFeatures string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -493,6 +537,7 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -504,10 +549,12 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -521,8 +568,31 @@ func (p *Processor) GetSmfSelectDataProcedure(c *gin.Context, supi string, plmnI
 }
 
 func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription) {
+	if sdmSubscription.NfInstanceId == "" {
+		logger.SdmLog.Warnf("Missing mandatory parameter: nfInstanceId")
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "MANDATORY_IE_MISSING",
+		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(http.StatusBadRequest, problemDetails)
+		return
+	}
+
+	if _, err := uuid.Parse(sdmSubscription.NfInstanceId); err != nil {
+		logger.SdmLog.Warnf("Invalid nfInstanceId format: %s", sdmSubscription.NfInstanceId)
+		problemDetails := models.ProblemDetails{
+			Status: http.StatusBadRequest,
+			Cause:  "INVALID_IE_VALUE",
+		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+		c.JSON(http.StatusBadRequest, problemDetails)
+		return
+	}
+
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -536,11 +606,13 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if subToShareDataErr, ok2 := apiErr.Model().(SubscriberDataManagement.SubscribeToSharedDataError); ok2 {
 				problem := subToShareDataErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -557,12 +629,14 @@ func (p *Processor) SubscribeToSharedDataProcedure(c *gin.Context, sdmSubscripti
 func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.SdmSubscription, supi string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -574,10 +648,12 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -595,6 +671,7 @@ func (p *Processor) SubscribeProcedure(c *gin.Context, sdmSubscription *models.S
 func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscriptionID string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDM_SDM, models.NrfNfManagementNfType_UDM)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -608,11 +685,13 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscripti
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if subToShareDataErr, ok2 := apiErr.Model().(SubscriberDataManagement.UnsubscribeForSharedDataError); ok2 {
 				problem := subToShareDataErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -623,12 +702,14 @@ func (p *Processor) UnsubscribeForSharedDataProcedure(c *gin.Context, subscripti
 func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscriptionID string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -640,11 +721,13 @@ func (p *Processor) UnsubscribeProcedure(c *gin.Context, supi string, subscripti
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if removeSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.RemovesdmSubscriptionsError); ok2 {
 				problem := removeSubErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -659,12 +742,14 @@ func (p *Processor) ModifyProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -681,11 +766,13 @@ func (p *Processor) ModifyProcedure(c *gin.Context,
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if updateSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.UpdatesdmsubscriptionsError); ok2 {
 				problem := updateSubErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -702,12 +789,14 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -725,11 +814,13 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
 			if updateShareSubErr, ok2 := apiErr.Model().(Nudr_DataRepository.UpdatesdmsubscriptionsError); ok2 {
 				problem := updateShareSubErr.ProblemDetails
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problem.Cause)
 				c.JSON(int(problem.Status), problem)
 				return
 			}
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -740,6 +831,7 @@ func (p *Processor) ModifyForSharedDataProcedure(c *gin.Context,
 func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID string) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -751,6 +843,7 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -762,10 +855,12 @@ func (p *Processor) GetTraceDataProcedure(c *gin.Context, supi string, plmnID st
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -791,6 +886,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	clientAPI, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -800,6 +896,7 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -809,10 +906,12 @@ func (p *Processor) GetUeContextInSmfDataProcedure(c *gin.Context, supi string, 
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}

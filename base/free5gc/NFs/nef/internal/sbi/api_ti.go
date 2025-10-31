@@ -3,12 +3,14 @@ package sbi
 import (
 	"net/http"
 
-	"github.com/free5gc/openapi/models_nef"
+	"github.com/free5gc/nef/internal/logger"
+	"github.com/free5gc/openapi"
+	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) getTrafficInfluenceEndpoints() []Endpoint {
-	return []Endpoint{
+func (s *Server) getTrafficInfluenceRoutes() []Route {
+	return []Route{
 		{
 			Method:  http.MethodGet,
 			Pattern: "/:afID/subscriptions",
@@ -43,73 +45,82 @@ func (s *Server) getTrafficInfluenceEndpoints() []Endpoint {
 }
 
 func (s *Server) apiGetTrafficInfluenceSubscription(gc *gin.Context) {
-	hdlRsp := s.Processor().GetTrafficInfluenceSubscription(
-		gc.Param("afID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetTrafficInfluenceSubscription(
+		gc, gc.Param("afID"))
 }
 
 func (s *Server) apiPostTrafficInfluenceSubscription(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
+	var tiSub models.NefTrafficInfluSub
+	reqBody, err := gc.GetRawData()
 	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	var tiSub models_nef.TrafficInfluSub
-	if err := s.deserializeData(gc, &tiSub, contentType); err != nil {
+	err = openapi.Deserialize(&tiSub, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PostTrafficInfluenceSubscription(
-		gc.Param("afID"), &tiSub)
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PostTrafficInfluenceSubscription(
+		gc, gc.Param("afID"), &tiSub)
 }
 
 func (s *Server) apiGetIndividualTrafficInfluenceSubscription(gc *gin.Context) {
-	hdlRsp := s.Processor().GetIndividualTrafficInfluenceSubscription(
-		gc.Param("afID"), gc.Param("subID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetIndividualTrafficInfluenceSubscription(
+		gc, gc.Param("afID"), gc.Param("subID"))
 }
 
 func (s *Server) apiPutIndividualTrafficInfluenceSubscription(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
+	var tiSub models.NefTrafficInfluSub
+	reqBody, err := gc.GetRawData()
 	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	var tiSub models_nef.TrafficInfluSub
-	if err := s.deserializeData(gc, &tiSub, contentType); err != nil {
+	err = openapi.Deserialize(&tiSub, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PutIndividualTrafficInfluenceSubscription(
-		gc.Param("afID"), gc.Param("subID"), &tiSub)
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PutIndividualTrafficInfluenceSubscription(
+		gc, gc.Param("afID"), gc.Param("subID"), &tiSub)
 }
 
 func (s *Server) apiPatchIndividualTrafficInfluenceSubscription(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
+	var tiSubPatch models.NefTrafficInfluSubPatch
+	reqBody, err := gc.GetRawData()
 	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	var tiSubPatch models_nef.TrafficInfluSubPatch
-	if err := s.deserializeData(gc, &tiSubPatch, contentType); err != nil {
+	err = openapi.Deserialize(&tiSubPatch, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PatchIndividualTrafficInfluenceSubscription(
-		gc.Param("afID"), gc.Param("subID"), &tiSubPatch)
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PatchIndividualTrafficInfluenceSubscription(
+		gc, gc.Param("afID"), gc.Param("subID"), &tiSubPatch)
 }
 
 func (s *Server) apiDeleteIndividualTrafficInfluenceSubscription(gc *gin.Context) {
-	hdlRsp := s.Processor().DeleteIndividualTrafficInfluenceSubscription(
-		gc.Param("afID"), gc.Param("subID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().DeleteIndividualTrafficInfluenceSubscription(
+		gc, gc.Param("afID"), gc.Param("subID"))
 }

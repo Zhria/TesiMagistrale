@@ -24,6 +24,7 @@ import (
 	"github.com/free5gc/ausf/internal/logger"
 	"github.com/free5gc/ausf/pkg/factory"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/ueauth"
 )
 
@@ -46,6 +47,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -57,6 +59,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 			Status: http.StatusNotFound,
 			Cause:  "USER_NOT_FOUND",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -69,6 +72,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 		eapFailPkt := ConstructEapNoTypePkt(radius.EapCodeFailure, 0)
 		eapSession.EapPayload = eapFailPkt
 		eapSession.AuthResult = models.AusfUeAuthenticationAuthResult_FAILURE
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, eapSession.AuthResult)
 		c.JSON(http.StatusUnauthorized, eapSession)
 		return
 	}
@@ -132,6 +136,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 					problemDetails := models.ProblemDetails{
 						Cause: "UPSTREAM_SERVER_ERROR",
 					}
+					c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 					c.JSON(http.StatusInternalServerError, problemDetails)
 					return
 				}
@@ -178,6 +183,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 				Status: http.StatusInternalServerError,
 				Cause:  "UPSTREAM_SERVER_ERROR",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(http.StatusInternalServerError, problemDetails)
 			return
 		}
@@ -198,6 +204,7 @@ func (p *Processor) EapAuthComfirmRequestProcedure(
 			var problemDetails models.ProblemDetails
 			problemDetails.Status = http.StatusInternalServerError
 			problemDetails.Cause = "UPSTREAM_SERVER_ERROR"
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(http.StatusInternalServerError, problemDetails)
 			return
 		}
@@ -229,6 +236,7 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 			Status: http.StatusForbidden,
 		}
 		logger.UeAuthLog.Infoln("403 forbidden: serving network NOT AUTHORIZED")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(http.StatusForbidden, problemDetails)
 		return
 	}
@@ -256,9 +264,10 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 
 	udmUrl := p.Consumer().GetUdmUrl(self.NrfUri)
 
-	result, err, pd := p.Consumer().GenerateAuthDataApi(udmUrl, supiOrSuci, authInfoReq)
+	result, pd, err := p.Consumer().GenerateAuthDataApi(udmUrl, supiOrSuci, authInfoReq)
 	if err != nil {
 		logger.UeAuthLog.Infof("GenerateAuthDataApi error: %+v", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(http.StatusInternalServerError, pd)
 		return
 	}
@@ -276,7 +285,8 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 
 	locationURI := self.Url + factory.AusfAuthResUriPrefix + "/ue-authentications/" + supiOrSuci
 	putLink := locationURI
-	if authInfoResult.AuthType == models.UdmUeauAuthType__5_G_AKA {
+	switch authInfoResult.AuthType {
+	case models.UdmUeauAuthType__5_G_AKA:
 		logger.UeAuthLog.Infoln("Use 5G AKA auth method")
 		putLink += "/5g-aka-confirmation"
 
@@ -291,6 +301,7 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 				Detail: err.Error(),
 				Status: http.StatusInternalServerError,
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(http.StatusInternalServerError, problemDetails)
 			return
 		} else {
@@ -311,6 +322,7 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 				Detail: err.Error(),
 				Status: http.StatusInternalServerError,
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(http.StatusInternalServerError, problemDetails)
 			return
 		} else {
@@ -326,6 +338,7 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 				Detail: err.Error(),
 				Status: http.StatusInternalServerError,
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(http.StatusInternalServerError, problemDetails)
 			return
 		}
@@ -343,7 +356,7 @@ func (p *Processor) UeAuthPostRequestProcedure(c *gin.Context, updateAuthenticat
 		linksValue := models.Link{Href: putLink}
 		responseBody.Links = make(map[string][]models.Link)
 		responseBody.Links["5g-aka"] = []models.Link{linksValue}
-	} else if authInfoResult.AuthType == models.UdmUeauAuthType_EAP_AKA_PRIME {
+	case models.UdmUeauAuthType_EAP_AKA_PRIME:
 		logger.UeAuthLog.Infoln("Use EAP-AKA' auth method")
 		putLink += "/eap-session"
 
@@ -469,6 +482,7 @@ func (p *Processor) Auth5gAkaComfirmRequestProcedure(c *gin.Context, updateConfi
 			Cause:  "USER_NOT_FOUND",
 			Status: http.StatusBadRequest,
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(http.StatusBadRequest, problemDetails)
 		return
 	}
@@ -480,6 +494,7 @@ func (p *Processor) Auth5gAkaComfirmRequestProcedure(c *gin.Context, updateConfi
 			Cause:  "USER_NOT_FOUND",
 			Status: http.StatusBadRequest,
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(http.StatusBadRequest, problemDetails)
 		return
 	}
@@ -510,6 +525,7 @@ func (p *Processor) Auth5gAkaComfirmRequestProcedure(c *gin.Context, updateConfi
 			Status: http.StatusInternalServerError,
 			Cause:  "UPSTREAM_SERVER_ERROR",
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(http.StatusInternalServerError, problemDetails)
 		return
 	}
@@ -768,7 +784,7 @@ func decodeEapAkaPrime(eapPkt []byte) (*ausf_context.EapAkaPrimePkt, error) {
 			return nil, fmt.Errorf("AKA-Synchornization-Failure attributes error")
 		} else if _, ok := attributes[ausf_context.AT_KDF_ATTRIBUTE]; !ok {
 			return nil, fmt.Errorf("AKA-Synchornization-Failure attributes error")
-		} else if kdfVal := attributes[ausf_context.AT_KDF_ATTRIBUTE].Value; !(kdfVal[0] == 0 && kdfVal[1] == 1) {
+		} else if kdfVal := attributes[ausf_context.AT_KDF_ATTRIBUTE].Value; kdfVal[0] != 0 || kdfVal[1] != 1 {
 			return nil, fmt.Errorf("AKA-Synchornization-Failure attributes error")
 		}
 	case ausf_context.AKA_NOTIFICATION_SUBTYPE:
@@ -825,12 +841,13 @@ func (p *Processor) logConfirmFailureAndInformUDM(
 ) {
 	udmAuthType := models.UdmUeauAuthType(authType)
 
-	if authType == models.AusfUeAuthenticationAuthType__5_G_AKA {
+	switch authType {
+	case models.AusfUeAuthenticationAuthType__5_G_AKA:
 		logger.Auth5gAkaLog.Infoln(servingNetworkName, errStr)
 		if sendErr := p.Consumer().SendAuthResultToUDM(id, udmAuthType, false, "", udmUrl); sendErr != nil {
 			logger.Auth5gAkaLog.Infoln(sendErr.Error())
 		}
-	} else if authType == models.AusfUeAuthenticationAuthType_EAP_AKA_PRIME {
+	case models.AusfUeAuthenticationAuthType_EAP_AKA_PRIME:
 		logger.AuthELog.Infoln(errStr)
 		if sendErr := p.Consumer().SendAuthResultToUDM(id, udmAuthType, false, "", udmUrl); sendErr != nil {
 			logger.AuthELog.Infoln(sendErr.Error())

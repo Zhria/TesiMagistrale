@@ -93,11 +93,11 @@ func (c *Configuration) validate() (bool, error) {
 		}
 	}
 	for i, s := range c.ServiceList {
-		switch {
-		case s.ServiceName == ServiceNefPfd:
-		case s.ServiceName == ServiceNefOam:
+		switch s.ServiceName {
+		case ServiceNefPfd:
+		case ServiceNefOam:
 		default:
-			err := errors.New("Invalid serviceList[" + strconv.Itoa(i) + "]: " +
+			err := errors.New("invalid serviceList[" + strconv.Itoa(i) + "]: " +
 				s.ServiceName + ", should be " + ServiceNefPfd + " or " + ServiceNefOam)
 			return false, appendInvalid(err)
 		}
@@ -153,7 +153,7 @@ func appendInvalid(err error) error {
 	es, ok := err.(govalidator.Errors)
 	if ok {
 		for _, e := range es.Errors() {
-			errs = append(errs, fmt.Errorf("Invalid %w", e))
+			errs = append(errs, fmt.Errorf("invalid %w", e))
 		}
 	} else {
 		errs = append(errs, err)
@@ -337,13 +337,13 @@ func (c *Config) ServiceList() []Service {
 	c.RLock()
 	defer c.RUnlock()
 
-	if c.Configuration.ServiceList != nil && len(c.Configuration.ServiceList) > 0 {
+	if len(c.Configuration.ServiceList) > 0 {
 		return c.Configuration.ServiceList
 	}
 	return nil
 }
 
-func (c *Config) TLSPemPath() string {
+func (c *Config) GetCertPemPath() string {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -353,7 +353,7 @@ func (c *Config) TLSPemPath() string {
 	return NefDefaultCertPemPath
 }
 
-func (c *Config) TLSKeyPath() string {
+func (c *Config) GetCertKeyPath() string {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -363,15 +363,15 @@ func (c *Config) TLSKeyPath() string {
 	return NefDefaultPrivateKeyPath
 }
 
-func (c *Config) NFServices() []models.NfService {
+func (c *Config) NFServices() []models.NrfNfManagementNfService {
 	versions := strings.Split(c.Version(), ".")
 	majorVersionUri := "v" + versions[0]
-	nfServices := []models.NfService{}
+	nfServices := []models.NrfNfManagementNfService{}
 	for i, s := range c.ServiceList() {
-		nfService := models.NfService{
+		nfService := models.NrfNfManagementNfService{
 			ServiceInstanceId: strconv.Itoa(i),
 			ServiceName:       models.ServiceName(s.ServiceName),
-			Versions: &[]models.NfServiceVersion{
+			Versions: []models.NfServiceVersion{
 				{
 					ApiFullVersion:  c.Version(),
 					ApiVersionInUri: majorVersionUri,
@@ -380,10 +380,10 @@ func (c *Config) NFServices() []models.NfService {
 			Scheme:          models.UriScheme(c.SbiScheme()),
 			NfServiceStatus: models.NfServiceStatus_REGISTERED,
 			ApiPrefix:       c.SbiUri(),
-			IpEndPoints: &[]models.IpEndPoint{
+			IpEndPoints: []models.IpEndPoint{
 				{
 					Ipv4Address: c.SbiRegisterIP(),
-					Transport:   models.TransportProtocol_TCP,
+					Transport:   models.NrfNfManagementTransportProtocol_TCP,
 					Port:        int32(c.SbiPort()),
 				},
 			},

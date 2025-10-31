@@ -5,13 +5,18 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
-	"github.com/urfave/cli"
+	"github.com/urfave/cli/v2"
 
 	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/version"
 	"github.com/free5gc/webconsole/backend/factory"
 	"github.com/free5gc/webconsole/backend/logger"
 	"github.com/free5gc/webconsole/backend/webui_service"
+)
+
+// File system constants
+const (
+	DefaultDirPermission = 0o775
 )
 
 var WEBUI *webui_service.WebuiApp
@@ -28,13 +33,15 @@ func main() {
 	app.Usage = "free5GC Web Console"
 	app.Action = action
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Usage: "Load configuration from `FILE`",
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Load configuration from `FILE`",
 		},
-		cli.StringSliceFlag{
-			Name:  "log, l",
-			Usage: "Output NF log to `FILE`",
+		&cli.StringSliceFlag{
+			Name:    "log",
+			Aliases: []string{"l"},
+			Usage:   "Output NF log to `FILE`",
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -80,7 +87,7 @@ func initLogFile(logNfPath []string) (string, error) {
 
 		nfDir, _ := filepath.Split(path)
 		tmpDir := filepath.Join(nfDir, "key")
-		if err := os.MkdirAll(tmpDir, 0o775); err != nil {
+		if err := os.MkdirAll(tmpDir, DefaultDirPermission); err != nil {
 			logger.InitLog.Errorf("Make directory %s failed: %+v", tmpDir, err)
 
 			return "", err

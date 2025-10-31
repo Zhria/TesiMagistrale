@@ -21,6 +21,7 @@ import (
 	"github.com/free5gc/smf/internal/logger"
 	smf_errors "github.com/free5gc/smf/pkg/errors"
 	"github.com/free5gc/smf/pkg/factory"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func (p *Processor) HandlePDUSessionSMContextCreate(
@@ -44,6 +45,7 @@ func (p *Processor) HandlePDUSessionSMContextCreate(
 				Error: &smf_errors.N1SmError,
 			},
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, postSmContextsError.JsonData.Error.Cause)
 		c.JSON(http.StatusForbidden, postSmContextsError)
 		return
 	}
@@ -121,7 +123,7 @@ func (p *Processor) HandlePDUSessionSMContextCreate(
 		}
 	}
 
-	var doSubscribe bool = false
+	doSubscribe := false
 	defer func() {
 		if doSubscribe {
 			if !p.Context().Ues.UeExists(smContext.Supi) {
@@ -177,8 +179,13 @@ func (p *Processor) HandlePDUSessionSMContextCreate(
 		return
 	}
 
-	if err := p.Consumer().PCFSelection(smContext); err != nil {
-		smContext.Log.Errorln("pcf selection error:", err)
+	// BSF-aware PCF selection: first check BSF for existing PCF binding
+	if bsfErr := p.Consumer().BSFAwarePCFSelection(smContext); bsfErr != nil {
+		smContext.Log.Errorln("PCF selection error (with BSF integration):", bsfErr)
+		// Fallback to traditional PCF selection if BSF integration fails
+		if fallbackErr := p.Consumer().PCFSelection(smContext); fallbackErr != nil {
+			smContext.Log.Errorln("fallback PCF selection error:", fallbackErr)
+		}
 	}
 
 	smPolicyID, smPolicyDecision, err := p.Consumer().SendSMPolicyAssociationCreate(smContext)
@@ -320,6 +327,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				},
 			},
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, updateSmContextError.JsonData.Error.Title)
 		c.JSON(http.StatusNotFound, updateSmContextError)
 		return
 	}
@@ -345,6 +353,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					Error: &smf_errors.N1SmError,
 				},
 			} // Depends on the reason why N4 fail
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, updateSmContextError.JsonData.Error.Cause)
 			c.JSON(http.StatusForbidden, updateSmContextError)
 			return
 		}
@@ -472,6 +481,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 	}
 
 	tunnel := smContext.Tunnel
+	dcTunnel := smContext.DCTunnel
 	pdrList := []*smf_context.PDR{}
 	farList := []*smf_context.FAR{}
 	barList := []*smf_context.BAR{}
@@ -597,6 +607,49 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		if err = smf_context.
 			HandlePDUSessionResourceSetupResponseTransfer(body.BinaryDataN2SmInformation, smContext); err != nil {
 			smContext.Log.Errorf("Handle PDUSessionResourceSetupResponseTransfer failed: %+v", err)
+		} else if smContext.NrdcIndicator {
+			for _, pdr := range pdrList {
+				// Remove all PDRs except the default PDR
+				if pdr.Precedence != 255 {
+					pdr.State = smf_context.RULE_REMOVE
+				}
+			}
+			if err = smContext.ApplyDcPccRulesOnDcTunnel(); err != nil {
+				smContext.Log.Errorf("ApplyDcPccRulesOnDcTunnel failed: %+v", err)
+			}
+			for _, dataPath := range dcTunnel.DataPathPool {
+				if dataPath.Activated {
+					ANUPF := dataPath.FirstDPNode
+					ULPDR := ANUPF.UpLinkTunnel.PDR
+					DLPDR := ANUPF.DownLinkTunnel.PDR
+
+					ULPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+						Buff: false,
+						Drop: false,
+						Dupl: false,
+						Forw: true,
+						Nocp: false,
+					}
+					DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+						Buff: false,
+						Drop: false,
+						Dupl: false,
+						Forw: true,
+						Nocp: false,
+					}
+
+					DLPDR.State = smf_context.RULE_INITIAL
+					DLPDR.FAR.State = smf_context.RULE_INITIAL
+					ULPDR.State = smf_context.RULE_INITIAL
+					ULPDR.FAR.State = smf_context.RULE_INITIAL
+
+					pdrList = append(pdrList, DLPDR)
+					farList = append(farList, DLPDR.FAR)
+
+					pdrList = append(pdrList, ULPDR)
+					farList = append(farList, ULPDR.FAR)
+				}
+			}
 		}
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
@@ -609,6 +662,166 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		if err = smf_context.
 			HandlePDUSessionResourceModifyResponseTransfer(body.BinaryDataN2SmInformation, smContext); err != nil {
 			smContext.Log.Errorf("Handle PDUSessionResourceModifyResponseTransfer failed: %+v", err)
+		}
+	case models.N2SmInfoType_PDU_RES_MOD_IND:
+		// This handler only processes changes in the number of tunnels:
+		// 1. Single tunnel to dual tunnels (1->2)
+		// 2. Dual tunnels to single tunnel (2->1)
+		// Does NOT handle modifications between same number of tunnels (1->1 or 2->2). It doesn't make sense.
+
+		// After check the smContext is active, change it to modification pending
+		smContext.CheckState(smf_context.Active)
+		smContext.SetState(smf_context.ModificationPending)
+
+		if smContext.NrdcIndicator {
+			smContext.Log.Infof("Both tunnels are active - Tunnel TEID: %d, DCTunnel TEID: %d",
+				smContext.Tunnel.ANInformation.TEID, smContext.DCTunnel.ANInformation.TEID)
+
+			// avtivate the rules for specified QoS traffic on Tunnel
+			for _, dataPath := range tunnel.DataPathPool {
+				if dataPath.Activated {
+					ANUPF := dataPath.FirstDPNode
+					DLPDR := ANUPF.DownLinkTunnel.PDR
+					if DLPDR.Precedence == 255 {
+						continue
+					}
+
+					DLPDR.State = smf_context.RULE_INITIAL
+					DLPDR.FAR.State = smf_context.RULE_INITIAL
+
+					pdrList = append(pdrList, DLPDR)
+					farList = append(farList, DLPDR.FAR)
+				}
+			}
+
+			// remove the rules on DCTunnel
+			for _, dataPath := range dcTunnel.DataPathPool {
+				if dataPath.Activated {
+					ANUPF := dataPath.FirstDPNode
+					ULPDR := ANUPF.UpLinkTunnel.PDR
+					DLPDR := ANUPF.DownLinkTunnel.PDR
+					if DLPDR.Precedence == 255 {
+						continue
+					}
+
+					ULPDR.State = smf_context.RULE_REMOVE
+					ULPDR.FAR.State = smf_context.RULE_REMOVE
+					DLPDR.State = smf_context.RULE_REMOVE
+					DLPDR.FAR.State = smf_context.RULE_REMOVE
+
+					pdrList = append(pdrList, ULPDR)
+					farList = append(farList, ULPDR.FAR)
+
+					pdrList = append(pdrList, DLPDR)
+					farList = append(farList, DLPDR.FAR)
+				}
+			}
+
+			// re-initialize DCTunnel
+			smContext.DCTunnel = smf_context.NewUPTunnel()
+			smContext.NrdcIndicator, sendPFCPModification = false, true
+
+			smContext.Log.Infoln("Release DCTunnel")
+		} else {
+			smContext.Log.Infof("Only master tunnel is active - Tunnel TEID: %d", smContext.Tunnel.ANInformation.TEID)
+
+			// handle the PDU session resource modify indication transfer message
+			if err = smf_context.
+				HandlePDUSessionResourceModifyIndicationTransfer(body.BinaryDataN2SmInformation, smContext); err != nil {
+				smContext.Log.Errorf("Handle PDUSessionResourceModifyIndicationTransfer failed: %+v", err)
+				sendPFCPModification = false
+			} else {
+				// apply the rules on DCTunnel
+				if err = smContext.ApplyDcPccRulesOnDcTunnel(); err != nil {
+					smContext.Log.Errorf("ApplyDcPccRulesOnDcTunnel failed: %+v", err)
+					sendPFCPModification = false
+				} else {
+					// append the rules on DCTunnel
+					for _, dataPath := range dcTunnel.DataPathPool {
+						if dataPath.Activated {
+							ANUPF := dataPath.FirstDPNode
+							ULPDR := ANUPF.UpLinkTunnel.PDR
+							DLPDR := ANUPF.DownLinkTunnel.PDR
+							if DLPDR.Precedence == 255 {
+								continue
+							}
+
+							ULPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+								Buff: false,
+								Drop: false,
+								Dupl: false,
+								Forw: true,
+								Nocp: false,
+							}
+							DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+								Buff: false,
+								Drop: false,
+								Dupl: false,
+								Forw: true,
+								Nocp: false,
+							}
+
+							DLPDR.State = smf_context.RULE_INITIAL
+							DLPDR.FAR.State = smf_context.RULE_INITIAL
+							ULPDR.State = smf_context.RULE_INITIAL
+							ULPDR.FAR.State = smf_context.RULE_INITIAL
+
+							pdrList = append(pdrList, DLPDR)
+							farList = append(farList, DLPDR.FAR)
+
+							pdrList = append(pdrList, ULPDR)
+							farList = append(farList, ULPDR.FAR)
+						}
+					}
+
+					// remove the rules for specified QoS traffic on Tunnel
+					for _, dataPath := range tunnel.DataPathPool {
+						if dataPath.Activated {
+							ANUPF := dataPath.FirstDPNode
+							DLPDR := ANUPF.DownLinkTunnel.PDR
+							if DLPDR.Precedence == 255 {
+								continue
+							}
+
+							DLPDR.State = smf_context.RULE_REMOVE
+							DLPDR.FAR.State = smf_context.RULE_REMOVE
+
+							pdrList = append(pdrList, DLPDR)
+							farList = append(farList, DLPDR.FAR)
+						}
+					}
+					smContext.NrdcIndicator, sendPFCPModification = true, true
+
+					smContext.Log.Infoln("Activate DCTunnel")
+				}
+			}
+		}
+
+		if sendPFCPModification {
+			smContext.SetState(smf_context.PFCPModification)
+			if smContext.NrdcIndicator {
+				response.BinaryDataN2SmInformation, err = smf_context.
+					BuildPDUSessionResourceModifyConfirmTransfer(
+						smContext, smContext.DCTunnel, smContext.LocalULTeidForSplitPDUSession)
+				if err != nil {
+					smContext.Log.Errorf("Build PDUSessionResourceModifyConfirmSuccess failed: %+v", err)
+				} else {
+					response.JsonData.N2SmInfo = &models.RefToBinaryData{ContentId: "PDU_RES_MOD_CFM"}
+					response.JsonData.N2SmInfoType = models.N2SmInfoType_PDU_RES_MOD_CFM
+				}
+			} else {
+				response.BinaryDataN2SmInformation, err = smf_context.
+					BuildPDUSessionResourceModifyConfirmTransfer(
+						smContext, smContext.Tunnel, smContext.LocalULTeid)
+				if err != nil {
+					smContext.Log.Errorf("Build PDUSessionResourceModifyConfirmSuccess failed: %+v", err)
+				} else {
+					response.JsonData.N2SmInfo = &models.RefToBinaryData{ContentId: "PDU_RES_MOD_CFM"}
+					response.JsonData.N2SmInfoType = models.N2SmInfoType_PDU_RES_MOD_CFM
+				}
+			}
+		} else {
+			smContext.SetState(smf_context.Active)
 		}
 	case models.N2SmInfoType_PDU_RES_REL_RSP:
 		// remove an tunnel info
@@ -844,6 +1057,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					Error: &smf_errors.N1SmError,
 				},
 			} // Depends on the reason why N4 fail
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, updateSmContextError.JsonData.Error.Cause)
 			c.JSON(http.StatusForbidden, updateSmContextError)
 
 		case smf_context.SessionReleaseSuccess:
@@ -875,6 +1089,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 					errResponse.JsonData.N1SmMsg = &models.RefToBinaryData{ContentId: "PDUSessionReleaseReject"}
 				}
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, errResponse.JsonData.Error.Cause)
 			c.JSON(int(problemDetail.Status), errResponse)
 		}
 		smContext.PostRemoveDataPath()
@@ -918,6 +1133,7 @@ func (p *Processor) HandlePDUSessionSMContextRelease(
 				},
 			},
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, updateSmContextError.JsonData.Error.Title)
 		c.JSON(http.StatusNotFound, updateSmContextError)
 		return
 	}
@@ -993,6 +1209,7 @@ func (p *Processor) HandlePDUSessionSMContextRelease(
 			errResponse.JsonData.N1SmMsg = &models.RefToBinaryData{ContentId: "PDUSessionReleaseReject"}
 		}
 
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, errResponse.JsonData.Error.Cause)
 		c.JSON(int(problemDetail.Status), errResponse)
 
 	default:
@@ -1015,7 +1232,7 @@ func (p *Processor) HandlePDUSessionSMContextRelease(
 			errResponse.BinaryDataN1SmMessage = buf
 			errResponse.JsonData.N1SmMsg = &models.RefToBinaryData{ContentId: "PDUSessionReleaseReject"}
 		}
-
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, errResponse.JsonData.Error.Cause)
 		c.JSON(int(problemDetail.Status), errResponse)
 	}
 
@@ -1100,6 +1317,15 @@ func releaseSession(smContext *smf_context.SMContext) smf_context.PFCPSessionRes
 	smContext.SetState(smf_context.PFCPModification)
 
 	for _, res := range ReleaseTunnel(smContext) {
+		if res.Status != smf_context.SessionReleaseSuccess {
+			return res.Status
+		}
+	}
+	if !smContext.NrdcIndicator {
+		return smf_context.SessionReleaseSuccess
+	}
+
+	for _, res := range ReleaseDcTunnel(smContext) {
 		if res.Status != smf_context.SessionReleaseSuccess {
 			return res.Status
 		}
@@ -1242,12 +1468,15 @@ func (p *Processor) nasErrorResponse(
 			rspBody, contentType, err := openapi.MultipartSerialize(errBody)
 			if err != nil {
 				logger.SBILog.Infof("MultipartSerialize error: %v", err)
-				c.JSON(http.StatusInternalServerError, openapi.ProblemDetailsSystemFailure(err.Error()))
+				problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
+				c.JSON(http.StatusInternalServerError, problemDetails)
 			} else {
 				c.Data(status, contentType, rspBody)
 			}
 			return
 		}
 	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, errBody.JsonData.Error.Cause)
 	c.JSON(status, errBody)
 }

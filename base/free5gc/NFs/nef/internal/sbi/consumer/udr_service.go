@@ -2,30 +2,33 @@ package consumer
 
 import (
 	"net/http"
+	"reflect"
 	"sync"
 
-	"github.com/antihax/optional"
-	"github.com/free5gc/nef/internal/logger"
-	"github.com/free5gc/openapi/Nudr_DataRepository"
+	// "github.com/free5gc/openapi/Nudr_DataRepository"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/openapi/nrf/NFDiscovery"
+	"github.com/free5gc/openapi/udr/DataRepository"
 )
 
 type nudrService struct {
 	consumer *Consumer
 
 	mu      sync.RWMutex
-	clients map[string]*Nudr_DataRepository.APIClient
+	clients map[string]*DataRepository.APIClient
 }
 
-func (s *nudrService) getClient(uri string) *Nudr_DataRepository.APIClient {
+func (s *nudrService) getClient(uri string) *DataRepository.APIClient {
 	s.mu.RLock()
 	if client, ok := s.clients[uri]; ok {
 		defer s.mu.RUnlock()
 		return client
 	} else {
-		configuration := Nudr_DataRepository.NewConfiguration()
+		configuration := DataRepository.NewConfiguration()
 		configuration.SetBasePath(uri)
-		cli := Nudr_DataRepository.NewAPIClient(configuration)
+		configuration.SetHTTPClient(http.DefaultClient)
+		cli := DataRepository.NewAPIClient(configuration)
 
 		s.mu.RUnlock()
 		s.mu.Lock()
@@ -38,8 +41,13 @@ func (s *nudrService) getClient(uri string) *Nudr_DataRepository.APIClient {
 func (s *nudrService) getUdrDrUri() (string, error) {
 	uri := s.consumer.Context().UdrDrUri()
 	if uri == "" {
+		localVarOptionals := NFDiscovery.SearchNFInstancesRequest{
+			ServiceNames: []models.ServiceName{
+				models.ServiceName_NUDR_DR,
+			},
+		}
 		_, sUri, err := s.consumer.SearchNFInstances(s.consumer.Config().NrfUri(),
-			models.ServiceName_NUDR_DR, nil)
+			models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR, models.NrfNfManagementNfType_NEF, &localVarOptionals)
 		if err == nil {
 			s.consumer.Context().SetUdrDrUri(sUri)
 		}
@@ -53,8 +61,7 @@ func (s *nudrService) AppDataInfluenceDataGet(influenceIDs []string) (int, inter
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  []models.TrafficInfluData
-		rsp     *http.Response
+		result  *DataRepository.ReadInfluenceDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -63,39 +70,24 @@ func (s *nudrService) AppDataInfluenceDataGet(influenceIDs []string) (int, inter
 	}
 	client := s.getClient(uri)
 
-	param := &Nudr_DataRepository.ApplicationDataInfluenceDataGetParamOpts{
-		InfluenceIds: optional.NewInterface(influenceIDs),
-	}
-
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.InfluenceDataApi.
-		ApplicationDataInfluenceDataGet(ctx, param)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
-
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
-	} else {
-		// API Service Internal Error or Server No Response
-		rspCode, rspBody = handleAPIServiceNoResponse(err)
+	readInfluenceDataReq := &DataRepository.ReadInfluenceDataRequest{
+		InfluenceIds: influenceIDs,
+	}
+	result, err = client.InfluenceDataStoreApi.ReadInfluenceData(ctx, readInfluenceDataReq)
+	if err != nil {
+		return handleAPIServiceNoResponse(err)
 	}
 
-	return rspCode, rspBody
+	if result == nil || reflect.DeepEqual(result.TrafficInfluData, []models.TrafficInfluData{}) {
+		return http.StatusNoContent, nil
+	}
+
+	return http.StatusOK, result.TrafficInfluData
 }
 
 func (s *nudrService) AppDataInfluenceDataIdGet(influenceID string) (int, interface{}) {
@@ -103,8 +95,7 @@ func (s *nudrService) AppDataInfluenceDataIdGet(influenceID string) (int, interf
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  []models.TrafficInfluData
-		rsp     *http.Response
+		result  *DataRepository.ReadInfluenceDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -113,35 +104,20 @@ func (s *nudrService) AppDataInfluenceDataIdGet(influenceID string) (int, interf
 	}
 	client := s.getClient(uri)
 
-	param := &Nudr_DataRepository.ApplicationDataInfluenceDataGetParamOpts{
-		InfluenceIds: optional.NewInterface(influenceID),
-	}
-
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.InfluenceDataApi.
-		ApplicationDataInfluenceDataGet(ctx, param)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
+	readInfluenceDataReq := &DataRepository.ReadInfluenceDataRequest{
+		InfluenceIds: []string{influenceID},
+	}
+	result, err = client.InfluenceDataStoreApi.ReadInfluenceData(ctx, readInfluenceDataReq)
 
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
+	if result != nil {
+		rspCode = http.StatusOK
+		rspBody = result.TrafficInfluData
 	} else {
-		// API Service Internal Error or Server No Response
 		rspCode, rspBody = handleAPIServiceNoResponse(err)
 	}
 
@@ -155,8 +131,7 @@ func (s *nudrService) AppDataInfluenceDataPut(influenceID string,
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  models.TrafficInfluData
-		rsp     *http.Response
+		result  *DataRepository.CreateOrReplaceIndividualInfluenceDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -165,31 +140,106 @@ func (s *nudrService) AppDataInfluenceDataPut(influenceID string,
 	}
 	client := s.getClient(uri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.IndividualInfluenceDataDocumentApi.
-		ApplicationDataInfluenceDataInfluenceIdPut(ctx, influenceID, *tiData)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
+	putInfluenceDataReq := &DataRepository.CreateOrReplaceIndividualInfluenceDataRequest{
+		InfluenceId:      &influenceID,
+		TrafficInfluData: tiData,
+	}
 
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusCreated { // TODO: check more status codes
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
+	result, err = client.IndividualInfluenceDataDocumentApi.CreateOrReplaceIndividualInfluenceData(
+		ctx, putInfluenceDataReq)
+
+	if result != nil {
+		if result.Location != "" {
+			rspCode = http.StatusCreated
+		} else if reflect.DeepEqual(result.TrafficInfluData, models.TrafficInfluData{}) {
+			rspCode = http.StatusNoContent
+		} else {
+			rspCode = http.StatusOK
+		}
+		rspBody = result.TrafficInfluData
+	} else {
+		rspCode, rspBody = handleAPIServiceNoResponse(err)
+	}
+
+	return rspCode, rspBody
+}
+
+func (s *nudrService) AppDataInfluenceDataPatch(
+	influenceID string, tiSubPatch *models.TrafficInfluDataPatch,
+) (int, interface{}) {
+	var (
+		err     error
+		rspCode int
+		rspBody interface{}
+		result  *DataRepository.UpdateIndividualInfluenceDataResponse
+	)
+
+	uri, err := s.getUdrDrUri()
+	if err != nil {
+		return rspCode, rspBody
+	}
+	client := s.getClient(uri)
+
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
+	if err != nil {
+		return rspCode, rspBody
+	}
+
+	patchInfluenceDataReq := &DataRepository.UpdateIndividualInfluenceDataRequest{
+		InfluenceId:           &influenceID,
+		TrafficInfluDataPatch: tiSubPatch,
+	}
+	result, err = client.IndividualInfluenceDataDocumentApi.UpdateIndividualInfluenceData(ctx, patchInfluenceDataReq)
+
+	if result != nil {
+		if reflect.DeepEqual(result.TrafficInfluData, models.TrafficInfluData{}) {
+			rspCode = http.StatusNoContent
+			rspBody = nil
+		} else {
+			rspCode = http.StatusOK
+			rspBody = result.TrafficInfluData
 		}
 	} else {
-		// API Service Internal Error or Server No Response
+		rspCode, rspBody = handleAPIServiceNoResponse(err)
+	}
+
+	return rspCode, rspBody
+}
+
+func (s *nudrService) AppDataInfluenceDataDelete(influenceID string) (int, interface{}) {
+	var (
+		err     error
+		rspCode int
+		rspBody interface{}
+		result  *DataRepository.DeleteIndividualInfluenceDataResponse
+	)
+
+	uri, err := s.getUdrDrUri()
+	if err != nil {
+		return rspCode, rspBody
+	}
+	client := s.getClient(uri)
+
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
+	if err != nil {
+		return rspCode, rspBody
+	}
+
+	deleteInfluenceDataReq := &DataRepository.DeleteIndividualInfluenceDataRequest{
+		InfluenceId: &influenceID,
+	}
+	result, err = client.IndividualInfluenceDataDocumentApi.
+		DeleteIndividualInfluenceData(ctx, deleteInfluenceDataReq)
+
+	if result != nil {
+		rspCode = http.StatusNoContent
+		rspBody = nil
+	} else {
 		rspCode, rspBody = handleAPIServiceNoResponse(err)
 	}
 
@@ -202,8 +252,7 @@ func (s *nudrService) AppDataPfdsGet(appIDs []string) (int, interface{}) {
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  []models.PfdDataForApp
-		rsp     *http.Response
+		result  *DataRepository.ReadPFDDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -212,48 +261,43 @@ func (s *nudrService) AppDataPfdsGet(appIDs []string) (int, interface{}) {
 	}
 	client := s.getClient(uri)
 
-	param := &Nudr_DataRepository.ApplicationDataPfdsGetParamOpts{
-		AppId: optional.NewInterface(appIDs),
-	}
-
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.DefaultApi.ApplicationDataPfdsGet(ctx, param)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
+	readPfdDataReq := &DataRepository.ReadPFDDataRequest{
+		AppId: appIDs,
+	}
+	result, err = client.PFDDataStoreApi.ReadPFDData(ctx, readPfdDataReq)
 
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
-	} else {
-		// API Service Internal Error or Server No Response
-		rspCode, rspBody = handleAPIServiceNoResponse(err)
+	if err == nil && result != nil {
+		rspCode = http.StatusOK
+		rspBody = &result.PfdDataForAppExt
+		return rspCode, rspBody
 	}
 
+	if err != nil {
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if pd, ok := apiErr.ErrorModel.(DataRepository.ReadPFDDataError); ok {
+				rspCode = int(pd.ProblemDetails.Status)
+				rspBody = &pd.ProblemDetails
+				return rspCode, rspBody
+			}
+		}
+	}
+
+	rspCode, rspBody = handleAPIServiceNoResponse(err)
 	return rspCode, rspBody
 }
 
 // TS 29.519 v15.3.0 6.2.4.3.3
-func (s *nudrService) AppDataPfdsAppIdPut(appID string, pfdDataForApp *models.PfdDataForApp) (int, interface{}) {
+func (s *nudrService) AppDataPfdsAppIdPut(appID string, pfdDataForApp *models.PfdDataForAppExt) (int, interface{}) {
 	var (
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  models.PfdDataForApp
-		rsp     *http.Response
+		result  *DataRepository.CreateOrReplaceIndividualPFDDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -262,30 +306,29 @@ func (s *nudrService) AppDataPfdsAppIdPut(appID string, pfdDataForApp *models.Pf
 	}
 	client := s.getClient(uri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.DefaultApi.ApplicationDataPfdsAppIdPut(ctx, appID, *pfdDataForApp)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
+	putPfdDataReq := &DataRepository.CreateOrReplaceIndividualPFDDataRequest{
+		AppId:            &appID,
+		PfdDataForAppExt: pfdDataForApp,
+	}
+	result, err = client.IndividualPFDDataDocumentApi.CreateOrReplaceIndividualPFDData(ctx, putPfdDataReq)
 
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK || rsp.StatusCode == http.StatusCreated {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
+	if result != nil {
+		if reflect.DeepEqual(result.PfdDataForAppExt, models.PfdDataForAppExt{}) {
+			rspCode = http.StatusNoContent
+			rspBody = nil
+		} else if result.Location != "" {
+			rspCode = http.StatusCreated
+			rspBody = &result.PfdDataForAppExt
+		} else {
+			rspCode = http.StatusOK
+			rspBody = &result.PfdDataForAppExt
 		}
 	} else {
-		// API Service Internal Error or Server No Response
 		rspCode, rspBody = handleAPIServiceNoResponse(err)
 	}
 
@@ -298,7 +341,7 @@ func (s *nudrService) AppDataPfdsAppIdDelete(appID string) (int, interface{}) {
 		err     error
 		rspCode int
 		rspBody interface{}
-		rsp     *http.Response
+		result  *DataRepository.DeleteIndividualPFDDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -307,26 +350,19 @@ func (s *nudrService) AppDataPfdsAppIdDelete(appID string) (int, interface{}) {
 	}
 	client := s.getClient(uri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	rsp, err = client.DefaultApi.ApplicationDataPfdsAppIdDelete(ctx, appID)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
+	deletePfdDataReq := &DataRepository.DeleteIndividualPFDDataRequest{
+		AppId: &appID,
+	}
+	result, err = client.IndividualPFDDataDocumentApi.DeleteIndividualPFDData(ctx, deletePfdDataReq)
 
-		rspCode = rsp.StatusCode
-		if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
+	if result != nil {
+		rspCode = http.StatusNoContent
+		rspBody = nil
 	} else {
 		// API Service Internal Error or Server No Response
 		rspCode, rspBody = handleAPIServiceNoResponse(err)
@@ -341,8 +377,7 @@ func (s *nudrService) AppDataPfdsAppIdGet(appID string) (int, interface{}) {
 		err     error
 		rspCode int
 		rspBody interface{}
-		result  models.PfdDataForApp
-		rsp     *http.Response
+		result  *DataRepository.ReadIndividualPFDDataResponse
 	)
 
 	uri, err := s.getUdrDrUri()
@@ -351,125 +386,32 @@ func (s *nudrService) AppDataPfdsAppIdGet(appID string) (int, interface{}) {
 	}
 	client := s.getClient(uri)
 
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
+	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
 		return rspCode, rspBody
 	}
 
-	result, rsp, err = client.DefaultApi.ApplicationDataPfdsAppIdGet(ctx, appID)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
+	readPfdDataReq := &DataRepository.ReadIndividualPFDDataRequest{
+		AppId: &appID,
+	}
+	result, err = client.IndividualPFDDataDocumentApi.ReadIndividualPFDData(ctx, readPfdDataReq)
+
+	if err == nil && result != nil {
+		rspCode = http.StatusOK
+		rspBody = &result.PfdDataForAppExt
+		return rspCode, rspBody
+	}
+
+	if err != nil {
+		if apiErr, ok := err.(openapi.GenericOpenAPIError); ok {
+			if pd, ok := apiErr.ErrorModel.(DataRepository.ReadIndividualPFDDataError); ok {
+				rspCode = int(pd.ProblemDetails.Status)
+				rspBody = &pd.ProblemDetails
+				return rspCode, rspBody
 			}
-		}()
-
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
 		}
-	} else {
-		// API Service Internal Error or Server No Response
-		rspCode, rspBody = handleAPIServiceNoResponse(err)
 	}
 
-	return rspCode, rspBody
-}
-
-func (s *nudrService) AppDataInfluenceDataPatch(
-	influenceID string, tiSubPatch *models.TrafficInfluDataPatch,
-) (int, interface{}) {
-	var (
-		err     error
-		rspCode int
-		rspBody interface{}
-		result  models.TrafficInfluData
-		rsp     *http.Response
-	)
-
-	uri, err := s.getUdrDrUri()
-	if err != nil {
-		return rspCode, rspBody
-	}
-	client := s.getClient(uri)
-
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
-	if err != nil {
-		return rspCode, rspBody
-	}
-
-	result, rsp, err = client.IndividualInfluenceDataDocumentApi.
-		ApplicationDataInfluenceDataInfluenceIdPatch(ctx, influenceID, *tiSubPatch)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
-
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &result
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
-	} else {
-		// API Service Internal Error or Server No Response
-		rspCode, rspBody = handleAPIServiceNoResponse(err)
-	}
-
-	return rspCode, rspBody
-}
-
-func (s *nudrService) AppDataInfluenceDataDelete(influenceID string) (int, interface{}) {
-	var (
-		err     error
-		rspCode int
-		rspBody interface{}
-		rsp     *http.Response
-	)
-
-	uri, err := s.getUdrDrUri()
-	if err != nil {
-		return rspCode, rspBody
-	}
-	client := s.getClient(uri)
-
-	ctx, _, err := s.consumer.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NfType_UDR)
-	if err != nil {
-		return rspCode, rspBody
-	}
-
-	rsp, err = client.IndividualInfluenceDataDocumentApi.
-		ApplicationDataInfluenceDataInfluenceIdDelete(ctx, influenceID)
-	if rsp != nil {
-		defer func() {
-			if rsp.Request.Response != nil {
-				rsp_err := rsp.Request.Response.Body.Close()
-				if rsp_err != nil {
-					logger.ConsumerLog.Errorf("ResponseBody can't be close: %+v", err)
-				}
-			}
-		}()
-
-		rspCode = rsp.StatusCode
-		if rsp.StatusCode == http.StatusOK {
-			rspBody = &rsp.Body
-		} else if err != nil {
-			rspCode, rspBody = handleAPIServiceResponseError(rsp, err)
-		}
-	} else {
-		// API Service Internal Error or Server No Response
-		rspCode, rspBody = handleAPIServiceNoResponse(err)
-	}
-
+	rspCode, rspBody = handleAPIServiceNoResponse(err)
 	return rspCode, rspBody
 }

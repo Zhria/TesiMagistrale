@@ -17,8 +17,9 @@ import (
 	"github.com/free5gc/openapi/models"
 	Nudr_DataRepository "github.com/free5gc/openapi/udr/DataRepository"
 	"github.com/free5gc/udm/internal/logger"
+	"github.com/free5gc/udm/internal/util"
 	"github.com/free5gc/udm/pkg/suci"
-	"github.com/free5gc/util/milenage"
+	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/ueauth"
 )
 
@@ -46,7 +47,7 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 
 	logger.UeauLog.Tracef("aucSQN: ConcSQNms=[%x]", ConcSQNms)
 
-	err = milenage.F2345(opc, k, rand, nil, nil, nil, nil, AK)
+	err = util.MilenageF2345(opc, k, rand, nil, nil, nil, nil, AK)
 	if err != nil {
 		logger.UeauLog.Errorln("aucSQN milenage F2345 err:", err)
 	}
@@ -57,7 +58,7 @@ func (p *Processor) aucSQN(opc, k, auts, rand []byte) ([]byte, []byte) {
 
 	logger.UeauLog.Tracef("aucSQN: opc=[%x], k=[%x], rand=[%x], AMF=[%x], SQNms=[%x]\n", opc, k, rand, AMF, SQNms)
 	// The AMF used to calculate MAC-S assumes a dummy value of all zeros
-	err = milenage.F1(opc, k, rand, SQNms, AMF, nil, macS)
+	err = util.MilenageF1(opc, k, rand, SQNms, AMF, nil, macS)
 	if err != nil {
 		logger.UeauLog.Errorln("aucSQN milenage F1 err:", err)
 	}
@@ -80,6 +81,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -90,6 +92,7 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -99,11 +102,13 @@ func (p *Processor) ConfirmAuthDataProcedure(c *gin.Context,
 	if err != nil {
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			return
 		}
 		logger.UeauLog.Errorln("ConfirmAuth err:", err.Error())
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -119,6 +124,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 ) {
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -135,6 +141,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("suciToSupi error: ", err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -144,6 +151,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 	client, err := p.Consumer().CreateUDMClientToUDR(supi)
 	if err != nil {
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -155,6 +163,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		logger.ProcLog.Errorf("Error on QueryAuthSubsData: %+v", err)
 		apiError, ok := err.(openapi.GenericOpenAPIError)
 		if ok {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(apiError.ErrorStatus))
 			c.JSON(apiError.ErrorStatus, apiError.RawBody)
 			switch apiError.ErrorStatus {
 			case http.StatusNotFound:
@@ -165,6 +174,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			return
 		}
 		problemDetails := openapi.ProblemDetailsSystemFailure(err.Error())
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -193,6 +203,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("kStr length is ", len(kStr))
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -204,6 +215,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("Nil PermanentKey")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -229,6 +241,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			Status: http.StatusForbidden,
 			Cause:  authenticationRejected,
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -244,6 +257,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -260,6 +274,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -275,6 +290,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -294,6 +310,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("err:", deCodeErr)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -307,6 +324,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 			}
 
 			logger.UeauLog.Errorln("err:", deCodeErr)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -322,6 +340,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 				}
 
 				logger.UeauLog.Errorln("err:", err)
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 				c.JSON(int(problemDetails.Status), problemDetails)
 				return
 			}
@@ -348,6 +367,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 				Status: http.StatusForbidden,
 				Cause:  "modification is rejected",
 			}
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -364,6 +384,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("err:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -400,6 +421,7 @@ func (p *Processor) GenerateAuthDataProcedure(
 		}
 
 		logger.UeauLog.Errorln("update sqn error:", err)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -411,14 +433,14 @@ func (p *Processor) GenerateAuthDataProcedure(
 	AK, AKstar := make([]byte, 6), make([]byte, 6)
 
 	// Generate macA, macS
-	err = milenage.F1(opc, k, RAND, sqn, AMF, macA, macS)
+	err = util.MilenageF1(opc, k, RAND, sqn, AMF, macA, macS)
 	if err != nil {
 		logger.UeauLog.Errorln("milenage F1 err:", err)
 	}
 
 	// Generate RES, CK, IK, AK, AKstar
 	// RES == XRES (expected RES) for server
-	err = milenage.F2345(opc, k, RAND, RES, CK, IK, AK, AKstar)
+	err = util.MilenageF2345(opc, k, RAND, RES, CK, IK, AK, AKstar)
 	if err != nil {
 		logger.UeauLog.Errorln("milenage F2345 err:", err)
 	}

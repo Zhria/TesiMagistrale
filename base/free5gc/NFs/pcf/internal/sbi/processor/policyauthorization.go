@@ -15,6 +15,7 @@ import (
 	pcf_context "github.com/free5gc/pcf/internal/context"
 	"github.com/free5gc/pcf/internal/logger"
 	"github.com/free5gc/pcf/internal/util"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 const (
@@ -108,7 +109,7 @@ func handleMediaSubComponent(smPolicy *pcf_context.UeSmPolicyData, medComp *mode
 				var ul, dl bool
 				qosData, ul, dl = updateQosInMedSubComp(smPolicy.PolicyDecision.QosDecs[qosID], medComp, medSubComp)
 				if problemDetails := modifyRemainBitRate(smPolicy, &qosData, ul, dl); problemDetails != nil {
-					logger.PolicyAuthLog.Errorf(problemDetails.Detail)
+					logger.PolicyAuthLog.Error(problemDetails.Detail)
 					return nil, problemDetails
 				}
 				smPolicy.PolicyDecision.QosDecs[qosData.QosId] = &qosData
@@ -142,6 +143,7 @@ func (p *Processor) HandlePostAppSessionsContext(
 		c.JSON(http.StatusCreated, response)
 		return
 	} else if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -149,6 +151,7 @@ func (p *Processor) HandlePostAppSessionsContext(
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(http.StatusForbidden, problemDetails)
 }
 
@@ -197,7 +200,7 @@ func (p *Processor) postAppSessCtxProcedure(appSessCtx *models.AppSessionContext
 
 	var requestSuppFeat openapi.SupportedFeature
 	if tempRequestSuppFeat, err := openapi.NewSupportedFeature(ascReqData.SuppFeat); err != nil {
-		logger.PolicyAuthLog.Errorf(err.Error())
+		logger.PolicyAuthLog.Error(err.Error())
 	} else {
 		requestSuppFeat = tempRequestSuppFeat
 	}
@@ -450,18 +453,19 @@ func (p *Processor) HandleDeleteAppSessionContext(
 	}
 	if appSession == nil {
 		problemDetail := util.GetProblemDetail("can't find app session", util.APPLICATION_SESSION_CONTEXT_NOT_FOUND)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
 	if eventsSubscReqData != nil {
-		logger.PolicyAuthLog.Warnf("Delete AppSessions does not support with Event Subscription")
+		logger.PolicyAuthLog.Warn("Delete AppSessions does not support with Event Subscription")
 	}
 	// Remove related pcc rule resource
 	smPolicy := appSession.SmPolicyData
 	deletedSmPolicyDec := models.SmPolicyDecision{}
 	for _, pccRuleID := range appSession.RelatedPccRuleIds {
 		if err := smPolicy.RemovePccRule(pccRuleID, &deletedSmPolicyDec); err != nil {
-			logger.PolicyAuthLog.Warnf(err.Error())
+			logger.PolicyAuthLog.Warn(err.Error())
 		}
 	}
 
@@ -511,6 +515,7 @@ func (p *Processor) HandleGetAppSessionContext(
 	}
 	if appSession == nil {
 		problemDetail := util.GetProblemDetail("can't find app session", util.APPLICATION_SESSION_CONTEXT_NOT_FOUND)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -533,6 +538,7 @@ func (p *Processor) HandleModAppSessionContext(
 	}
 	if appSession == nil {
 		problemDetail := util.GetProblemDetail("can't find app session", util.APPLICATION_SESSION_CONTEXT_NOT_FOUND)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON((int)(problemDetail.Status), problemDetail)
 		return
 	}
@@ -541,6 +547,7 @@ func (p *Processor) HandleModAppSessionContext(
 		appSessCtx.AscReqData.BdtRefId = appSessionContextUpdateData.BdtRefId
 		if err := p.handleBDTPolicyInd(pcfSelf, appSessCtx); err != nil {
 			problemDetail := util.GetProblemDetail(err.Error(), util.ERROR_REQUEST_PARAMETERS)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		}
@@ -551,6 +558,7 @@ func (p *Processor) HandleModAppSessionContext(
 	smPolicy := appSession.SmPolicyData
 	if smPolicy == nil {
 		problemDetail := util.GetProblemDetail("Can't find related PDU Session", util.REQUESTED_SERVICE_NOT_AUTHORIZED)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -584,6 +592,7 @@ func (p *Processor) HandleModAppSessionContext(
 				for _, medSubComp := range medComp.MedSubComps {
 					if tempPccRule, problemDetail := handleMediaSubComponent(smPolicy, medComp,
 						&medSubComp, var5qi); problemDetail != nil {
+						c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 						c.JSON(int(problemDetail.Status), problemDetail)
 						return
 					} else {
@@ -604,6 +613,7 @@ func (p *Processor) HandleModAppSessionContext(
 			} else {
 				problemDetail := util.GetProblemDetail("Media Component needs flows of subComp or afAppId",
 					util.REQUESTED_SERVICE_NOT_AUTHORIZED)
+				c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 				c.JSON(int(problemDetail.Status), problemDetail)
 				return
 			}
@@ -619,6 +629,7 @@ func (p *Processor) HandleModAppSessionContext(
 					var ul, dl bool
 					qosData, ul, dl = updateQosInMedComp(qosData, medComp)
 					if problemDetail := modifyRemainBitRate(smPolicy, &qosData, ul, dl); problemDetail != nil {
+						c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 						c.JSON(int(problemDetail.Status), problemDetail)
 						return
 					}
@@ -637,6 +648,7 @@ func (p *Processor) HandleModAppSessionContext(
 						var ul, dl bool
 						qosData, ul, dl = updateQosInMedComp(*smPolicy.PolicyDecision.QosDecs[qosID], medComp)
 						if problemDetail := modifyRemainBitRate(smPolicy, &qosData, ul, dl); problemDetail != nil {
+							c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 							c.JSON(int(problemDetail.Status), problemDetail)
 							return
 						}
@@ -739,6 +751,7 @@ func (p *Processor) HandleModAppSessionContext(
 		if tempUmData, err := extractUmData(umID, eventSubs,
 			threshRmToThresh(appSessionContextUpdateData.EvSubsc.UsgThres)); err != nil {
 			problemDetail := util.GetProblemDetail(err.Error(), util.REQUESTED_SERVICE_NOT_AUTHORIZED)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		} else {
@@ -747,6 +760,7 @@ func (p *Processor) HandleModAppSessionContext(
 		if err := handleSponsoredConnectivityInformation(smPolicy, relatedPccRuleIds, appSessionContextUpdateData.AspId,
 			appSessionContextUpdateData.SponId, appSessionContextUpdateData.SponStatus, umData, &updateSMpolicy); err != nil {
 			problemDetail := util.GetProblemDetail(err.Error(), util.REQUESTED_SERVICE_NOT_AUTHORIZED)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		}
@@ -818,6 +832,7 @@ func (p *Processor) HandleDeleteEventsSubscContext(
 	}
 	if appSession == nil {
 		problemDetail := util.GetProblemDetail("can't find app session", util.APPLICATION_SESSION_CONTEXT_NOT_FOUND)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -859,6 +874,7 @@ func (p *Processor) HandleUpdateEventsSubscContext(
 	}
 	if appSession == nil {
 		problemDetail := util.GetProblemDetail("can't find app session", util.APPLICATION_SESSION_CONTEXT_NOT_FOUND)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -866,10 +882,7 @@ func (p *Processor) HandleUpdateEventsSubscContext(
 	eventSubs := make(map[models.PcfPolicyAuthorizationAfEvent]models.AfNotifMethod)
 
 	updataSmPolicy := false
-	created := false
-	if appSession.Events == nil {
-		created = true
-	}
+	created := appSession.Events == nil
 
 	for _, subs := range eventsSubscReqData.Events {
 		if subs.NotifMethod == "" {
@@ -1096,7 +1109,7 @@ func (p *Processor) handleBDTPolicyInd(pcfSelf *pcf_context.PCFContext,
 
 	udrUri := p.getDefaultUdrUri(pcfSelf)
 	if udrUri == "" {
-		err = fmt.Errorf("Can't find any UDR which supported to this PCF")
+		err = fmt.Errorf("can't find any UDR which supported to this PCF")
 		return err
 	}
 	resp, pd, err := p.Consumer().GetBdtData(udrUri, req.BdtRefId)
@@ -1151,7 +1164,7 @@ func handleSponsoredConnectivityInformation(smPolicy *pcf_context.UeSmPolicyData
 		if umData != nil {
 			supp := util.CheckSuppFeat(smPolicy.PolicyDecision.SuppFeat, 5) // UMC support = 5 in 29512
 			if !supp {
-				err := fmt.Errorf("Usage Monitor Control is not supported in SMF")
+				err := fmt.Errorf("usage Monitor Control is not supported in SMF")
 				return err
 			}
 		}
@@ -1210,7 +1223,7 @@ func getAvailablePrecedence(pccRules map[string]*models.PccRule) (maxVaule int32
 func getFlowInfos(comp models.MediaComponent) (flows []models.FlowInformation, err error) {
 	for _, subComp := range comp.MedSubComps {
 		if subComp.EthfDescs != nil {
-			return nil, fmt.Errorf("Flow Description with Mac Address does not support")
+			return nil, fmt.Errorf("flow Description with Mac Address does not support")
 		}
 		fStatus := subComp.FStatus
 		if subComp.FlowUsage == models.FlowUsage_RTCP {
@@ -1256,7 +1269,7 @@ func getFlowInfos(comp models.MediaComponent) (flows []models.FlowInformation, e
 func getFlowInfos(subComp *models.MediaSubComponent) ([]models.FlowInformation, error) {
 	var flows []models.FlowInformation
 	if subComp.EthfDescs != nil {
-		return nil, fmt.Errorf("Flow Description with Mac Address does not support")
+		return nil, fmt.Errorf("flow Description with Mac Address does not support")
 	}
 	fStatus := subComp.FStatus
 	if subComp.FlowUsage == models.FlowUsage_RTCP {
@@ -1300,13 +1313,13 @@ func flowDescFromN5toN7(n5Flow string) (n7Flow string, direction models.FlowDire
 		n7Flow = n5Flow
 		direction = models.FlowDirection_DOWNLINK
 	} else if strings.HasPrefix(n5Flow, "permit in") {
-		n7Flow = strings.Replace(n5Flow, "permit in", "permit out", -1)
+		n7Flow = strings.ReplaceAll(n5Flow, "permit in", "permit out")
 		direction = models.FlowDirection_UPLINK
 	} else if strings.HasPrefix(n5Flow, "permit inout") {
-		n7Flow = strings.Replace(n5Flow, "permit inout", "permit out", -1)
+		n7Flow = strings.ReplaceAll(n5Flow, "permit inout", "permit out")
 		direction = models.FlowDirection_BIDIRECTIONAL
 	} else {
-		err = fmt.Errorf("Invaild flow Description[%s]", n5Flow)
+		err = fmt.Errorf("invaild flow Description[%s]", n5Flow)
 	}
 	return
 }
@@ -1586,7 +1599,7 @@ func removeMediaComp(appSession *pcf_context.AppSessionData, compN string) {
 				pccRuleID := idMaps[key]
 				err := smPolicy.RemovePccRule(pccRuleID, nil)
 				if err != nil {
-					logger.PolicyAuthLog.Warnf(err.Error())
+					logger.PolicyAuthLog.Warn(err.Error())
 				}
 				delete(appSession.RelatedPccRuleIds, key)
 				delete(appSession.PccRuleIdMapToCompId, pccRuleID)
@@ -1595,7 +1608,7 @@ func removeMediaComp(appSession *pcf_context.AppSessionData, compN string) {
 			pccRuleID := idMaps[compN]
 			err := smPolicy.RemovePccRule(pccRuleID, nil)
 			if err != nil {
-				logger.PolicyAuthLog.Warnf(err.Error())
+				logger.PolicyAuthLog.Warn(err.Error())
 			}
 			delete(appSession.RelatedPccRuleIds, compN)
 			delete(appSession.PccRuleIdMapToCompId, pccRuleID)
@@ -1640,7 +1653,7 @@ func extractUmData(umID string, eventSubs map[models.PcfPolicyAuthorizationAfEve
 ) (umData *models.UsageMonitoringData, err error) {
 	if _, umExist := eventSubs[models.PcfPolicyAuthorizationAfEvent_USAGE_REPORT]; umExist {
 		if threshold == nil {
-			return nil, fmt.Errorf("UsageThreshold is nil in USAGE REPORT Subscription")
+			return nil, fmt.Errorf("usageThreshold is nil in USAGE REPORT Subscription")
 		} else {
 			tmp := util.CreateUmData(umID, *threshold)
 			umData = &tmp

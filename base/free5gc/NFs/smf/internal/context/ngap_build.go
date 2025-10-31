@@ -16,7 +16,9 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 	ANUPF := ctx.Tunnel.DataPathPool.GetDefaultPath().FirstDPNode
 	UpNode := ANUPF.UPF
 	teidOct := make([]byte, 4)
+	teidOctForSplitPDUSession := make([]byte, 4)
 	binary.BigEndian.PutUint32(teidOct, ctx.LocalULTeid)
+	binary.BigEndian.PutUint32(teidOctForSplitPDUSession, ctx.LocalULTeidForSplitPDUSession)
 
 	resourceSetupRequestTransfer := ngapType.PDUSessionResourceSetupRequestTransfer{}
 
@@ -28,7 +30,7 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 	ie.Criticality.Value = ngapType.CriticalityPresentReject
 	sessRule := ctx.SelectedSessionRule()
 	if sessRule == nil || sessRule.AuthSessAmbr == nil {
-		return nil, fmt.Errorf("No PDU Session AMBR")
+		return nil, fmt.Errorf("no PDU Session AMBR")
 	}
 	ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
 		Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentPDUSessionAggregateMaximumBitRate,
@@ -67,6 +69,37 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 		}
 	}
 
+	resourceSetupRequestTransfer.ProtocolIEs.List = append(resourceSetupRequestTransfer.ProtocolIEs.List, ie)
+
+	// Additional UL NG-U UP TNL Information
+	ie = ngapType.PDUSessionResourceSetupRequestTransferIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAdditionalULNGUUPTNLInformation
+	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+	if n3IP, err := UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType); err != nil {
+		return nil, err
+	} else {
+		ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
+			Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentAdditionalULNGUUPTNLInformation,
+			AdditionalULNGUUPTNLInformation: &ngapType.UPTransportLayerInformationList{
+				List: []ngapType.UPTransportLayerInformationItem{
+					{
+						NGUUPTNLInformation: ngapType.UPTransportLayerInformation{
+							Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+							GTPTunnel: &ngapType.GTPTunnel{
+								TransportLayerAddress: ngapType.TransportLayerAddress{
+									Value: aper.BitString{
+										Bytes:     n3IP,
+										BitLength: uint64(len(n3IP) * 8),
+									},
+								},
+								GTPTEID: ngapType.GTPTEID{Value: teidOctForSplitPDUSession},
+							},
+						},
+					},
+				},
+			},
+		}
+	}
 	resourceSetupRequestTransfer.ProtocolIEs.List = append(resourceSetupRequestTransfer.ProtocolIEs.List, ie)
 
 	// PDU Session Type
@@ -225,6 +258,57 @@ func BuildPDUSessionResourceModifyRequestTransfer(ctx *SMContext) ([]byte, error
 	}
 }
 
+func BuildPDUSessionResourceModifyConfirmTransfer(
+	ctx *SMContext,
+	tunnel *UPTunnel,
+	localULTeid uint32,
+) ([]byte, error) {
+	confirmTransfer := ngapType.PDUSessionResourceModifyConfirmTransfer{}
+
+	// QoS Flow Modify Confirm List
+	qosList := &confirmTransfer.QosFlowModifyConfirmList
+	for _, dataPath := range tunnel.DataPathPool {
+		if dataPath.Activated {
+			ANUPF := dataPath.FirstDPNode
+			DLPDR := ANUPF.DownLinkTunnel.PDR
+			// The flow we move to secondary gNB will not include precedence=255(default flow).
+			// So we do not need to send the flow QFI to RAN
+			if DLPDR.Precedence == 255 {
+				continue
+			}
+
+			for _, qer := range DLPDR.QER {
+				qosList.List = append(qosList.List, ngapType.QosFlowModifyConfirmItem{
+					QosFlowIdentifier: ngapType.QosFlowIdentifier{
+						Value: int64(qer.QFI.QFI),
+					},
+				})
+			}
+		}
+	}
+
+	// UL NG-U UP TNL Information
+	ANUPF := tunnel.DataPathPool.GetDefaultPath().FirstDPNode
+	teidOct := make([]byte, 4)
+	binary.BigEndian.PutUint32(teidOct, localULTeid)
+
+	confirmTransfer.ULNGUUPTNLInformation = ngapType.UPTransportLayerInformation{
+		Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+		GTPTunnel: &ngapType.GTPTunnel{
+			TransportLayerAddress: ngapConvert.IPAddressToNgap(ANUPF.UPF.NodeID.ResolveNodeIdToIp().String(), ""),
+			GTPTEID: ngapType.GTPTEID{
+				Value: teidOct,
+			},
+		},
+	}
+
+	if buf, err := aper.MarshalWithParams(confirmTransfer, "valueExt"); err != nil {
+		return nil, fmt.Errorf("encode confirmTransfer failed: %s", err)
+	} else {
+		return buf, nil
+	}
+}
+
 // TS 38.413 9.3.4.9
 func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 	ANUPF := ctx.Tunnel.DataPathPool.GetDefaultPath().FirstDPNode
@@ -360,7 +444,8 @@ func BuildPDUSessionResourceReleaseCommandTransfer(ctx *SMContext) (buf []byte, 
 func BuildHandoverCommandTransfer(ctx *SMContext) ([]byte, error) {
 	handoverCommandTransfer := ngapType.HandoverCommandTransfer{}
 
-	if ctx.DLForwardingType == IndirectForwarding {
+	switch ctx.DLForwardingType {
+	case IndirectForwarding:
 		ANUPF := ctx.Tunnel.DataPathPool.GetDefaultPath().FirstDPNode
 		UpNode := ANUPF.UPF
 		teidOct := make([]byte, 4)
@@ -380,7 +465,7 @@ func BuildHandoverCommandTransfer(ctx *SMContext) ([]byte, error) {
 				BitLength: uint64(len(n3IP) * 8),
 			}
 		}
-	} else if ctx.DLForwardingType == DirectForwarding {
+	case DirectForwarding:
 		handoverCommandTransfer.DLForwardingUPTNLInformation = ctx.DLDirectForwardingTunnel
 	}
 

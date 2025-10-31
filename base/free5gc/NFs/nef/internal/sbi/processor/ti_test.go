@@ -1,18 +1,20 @@
 package processor
 
 import (
+	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/free5gc/openapi/models"
-	"github.com/free5gc/openapi/models_nef"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/h2non/gock.v1"
 )
 
 var (
-	tiSub1ForAf1 = models_nef.TrafficInfluSub{
+	tiSub1ForAf1 = models.NefTrafficInfluSub{
 		AfServiceId: "Service1",
 		AfAppId:     "App1",
 		Dnn:         "internet",
@@ -29,7 +31,7 @@ var (
 				},
 			},
 		},
-		TrafficRoutes: []models.RouteToLocation{
+		TrafficRoutes: []*models.RouteToLocation{
 			{
 				Dnai: "mec",
 				RouteInfo: &models.RouteInformation{
@@ -40,7 +42,7 @@ var (
 		},
 	}
 
-	tiSub2ForAf1 = models_nef.TrafficInfluSub{
+	tiSub2ForAf1 = models.NefTrafficInfluSub{
 		AfServiceId: "Service2",
 		AfAppId:     "App2",
 		Dnn:         "internet",
@@ -57,7 +59,7 @@ var (
 				},
 			},
 		},
-		TrafficRoutes: []models.RouteToLocation{
+		TrafficRoutes: []*models.RouteToLocation{
 			{
 				Dnai: "mec",
 				RouteInfo: &models.RouteInformation{
@@ -68,7 +70,7 @@ var (
 		},
 	}
 
-	tiSub3ForAf1 = models_nef.TrafficInfluSub{
+	tiSub3ForAf1 = models.NefTrafficInfluSub{
 		AfServiceId: "Service3",
 		AfAppId:     "App3",
 		Dnn:         "internet",
@@ -85,7 +87,7 @@ var (
 				},
 			},
 		},
-		TrafficRoutes: []models.RouteToLocation{
+		TrafficRoutes: []*models.RouteToLocation{
 			{
 				Dnai: "mec",
 				RouteInfo: &models.RouteInformation{
@@ -96,7 +98,7 @@ var (
 		},
 	}
 
-	tiSub4ForAf1 = models_nef.TrafficInfluSub{
+	tiSub4ForAf1 = models.NefTrafficInfluSub{
 		AfServiceId: "Service4",
 		Dnn:         "internet",
 		Snssai: &models.Snssai{
@@ -106,7 +108,7 @@ var (
 		Ipv4Addr: "10.60.0.10",
 	}
 
-	tiSub5ForAf1 = models_nef.TrafficInfluSub{
+	tiSub5ForAf1 = models.NefTrafficInfluSub{
 		AfServiceId: "Service5",
 		AfAppId:     "App5",
 		TrafficFilters: []models.FlowInfo{
@@ -117,7 +119,7 @@ var (
 				},
 			},
 		},
-		TrafficRoutes: []models.RouteToLocation{
+		TrafficRoutes: []*models.RouteToLocation{
 			{
 				Dnai: "mec",
 				RouteInfo: &models.RouteInformation{
@@ -128,7 +130,7 @@ var (
 		},
 	}
 
-	tiSubPatch1ForAf1 = models_nef.TrafficInfluSubPatch{
+	tiSubPatch1ForAf1 = models.NefTrafficInfluSubPatch{
 		TrafficFilters: []models.FlowInfo{
 			{
 				FlowId: 1,
@@ -137,7 +139,7 @@ var (
 				},
 			},
 		},
-		TrafficRoutes: []models.RouteToLocation{
+		TrafficRoutes: []*models.RouteToLocation{
 			{
 				Dnai: "mec5",
 			},
@@ -156,7 +158,7 @@ func TestGetTrafficInfluenceSubscription(t *testing.T) {
 			afID:        "af1",
 			expectedResponse: &HandlerResponse{
 				Status: http.StatusOK,
-				Body:   &[]models_nef.TrafficInfluSub{tiSub1ForAf1, tiSub2ForAf1},
+				Body:   &[]models.NefTrafficInfluSub{tiSub1ForAf1, tiSub2ForAf1},
 			},
 		},
 		{
@@ -188,13 +190,18 @@ func TestGetTrafficInfluenceSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().GetTrafficInfluenceSubscription(tc.afID)
-			require.Equal(t, tc.expectedResponse.Status, rsp.Status)
-			require.Equal(t, tc.expectedResponse.Headers, rsp.Headers)
-			if trafficInfluSub, ok := tc.expectedResponse.Body.(*[]models_nef.TrafficInfluSub); ok {
-				require.ElementsMatch(t, *trafficInfluSub, *rsp.Body.(*[]models_nef.TrafficInfluSub))
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetTrafficInfluenceSubscription(c, tc.afID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			if trafficInfluSub, ok := tc.expectedResponse.Body.(*[]models.NefTrafficInfluSub); ok {
+				var rspSubs []models.NefTrafficInfluSub
+				require.NoError(t, json.Unmarshal(httpRecorder.Body.Bytes(), &rspSubs))
+				require.ElementsMatch(t, *trafficInfluSub, rspSubs)
 			} else {
-				require.Equal(t, tc.expectedResponse.Body, rsp.Body)
+				assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 			}
 		})
 	}
@@ -258,8 +265,13 @@ func TestGetGetIndividualTrafficInfluenceSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().GetIndividualTrafficInfluenceSubscription(tc.afID, tc.subID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().GetIndividualTrafficInfluenceSubscription(c, tc.afID, tc.subID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 
@@ -282,7 +294,7 @@ func TestPostTrafficInfluenceSubscription(t *testing.T) {
 	testCases := []struct {
 		description      string
 		afID             string
-		tiSub            *models_nef.TrafficInfluSub
+		tiSub            *models.NefTrafficInfluSub
 		expectedResponse *HandlerResponse
 	}{
 		{
@@ -340,8 +352,26 @@ func TestPostTrafficInfluenceSubscription(t *testing.T) {
 	nefCtx := nefApp.Context()
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().PostTrafficInfluenceSubscription(tc.afID, tc.tiSub)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PostTrafficInfluenceSubscription(c, tc.afID, tc.tiSub)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			if tc.expectedResponse.Headers != nil {
+				for k, v := range tc.expectedResponse.Headers {
+					resp := httpRecorder.Result()
+					defer func() {
+						if err := resp.Body.Close(); err != nil {
+							t.Errorf("failed to close resp body: %v", err)
+						}
+					}()
+
+					require.ElementsMatch(t, v, resp.Header.Values(k))
+				}
+			}
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 	nefCtx.DeleteAf("af1")
@@ -369,7 +399,7 @@ func TestDeleteIndividualTrafficInfluenceSubscription(t *testing.T) {
 			},
 		},
 		{
-			description: "TC1: Successful delete TI subscription to PCF",
+			description: "TC2: Successful delete TI subscription to PCF",
 			afID:        "af1",
 			subID:       "2",
 			expectedResponse: &HandlerResponse{
@@ -408,8 +438,13 @@ func TestDeleteIndividualTrafficInfluenceSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().DeleteIndividualTrafficInfluenceSubscription(tc.afID, tc.subID)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().DeleteIndividualTrafficInfluenceSubscription(c, tc.afID, tc.subID)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 	nefCtx.DeleteAf(af1.AfID)
@@ -434,7 +469,7 @@ func TestPatchIndividualTrafficInfluenceSubscription(t *testing.T) {
 		description      string
 		afID             string
 		subID            string
-		tiSubPatch       *models_nef.TrafficInfluSubPatch
+		tiSubPatch       *models.NefTrafficInfluSubPatch
 		expectedResponse *HandlerResponse
 	}{
 		{
@@ -490,9 +525,14 @@ func TestPatchIndividualTrafficInfluenceSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().PatchIndividualTrafficInfluenceSubscription(
-				tc.afID, tc.subID, tc.tiSubPatch)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PatchIndividualTrafficInfluenceSubscription(
+				c, tc.afID, tc.subID, tc.tiSubPatch)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 	nefCtx.DeleteAf(af1.AfID)
@@ -509,7 +549,7 @@ func TestPutIndividualTrafficInfluenceSubscription(t *testing.T) {
 		description      string
 		afID             string
 		subID            string
-		tiSub            *models_nef.TrafficInfluSub
+		tiSub            *models.NefTrafficInfluSub
 		expectedResponse *HandlerResponse
 	}{
 		{
@@ -593,9 +633,14 @@ func TestPutIndividualTrafficInfluenceSubscription(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.description, func(t *testing.T) {
-			rsp := nefApp.Processor().PutIndividualTrafficInfluenceSubscription(
-				tc.afID, tc.subID, tc.tiSub)
-			require.Equal(t, tc.expectedResponse, rsp)
+			httpRecorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(httpRecorder)
+
+			nefApp.Processor().PutIndividualTrafficInfluenceSubscription(
+				c, tc.afID, tc.subID, tc.tiSub)
+			require.Equal(t, tc.expectedResponse.Status, httpRecorder.Code)
+
+			assertJSONBodyEqual(t, tc.expectedResponse.Body, httpRecorder.Body.Bytes())
 		})
 	}
 	nefCtx.DeleteAf(af1.AfID)
@@ -663,4 +708,22 @@ func initPCFPaDeleteAppSessionsStub(statusCode int) {
 		Post("/app-sessions/12345/delete").
 		Persist().
 		Reply(statusCode)
+}
+
+func assertJSONBodyEqual(t *testing.T, expectedBody interface{}, actualBody []byte) {
+	t.Helper()
+
+	if expectedBody == nil {
+		require.Empty(t, len(actualBody))
+		return
+	}
+
+	expectedJSON, err := json.Marshal(expectedBody)
+	require.NoError(t, err)
+
+	var expectedData, actualData interface{}
+	require.NoError(t, json.Unmarshal(expectedJSON, &expectedData))
+	require.NoError(t, json.Unmarshal(actualBody, &actualData))
+
+	require.Equal(t, expectedData, actualData)
 }

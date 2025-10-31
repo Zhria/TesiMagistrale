@@ -3,12 +3,14 @@ package sbi
 import (
 	"net/http"
 
+	"github.com/free5gc/nef/internal/logger"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) getCallbackEndpoints() []Endpoint {
-	return []Endpoint{
+func (s *Server) getCallbackRoutes() []Route {
+	return []Route{
 		{
 			Method:  http.MethodPost,
 			Pattern: "/notification/smf",
@@ -18,17 +20,22 @@ func (s *Server) getCallbackEndpoints() []Endpoint {
 }
 
 func (s *Server) apiPostSmfNotification(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var eeNotif models.NsmfEventExposureNotification
-	if err := s.deserializeData(gc, &eeNotif, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().SmfNotification(&eeNotif)
+	err = openapi.Deserialize(&eeNotif, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().SmfNotification(gc, &eeNotif)
 }

@@ -7,6 +7,7 @@ package factory
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -27,6 +28,10 @@ const (
 	SmfSbiDefaultIPv4            = "127.0.0.2"
 	SmfSbiDefaultPort            = 8000
 	SmfSbiDefaultScheme          = "https"
+	SmfMetricsDefaultEnabled     = false
+	SmfMetricsDefaultPort        = 9091
+	SmfMetricsDefaultScheme      = "https"
+	SmfMetricsDefaultNamespace   = "free5gc"
 	SmfDefaultNrfUri             = "https://127.0.0.10:8000"
 	SmfEventExposureResUriPrefix = "/nsmf_event-exposure/v1"
 	SmfPdusessionResUriPrefix    = "/nsmf-pdusession/v1"
@@ -46,6 +51,10 @@ type Config struct {
 }
 
 func (c *Config) Validate() (bool, error) {
+	govalidator.TagMap["scheme"] = func(str string) bool {
+		return str == "https" || str == "http"
+	}
+
 	if configuration := c.Configuration; configuration != nil {
 		if result, err := configuration.validate(); err != nil {
 			return result, err
@@ -77,6 +86,7 @@ func (i *Info) validate() (bool, error) {
 type Configuration struct {
 	SmfName              string               `yaml:"smfName" valid:"type(string),required"`
 	Sbi                  *Sbi                 `yaml:"sbi" valid:"required"`
+	Metrics              *Metrics             `yaml:"metrics,omitempty" valid:"optional"`
 	PFCP                 *PFCP                `yaml:"pfcp" valid:"required"`
 	NrfUri               string               `yaml:"nrfUri" valid:"url,required"`
 	NrfCertPem           string               `yaml:"nrfCertPem,omitempty" valid:"optional"`
@@ -107,6 +117,20 @@ func (c *Configuration) validate() (bool, error) {
 		}
 	}
 
+	if c.Metrics != nil {
+		if _, err := c.Metrics.validate(); err != nil {
+			return false, err
+		}
+
+		if c.Sbi != nil && c.Metrics.Port == c.Sbi.Port && c.Sbi.BindingIPv4 == c.Metrics.BindingIPv4 {
+			var errs govalidator.Errors
+			err := fmt.Errorf("sbi and metrics bindings IPv4: %s and port: %d cannot be the same, "+
+				"please provide at least another port for the metrics", c.Sbi.BindingIPv4, c.Sbi.Port)
+			errs = append(errs, err)
+			return false, error(errs)
+		}
+	}
+
 	if pfcp := c.PFCP; pfcp != nil {
 		if result, err := pfcp.validate(); err != nil {
 			return result, err
@@ -120,13 +144,13 @@ func (c *Configuration) validate() (bool, error) {
 	}
 
 	for index, serviceName := range c.ServiceNameList {
-		switch {
-		case serviceName == "nsmf-pdusession":
-		case serviceName == "nsmf-event-exposure":
-		case serviceName == "nsmf-oam":
+		switch serviceName {
+		case "nsmf-pdusession":
+		case "nsmf-event-exposure":
+		case "nsmf-oam":
 		default:
-			err := errors.New("Invalid serviceNameList[" + strconv.Itoa(index) + "]: " +
-				serviceName + ", should be nsmf-pdusession, nsmf-event-exposure or nsmf-oam.")
+			err := errors.New("invalid serviceNameList[" + strconv.Itoa(index) + "]: " +
+				serviceName + ", should be nsmf-pdusession, nsmf-event-exposure or nsmf-oam")
 			return false, err
 		}
 	}
@@ -212,6 +236,34 @@ func (s *SnssaiDnnInfoItem) validate() (bool, error) {
 
 	result, err := govalidator.ValidateStruct(s)
 	return result, appendInvalid(err)
+}
+
+type Metrics struct {
+	Enable      bool   `yaml:"enable" valid:"optional"`
+	Scheme      string `yaml:"scheme" valid:"required,scheme"`
+	BindingIPv4 string `yaml:"bindingIPv4,omitempty" valid:"required,host"` // IP used to run the server in the node.
+	Port        int    `yaml:"port,omitempty" valid:"optional,port"`
+	Tls         *Tls   `yaml:"tls,omitempty" valid:"optional"`
+	Namespace   string `yaml:"namespace" valid:"optional"`
+}
+
+// This function is the mirror of the SBI one, I decided not to factor the code as it could in the future diverge.
+// And it will reduce the cognitive overload when reading the function by not hiding the logic elsewhere.
+func (m *Metrics) validate() (bool, error) {
+	var errs govalidator.Errors
+
+	if tls := m.Tls; tls != nil {
+		if _, err := tls.validate(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if _, err := govalidator.ValidateStruct(m); err != nil {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		return false, error(errs)
+	}
+	return true, nil
 }
 
 type Sbi struct {
@@ -512,7 +564,7 @@ func (u *UPNode) validate() (bool, error) {
 
 		if n3IfsNum > 1 || n9IfsNum > 1 {
 			return false, fmt.Errorf(
-				"Not support multiple InterfaceUpfInfo for the same type: N3 number(%d), N9 number(%d)",
+				"not support multiple InterfaceUpfInfo for the same type: N3 number(%d), N9 number(%d)",
 				n3IfsNum, n9IfsNum)
 		}
 	}
@@ -669,13 +721,13 @@ type PlmnID struct {
 func (p *PlmnID) validate() (bool, error) {
 	mcc := p.Mcc
 	if result := govalidator.StringMatches(mcc, "^[0-9]{3}$"); !result {
-		err := fmt.Errorf("Invalid mcc: %s, should be a 3-digit number", mcc)
+		err := fmt.Errorf("invalid mcc: %s, should be a 3-digit number", mcc)
 		return false, err
 	}
 
 	mnc := p.Mnc
 	if result := govalidator.StringMatches(mnc, "^[0-9]{2,3}$"); !result {
-		err := fmt.Errorf("Invalid mnc: %s, should be a 2 or 3-digit number", mnc)
+		err := fmt.Errorf("invalid mnc: %s, should be a 2 or 3-digit number", mnc)
 		return false, err
 	}
 	return true, nil
@@ -784,6 +836,88 @@ func (c *Config) GetLogReportCaller() bool {
 		return false
 	}
 	return c.Logger.ReportCaller
+}
+
+func (c *Config) AreMetricsEnabled() bool {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration != nil && c.Configuration.Metrics != nil {
+		return c.Configuration.Metrics.Enable
+	}
+	return SmfMetricsDefaultEnabled
+}
+
+func (c *Config) GetMetricsScheme() string {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration != nil && c.Configuration.Metrics != nil && c.Configuration.Metrics.Scheme != "" {
+		return c.Configuration.Metrics.Scheme
+	}
+	return SmfMetricsDefaultScheme
+}
+
+func (c *Config) GetMetricsPort() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration != nil && c.Configuration.Metrics != nil && c.Configuration.Metrics.Port != 0 {
+		return c.Configuration.Metrics.Port
+	}
+	return SmfMetricsDefaultPort
+}
+
+func (c *Config) GetMetricsBindingIP() string {
+	c.RLock()
+	defer c.RUnlock()
+	bindIP := "0.0.0.0"
+
+	if c.Configuration == nil || c.Configuration.Metrics == nil {
+		return bindIP
+	}
+
+	if c.Configuration.Metrics.BindingIPv4 != "" {
+		if bindIP = os.Getenv(c.Configuration.Metrics.BindingIPv4); bindIP != "" {
+			logger.CfgLog.Infof("Parsing ServerIPv4 [%s] from ENV Variable", bindIP)
+		} else {
+			bindIP = c.Configuration.Metrics.BindingIPv4
+		}
+	}
+	return bindIP
+}
+
+func (c *Config) GetMetricsBindingAddr() string {
+	c.RLock()
+	defer c.RUnlock()
+	return c.GetMetricsBindingIP() + ":" + strconv.Itoa(c.GetMetricsPort())
+}
+
+func (c *Config) GetMetricsCertPemPath() string {
+	// We can see if there is a benefit to factor this tls key/pem with the sbi ones
+	c.RLock()
+	defer c.RUnlock()
+
+	if c.Configuration.Metrics != nil && c.Configuration.Metrics.Tls != nil {
+		return c.Configuration.Metrics.Tls.Pem
+	}
+	return ""
+}
+
+func (c *Config) GetMetricsCertKeyPath() string {
+	c.RLock()
+	defer c.RUnlock()
+
+	if c.Configuration.Metrics != nil && c.Configuration.Metrics.Tls != nil {
+		return c.Configuration.Metrics.Tls.Key
+	}
+	return ""
+}
+
+func (c *Config) GetMetricsNamespace() string {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration.Metrics != nil && c.Configuration.Metrics.Namespace != "" {
+		return c.Configuration.Metrics.Namespace
+	}
+	return SmfMetricsDefaultNamespace
 }
 
 func (c *Config) GetSbiScheme() string {

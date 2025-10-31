@@ -3,12 +3,14 @@ package sbi
 import (
 	"net/http"
 
+	"github.com/free5gc/nef/internal/logger"
+	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) getPFDFEndpoints() []Endpoint {
-	return []Endpoint{
+func (s *Server) getPFDFRoutes() []Route {
+	return []Route{
 		{
 			Method:  http.MethodGet,
 			Pattern: "/applications",
@@ -34,36 +36,35 @@ func (s *Server) getPFDFEndpoints() []Endpoint {
 
 func (s *Server) apiGetApplicationsPFD(gc *gin.Context) {
 	// TODO: support URI query parameters: supported-features
-	hdlRsp := s.Processor().GetApplicationsPFD(gc.QueryArray("application-ids"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetApplicationsPFD(gc, gc.QueryArray("application-ids"))
 }
 
 func (s *Server) apiGetIndividualApplicationPFD(gc *gin.Context) {
 	// TODO: support URI query parameters: supported-features
-	hdlRsp := s.Processor().GetIndividualApplicationPFD(gc.Param("appID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().GetIndividualApplicationPFD(gc, gc.Param("appID"))
 }
 
 func (s *Server) apiPostPFDSubscriptions(gc *gin.Context) {
-	contentType, err := checkContentTypeIsJSON(gc)
-	if err != nil {
-		return
-	}
-
 	var pfdSubsc models.PfdSubscription
-	if err := s.deserializeData(gc, &pfdSubsc, contentType); err != nil {
+	reqBody, err := gc.GetRawData()
+	if err != nil {
+		logger.SBILog.Errorf("Get Request Body error: %+v", err)
+		gc.JSON(http.StatusInternalServerError,
+			openapi.ProblemDetailsSystemFailure(err.Error()))
 		return
 	}
 
-	hdlRsp := s.Processor().PostPFDSubscriptions(&pfdSubsc)
+	err = openapi.Deserialize(&pfdSubsc, reqBody, "application/json")
+	if err != nil {
+		logger.SBILog.Errorf("Deserialize Request Body error: %+v", err)
+		gc.JSON(http.StatusBadRequest,
+			openapi.ProblemDetailsMalformedReqSyntax(err.Error()))
+		return
+	}
 
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().PostPFDSubscriptions(gc, &pfdSubsc)
 }
 
 func (s *Server) apiDeleteIndividualPFDSubscription(gc *gin.Context) {
-	hdlRsp := s.Processor().DeleteIndividualPFDSubscription(gc.Param("subID"))
-
-	s.buildAndSendHttpResponse(gc, hdlRsp, false)
+	s.Processor().DeleteIndividualPFDSubscription(gc, gc.Param("subID"))
 }

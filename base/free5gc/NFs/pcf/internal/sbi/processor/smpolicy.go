@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 
 	"github.com/free5gc/openapi"
-	"github.com/free5gc/openapi/bsf/Management"
 	"github.com/free5gc/openapi/models"
 	"github.com/free5gc/openapi/pcf/SMPolicyControl"
 	"github.com/free5gc/openapi/udr/DataRepository"
@@ -18,6 +17,7 @@ import (
 	"github.com/free5gc/pcf/internal/logger"
 	"github.com/free5gc/pcf/internal/util"
 	"github.com/free5gc/util/flowdesc"
+	"github.com/free5gc/util/metrics/sbi"
 	"github.com/free5gc/util/mongoapi"
 )
 
@@ -40,6 +40,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 	if request.Supi == "" || request.SliceInfo == nil {
 		problemDetail := util.GetProblemDetail("Errorneous/Missing Mandotory IE", util.ERROR_INITIAL_PARAMETERS)
 		logger.SmPolicyLog.Warnln("Errorneous/Missing Mandotory IE", util.ERROR_INITIAL_PARAMETERS)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -54,6 +55,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 	if ue == nil {
 		problemDetail := util.GetProblemDetail("Supi is not supported in PCF", util.USER_UNKNOWN)
 		logger.SmPolicyLog.Warnf("Supi[%s] is not supported in PCF", request.Supi)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -61,6 +63,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 	if udrUri == "" {
 		problemDetail := util.GetProblemDetail("Can't find corresponding UDR with UE", util.USER_UNKNOWN)
 		logger.SmPolicyLog.Warnf("Can't find corresponding UDR with UE[%s]", ue.Supi)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -79,9 +82,11 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 		if sessionErr != nil || response == nil {
 			problemDetail := util.GetProblemDetail("Can't find UE SM Policy Data in UDR", util.USER_UNKNOWN)
 			logger.SmPolicyLog.Warnf("Can't find UE[%s] SM Policy Data in UDR", ue.Supi)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 			c.JSON(int(problemDetail.Status), problemDetail)
 			return
 		} else if pd != nil {
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 			c.JSON(int(pd.Status), pd)
 			return
 		}
@@ -93,6 +98,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 	if amPolicy == nil {
 		problemDetail := util.GetProblemDetail("Can't find corresponding AM Policy", util.POLICY_CONTEXT_DENIED)
 		logger.SmPolicyLog.Warnf("Can't find corresponding AM Policy")
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -143,7 +149,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 			var gbrDL float64
 			gbrDL, err = pcf_context.ConvertBitRateToKbps(dnnData.GbrDl)
 			if err != nil {
-				logger.SmPolicyLog.Warnf(err.Error())
+				logger.SmPolicyLog.Warn(err.Error())
 			} else {
 				smPolicyData.RemainGbrDL = &gbrDL
 				logger.SmPolicyLog.Tracef("SM Policy Dnn[%s] Data Aggregate DL GBR[%.2f Kbps]", request.Dnn, gbrDL)
@@ -153,7 +159,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 			var gbrUL float64
 			gbrUL, err = pcf_context.ConvertBitRateToKbps(dnnData.GbrUl)
 			if err != nil {
-				logger.SmPolicyLog.Warnf(err.Error())
+				logger.SmPolicyLog.Warn(err.Error())
 			} else {
 				smPolicyData.RemainGbrUL = &gbrUL
 				logger.SmPolicyLog.Tracef("SM Policy Dnn[%s] Data Aggregate UL GBR[%.2f Kbps]", request.Dnn, gbrUL)
@@ -208,6 +214,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 		if err1 != nil {
 			logger.SmPolicyLog.Error("rating group allocate error")
 			problemDetails := util.GetProblemDetail("rating group allocate error", util.ERROR_IDGENERATOR)
+			c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 			c.JSON(int(problemDetails.Status), problemDetails)
 			return
 		}
@@ -267,7 +274,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 				logger.SmPolicyLog.Warnln("Wrong Port format in IP Filter's setting:", tokens[1], ", set to 1-65535")
 			}
 
-			if !(portLowerBound <= 1 && portUpperBound >= 65535) { // Port range need to be assigned
+			if portLowerBound > 1 || portUpperBound < 65535 { // Port range need to be assigned
 				FlowDescription.SrcPorts = flowdesc.PortRanges{
 					flowdesc.PortRange{
 						Start: uint16(portLowerBound),
@@ -304,6 +311,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 				if err1 != nil {
 					logger.SmPolicyLog.Error("rating group allocate error")
 					problemDetails := util.GetProblemDetail("rating group allocate error", util.ERROR_IDGENERATOR)
+					c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 					c.JSON(int(problemDetails.Status), problemDetails)
 					return
 				}
@@ -370,6 +378,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 
 	ctx, pd, err := p.Context().GetTokenCtx(models.ServiceName_NUDR_DR, models.NrfNfManagementNfType_UDR)
 	if err != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, pd.Cause)
 		c.JSON(int(pd.Status), pd)
 		return
 	}
@@ -405,6 +414,7 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 				if err1 != nil {
 					logger.SmPolicyLog.Error("rating group allocate error")
 					problemDetails := util.GetProblemDetail("rating group allocate error", util.ERROR_IDGENERATOR)
+					c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 					c.JSON(int(problemDetails.Status), problemDetails)
 					return
 				}
@@ -464,40 +474,14 @@ func (p *Processor) HandleCreateSmPolicyRequest(
 	}
 	smPolicyData.SubscriptionID = subscriptionID
 
-	// Create PCF binding data to BSF
-	policyAuthorizationService := p.Context().NfService[models.ServiceName_NPCF_POLICYAUTHORIZATION]
-	pcfBinding := models.PcfBinding{
-		Supi:           request.Supi,
-		Gpsi:           request.Gpsi,
-		Ipv4Addr:       request.Ipv4Address,
-		Ipv6Prefix:     request.Ipv6AddressPrefix,
-		IpDomain:       request.IpDomain,
-		Dnn:            request.Dnn,
-		Snssai:         request.SliceInfo,
-		PcfFqdn:        policyAuthorizationService.ApiPrefix,
-		PcfIpEndPoints: policyAuthorizationService.IpEndPoints,
-	}
-
-	// TODO: Record BSF URI instead of discovering from NRF every time
-	bsfUri := p.Consumer().SendNFInstancesBSF(p.Context().NrfUri)
-	if bsfUri != "" {
-		bsfClient := util.GetNbsfClient(bsfUri)
-
-		ctx, pd, err = p.Context().GetTokenCtx(models.ServiceName_NBSF_MANAGEMENT, models.NrfNfManagementNfType_BSF)
-		if err != nil {
-			c.JSON(int(pd.Status), pd)
-			return
-		}
-		req := Management.CreatePCFBindingRequest{
-			PcfBinding: &pcfBinding,
-		}
-		resp, err := bsfClient.PCFBindingsCollectionApi.CreatePCFBinding(ctx, &req)
-		if err != nil || resp == nil {
-			logger.SmPolicyLog.Warnf("Create PCF binding data in BSF error[%+v]", err)
-			// Uncomment the following to return error response --> PDU SessEstReq will fail
-			// problemDetail := util.GetProblemDetail("Cannot create PCF binding data in BSF", "")
-			// return nil, nil, &problemDetail
-		}
+	// Register PCF binding in BSF using the new consumer service
+	if bindingId, err := p.Consumer().RegisterPCFBinding(smPolicyData); err != nil {
+		logger.SmPolicyLog.Warnf("Failed to register PCF binding in BSF: %v", err)
+		// Continue without failing the session - BSF registration is not critical for basic operation
+	} else if bindingId != "" {
+		// Store binding ID in policy data for future updates/deletion
+		smPolicyData.BsfBindingId = bindingId
+		logger.SmPolicyLog.Infof("Successfully registered PCF binding in BSF with ID: %s", bindingId)
 	}
 	locationHeader := util.GetResourceUri(models.ServiceName_NPCF_SMPOLICYCONTROL, smPolicyID)
 	c.Header("Location", locationHeader)
@@ -540,7 +524,8 @@ func (p *Processor) HandleDeleteSmPolicyContextRequest(
 	ue := p.Context().PCFUeFindByPolicyId(smPolicyId)
 	if ue == nil || ue.SmPolicyData[smPolicyId] == nil {
 		problemDetail := util.GetProblemDetail("smPolicyID not found in PCF", util.CONTEXT_NOT_FOUND)
-		logger.SmPolicyLog.Warnf(problemDetail.Detail)
+		logger.SmPolicyLog.Warn(problemDetail.Detail)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -553,6 +538,16 @@ func (p *Processor) HandleDeleteSmPolicyContextRequest(
 		logger.SmPolicyLog.Errorf("Remove UDR Influence Data Subscription Failed Problem[%+v]", problemDetail)
 	} else if err != nil {
 		logger.SmPolicyLog.Errorf("Remove UDR Influence Data Subscription Error[%v]", err.Error())
+	}
+
+	// Delete PCF binding from BSF if binding ID exists
+	if smPolicy.BsfBindingId != "" {
+		if err := p.Consumer().DeletePCFBinding(smPolicy.BsfBindingId); err != nil {
+			logger.SmPolicyLog.Warnf("Failed to delete PCF binding from BSF: %v", err)
+			// Continue with deletion even if BSF cleanup fails
+		} else {
+			logger.SmPolicyLog.Infof("Successfully deleted PCF binding from BSF: %s", smPolicy.BsfBindingId)
+		}
 	}
 
 	// Unsubscrice UDR
@@ -598,7 +593,8 @@ func (p *Processor) HandleGetSmPolicyContextRequest(
 	ue := p.Context().PCFUeFindByPolicyId(smPolicyId)
 	if ue == nil || ue.SmPolicyData[smPolicyId] == nil {
 		problemDetail := util.GetProblemDetail("smPolicyID not found in PCF", util.CONTEXT_NOT_FOUND)
-		logger.SmPolicyLog.Warnf(problemDetail.Detail)
+		logger.SmPolicyLog.Warn(problemDetail.Detail)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -623,7 +619,8 @@ func (p *Processor) HandleUpdateSmPolicyContextRequest(
 	ue := p.Context().PCFUeFindByPolicyId(smPolicyId)
 	if ue == nil || ue.SmPolicyData[smPolicyId] == nil {
 		problemDetail := util.GetProblemDetail("smPolicyID not found in PCF", util.CONTEXT_NOT_FOUND)
-		logger.SmPolicyLog.Warnf(problemDetail.Detail)
+		logger.SmPolicyLog.Warn(problemDetail.Detail)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
@@ -684,7 +681,8 @@ func (p *Processor) HandleUpdateSmPolicyContextRequest(
 				qosData.GbrDl, qosData.GbrUl, err = smPolicy.DecreaseRemainGBR(req.ReqQos)
 				if err != nil {
 					problemDetail := util.GetProblemDetail(err.Error(), util.ERROR_TRAFFIC_MAPPING_INFO_REJECTED)
-					logger.SmPolicyLog.Warnf(problemDetail.Detail)
+					logger.SmPolicyLog.Warn(problemDetail.Detail)
+					c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 					c.JSON(int(problemDetail.Status), problemDetail)
 					return
 				}
@@ -733,7 +731,8 @@ func (p *Processor) HandleUpdateSmPolicyContextRequest(
 								smPolicy.RemainGbrDL = origDl
 								smPolicy.RemainGbrUL = origUl
 								problemDetail := util.GetProblemDetail(err.Error(), util.ERROR_TRAFFIC_MAPPING_INFO_REJECTED)
-								logger.SmPolicyLog.Warnf(problemDetail.Detail)
+								logger.SmPolicyLog.Warn(problemDetail.Detail)
+								c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 								c.JSON(int(problemDetail.Status), problemDetail)
 								return
 							}
@@ -989,10 +988,22 @@ func (p *Processor) HandleUpdateSmPolicyContextRequest(
 
 	if errCause != "" {
 		problemDetail := util.GetProblemDetail(errCause, util.ERROR_TRIGGER_EVENT)
-		logger.SmPolicyLog.Warnf(errCause)
+		logger.SmPolicyLog.Warn(errCause)
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetail.Cause)
 		c.JSON(int(problemDetail.Status), problemDetail)
 		return
 	}
+
+	// Update PCF binding in BSF if binding ID exists and context has relevant changes
+	if smPolicy.BsfBindingId != "" {
+		if err := p.Consumer().UpdatePCFBinding(smPolicy.BsfBindingId, smPolicy); err != nil {
+			logger.SmPolicyLog.Warnf("Failed to update PCF binding in BSF: %v", err)
+			// Continue with policy update even if BSF update fails
+		} else {
+			logger.SmPolicyLog.Infof("Successfully updated PCF binding in BSF: %s", smPolicy.BsfBindingId)
+		}
+	}
+
 	logger.SmPolicyLog.Tracef("SMPolicy smPolicyID[%s] Update", smPolicyId)
 	c.JSON(http.StatusOK, smPolicyDecision)
 }

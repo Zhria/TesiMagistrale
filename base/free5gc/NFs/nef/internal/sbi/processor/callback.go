@@ -6,17 +6,20 @@ import (
 	"github.com/free5gc/nef/internal/logger"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/gin-gonic/gin"
 )
 
 func (p *Processor) SmfNotification(
+	c *gin.Context,
 	eeNotif *models.NsmfEventExposureNotification,
-) *HandlerResponse {
+) {
 	logger.TrafInfluLog.Infof("SmfNotification - NotifId[%s]", eeNotif.NotifId)
 
 	af, sub := p.Context().FindAfSub(eeNotif.NotifId)
 	if sub == nil {
 		pd := openapi.ProblemDetailsDataNotFound("Subscrption is not found")
-		return &HandlerResponse{http.StatusNotFound, nil, pd}
+		c.JSON(http.StatusNotFound, pd)
+		return
 	}
 
 	af.Mu.RLock()
@@ -24,5 +27,5 @@ func (p *Processor) SmfNotification(
 
 	// TODO: Notify AF
 
-	return &HandlerResponse{http.StatusOK, nil, nil}
+	c.JSON(http.StatusOK, nil)
 }

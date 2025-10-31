@@ -21,6 +21,7 @@ import (
 	"github.com/free5gc/pcf/pkg/factory"
 	"github.com/free5gc/util/httpwrapper"
 	logger_util "github.com/free5gc/util/logger"
+	"github.com/free5gc/util/metrics"
 )
 
 type Route struct {
@@ -66,6 +67,8 @@ func NewServer(pcf pcf, tlsKeyLogPath string) (*Server, error) {
 		pcf:    pcf,
 		router: logger_util.NewGinWithLogrus(logger.GinLog),
 	}
+
+	s.router.Use(metrics.InboundMetrics())
 
 	smPolicyRoutes := s.getSmPolicyRoutes()
 	smPolicyGroup := s.router.Group(factory.PcfSMpolicyCtlResUriPrefix)
@@ -167,14 +170,15 @@ func (s *Server) startServer(wg *sync.WaitGroup) {
 	var err error
 	cfg := s.Config()
 	scheme := cfg.GetSbiScheme()
-	if scheme == "http" {
+	switch scheme {
+	case "http":
 		err = s.httpServer.ListenAndServe()
-	} else if scheme == "https" {
+	case "https":
 		err = s.httpServer.ListenAndServeTLS(
 			cfg.GetCertPemPath(),
 			cfg.GetCertKeyPath())
-	} else {
-		err = fmt.Errorf("No support this scheme[%s]", scheme)
+	default:
+		err = fmt.Errorf("no support this scheme[%s]", scheme)
 	}
 
 	if err != nil && err != http.ErrServerClosed {

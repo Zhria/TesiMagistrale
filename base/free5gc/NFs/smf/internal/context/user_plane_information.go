@@ -650,19 +650,8 @@ func GenerateDataPath(upPath UPPath) *DataPath {
 
 func (upi *UserPlaneInformation) GenerateDefaultPath(selection *UPFSelectionParams) bool {
 	var source *UPNode
-	var destinations []*UPNode
-
-	for _, node := range upi.AccessNetwork {
-		if node.Type == UPNODE_AN {
-			source = node
-			break
-		}
-	}
-
-	if source == nil {
-		logger.CtxLog.Errorf("There is no AN Node in config file!")
-		return false
-	}
+	var destinations, path []*UPNode
+	var pathExist bool
 
 	destinations = upi.selectMatchUPF(selection)
 
@@ -673,22 +662,48 @@ func (upi *UserPlaneInformation) GenerateDefaultPath(selection *UPFSelectionPara
 	} else {
 		logger.CtxLog.Tracef("Find UPF with DNN[%s] S-NSSAI[sst: %d sd: %s] DNAI[%s]\n", selection.Dnn,
 			selection.SNssai.Sst, selection.SNssai.Sd, selection.Dnai)
+
+		logger.CtxLog.Tracef("=================================")
+		for i, node := range destinations {
+			logger.CtxLog.Tracef("Destination list [%d]: %s", i, node.Name)
+		}
+		logger.CtxLog.Tracef("=================================")
 	}
 
 	// Run DFS
-	visited := make(map[*UPNode]bool)
+	for _, node := range upi.AccessNetwork {
+		visited := make(map[*UPNode]bool)
+		for _, upNode := range upi.UPNodes {
+			visited[upNode] = false
+		}
 
-	for _, upNode := range upi.UPNodes {
-		visited[upNode] = false
+		if node.Type == UPNODE_AN {
+			source = node
+			path, pathExist = getPathBetween(source, destinations[0], visited, selection)
+
+			if pathExist {
+				if path[0].Type == UPNODE_AN {
+					path = path[1:]
+				}
+				upi.DefaultUserPlanePath[selection.String()] = path
+				break
+			}
+		}
 	}
 
-	path, pathExist := getPathBetween(source, destinations[0], visited, selection)
+	if source == nil {
+		logger.CtxLog.Errorf("There is no AN Node in config file!")
+		return false
+	}
 
 	if pathExist {
-		if path[0].Type == UPNODE_AN {
-			path = path[1:]
+		logger.CtxLog.Tracef("=================================")
+		for i, node := range path {
+			logger.CtxLog.Tracef("Path list [%d]: %s", i, node.Name)
 		}
-		upi.DefaultUserPlanePath[selection.String()] = path
+		logger.CtxLog.Tracef("=================================")
+	} else {
+		logger.CtxLog.Errorf("No path fuck found")
 	}
 
 	return pathExist
@@ -810,7 +825,8 @@ func (upi *UserPlaneInformation) selectAnchorUPF(source *UPNode, selection *UPFS
 				if link.MatchedSelection(selectionForIUPF) {
 					queue = append(queue, link)
 					findNewNode = true
-					break
+					// if here we break, we will not check next links
+					// break
 				}
 			}
 		}
@@ -862,6 +878,7 @@ func (upi *UserPlaneInformation) SelectUPFAndAllocUEIP(selection *UPFSelectionPa
 		return nil, nil, false
 	}
 	UPFList := upi.selectAnchorUPF(source, selection)
+	logger.CtxLog.Debug("UPFList: ", UPFList)
 	listLength := len(UPFList)
 	if listLength == 0 {
 		logger.CtxLog.Warnf("Can't find UPF with DNN[%s] S-NSSAI[sst: %d sd: %s] DNAI[%s]\n", selection.Dnn,

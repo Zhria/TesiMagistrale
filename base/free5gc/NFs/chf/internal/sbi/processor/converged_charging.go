@@ -25,6 +25,7 @@ import (
 	"github.com/free5gc/chf/internal/util"
 	Nchf_ConvergedCharging "github.com/free5gc/openapi/chf/ConvergedCharging"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 func min[T constraints.Ordered](a, b T) T {
@@ -83,6 +84,7 @@ func (p *Processor) HandleChargingdataInitial(
 		c.JSON(http.StatusCreated, response)
 		return
 	} else if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -90,6 +92,7 @@ func (p *Processor) HandleChargingdataInitial(
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
@@ -105,6 +108,7 @@ func (p *Processor) HandleChargingdataUpdate(
 		c.JSON(http.StatusOK, response)
 		return
 	} else if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		c.JSON(int(problemDetails.Status), problemDetails)
 		return
 	}
@@ -112,6 +116,7 @@ func (p *Processor) HandleChargingdataUpdate(
 		Status: http.StatusForbidden,
 		Cause:  "UNSPECIFIED",
 	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
@@ -124,9 +129,10 @@ func (p *Processor) HandleChargingdataRelease(
 
 	problemDetails := p.ChargingDataRelease(chargingdata, chargingSessionId)
 	if problemDetails == nil {
-		c.Status(http.StatusBadRequest)
+		c.Status(http.StatusNoContent)
 		return
 	}
+	c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 	c.JSON(int(problemDetails.Status), problemDetails)
 }
 
@@ -253,7 +259,7 @@ func (p *Processor) ChargingDataUpdate(
 
 	var chgDataBytes []byte
 	var errChgDataBer error
-	if chargingData.MultipleUnitUsage != nil && len(chargingData.MultipleUnitUsage) != 0 {
+	if len(chargingData.MultipleUnitUsage) != 0 {
 		cdrMultiUnitUsage := cdrConvert.MultiUnitUsageToCdr(chargingData.MultipleUnitUsage)
 		chgDataBytes, errChgDataBer = asn.BerMarshalWithParams(&cdrMultiUnitUsage, "explicit,choice")
 		if errChgDataBer != nil {
@@ -564,7 +570,7 @@ func sessionChargingReservation(
 			usedQuota := uint64(totalUsedUnit * ue.UnitCost[rg])
 			requestedQuota = uint64(uint32(unitUsage.RequestedUnit.TotalVolume) * ue.UnitCost[rg])
 			ue.ReservedQuota[rg] -= int64(usedQuota)
-			NeedReserveQuota := !(ue.ReservedQuota[rg] > 0)
+			NeedReserveQuota := ue.ReservedQuota[rg] <= 0
 
 			if NeedReserveQuota {
 				reserveQuota := -uint64(ue.ReservedQuota[rg]) + requestedQuota

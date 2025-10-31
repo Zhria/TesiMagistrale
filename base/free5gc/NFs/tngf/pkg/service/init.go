@@ -1,16 +1,15 @@
 package service
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
 	"os"
-	"os/signal"
 	"runtime/debug"
 	"sync"
-	"syscall"
-	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 
@@ -19,33 +18,74 @@ import (
 	nwtcp_service "github.com/free5gc/tngf/internal/nwtcp/service"
 	nwtup_service "github.com/free5gc/tngf/internal/nwtup/service"
 	"github.com/free5gc/tngf/internal/util"
-	"github.com/free5gc/tngf/pkg/context"
 	tngf_context "github.com/free5gc/tngf/pkg/context"
 	"github.com/free5gc/tngf/pkg/factory"
 	ike_service "github.com/free5gc/tngf/pkg/ike/service"
 	"github.com/free5gc/tngf/pkg/ike/xfrm"
 	radius_service "github.com/free5gc/tngf/pkg/radius/service"
+	"github.com/free5gc/util/metrics"
+	"github.com/free5gc/util/metrics/utils"
 )
 
 type TngfApp struct {
 	cfg     *factory.Config
 	tngfCtx *tngf_context.TNGFContext
+
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	wg sync.WaitGroup
+
+	metricsServer *metrics.Server
 }
 
-func NewApp(cfg *factory.Config) (*TngfApp, error) {
+func NewApp(ctx context.Context, cfg *factory.Config, tlsKeyLogPath string) (*TngfApp, error) {
+	var err error
+
 	if !util.InitTNGFContext() {
-		logger.InitLog.Error("Initicating context failed")
-		return nil, fmt.Errorf("Initicating context failed")
+		logger.InitLog.Error("Initiating context failed")
+		return nil, fmt.Errorf("initiating context failed")
 	}
 	tngf := &TngfApp{
 		cfg:     cfg,
 		tngfCtx: tngf_context.TNGFSelf(),
+		wg:      sync.WaitGroup{},
 	}
+	tngf.ctx, tngf.cancel = context.WithCancel(ctx)
+
 	tngf.SetLogEnable(cfg.GetLogEnable())
 	tngf.SetLogLevel(cfg.GetLogLevel())
 	tngf.SetReportCaller(cfg.GetLogReportCaller())
 
+	features := map[utils.MetricTypeEnabled]bool{utils.NGAP: true}
+	customMetrics := make(map[utils.MetricTypeEnabled][]prometheus.Collector)
+	if cfg.AreMetricsEnabled() {
+		if tngf.metricsServer, err = metrics.NewServer(
+			getInitMetrics(cfg, features, customMetrics), tlsKeyLogPath, logger.InitLog); err != nil {
+			return nil, err
+		}
+	}
+
 	return tngf, nil
+}
+
+func getInitMetrics(
+	cfg *factory.Config,
+	features map[utils.MetricTypeEnabled]bool,
+	customMetrics map[utils.MetricTypeEnabled][]prometheus.Collector,
+) metrics.InitMetrics {
+	metricsInfo := metrics.Metrics{
+		BindingIPv4: cfg.GetMetricsBindingAddr(),
+		Scheme:      cfg.GetMetricsScheme(),
+		Namespace:   cfg.GetMetricsNamespace(),
+		Port:        cfg.GetMetricsPort(),
+		Tls: metrics.Tls{
+			Key: cfg.GetMetricsCertKeyPath(),
+			Pem: cfg.GetMetricsCertPemPath(),
+		},
+	}
+
+	return metrics.NewInitMetrics(metricsInfo, "tngf", features, customMetrics)
 }
 
 func (a *TngfApp) SetLogEnable(enable bool) {
@@ -90,33 +130,23 @@ func (a *TngfApp) SetReportCaller(reportCaller bool) {
 	logger.Log.SetReportCaller((reportCaller))
 }
 
-func (a *TngfApp) Start(tlsKeyLogPath string) {
+func (a *TngfApp) Start() {
 	logger.InitLog.Infoln("Server started")
 
 	if err := a.InitDefaultXfrmInterface(); err != nil {
-		logger.InitLog.Errorf("Initicating XFRM interface for control plane failed: %+v", err)
+		logger.InitLog.Errorf("Initiating XFRM interface for control plane failed: %+v", err)
 		return
 	}
 
-	// Graceful Shutdown
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		defer func() {
-			if p := recover(); p != nil {
-				// Print stack for panic to log. Fatalf() will let program exit.
-				logger.InitLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
-			}
+	a.wg.Add(1)
+	go a.listenShutdownEvent()
+
+	// Metrics server
+	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {
+		go func() {
+			a.metricsServer.Run(&a.wg)
 		}()
-
-		<-signalChannel
-		a.Terminate()
-		// Waiting for negotiatioon with netlink for deleting interfaces
-		time.Sleep(2 * time.Second)
-		os.Exit(0)
-	}()
-
-	wg := sync.WaitGroup{}
+	}
 
 	// NGAP
 	if err := ngap_service.Run(); err != nil {
@@ -124,24 +154,24 @@ func (a *TngfApp) Start(tlsKeyLogPath string) {
 		return
 	}
 	logger.InitLog.Info("NGAP service running.")
-	wg.Add(1)
+	a.wg.Add(1)
 
 	// Relay listeners
 	// Control plane
-	if err := nwtcp_service.Run(); err != nil {
+	if err := nwtcp_service.Run(a.ctx); err != nil {
 		logger.InitLog.Errorf("Listen NWt control plane traffic failed: %+v", err)
 		return
 	}
 	logger.InitLog.Info("NAS TCP server successfully started.")
-	wg.Add(1)
+	a.wg.Add(1)
 
 	// User plane
-	if err := nwtup_service.Run(); err != nil {
+	if err := nwtup_service.Run(a.ctx); err != nil {
 		logger.InitLog.Errorf("Listen NWt user plane traffic failed: %+v", err)
 		return
 	}
 	logger.InitLog.Info("Listening NWt user plane traffic")
-	wg.Add(1)
+	a.wg.Add(1)
 
 	// IKE
 	if err := ike_service.Run(); err != nil {
@@ -149,7 +179,7 @@ func (a *TngfApp) Start(tlsKeyLogPath string) {
 		return
 	}
 	logger.InitLog.Info("IKE service running.")
-	wg.Add(1)
+	a.wg.Add(1)
 
 	// Radius
 	if err := radius_service.Run(); err != nil {
@@ -157,15 +187,28 @@ func (a *TngfApp) Start(tlsKeyLogPath string) {
 		return
 	}
 	logger.InitLog.Info("Radius service running.")
-	wg.Add(1)
+	a.wg.Add(1)
 
 	logger.InitLog.Info("TNGF running...")
 
-	wg.Wait()
+	a.wg.Wait()
+}
+
+func (a *TngfApp) listenShutdownEvent() {
+	defer func() {
+		if p := recover(); p != nil {
+			// Print stack for panic to log. Fatalf() will let program exit.
+			logger.MainLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
+		}
+		a.wg.Done()
+	}()
+
+	<-a.ctx.Done()
+	a.Terminate()
 }
 
 func (a *TngfApp) InitDefaultXfrmInterface() error {
-	tngfContext := context.TNGFSelf()
+	tngfContext := tngf_context.TNGFSelf()
 
 	// Setup default IPsec interface for Control Plane
 	var linkIPSec netlink.Link
@@ -198,7 +241,7 @@ func (a *TngfApp) InitDefaultXfrmInterface() error {
 }
 
 func (a *TngfApp) RemoveIPsecInterfaces() {
-	tngfSelf := context.TNGFSelf()
+	tngfSelf := tngf_context.TNGFSelf()
 	tngfSelf.XfrmIfaces.Range(
 		func(key, value interface{}) bool {
 			iface := value.(netlink.Link)
@@ -215,5 +258,11 @@ func (a *TngfApp) Terminate() {
 	logger.InitLog.Info("Terminating TNGF...")
 	logger.InitLog.Info("Deleting interfaces created by TNGF")
 	a.RemoveIPsecInterfaces()
+
+	if a.metricsServer != nil {
+		a.metricsServer.Stop()
+		logger.MainLog.Infof("TNGF Metrics Server terminated")
+	}
+
 	logger.InitLog.Info("TNGF terminated")
 }

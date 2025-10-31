@@ -20,6 +20,7 @@ import (
 	"github.com/free5gc/nssf/internal/util"
 	"github.com/free5gc/openapi"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/util/metrics/sbi"
 )
 
 type NetworkSliceInformationGetQuery struct {
@@ -75,6 +76,7 @@ func (p *Processor) NSSelectionSliceInformationGet(
 			Status: http.StatusForbidden,
 			Detail: err.Error(),
 		}
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Title)
 		util.GinProblemJson(c, problemDetails)
 		return
 	}
@@ -94,7 +96,7 @@ func (p *Processor) NSSelectionSliceInformationGet(
 				},
 			},
 		}
-
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		util.GinProblemJson(c, problemDetails)
 		return
 	}
@@ -110,11 +112,13 @@ func (p *Processor) NSSelectionSliceInformationGet(
 	// TODO: Handle `SliceInfoRequestForUeConfigurationUpdate`
 
 	if problemDetails != nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, problemDetails.Cause)
 		util.GinProblemJson(c, problemDetails)
 		return
 	}
 
 	if response == nil {
+		c.Set(sbi.IN_PB_DETAILS_CTX_STR, http.StatusText(http.StatusInternalServerError))
 		util.GinProblemJson(c, &models.ProblemDetails{
 			Title:  util.INTERNAL_ERROR,
 			Status: http.StatusInternalServerError,
@@ -183,7 +187,7 @@ func useDefaultSubscribedSnssai(
 			// Default Access Type is set to 3GPP Access if no TAI is provided
 			// TODO: Depend on operator implementation, it may also return S-NSSAIs in all valid Access Type if
 			//       UE's Access Type could not be identified
-			var accessType models.AccessType = models.AccessType__3_GPP_ACCESS
+			accessType := models.AccessType__3_GPP_ACCESS
 			if param.Tai != nil {
 				accessType = util.GetAccessTypeFromConfig(*param.Tai)
 			}
@@ -353,7 +357,7 @@ func nsselectionForRegistration(param NetworkSliceInformationGetQuery) (
 					// Default Access Type is set to 3GPP Access if no TAI is provided
 					// TODO: Depend on operator implementation, it may also return S-NSSAIs in all valid Access Type if
 					//       UE's Access Type could not be identified
-					var accessType models.AccessType = models.AccessType__3_GPP_ACCESS
+					accessType := models.AccessType__3_GPP_ACCESS
 					if param.Tai != nil {
 						accessType = util.GetAccessTypeFromConfig(*param.Tai)
 					}
@@ -386,7 +390,7 @@ func nsselectionForRegistration(param NetworkSliceInformationGetQuery) (
 					// Default Access Type is set to 3GPP Access if no TAI is provided
 					// TODO: Depend on operator implementation, it may also return S-NSSAIs in all valid Access Type if
 					//       UE's Access Type could not be identified
-					var accessType models.AccessType = models.AccessType__3_GPP_ACCESS
+					accessType := models.AccessType__3_GPP_ACCESS
 					if param.Tai != nil {
 						accessType = util.GetAccessTypeFromConfig(*param.Tai)
 					}
@@ -406,8 +410,7 @@ func nsselectionForRegistration(param NetworkSliceInformationGetQuery) (
 	}
 
 	checkInvalidRequestedNssai := false
-	if param.SliceInfoRequestForRegistration.RequestedNssai != nil &&
-		len(param.SliceInfoRequestForRegistration.RequestedNssai) != 0 {
+	if len(param.SliceInfoRequestForRegistration.RequestedNssai) != 0 {
 		// Requested NSSAI is provided
 		// Verify which S-NSSAI(s) in the Requested NSSAI are permitted based on comparing the Subscribed S-NSSAI(s)
 
@@ -491,7 +494,7 @@ func nsselectionForRegistration(param NetworkSliceInformationGetQuery) (
 					// Default Access Type is set to 3GPP Access if no TAI is provided
 					// TODO: Depend on operator implementation, it may also return S-NSSAIs in all valid Access Type if
 					//       UE's Access Type could not be identified
-					var accessType models.AccessType = models.AccessType__3_GPP_ACCESS
+					accessType := models.AccessType__3_GPP_ACCESS
 					if param.Tai != nil {
 						accessType = util.GetAccessTypeFromConfig(*param.Tai)
 					}
