@@ -1,4 +1,5 @@
-FROM amf_local 
+FROM zhria/amfcustom:latest as builder
+
 #FROM free5gc/amf-base:latest AS builder
 FROM alpine:3.15
 
@@ -15,9 +16,9 @@ WORKDIR /free5gc
 RUN mkdir -p config/ log/ cert/
 
 # Copy executable and default certs
-COPY --from=amf_local /free5gc/${F5GC_MODULE} ./
-COPY --from=amf_local /free5gc/cert/${F5GC_MODULE}.pem ./cert/
-COPY --from=amf_local /free5gc/cert/${F5GC_MODULE}.key ./cert/
+COPY --from=builder /free5gc/${F5GC_MODULE} ./
+COPY --from=builder /free5gc/cert/${F5GC_MODULE}.pem ./cert/
+COPY --from=builder /free5gc/cert/${F5GC_MODULE}.key ./cert/
 
 # Config files volume
 VOLUME [ "/free5gc/config" ]

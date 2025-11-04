@@ -1,6 +1,5 @@
 module github.com/free5gc/n3iwf
 
-
 go 1.21
 
 require (

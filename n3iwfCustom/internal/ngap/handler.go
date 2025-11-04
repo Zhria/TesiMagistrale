@@ -2,6 +2,7 @@ package ngap
 
 import (
 	"encoding/binary"
+	"fmt"
 	"math"
 	"net"
 	"time"
@@ -3325,11 +3326,28 @@ func (s *Server) HandleHandoverRequest(
 	}
 
 	var amfUeNgapID *ngapType.AMFUENGAPID
+	var ueSecurityCapabilities *ngapType.UESecurityCapabilities
+	var securityContext *ngapType.SecurityContext
+	var pduSessionResourceSetupListHOReq *ngapType.PDUSessionResourceSetupListHOReq
+	var iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
 
 	for _, ie := range handoverRequest.ProtocolIEs.List {
 		switch ie.Id.Value {
 		case ngapType.ProtocolIEIDAMFUENGAPID:
 			amfUeNgapID = ie.Value.AMFUENGAPID
+		case ngapType.ProtocolIEIDUESecurityCapabilities:
+			ueSecurityCapabilities = ie.Value.UESecurityCapabilities
+		case ngapType.ProtocolIEIDSecurityContext:
+			securityContext = ie.Value.SecurityContext
+		case ngapType.ProtocolIEIDPDUSessionResourceSetupListHOReq:
+			pduSessionResourceSetupListHOReq = ie.Value.PDUSessionResourceSetupListHOReq
+			if pduSessionResourceSetupListHOReq == nil {
+				item := buildCriticalityDiagnosticsIEItem(
+					ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		default:
+			ngapLog.Tracef("Unhandled IE in HandoverRequest: %d", ie.Id.Value)
 		}
 	}
 
@@ -3338,22 +3356,150 @@ func (s *Server) HandleHandoverRequest(
 		return
 	}
 
-	cause := message.BuildCause(
-		ngapType.CausePresentRadioNetwork,
-		ngapType.CauseRadioNetworkPresentHoTargetNotAllowed,
+	if len(iesCriticalityDiagnostics.List) > 0 {
+		cause := message.BuildCause(ngapType.CausePresentProtocol,
+			ngapType.CauseProtocolPresentAbstractSyntaxErrorFalselyConstructedMessage)
+		pkt, err := message.BuildHandoverPreparationFailure(amfUeNgapID.Value, nil, *cause)
+		if err != nil {
+			ngapLog.Errorf("Build HandoverPreparationFailure failed: %+v", err)
+			return
+		}
+		message.SendToAmf(amf, pkt)
+		return
+	}
+
+	n3iwfCtx := s.Context()
+	n3iwfUe := n3iwfCtx.NewN3iwfRanUe()
+	sharedCtx := n3iwfUe.GetSharedCtx()
+	sharedCtx.AMF = amf
+	sharedCtx.AmfUeNgapId = amfUeNgapID.Value
+	if ueSecurityCapabilities != nil {
+		sharedCtx.SecurityCapabilities = ueSecurityCapabilities
+	}
+	amf.N3iwfRanUeList[n3iwfUe.RanUeNgapId] = n3iwfUe
+
+	gtpBindAddr := s.Config().GetN3iwfGtpBindAddress()
+	var admittedItems []message.HandoverAdmittedItem
+	var failedItems []message.HandoverFailedItem
+
+	if pduSessionResourceSetupListHOReq != nil {
+		for _, item := range pduSessionResourceSetupListHOReq.List {
+			pduSessionID := item.PDUSessionID.Value
+			pduSession, err := sharedCtx.CreatePDUSession(pduSessionID, item.SNSSAI)
+			if err != nil {
+				ngapLog.Errorf("Create PDU Session[%d] failed: %v", pduSessionID, err)
+				cause := message.BuildCause(ngapType.CausePresentRadioNetwork,
+					ngapType.CauseRadioNetworkPresentMultiplePDUSessionIDInstances)
+				if cause != nil {
+					failTransfer, buildErr := message.BuildHandoverResourceAllocationUnsuccessfulTransfer(*cause)
+					if buildErr == nil {
+						failedItems = append(failedItems, message.HandoverFailedItem{
+							PDUSessionID: pduSessionID,
+							Transfer:     failTransfer,
+						})
+					}
+				}
+				continue
+			}
+
+			var transfer ngapType.PDUSessionResourceSetupRequestTransfer
+			if err := aper.UnmarshalWithParams(item.HandoverRequestTransfer, &transfer, "valueExt"); err != nil {
+				ngapLog.Errorf("Decode HandoverRequestTransfer failed: %v", err)
+				sharedCtx.DeletePDUSession(pduSessionID)
+				cause := message.BuildCause(ngapType.CausePresentProtocol,
+					ngapType.CauseProtocolPresentAbstractSyntaxErrorReject)
+				if cause != nil {
+					failTransfer, buildErr := message.BuildHandoverResourceAllocationUnsuccessfulTransfer(*cause)
+					if buildErr == nil {
+						failedItems = append(failedItems, message.HandoverFailedItem{
+							PDUSessionID: pduSessionID,
+							Transfer:     failTransfer,
+						})
+					}
+				}
+				continue
+			}
+
+			success, _ := s.handlePDUSessionResourceSetupRequestTransfer(n3iwfUe, pduSession, transfer)
+			if !success {
+				ngapLog.Errorf("Handle HandoverRequestTransfer for PDU Session[%d] failed", pduSessionID)
+				sharedCtx.DeletePDUSession(pduSessionID)
+				cause := message.BuildCause(ngapType.CausePresentProtocol,
+					ngapType.CauseProtocolPresentUnspecified)
+				if cause != nil {
+					failTransfer, buildErr := message.BuildHandoverResourceAllocationUnsuccessfulTransfer(*cause)
+					if buildErr == nil {
+						failedItems = append(failedItems, message.HandoverFailedItem{
+							PDUSessionID: pduSessionID,
+							Transfer:     failTransfer,
+						})
+					}
+				}
+				continue
+			}
+
+			ackTransfer, err := message.BuildHandoverRequestAcknowledgeTransfer(pduSession, gtpBindAddr)
+			if err != nil {
+				ngapLog.Errorf("Build HandoverRequestAcknowledgeTransfer failed: %v", err)
+				sharedCtx.DeletePDUSession(pduSessionID)
+				cause := message.BuildCause(ngapType.CausePresentProtocol,
+					ngapType.CauseProtocolPresentUnspecified)
+				if cause != nil {
+					failTransfer, buildErr := message.BuildHandoverResourceAllocationUnsuccessfulTransfer(*cause)
+					if buildErr == nil {
+						failedItems = append(failedItems, message.HandoverFailedItem{
+							PDUSessionID: pduSessionID,
+							Transfer:     failTransfer,
+						})
+					}
+				}
+				continue
+			}
+
+			admittedItems = append(admittedItems, message.HandoverAdmittedItem{
+				PDUSessionID: pduSessionID,
+				Transfer:     ackTransfer,
+			})
+		}
+	}
+
+	if len(admittedItems) == 0 && len(failedItems) > 0 {
+		ngapLog.Warn("All PDU sessions failed during handover preparation, notifying AMF")
+		cause := message.BuildCause(
+			ngapType.CausePresentRadioNetwork,
+			ngapType.CauseRadioNetworkPresentHoFailureInTarget5GCNgranNodeOrTargetSystem,
+		)
+		if cause == nil {
+			return
+		}
+		pkt, err := message.BuildHandoverPreparationFailure(amfUeNgapID.Value, nil, *cause)
+		if err != nil {
+			ngapLog.Errorf("Build HandoverPreparationFailure failed: %+v", err)
+			return
+		}
+		message.SendToAmf(amf, pkt)
+		return
+	}
+
+	targetToSource := []byte(fmt.Sprintf("N3IWF:%s", gtpBindAddr))
+
+	ackPkt, err := message.BuildHandoverRequestAcknowledge(
+		n3iwfUe,
+		admittedItems,
+		failedItems,
+		targetToSource,
 	)
-	if cause == nil {
-		ngapLog.Error("Failed to build default cause for HandoverPreparationFailure")
-		return
-	}
-
-	pkt, err := message.BuildHandoverPreparationFailure(amfUeNgapID.Value, nil, *cause)
 	if err != nil {
-		ngapLog.Errorf("Build HandoverPreparationFailure failed: %+v", err)
+		ngapLog.Errorf("Build HandoverRequestAcknowledge failed: %+v", err)
 		return
 	}
 
-	message.SendToAmf(amf, pkt)
+	message.SendToAmf(amf, ackPkt)
+
+	if securityContext != nil {
+		ngapLog.Debugf("Received security context NH/NCC for handover (NCC=%d)", securityContext.NextHopChainingCount.Value)
+		// TODO: apply NH to IKE context when available
+	}
 }
 
 func (s *Server) HandleSendSendUEContextRelease(

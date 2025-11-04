@@ -1,14 +1,15 @@
 package message
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 
 	"github.com/free5gc/aper"
-	"github.com/free5gc/ngap"
-	"github.com/free5gc/ngap/ngapType"
-
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/ngap"
+	"github.com/free5gc/ngap/ngapConvert"
+	"github.com/free5gc/ngap/ngapType"
 )
 
 func BuildHandoverRequired(
@@ -192,4 +193,149 @@ func BuildHandoverPreparationFailure(
 	handoverFailureIEs.List = append(handoverFailureIEs.List, ie)
 
 	return ngap.Encoder(pdu)
+}
+
+type HandoverAdmittedItem struct {
+	PDUSessionID int64
+	Transfer     []byte
+}
+
+type HandoverFailedItem struct {
+	PDUSessionID int64
+	Transfer     []byte
+}
+
+func BuildHandoverRequestAcknowledge(
+	ranUe n3iwf_context.RanUe,
+	admitted []HandoverAdmittedItem,
+	failed []HandoverFailedItem,
+	targetToSourceContainer []byte,
+) ([]byte, error) {
+	if ranUe == nil {
+		return nil, errors.New("nil RanUE")
+	}
+
+	var pdu ngapType.NGAPPDU
+	pdu.Present = ngapType.NGAPPDUPresentSuccessfulOutcome
+	pdu.SuccessfulOutcome = new(ngapType.SuccessfulOutcome)
+
+	successful := pdu.SuccessfulOutcome
+	successful.ProcedureCode.Value = ngapType.ProcedureCodeHandoverResourceAllocation
+	successful.Criticality.Value = ngapType.CriticalityPresentReject
+	successful.Value.Present = ngapType.SuccessfulOutcomePresentHandoverRequestAcknowledge
+	successful.Value.HandoverRequestAcknowledge = new(ngapType.HandoverRequestAcknowledge)
+
+	handoverAck := successful.Value.HandoverRequestAcknowledge
+	ackIEs := &handoverAck.ProtocolIEs
+
+	sharedCtx := ranUe.GetSharedCtx()
+
+	// AMF UE NGAP ID
+	ie := ngapType.HandoverRequestAcknowledgeIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDAMFUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentAMFUENGAPID
+	ie.Value.AMFUENGAPID = &ngapType.AMFUENGAPID{Value: sharedCtx.AmfUeNgapId}
+	ackIEs.List = append(ackIEs.List, ie)
+
+	// RAN UE NGAP ID
+	ie = ngapType.HandoverRequestAcknowledgeIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDRANUENGAPID
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentRANUENGAPID
+	ie.Value.RANUENGAPID = &ngapType.RANUENGAPID{Value: sharedCtx.RanUeNgapId}
+	ackIEs.List = append(ackIEs.List, ie)
+
+	if len(admitted) > 0 {
+		pduSessionAdmittedList := ngapType.PDUSessionResourceAdmittedList{}
+		for _, item := range admitted {
+			admittedItem := ngapType.PDUSessionResourceAdmittedItem{
+				PDUSessionID: ngapType.PDUSessionID{
+					Value: item.PDUSessionID,
+				},
+				HandoverRequestAcknowledgeTransfer: item.Transfer,
+			}
+			pduSessionAdmittedList.List = append(pduSessionAdmittedList.List, admittedItem)
+		}
+		ie = ngapType.HandoverRequestAcknowledgeIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceAdmittedList
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentPDUSessionResourceAdmittedList
+		ie.Value.PDUSessionResourceAdmittedList = &pduSessionAdmittedList
+		ackIEs.List = append(ackIEs.List, ie)
+	}
+
+	if len(failed) > 0 {
+		pduSessionFailedList := ngapType.PDUSessionResourceFailedToSetupListHOAck{}
+		for _, item := range failed {
+			failedItem := ngapType.PDUSessionResourceFailedToSetupItemHOAck{
+				PDUSessionID: ngapType.PDUSessionID{
+					Value: item.PDUSessionID,
+				},
+				HandoverResourceAllocationUnsuccessfulTransfer: item.Transfer,
+			}
+			pduSessionFailedList.List = append(pduSessionFailedList.List, failedItem)
+		}
+		ie = ngapType.HandoverRequestAcknowledgeIEs{}
+		ie.Id.Value = ngapType.ProtocolIEIDPDUSessionResourceFailedToSetupListHOAck
+		ie.Criticality.Value = ngapType.CriticalityPresentIgnore
+		ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentPDUSessionResourceFailedToSetupListHOAck
+		ie.Value.PDUSessionResourceFailedToSetupListHOAck = &pduSessionFailedList
+		ackIEs.List = append(ackIEs.List, ie)
+	}
+
+	ie = ngapType.HandoverRequestAcknowledgeIEs{}
+	ie.Id.Value = ngapType.ProtocolIEIDTargetToSourceTransparentContainer
+	ie.Criticality.Value = ngapType.CriticalityPresentReject
+	ie.Value.Present = ngapType.HandoverRequestAcknowledgeIEsPresentTargetToSourceTransparentContainer
+	ie.Value.TargetToSourceTransparentContainer = &ngapType.TargetToSourceTransparentContainer{
+		Value: targetToSourceContainer,
+	}
+	ackIEs.List = append(ackIEs.List, ie)
+
+	return ngap.Encoder(pdu)
+}
+
+func BuildHandoverRequestAcknowledgeTransfer(
+	pduSession *n3iwf_context.PDUSession,
+	gtpIPv4 string,
+) ([]byte, error) {
+	if pduSession == nil {
+		return nil, errors.New("nil pdu session")
+	}
+	if pduSession.GTPConnInfo == nil {
+		return nil, errors.New("GTP tunnel not ready")
+	}
+
+	transfer := ngapType.HandoverRequestAcknowledgeTransfer{}
+
+	transfer.DLNGUUPTNLInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
+	transfer.DLNGUUPTNLInformation.GTPTunnel = new(ngapType.GTPTunnel)
+	gtpTunnel := transfer.DLNGUUPTNLInformation.GTPTunnel
+
+	teid := make([]byte, 4)
+	binary.BigEndian.PutUint32(teid, pduSession.GTPConnInfo.IncomingTEID)
+	gtpTunnel.GTPTEID.Value = teid
+	gtpTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(gtpIPv4, "")
+
+	for _, qfi := range pduSession.QFIList {
+		item := ngapType.QosFlowItemWithDataForwarding{
+			QosFlowIdentifier: ngapType.QosFlowIdentifier{
+				Value: int64(qfi),
+			},
+		}
+		transfer.QosFlowSetupResponseList.List = append(
+			transfer.QosFlowSetupResponseList.List, item)
+	}
+
+	return aper.MarshalWithParams(transfer, "valueExt")
+}
+
+func BuildHandoverResourceAllocationUnsuccessfulTransfer(
+	cause ngapType.Cause,
+) ([]byte, error) {
+	transfer := ngapType.HandoverResourceAllocationUnsuccessfulTransfer{
+		Cause: cause,
+	}
+	return aper.MarshalWithParams(transfer, "valueExt")
 }
