@@ -1,15 +1,26 @@
-FROM zhria/amfcustom:latest as builder
+FROM zhria/amfcustom:latest AS builder
 
-#FROM free5gc/amf-base:latest AS builder
-FROM alpine:3.15
+FROM debian:bookworm-slim
 
 LABEL description="Free5GC open source 5G Core Network" \
     version="N3IWF Handover Support Patch"
 
 ENV F5GC_MODULE=amf
 
-# Install debug tools ~ 100MB
-RUN apk add -U vim strace net-tools curl netcat-openbsd
+# Install runtime deps + debug tools (unchanged behaviour) and clean apt cache
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libmnl0 \
+        libsctp1 \
+        libyaml-0-2 \
+        tzdata \
+        vim \
+        strace \
+        net-tools \
+        curl \
+        netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working dir
 WORKDIR /free5gc

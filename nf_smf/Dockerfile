@@ -1,5 +1,6 @@
 FROM zhria/smfcustom:latest AS builder
-FROM alpine:3.15
+
+FROM debian:bookworm-slim
 
 LABEL description="Free5GC open source 5G Core Network" \
     version="Stage 3"
@@ -7,8 +8,24 @@ LABEL description="Free5GC open source 5G Core Network" \
 ENV F5GC_MODULE=smf
 ARG DEBUG_TOOLS
 
-# Install debug tools ~ 100MB (if DEBUG_TOOLS is set to true)
-RUN if [ "$DEBUG_TOOLS" = "true" ] ; then apk add -U vim strace net-tools curl netcat-openbsd ; fi
+# Install runtime deps and optional debug tooling, then clean apt cache
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        libmnl0 \
+        libsctp1 \
+        libyaml-0-2 \
+        tzdata; \
+    if [ "$DEBUG_TOOLS" = "true" ]; then \
+        apt-get install -y --no-install-recommends \
+            vim \
+            strace \
+            net-tools \
+            curl \
+            netcat-openbsd; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
 
 # Set working dir
 WORKDIR /free5gc
