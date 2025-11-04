@@ -1,24 +1,21 @@
-# Stage 1: build environment
-FROM golang:1.25.2-bookworm AS builder
+# Stage 1: build environment (musl-based, compatibile con Alpine runtime)
+FROM golang:1.21-alpine AS builder
 
 LABEL maintainer="Free5GC <support@free5gc.org>"
-ENV DEBIAN_FRONTEND=noninteractive
 
 # Strumenti e dipendenze native richieste durante il build
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        build-essential \
+RUN apk add --no-cache \
+        build-base \
         cmake \
         autoconf \
+        automake \
         libtool \
-        pkg-config \
+        pkgconf \
+        git \
+        linux-headers \
         libmnl-dev \
-        libyaml-dev \
-        libsctp-dev \
-        apt-transport-https \
-        ca-certificates \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+        yaml-dev \
+        lksctp-tools-dev
 
 WORKDIR /workspace
 
@@ -29,9 +26,10 @@ RUN go mod download
 # Copia il resto del sorgente SMF custom
 COPY smfCustom/ .
 
-# Compilazione del binario SMF
-RUN CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-    go build -o /output/smf ./cmd
+# Compilazione del binario SMF basato su musl per Alpine
+RUN mkdir -p /output \
+    && CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
+       go build -o /output/smf ./cmd
 
 # Stage 2: runtime minimale
 FROM alpine:3.19
@@ -42,7 +40,9 @@ LABEL description="Free5GC SMF custom build" \
 RUN apk add --no-cache \
     ca-certificates \
     libmnl \
-    lksctp-tools
+    lksctp-tools \
+    yaml \
+    tzdata
 
 WORKDIR /free5gc
 RUN mkdir -p cert public config log
