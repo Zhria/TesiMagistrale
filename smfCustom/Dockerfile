@@ -1,23 +1,12 @@
 # Stage 1: build environment (musl-based, compatibile con Alpine runtime)
-FROM golang:1.24-alpine AS builder
+FROM golang:1.24-bookworm AS builder
 
 LABEL maintainer="Free5GC <support@free5gc.org>"
 
 ENV GOTOOLCHAIN=auto
 
 # Strumenti e dipendenze native richieste durante il build
-RUN apk add --no-cache \
-        build-base \
-        cmake \
-        autoconf \
-        automake \
-        libtool \
-        pkgconf \
-        git \
-        linux-headers \
-        libmnl-dev \
-        yaml-dev \
-        lksctp-tools-dev
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential cmake autoconf automake libtool pkg-config git linux-headers-amd64 libmnl-dev libsctp-dev libyaml-dev
 
 WORKDIR /workspace
 
@@ -34,17 +23,13 @@ RUN mkdir -p /output \
        go build -o /output/smf ./cmd
 
 # Stage 2: runtime minimale
-FROM alpine:3.19
+FROM debian:bookworm-slim
 
 LABEL description="Free5GC SMF custom build" \
       version="custom"
 
-RUN apk add --no-cache \
-    ca-certificates \
-    libmnl \
-    lksctp-tools \
-    yaml \
-    tzdata
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libmnl0 libsctp1 libyaml-0-2 tzdata
+
 
 WORKDIR /free5gc
 RUN mkdir -p cert public config log
