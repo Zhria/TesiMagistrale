@@ -1,7 +1,9 @@
 # Stage 1: build environment (musl-based, compatibile con Alpine runtime)
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 LABEL maintainer="Free5GC <support@free5gc.org>"
+
+ENV GOTOOLCHAIN=auto
 
 # Strumenti e dipendenze native richieste durante il build
 RUN apk add --no-cache \

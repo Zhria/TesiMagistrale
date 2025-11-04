@@ -9,6 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
+	"github.com/gin-gonic/gin"
+	"github.com/urfave/cli/v2"
+
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/rc"
 	"github.com/free5gc/n3iwf/internal/snapshot"
@@ -16,9 +20,6 @@ import (
 	"github.com/free5gc/n3iwf/pkg/service"
 	logger_util "github.com/free5gc/util/logger"
 	"github.com/free5gc/util/version"
-	"github.com/gin-contrib/pprof"
-	"github.com/gin-gonic/gin"
-	"github.com/urfave/cli"
 )
 
 func main() {
@@ -34,29 +35,35 @@ func main() {
 	app.Usage = "Non-3GPP Interworking Function (N3IWF)"
 	app.Action = action
 	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Usage: "Load configuration from `FILE`",
+		&cli.StringFlag{
+			Name:    "config",
+			Aliases: []string{"c"},
+			Usage:   "Load configuration from `FILE`",
 		},
-		cli.StringSliceFlag{
-			Name:  "log, l",
-			Usage: "Output NF log to `FILE`",
+		&cli.StringSliceFlag{
+			Name:    "log",
+			Aliases: []string{"l"},
+			Usage:   "Output NF log to `FILE`",
 		},
-		cli.BoolFlag{
-			Name:  "nolog, nl",
-			Usage: "Disable log to stdout/stderr",
+		&cli.BoolFlag{
+			Name:    "nolog",
+			Aliases: []string{"nl"},
+			Usage:   "Disable log to stdout/stderr",
 		},
-		cli.StringFlag{
-			Name:  "loglevel, ll",
-			Usage: "Override logger level",
+		&cli.StringFlag{
+			Name:    "loglevel",
+			Aliases: []string{"ll"},
+			Usage:   "Override logger level",
 		},
-		cli.BoolFlag{
-			Name:  "reportcaller, rc",
-			Usage: "Enable logger report caller",
+		&cli.BoolFlag{
+			Name:    "reportcaller",
+			Aliases: []string{"rc"},
+			Usage:   "Enable logger report caller",
 		},
-		cli.BoolFlag{
-			Name:  "debug, deb",
-			Usage: "Enable pprof debug",
+		&cli.BoolFlag{
+			Name:    "debug",
+			Aliases: []string{"deb"},
+			Usage:   "Enable pprof debug",
 		},
 	}
 	if err := app.Run(os.Args); err != nil {
@@ -64,7 +71,7 @@ func main() {
 	}
 }
 
-func runPProfServer() *gin.Engine {
+func runPProfServer() {
 	r := gin.Default()
 	pprof.Register(r)
 	// Listen and Server in 0.0.0.0:6061
@@ -72,7 +79,6 @@ func runPProfServer() *gin.Engine {
 	if err != nil {
 		logger.MainLog.Errorf("runPProfServer(): %v", err)
 	}
-	return r
 }
 
 func action(cliCtx *cli.Context) error {
