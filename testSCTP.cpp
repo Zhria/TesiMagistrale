@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
     const char *local_ip;
     if (argc < 3 || argc > 4)
     {
-        server_ip = "192.168.17.70";
+        server_ip = "192.168.17.125";
         server_port = 32222;
         local_ip = "192.168.17.94";
     }

@@ -40,6 +40,8 @@ if [ -z "$PARAM_AVVIO" ]; then
 fi
 
 sudo ./setup-gtp5g.sh
+sudo git reset --hard origin/main 
+git pull
 # Run con docker compose
 sudo docker compose -f dcb.yaml up $PARAM_AVVIO
 
