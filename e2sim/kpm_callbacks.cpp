@@ -220,6 +220,10 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     }
 
     std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
+    if (kpi.empty()) {
+      logln("Report loop: no KPM metrics available for seqNum %ld", seqNum);
+      continue;
+    }
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
 
@@ -239,6 +243,12 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 
     kpm_fill_ue_rf_basic(ind_msg, kpi);
+    if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format1) {
+      logln("KPM indication message was not populated, skipping seqNum %ld", seqNum);
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      continue;
+    }
     logln("Encoded KPM indication message (Format1)\n");
     xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 

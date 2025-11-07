@@ -1,4 +1,5 @@
 #include <cctype>
+#include <cerrno>
 #include <iostream>
 #include <map>
 #include <fstream>
@@ -6,6 +7,7 @@
 #include <filesystem>
 #include <sstream>
 #include <string>
+#include <cstdlib>
 #include <nlohmann/json.hpp>
 
 #include "encode_e2apv2.hpp"
@@ -36,60 +38,11 @@ extern "C" {
 #include "RICtimeToWait.h"
 }
 
-enum Direction{
-  DL=0,
-  UL=1
-};
-
-
-struct KPMMetric{
-    std::string name;
-    int64_t value=0;
-    int direction=0; // 0=DL, 1=UL
-};
-
-struct KPMMetrics{
-    std::array<KPMMetric, 20> metrics; // max 20 metriche KPM per cella
-    int count=0;
-};
-
-KPMMetrics g_metrics; // max 20 metriche KPM per cella
-
-static int64_t getKPMMetricValue(const std::string& name, Direction direction) {
-  for (const auto& metric : g_metrics.metrics) {
-        if (metric.name == name && metric.direction == direction) {
-            return metric.value;
-        }
-    }
-  // If we reach here, the metric was not found
-  //So we create a metric with value 0 and return 0
-  logln("Metric %s not found, return  0\n", name.c_str());
-  return 0; // Default value if not found
-}
-
-static void setKPMMetricValue(const std::string& name, int64_t value, Direction direction) {
-    for (int i=0; i < g_metrics.count; i++) {
-        if (g_metrics.metrics[i].name == name && g_metrics.metrics[i].direction == direction) {
-            g_metrics.metrics[i].value = value;
-            return;
-        }
-    }
-    // If we reach here, the metric was not found
-    //So we create a metric with the given value
-    if(g_metrics.count < 20){
-      g_metrics.metrics[g_metrics.count++] = {name, value, direction};
-  }
-}
-
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-//Last metric values:
-std::vector<std::string> kpi=getAllowedKPI();
-
 // -------------------- configurazione (safe) --------------------
 static std::string g_fileName = "n3iwf_e2.json";
-static std::string g_fileNameKPM="n3iwf_e2.json.kpm.log";
 static std::string g_rcFileName = "n3iwf_e2_rc.json";
 static std::string g_basePath = []{
   if (const char* p = std::getenv("E2_LOG_BASE")) return std::string(p);
@@ -102,10 +55,6 @@ void setBasePath(const std::string& path) {
 }
 void setFileName(const std::string& name) {
   g_fileName = name;
-}
-
-void setFileNameKPM(const std::string& name) {
-  g_fileNameKPM = name;
 }
 
 void setRcLogFileName(const std::string& name) {
@@ -217,6 +166,325 @@ static std::map<std::string, std::string> json_to_string_map(const json& value) 
     out.emplace(key, json_to_string(val));
   }
   return out;
+}
+
+static std::string to_lower_copy(const std::string &value) {
+  std::string lower;
+  lower.reserve(value.size());
+  for (char c : value) {
+    lower.push_back(static_cast<char>(std::tolower(static_cast<unsigned char>(c))));
+  }
+  return lower;
+}
+
+static bool parse_first_double(const std::string &text, double &out) {
+  if (text.empty()) {
+    return false;
+  }
+  const char *ptr = text.c_str();
+  char *end = nullptr;
+  errno = 0;
+  double val = std::strtod(ptr, &end);
+  if (ptr == end || errno == ERANGE) {
+    return false;
+  }
+  out = val;
+  return true;
+}
+
+static bool parse_first_int64(const std::string &text, int64_t &out) {
+  if (text.empty()) {
+    return false;
+  }
+  const char *ptr = text.c_str();
+  char *end = nullptr;
+  errno = 0;
+  long long val = std::strtoll(ptr, &end, 0);
+  if (ptr == end || errno == ERANGE) {
+    return false;
+  }
+  out = static_cast<int64_t>(val);
+  return true;
+}
+
+static bool parse_first_uint64(const std::string &text, uint64_t &out) {
+  if (text.empty()) {
+    return false;
+  }
+  const char *ptr = text.c_str();
+  char *end = nullptr;
+  errno = 0;
+  unsigned long long val = std::strtoull(ptr, &end, 0);
+  if (ptr == end || errno == ERANGE) {
+    return false;
+  }
+  out = static_cast<uint64_t>(val);
+  return true;
+}
+
+static bool parse_bitrate_bps(const std::string &text, double &bps) {
+  double value = 0.0;
+  if (!parse_first_double(text, value)) {
+    return false;
+  }
+  std::string lower = to_lower_copy(text);
+  double multiplier = 1.0;
+  if (lower.find("gbit") != std::string::npos) {
+    multiplier = 1e9;
+  } else if (lower.find("mbit") != std::string::npos) {
+    multiplier = 1e6;
+  } else if (lower.find("kbit") != std::string::npos) {
+    multiplier = 1e3;
+  } else if (lower.find("bit") != std::string::npos) {
+    multiplier = 1.0;
+  }
+  bps = value * multiplier;
+  return true;
+}
+
+static bool parse_duration_seconds(const std::string &text, double &seconds) {
+  double value = 0.0;
+  if (!parse_first_double(text, value)) {
+    return false;
+  }
+  std::string lower = to_lower_copy(text);
+  if (lower.find("ms") != std::string::npos) {
+    seconds = value / 1000.0;
+  } else if (lower.find("us") != std::string::npos) {
+    seconds = value / 1'000'000.0;
+  } else {
+    seconds = value;
+  }
+  return true;
+}
+
+static bool lookup_station_field(const RcStationSnapshot &station,
+                                 std::initializer_list<const char *> keys,
+                                 std::string &out) {
+  const std::map<std::string, std::string> *sources[] = {
+      &station.fields, &station.station_dump, &station.hostapd};
+  for (const char *key : keys) {
+    for (const auto *src : sources) {
+      auto it = src->find(key);
+      if (it != src->end()) {
+        out = it->second;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+struct RcMetricAccumulator {
+  size_t ue_count{0};
+  double signal_sum{0.0};
+  size_t signal_count{0};
+  uint64_t total_rx_bytes{0};
+  uint64_t total_tx_bytes{0};
+  uint64_t total_rx_packets{0};
+  uint64_t total_tx_packets{0};
+  uint64_t total_tx_retries{0};
+  double conn_time_sum{0.0};
+  size_t conn_time_count{0};
+  double inactive_time_sum{0.0};
+  size_t inactive_time_count{0};
+  double tx_bitrate_sum{0.0};
+  size_t tx_bitrate_count{0};
+  double rx_bitrate_sum{0.0};
+  size_t rx_bitrate_count{0};
+};
+
+static void accumulate_rc_metrics(const RcAssociationSnapshot &assoc,
+                                  RcMetricAccumulator &acc) {
+  acc.ue_count++;
+  const RcStationSnapshot &station = assoc.station;
+  std::string field;
+
+  if (lookup_station_field(station, {"signal", "iw.signal", "signal_avg"}, field)) {
+    double dbm = 0.0;
+    if (parse_first_double(field, dbm)) {
+      acc.signal_sum += dbm;
+      acc.signal_count++;
+    }
+  }
+
+  bool rx_bytes_recorded = false;
+  if (lookup_station_field(station, {"rx_bytes", "iw.rx_bytes"}, field)) {
+    uint64_t value = 0;
+    if (parse_first_uint64(field, value)) {
+      acc.total_rx_bytes += value;
+      rx_bytes_recorded = true;
+    }
+  }
+  if (!rx_bytes_recorded && assoc.counters.incoming_octets > 0) {
+    acc.total_rx_bytes += assoc.counters.incoming_octets;
+  }
+
+  bool tx_bytes_recorded = false;
+  if (lookup_station_field(station, {"tx_bytes", "iw.tx_bytes"}, field)) {
+    uint64_t value = 0;
+    if (parse_first_uint64(field, value)) {
+      acc.total_tx_bytes += value;
+      tx_bytes_recorded = true;
+    }
+  }
+  if (!tx_bytes_recorded && assoc.counters.transmit_octets > 0) {
+    acc.total_tx_bytes += assoc.counters.transmit_octets;
+  }
+
+  if (lookup_station_field(station, {"rx_packets", "iw.rx_packets"}, field)) {
+    uint64_t value = 0;
+    if (parse_first_uint64(field, value)) {
+      acc.total_rx_packets += value;
+    }
+  } else if (assoc.counters.incoming_pkts > 0) {
+    acc.total_rx_packets += assoc.counters.incoming_pkts;
+  }
+
+  if (lookup_station_field(station, {"tx_packets", "iw.tx_packets"}, field)) {
+    uint64_t value = 0;
+    if (parse_first_uint64(field, value)) {
+      acc.total_tx_packets += value;
+    }
+  } else if (assoc.counters.transmit_pkts > 0) {
+    acc.total_tx_packets += assoc.counters.transmit_pkts;
+  }
+
+  if (lookup_station_field(station, {"tx_retries", "iw.tx_retries"}, field)) {
+    uint64_t value = 0;
+    if (parse_first_uint64(field, value)) {
+      acc.total_tx_retries += value;
+    }
+  }
+
+  bool conn_recorded = false;
+  if (lookup_station_field(station,
+                           {"connected_time", "iw.connected_time", "stationDump.connected_time"},
+                           field)) {
+    double seconds = 0.0;
+    if (parse_duration_seconds(field, seconds)) {
+      acc.conn_time_sum += seconds;
+      acc.conn_time_count++;
+      conn_recorded = true;
+    }
+  }
+  if (!conn_recorded && lookup_station_field(station, {"connected_time"}, field)) {
+    double seconds = 0.0;
+    if (parse_first_double(field, seconds)) {
+      acc.conn_time_sum += seconds;
+      acc.conn_time_count++;
+    }
+  }
+
+  bool inactive_recorded = false;
+  if (lookup_station_field(station, {"inactive_time", "iw.inactive_time"}, field)) {
+    double seconds = 0.0;
+    if (parse_duration_seconds(field, seconds)) {
+      acc.inactive_time_sum += seconds;
+      acc.inactive_time_count++;
+      inactive_recorded = true;
+    }
+  }
+  if (!inactive_recorded && lookup_station_field(station, {"inactive_msec"}, field)) {
+    double ms_value = 0.0;
+    if (parse_first_double(field, ms_value)) {
+      acc.inactive_time_sum += ms_value / 1000.0;
+      acc.inactive_time_count++;
+    }
+  }
+
+  if (lookup_station_field(station, {"tx_bitrate", "iw.tx_bitrate"}, field)) {
+    double bps = 0.0;
+    if (parse_bitrate_bps(field, bps)) {
+      acc.tx_bitrate_sum += bps;
+      acc.tx_bitrate_count++;
+    }
+  }
+
+  if (lookup_station_field(station, {"rx_bitrate", "iw.rx_bitrate"}, field)) {
+    double bps = 0.0;
+    if (parse_bitrate_bps(field, bps)) {
+      acc.rx_bitrate_sum += bps;
+      acc.rx_bitrate_count++;
+    }
+  }
+}
+
+struct RcThroughputTotals {
+  uint64_t dl_bytes{0};
+  uint64_t ul_bytes{0};
+  uint64_t dl_packets{0};
+  uint64_t ul_packets{0};
+  uint64_t dl_drop_packets{0};
+  uint64_t ul_drop_packets{0};
+};
+
+static RcThroughputTotals g_prev_throughput_totals{};
+static bool g_prev_throughput_valid = false;
+
+static void accumulate_rc_throughput(const RcAssociationSnapshot &assoc,
+                                     RcThroughputTotals &totals) {
+  std::string field;
+  uint64_t value = 0;
+
+  if (lookup_station_field(assoc.station, {"tx_bytes", "iw.tx_bytes"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.dl_bytes += value;
+  } else {
+    totals.dl_bytes += assoc.counters.transmit_octets;
+  }
+
+  if (lookup_station_field(assoc.station, {"rx_bytes", "iw.rx_bytes"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.ul_bytes += value;
+  } else {
+    totals.ul_bytes += assoc.counters.incoming_octets;
+  }
+
+  if (lookup_station_field(assoc.station, {"tx_packets", "iw.tx_packets"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.dl_packets += value;
+  } else {
+    totals.dl_packets += assoc.counters.transmit_pkts;
+  }
+
+  if (lookup_station_field(assoc.station, {"rx_packets", "iw.rx_packets"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.ul_packets += value;
+  } else {
+    totals.ul_packets += assoc.counters.incoming_pkts;
+  }
+
+  if (lookup_station_field(assoc.station, {"tx_failed", "iw.tx_failed"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.dl_drop_packets += value;
+  }
+  if (lookup_station_field(assoc.station, {"tx_retries", "iw.tx_retries"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.dl_drop_packets += value;
+  }
+  if (lookup_station_field(assoc.station, {"rx_drop_misc", "iw.rx_drop_misc"}, field) &&
+      parse_first_uint64(field, value)) {
+    totals.ul_drop_packets += value;
+  }
+}
+
+static RcThroughputTotals subtract_totals(const RcThroughputTotals &curr,
+                                          const RcThroughputTotals &prev) {
+  RcThroughputTotals delta;
+  delta.dl_bytes = (curr.dl_bytes >= prev.dl_bytes) ? (curr.dl_bytes - prev.dl_bytes) : 0;
+  delta.ul_bytes = (curr.ul_bytes >= prev.ul_bytes) ? (curr.ul_bytes - prev.ul_bytes) : 0;
+  delta.dl_packets = (curr.dl_packets >= prev.dl_packets) ? (curr.dl_packets - prev.dl_packets) : 0;
+  delta.ul_packets = (curr.ul_packets >= prev.ul_packets) ? (curr.ul_packets - prev.ul_packets) : 0;
+  delta.dl_drop_packets =
+      (curr.dl_drop_packets >= prev.dl_drop_packets)
+          ? (curr.dl_drop_packets - prev.dl_drop_packets)
+          : 0;
+  delta.ul_drop_packets =
+      (curr.ul_drop_packets >= prev.ul_drop_packets)
+          ? (curr.ul_drop_packets - prev.ul_drop_packets)
+          : 0;
+  return delta;
 }
 
 static RcCountersSnapshot parse_rc_counters(const json& counters) {
@@ -515,125 +783,92 @@ static inline double percent_or_zero(int64_t num, int64_t den) {
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
   logln("Getting KPM metrics with granularityPeriod %ld milliseconds\n", granularityPeriod);
-  float granularityPeriodSec=granularityPeriod/1000.0; // converti in secondi
-  std::string fullPath= joinPathFile(g_basePath, g_fileNameKPM);
-  if (!fs::exists(fullPath)) {
-    std::cerr << "[n3iwf] JSON file non trovato: " << fullPath << "\n";
+  RcSnapshot rc_snapshot;
+  if (!loadRcSnapshot(rc_snapshot)) {
+    logln("[n3iwf] Unable to load RC snapshot, skipping metrics collection");
     return {};
   }
-  logln("fullPath is %s\n",fullPath.c_str());
-  auto buf = readWholeFile(fullPath);
-  if (!buf) {
-    logln("Impossibile leggere: %s\n",fullPath.c_str());
-    return {};
-  }
-  if (!json::accept(*buf)) {
-    logln("JSON non valido:\n%s\n",buf->c_str());
+  if (rc_snapshot.associations.empty()) {
+    logln("[n3iwf] RC snapshot has no associations, skipping metrics collection");
     return {};
   }
 
-  auto j = json::parse(*buf);
-  if (j.is_discarded()) {
-    logln("JSON non valido (discarded):\n%s\n",buf->c_str());
-    return {};
+  RcThroughputTotals curr_totals;
+  RcMetricAccumulator acc;
+  for (const auto &assoc : rc_snapshot.associations) {
+    accumulate_rc_throughput(assoc, curr_totals);
+    accumulate_rc_metrics(assoc, acc);
   }
-  
-  const auto& metrics = j.at("data").at("byDir");
-  if (metrics.is_discarded()) {
-    logln("JSON non valido (discarded):\n%s\n",buf->c_str());
-    return {};
-  }
-  //Can i use a try catch method to avoid the exception?
-  try {
-    if (!metrics.contains("0") || !metrics.contains("1")) {
-      logln("JSON non valido (missing '0' or '1' in byDir):\n%s\n",buf->c_str());
-      return {};
-    }
-  } catch (...) {
-    logln("Eccezione nel controllare '0' e '1' in byDir:\n%s\n",buf->c_str());
-    return {};
-  }
-  const auto& ul = metrics.at("1");
-  if( ul.is_discarded()) {
-    logln("JSON non valido (discarded) UL:\n%s\n",buf->c_str());
+
+  if (!g_prev_throughput_valid) {
+    g_prev_throughput_totals = curr_totals;
+    g_prev_throughput_valid = true;
+    logln("[n3iwf] Initialized throughput baseline from RC snapshot; waiting next interval");
     return {};
   }
 
-  const auto& dl = metrics.at("0");
+  RcThroughputTotals delta = subtract_totals(curr_totals, g_prev_throughput_totals);
+  g_prev_throughput_totals = curr_totals;
 
-  auto get64 = [](const json& o, const char* k) -> int64_t {
-    if (!o.contains(k)) return 0;
-    if (o.at(k).is_number_integer() || o.at(k).is_number_unsigned()) return o.at(k).get<int64_t>();
-    if (o.at(k).is_string()) return std::stoll(o.at(k).get<std::string>());
-    return 0;
-  };
-
-  //Print g_metrics
-  logln("Current saved KPM metrics:\n");
-  for(int i=0; i<g_metrics.count; i++){
-    logln("  %s: %ld (direction %d)\n", g_metrics.metrics[i].name.c_str(), g_metrics.metrics[i].value, g_metrics.metrics[i].direction);
-  } 
-  
-  const int64_t cur_dl_in    = get64(dl, "incomingOctets");   // UPF -> N3IWF
-  const int64_t cur_dl_tx    = get64(dl, "transmitOctets");   // N3IWF -> UE
-  const int64_t cur_dl_pkt_lost=get64(dl, "incomingPkts") - get64(dl, "transmitPkts"); 
-  logln("cur_dl_in: %ld, cur_dl_tx: %ld\n", cur_dl_in, cur_dl_tx);
-
-  const int64_t cur_ul_in    = get64(ul, "incomingOctets");   // UE -> N3IWF
-  const int64_t cur_ul_tx    = get64(ul, "transmitOctets");   // N3IWF -> UPF
-  const int64_t cur_ul_pkt_lost=get64(ul, "incomingPkts") - get64(ul, "transmitPkts");
-  logln("cur_ul_in: %ld, cur_ul_tx: %ld\n", cur_ul_in, cur_ul_tx);
-
+  double granularityPeriodSec = granularityPeriod / 1000.0;
+  if (granularityPeriodSec <= 0.0) {
+    granularityPeriodSec = 1.0;
+  }
 
   std::vector<std::string> kpi = getAllowedKPI();
-  //Calcolo delta metriche
-  int64_t d_dl_in   = cur_dl_in - getKPMMetricValue("incomingOctets",DL);
-  int64_t d_dl_tx   = cur_dl_tx - getKPMMetricValue("transmitOctets",DL);
-  int64_t d_dl_drop = cur_dl_pkt_lost - getKPMMetricValue("droppedPackets",DL);
-  logln("d_dl_in: %ld, d_dl_tx: %ld, d_dl_drop: %ld\n", d_dl_in, d_dl_tx, d_dl_drop);  
-  int64_t d_ul_in   = cur_ul_in - getKPMMetricValue("incomingOctets",UL);
-  int64_t d_ul_tx   = cur_ul_tx - getKPMMetricValue("transmitOctets",UL);
-  int64_t d_ul_drop = cur_ul_pkt_lost - getKPMMetricValue("droppedPackets",UL);
-  logln("d_ul_in: %ld, d_ul_tx: %ld, d_ul_drop: %ld\n", d_ul_in, d_ul_tx, d_ul_drop);
-
-
-  //Save new values for next delta calculation
-  setKPMMetricValue("incomingOctets",cur_dl_in, DL);
-  setKPMMetricValue("transmitOctets",cur_dl_tx, DL);
-  setKPMMetricValue("droppedPackets",cur_dl_pkt_lost, DL);
-
-  setKPMMetricValue("incomingOctets",cur_ul_in, UL);
-  setKPMMetricValue("transmitOctets",cur_ul_tx, UL);
-  setKPMMetricValue("droppedPackets",cur_ul_pkt_lost, UL);
-  logln("Saved new KPM metric values for next delta calculation\n");
-
   std::map<std::string, double> result;
-
 
   for (const auto& metric : kpi) {
     if (metric == "DRB.UEThpDl") {
-      //Il throughput è calcolato come delta octets / granularityPeriod (in secondi) perchè noi recuperiamo i valori cumulativi ogni granularityPeriod
-      result[metric] = safe_div(d_dl_tx * 8, granularityPeriodSec); // in bps
-      
+      result[metric] = safe_div(static_cast<double>(delta.dl_bytes) * 8.0, granularityPeriodSec);
     } else if (metric == "DRB.UEThpUl") {
-      result[metric] = safe_div(d_ul_tx * 8, granularityPeriodSec); // in bps
-
+      result[metric] = safe_div(static_cast<double>(delta.ul_bytes) * 8.0, granularityPeriodSec);
     } else if (metric == "DRB.RlcSduTransmittedVolumeDL") {
-
-      result[metric] = (double)d_dl_tx*8/1000; // in kbits
-
+      result[metric] = static_cast<double>(delta.dl_bytes) * 8.0 / 1000.0;
     } else if (metric == "DRB.RlcSduTransmittedVolumeUL") {
-      result[metric] = (double)d_ul_tx*8/1000; // in kbits
-
+      result[metric] = static_cast<double>(delta.ul_bytes) * 8.0 / 1000.0;
     } else if (metric == "DRB.RlcPacketDropRateDLDist") {
-      result[metric]= percent_or_zero(d_dl_drop, d_dl_in); //%
-    
+      uint64_t denom = delta.dl_packets + delta.dl_drop_packets;
+      result[metric] = percent_or_zero(static_cast<int64_t>(delta.dl_drop_packets),
+                                       static_cast<int64_t>(denom));
     } else if (metric == "DRB.RlcPacketLossRateULDist") {
-      result[metric]= percent_or_zero(d_ul_drop, d_ul_in); //%
-
+      uint64_t denom = delta.ul_packets + delta.ul_drop_packets;
+      result[metric] = percent_or_zero(static_cast<int64_t>(delta.ul_drop_packets),
+                                       static_cast<int64_t>(denom));
     } else {
-      std::cerr << "[n3iwf] Metrica KPM non gestita: " << metric << "\n";
+      // handled later (extended RC-derived KPIs)
+      continue;
     }
+  }
+
+  result["UE.ActiveUeCount"] = static_cast<double>(acc.ue_count);
+  if (acc.signal_count > 0) {
+    result["UE.SignalStrengthAvgDbm"] = acc.signal_sum / static_cast<double>(acc.signal_count);
+  }
+  result["UE.RxBytesWiFi"] = static_cast<double>(acc.total_rx_bytes);
+  result["UE.TxBytesWiFi"] = static_cast<double>(acc.total_tx_bytes);
+  result["UE.RxPacketsWiFi"] = static_cast<double>(acc.total_rx_packets);
+  result["UE.TxPacketsWiFi"] = static_cast<double>(acc.total_tx_packets);
+  if (acc.total_tx_packets > 0) {
+    result["UE.TxRetryRatePercent"] =
+        percent_or_zero(static_cast<int64_t>(acc.total_tx_retries),
+                        static_cast<int64_t>(acc.total_tx_packets));
+  }
+  if (acc.conn_time_count > 0) {
+    result["UE.ConnectionTimeAvgSec"] =
+        acc.conn_time_sum / static_cast<double>(acc.conn_time_count);
+  }
+  if (acc.inactive_time_count > 0) {
+    result["UE.InactiveTimeAvgSec"] =
+        acc.inactive_time_sum / static_cast<double>(acc.inactive_time_count);
+  }
+  if (acc.tx_bitrate_count > 0) {
+    result["UE.TxBitrateAvgMbps"] =
+        (acc.tx_bitrate_sum / static_cast<double>(acc.tx_bitrate_count)) / 1'000'000.0;
+  }
+  if (acc.rx_bitrate_count > 0) {
+    result["UE.RxBitrateAvgMbps"] =
+        (acc.rx_bitrate_sum / static_cast<double>(acc.rx_bitrate_count)) / 1'000'000.0;
   }
 
   logln("KPM metrics computed:\n");

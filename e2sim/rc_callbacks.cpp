@@ -118,6 +118,21 @@ namespace {
 
 constexpr size_t kMaxReportedAssociations = 8;
 constexpr int64_t kSignalUnknown = std::numeric_limits<int64_t>::min();
+constexpr bool kRcSubscriptionsEnabled = false;
+constexpr int kDefaultRcEventTriggerFormat = 4;
+
+static const std::vector<long> &default_rc_report_param_ids() {
+  static const std::vector<long> ids = [] {
+    std::vector<long> out;
+    auto metrics = getAllowedReportMetricsRC();
+    out.reserve(metrics.size());
+    for (const auto &kv : metrics) {
+      out.push_back(kv.first);
+    }
+    return out;
+  }();
+  return ids;
+}
 
 struct RcRateState {
   RcCountersSnapshot counters{};
@@ -1072,15 +1087,96 @@ void start_rc_report_pipeline(const SubscriptionKey &key,
     start_rc_worker(key, et_format, ad_param_ids);
 }
 
+static void reject_rc_subscription_request(const RICsubscriptionRequest_t &orig_req) {
+    long reqRequestorId = -1;
+    long reqInstanceId = -1;
+    std::vector<long> requestedActions;
+
+    auto **ies = (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
+    int count = orig_req.protocolIEs.list.count;
+
+    for (int i = 0; i < count; ++i) {
+        RICsubscriptionRequest_IEs_t *ie = ies ? ies[i] : nullptr;
+        if (!ie) {
+            continue;
+        }
+        switch (ie->value.present) {
+            case RICsubscriptionRequest_IEs__value_PR_RICrequestID:
+                reqRequestorId = ie->value.choice.RICrequestID.ricRequestorID;
+                reqInstanceId = ie->value.choice.RICrequestID.ricInstanceID;
+                break;
+            case RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails: {
+                auto &sd = ie->value.choice.RICsubscriptionDetails;
+                auto **aitems =
+                    (RICaction_ToBeSetup_ItemIEs_t **)sd.ricAction_ToBeSetup_List.list.array;
+                for (int j = 0; j < sd.ricAction_ToBeSetup_List.list.count; ++j) {
+                    auto *item = aitems ? aitems[j] : nullptr;
+                    if (!item) {
+                        continue;
+                    }
+                    requestedActions.push_back(
+                        item->value.choice.RICaction_ToBeSetup_Item.ricActionID);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    if (reqRequestorId < 0 || reqInstanceId < 0) {
+        logln("RC subscription reject: missing RICrequestID, dropping request");
+        return;
+    }
+
+    E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(E2AP_PDU_t));
+    if (!rsp) {
+        logln("RC subscription reject: calloc failed for response PDU");
+        return;
+    }
+    const long *reject_array = requestedActions.empty() ? nullptr : requestedActions.data();
+    generate_e2apv2_subscription_failure(
+        rsp,
+        reqRequestorId,
+        reqInstanceId,
+        3,
+        reject_array,
+        (int)requestedActions.size());
+    e2.encode_and_send_sctp_data(rsp);
+}
+
+static void ensure_rc_worker_from_control(const RcControlContext &ctx) {
+    if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0) {
+        logln("RC control: missing identifiers, cannot start RC report pipeline");
+        return;
+    }
+    long actionId = (ctx.control_action_id > 0) ? ctx.control_action_id : kRcControlActionIdHandover;
+    const auto &params = default_rc_report_param_ids();
+    if (params.empty()) {
+        logln("RC control: no default RC report parameters configured, skipping report pipeline");
+        return;
+    }
+    SubscriptionKey key{ctx.requestor_id, ctx.instance_id, ctx.ran_function_id, actionId};
+    logln("RC control: starting RC report pipeline triggered by control request key[%ld:%ld:%ld:%ld]",
+          key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
+    start_rc_report_pipeline(key, kDefaultRcEventTriggerFormat, params);
+}
+
 
 /* ============================================================
  * SUBSCRIPTION CALLBACK RC 
- * ============================================================ */
+ * ============================================================ 
 void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
   logln("[CALLBACK RC SUBSCRIPTION REQUEST] Received Subscription Request\n");
   RICsubscriptionRequest_t &orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
+
+  if (!kRcSubscriptionsEnabled) {
+    logln("[CALLBACK RC SUBSCRIPTION REQUEST] RC reporting via subscription is disabled; returning failure");
+    reject_rc_subscription_request(orig_req);
+    return;
+  }
 
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
@@ -1169,7 +1265,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
     // E2AP cause tipiche: Event Trigger not supported / Action not supported / Invalid Info Request
     generate_e2apv2_subscription_failure(
         rsp, reqRequestorId, reqInstanceId,
-        /*num causes*/ (int)rejectedActions.size(),
+        (int)rejectedActions.size(),
         rejectedActions.empty()? NULL : rejectedActions.data(),
         (int)rejectedActions.size());
     e2.encode_and_send_sctp_data(rsp);
@@ -1195,7 +1291,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
     start_rc_report_pipeline(key, et_format_detected, params);
   }
 }
-
+*/
 
 void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 {
@@ -1415,7 +1511,7 @@ void registerRCfunctionDefinition(E2Sim &e2){
   memcpy(ranfunc_ostr_rc->buf, e2smbuffer_rc, ranfunc_ostr_rc->size);
 
   e2.register_e2sm(3, ranfunc_ostr_rc);
-  e2.register_subscription_callback(3, &callback_rc_subscription_request);
+  //e2.register_subscription_callback(3, &callback_rc_subscription_request);
   e2.register_control_callback(3, &callback_rc_control_request);
   const char* oid = "1.3.6.1.4.1.53148.1.1.2.3"; 
   PrintableString_t* ranFunctionOIDe = (PrintableString_t*)calloc(1, sizeof(PrintableString_t));

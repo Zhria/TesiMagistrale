@@ -142,12 +142,20 @@ std::vector<std::string> getAllowedKPI() {
         "DRB.UEThpUl",         // Throughput uplink per UE/DRB
         "DRB.RlcSduTransmittedVolumeDL" , // RLC SDU Transmitted Volume DL per UE/DRB O-RAN metric
         "DRB.RlcSduTransmittedVolumeUL" , // RLC SDU Transmitted Volume UL per UE/DRB O-RAN metric
-        //"DRB.PdcpPduVolumeDl", // Volume PDCP downlink per UE/DRB
-        //"DRB.PdcpPduVolumeUl", // Volume PDCP
-        //"PRB.UsageDl",         // PRB usage downlink (classico gNB)
-        //"PRB.UsageUl"          // PRB usage uplink
         "DRB.RlcPacketDropRateDLDist", // RLC Packet Drop Rate DL per UE/DRB
-        "DRB.RlcPacketLossRateULDist" // RLC Packet Loss Rate UL per UE/DRB
+        "DRB.RlcPacketLossRateULDist", // RLC Packet Loss Rate UL per UE/DRB
+        // Extended UE level KPIs derived from RC logger
+        "UE.ActiveUeCount",
+        "UE.SignalStrengthAvgDbm",
+        "UE.TxBytesWiFi",
+        "UE.RxBytesWiFi",
+        "UE.TxPacketsWiFi",
+        "UE.RxPacketsWiFi",
+        "UE.TxRetryRatePercent",
+        "UE.ConnectionTimeAvgSec",
+        "UE.InactiveTimeAvgSec",
+        "UE.TxBitrateAvgMbps",
+        "UE.RxBitrateAvgMbps"
     };
 }
 
