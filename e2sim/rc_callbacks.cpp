@@ -1379,7 +1379,7 @@ void registerRCfunctionDefinition(E2Sim &e2){
   }
 
   asn_enc_rval_t er_rc = asn_encode_to_buffer(
-      NULL, ATS_UNALIGNED_BASIC_PER,
+      NULL, ATS_ALIGNED_BASIC_PER,
       &asn_DEF_E2SM_RC_RANFunctionDefinition,
       rc_ranfunc_desc, e2smbuffer_rc, e2smbuffer_size);
 
@@ -1389,6 +1389,11 @@ void registerRCfunctionDefinition(E2Sim &e2){
     free(e2smbuffer_rc);
     return;
   }
+
+  // E2SM_RC_RANFunctionDefinition_t src = {0};
+  // E2SM_RC_RANFunctionDefinition_t* src_ref = &src;
+  // asn_dec_rval_t const ret = aper_decode(NULL, &asn_DEF_E2SM_RC_RANFunctionDefinition, (void **)&src_ref, er_rc, len, 0, 0);
+  // assert(ret.code == RC_OK);
 
   // Crea OCTET_STRING per registrazione nel simulatore
   OCTET_STRING_t *ranfunc_ostr_rc = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
