@@ -2,7 +2,8 @@
 #include "n3iwf_utils.hpp"
 
 namespace {
-constexpr long kRcControlStyleType = 1;
+constexpr long kRcControlStyleTypeLegacy = 1;
+constexpr long kRcControlStyleTypeConnectedMobility = 3;
 constexpr long kRcControlActionIdHandover = 1;
 constexpr long kRcParamUeId = 41001;
 constexpr long kRcParamTargetCellPci = 45001;
@@ -70,11 +71,13 @@ static void add_report_style(RANFunctionDefinition_Report *rep){
     return;
 }
 
-// Populates the RC control section with the single supported handover style.
-static void add_control_style(RANFunctionDefinition_Control *ctl){
+// Adds a control style entry (can be invoked multiple times for different styles).
+static void add_control_style(RANFunctionDefinition_Control *ctl,
+                              long style_type,
+                              const char *style_name){
     RANFunctionDefinition_Control_Item *ctrl = (RANFunctionDefinition_Control_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Item));
-    ctrl->ric_ControlStyle_Type = kRcControlStyleType;
-    OCTET_STRING_fromBuf(&ctrl->ric_ControlStyle_Name,"Handover Control", 17);
+    ctrl->ric_ControlStyle_Type = style_type;
+    OCTET_STRING_fromBuf(&ctrl->ric_ControlStyle_Name, style_name, strlen(style_name));
     ctrl->ric_ControlHeaderFormat_Type  = 1;  // header carries UE/Cell information
     ctrl->ric_ControlMessageFormat_Type = 1;  // payload describes the handover target
     ctrl->ric_ControlOutcomeFormat_Type = 1;  // outcome ACK/FAIL
@@ -162,7 +165,12 @@ void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* desc){
   add_report_style(desc->ranFunctionDefinition_Report);
 
   desc->ranFunctionDefinition_Control = (RANFunctionDefinition_Control*)calloc(1, sizeof(RANFunctionDefinition_Control));
-  add_control_style(desc->ranFunctionDefinition_Control);
+  add_control_style(desc->ranFunctionDefinition_Control,
+                    kRcControlStyleTypeLegacy,
+                    "Handover Control");
+  add_control_style(desc->ranFunctionDefinition_Control,
+                    kRcControlStyleTypeConnectedMobility,
+                    "Connected mode mobility control");
 /* 
   desc->ranFunctionDefinition_Insert=(RANFunctionDefinition_Insert*)calloc(1,sizeof(RANFunctionDefinition_Insert));
   add_insert_style(desc->ranFunctionDefinition_Insert);
