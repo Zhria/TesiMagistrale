@@ -28,6 +28,10 @@ for arg in "$@"; do
     esac
 done
 
+sudo ./setup-gtp5g.sh
+sudo git reset --hard origin/main 
+git pull
+
 # Se build richiesto
 if [ "$DO_BUILD" = true ]; then
     sudo ./buildN3iwf_E2.sh
@@ -39,9 +43,6 @@ if [ -z "$PARAM_AVVIO" ]; then
     PARAM_AVVIO=""
 fi
 
-sudo ./setup-gtp5g.sh
-sudo git reset --hard origin/main 
-git pull
 # Run con docker compose
 sudo docker compose -f dcb.yaml up $PARAM_AVVIO
 
