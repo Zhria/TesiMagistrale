@@ -124,7 +124,6 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   {
     const char *name = kv.first.c_str();
     double value = kv.second;
-    logln("  Adding measurement %s = %.2f\n", name, value);
     // Un record con i 3 valori
     if (value != -1)
     {

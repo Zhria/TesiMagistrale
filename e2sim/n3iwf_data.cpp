@@ -871,11 +871,6 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
         (acc.rx_bitrate_sum / static_cast<double>(acc.rx_bitrate_count)) / 1'000'000.0;
   }
 
-  logln("KPM metrics computed:\n");
-  for (const auto& [k, v] : result) {
-    logln("  %s: %.2f\n", k.c_str(), v);
-  }
-
   return result;
 }
 
