@@ -41,7 +41,7 @@ extern "C" {
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-// -------------------- configurazione (safe) --------------------
+// Configurazione (safe)
 static std::string g_fileName = "n3iwf_e2.json";
 static std::string g_rcFileName = "n3iwf_e2_rc.json";
 static std::string g_basePath = []{
@@ -63,7 +63,7 @@ void setRcLogFileName(const std::string& name) {
   }
 }
 
-// -------------------- util --------------------
+// Utility helpers
 static inline std::string joinPathFile(const std::string& dir, const std::string& file) {
   if (dir.empty()) return file;
   if (dir.back() == '/') return dir + file;
@@ -594,7 +594,7 @@ static std::string normalize_mac(const std::string& mac) {
   return out;
 }
 
-// -------------------- JSON I/O --------------------
+// JSON I/O
 static std::optional<json> getFree5gcData() {
   const std::string full = joinPathFile(g_basePath, g_fileName);
   if (!fs::exists(full)) {
@@ -618,7 +618,7 @@ static std::optional<json> getFree5gcData() {
   }
 }
 
-// -------------------- ASN.1 helpers --------------------
+// ASN.1 helpers
 // Converte MCC/MNC (stringhe "001","01") in 3 byte PLMN
 static bool buildPLMN(const std::string& mcc, const std::string& mnc, OCTET_STRING_t& out) {
   if (mcc.size() != 3 || (mnc.size() != 2 && mnc.size() != 3)) return false;
@@ -671,7 +671,7 @@ static bool buildBitStringFromUIntN(uint32_t value, BIT_STRING_t* out) {
 }
 
 
-// -------------------- costruzione strutture --------------------
+// Costruzione strutture
 static bool getPLMNID_from_json(const json& j, OCTET_STRING_t& out) {
   try {
     const auto& plmn = j.at("data").at("config").at("Configuration")
@@ -730,7 +730,7 @@ static void freeGlobalgNB_ID(GlobalgNB_ID_t* gnb) {
   free(gnb);
 }
 
-// -------------------- API “pubblica” compatibile --------------------
+// API “pubblica” compatibile
 // Manteniamo un singleton per semplicità
 static GlobalgNB_ID_t* g_gnbStore = nullptr;
 

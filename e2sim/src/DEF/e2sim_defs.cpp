@@ -81,9 +81,7 @@ options_t read_input_options(int argc, char *argv[])
     }
   }
 
-  // -------------------------
   // Parsing argomenti
-  // -------------------------
   const char* config_path = nullptr;
   const char* positional_ip   = nullptr;
   const char* positional_port = nullptr;
@@ -106,9 +104,7 @@ options_t read_input_options(int argc, char *argv[])
     }
   }
 
-  // -------------------------
   // Se c'è -c, usa YAML
-  // -------------------------
   if (config_path) {
     // verifica esistenza file
     std::ifstream f(config_path);
@@ -177,9 +173,7 @@ options_t read_input_options(int argc, char *argv[])
     return options;
   }
 
-  // -------------------------
   // Altrimenti: IP/PORT posizionali o default (logica esistente)
-  // -------------------------
   if (positional_ip && positional_port) {
     options.server_ip   = const_cast<char*>(positional_ip);
     options.server_port = std::atoi(positional_port);

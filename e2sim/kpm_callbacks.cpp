@@ -433,9 +433,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
   logln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
-  logln("Decoding Subscription Request...\n");
-  xer_fprint(stdout, &asn_DEF_E2AP_PDU, sub_req_pdu);
-  logln("POST XER Subscription Request\n");
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
@@ -464,7 +461,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     RICsubscriptionRequest_IEs_t *next_ie = ies[i];
     pres = next_ie->value.present;
 
-    logln("next present value %d\n", pres);
 
     switch (pres)
     {
@@ -473,8 +469,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       RICrequestID_t reqId = next_ie->value.choice.RICrequestID;
       long requestorId = reqId.ricRequestorID;
       long instanceId = reqId.ricInstanceID;
-      logln("requestorId %ld\n", requestorId);
-      logln("instanceId %ld\n", instanceId);
       reqRequestorId = requestorId;
       reqInstanceId = instanceId;
       break;
@@ -490,7 +484,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
 
       int actionCount = actionList.list.count;
-      logln("action count %d\n", actionCount);
 
       RICaction_ToBeSetup_ItemIEs_t **item_array =
           (RICaction_ToBeSetup_ItemIEs_t **)actionList.list.array;
@@ -582,7 +575,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
 void registerKPMfunctionDefinition()
 {
-  // --- RANfunction-Description KPM v3 ---
+  // RANfunction-Description KPM v3
   E2SM_KPM_RANfunction_Description_t *ranfunc_desc =
       (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
   if (ranfunc_desc == NULL)

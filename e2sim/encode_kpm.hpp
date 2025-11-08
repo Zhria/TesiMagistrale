@@ -1,7 +1,6 @@
 #ifndef ENCODE_KPM_V3_HPP
 #define ENCODE_KPM_V3_HPP
 
-// encode_kpm_v3.cpp
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
@@ -42,17 +41,17 @@ extern "C" {
   #include "INTEGER.h"
 
   #include "E2SM-KPM-RANfunction-Description.h"
-  #include "E2SM-KPM-ActionDefinition.h" // or the correct header where MeasurementInfoAction_Item_t is defined
+  #include "E2SM-KPM-ActionDefinition.h"
 
   #include "RIC-EventTriggerStyle-Item.h"
   #include "RIC-ReportStyle-Item.h"
 
 }
   
-// --- RAN Function Description (rimane)
+// RAN Function Description
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t* ranfunc_desc);
 
-// --- Indication Header/Message (nuovi formati v3)
+// Indication Header/Message (formati v3)
 void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t* hdr);
 
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t* indMsg,std::map<std::string, double> kpi);

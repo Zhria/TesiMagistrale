@@ -711,10 +711,8 @@ static bool encode_rc_control_outcome_single(long id,
 } // namespace
 
 
-// ---------------------------------------------------------------------
 // Raccoglie gli ID dichiarati in RANFunctionDefinition-Report, opzionalmente
 // filtrando per ric_ReportStyle_Type == report_style_type (se >0).
-// ---------------------------------------------------------------------
 static void collect_declared_report_param_ids(const E2SM_RC_RANFunctionDefinition_t *def,
                                               int report_style_type,                  // 0 = qualunque style
                                               std::unordered_set<long> &out_ids)
@@ -748,12 +746,9 @@ static void collect_declared_report_param_ids(const E2SM_RC_RANFunctionDefinitio
     }
 }
 
-// ---------------------------------------------------------------------
-// Verifica: tutti gli 'ids' richiesti compaiono tra quelli dichiarati.
-// Se 'out_missing' non è nullptr, riempie i mancanti.
-// report_style_type: 0 = qualunque style; >0 = filtra su quello specifico.
-// Ritorna true se TUTTI presenti, false se almeno uno manca.
-// ---------------------------------------------------------------------
+// Verifica che tutti gli ID richiesti compaiano tra quelli dichiarati.
+// Se 'out_missing' non è nullptr, riporta quelli mancanti.
+// report_style_type: 0 = qualunque style; >0 = filtra su uno specifico.
 bool all_ids_declared_in_ranFunctionDefinition(const std::vector<long> &ids,int report_style_type,std::vector<long> *out_missing)
 {
     if (out_missing) out_missing->clear();
@@ -1186,12 +1181,12 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
   std::vector<long> acceptedActions, rejectedActions;
   bool reject_all = false;
 
-  // --- helper outputs
+  // Helper outputs
   int et_format_detected = 0;     // 1..4 per RC (noi vogliamo 4 per UE change)
   int report_style_hint = 0;      // opzionale: dedotto da AD (p.es. 4 per UE Info)
   std::map<long, std::vector<long>> action_param_map; // actionId -> RAN Parameter IDs richiesti dal RIC
 
-  // ---- 1) parse IEs
+  // Step 1: parse IEs
   for (int i = 0; i < count; ++i) {
     RICsubscriptionRequest_IEs_t *ie = ies[i];
     switch (ie->value.present) {
@@ -1203,14 +1198,14 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
       case RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails: {
         RICsubscriptionDetails_t &sd = ie->value.choice.RICsubscriptionDetails;
 
-        // ---- 1a) decode RC Event Trigger Definition (expect Format 4 per UE change)
+        // Step 1a: decode RC Event Trigger Definition (expect Format 4 per UE change)
         if (!decode_rc_event_trigger(&sd.ricEventTriggerDefinition, &et_format_detected)) {
           logln("Invalid RC Event Trigger Definition\n");
           reject_all = true;
           break;
         }
 
-        // ---- 1b) actions loop
+        // Step 1b: iterate actions
         RICactions_ToBeSetup_List_t &alist = sd.ricAction_ToBeSetup_List;
         auto **aitems = (RICaction_ToBeSetup_ItemIEs_t **)alist.list.array;
 
@@ -1234,7 +1229,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
             continue;
           }
 
-          // ---- 1c) valida che tutti i RAN Parameter ID richiesti siano stati dichiarati
+          // Step 1c: validate that each requested RAN parameter ID was declared
           if (!all_ids_declared_in_ranFunctionDefinition(ids_req,report_style_hint,nullptr)) {
             logln("Requested RAN Parameter not declared in RANFunctionDefinition\n");
             rejectedActions.push_back(actionId);
@@ -1258,7 +1253,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
     }
   }
 
-  // ---- 2) rispondi
+  // Step 2: send the response
   E2AP_PDU *rsp = (E2AP_PDU *)calloc(1, sizeof(*rsp));
 
   if (reject_all || acceptedActions.empty()) {
@@ -1281,7 +1276,7 @@ void callback_rc_subscription_request(E2AP_PDU_t *sub_req_pdu)
       reqRequestorId, reqInstanceId,3);
   e2.encode_and_send_sctp_data(rsp);
 
-  // ---- 3) attiva il producer REPORT
+  // Step 3: start the REPORT producer
   long ranFunctionId = 3; // RC RAN Function
   for (long actionId : acceptedActions) {
     SubscriptionKey key{reqRequestorId, reqInstanceId, ranFunctionId, actionId};

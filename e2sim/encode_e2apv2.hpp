@@ -76,7 +76,7 @@ void generate_e2apv2_subscription_response_success(
     int reject_size,
     long reqRequestorId,
     long reqInstanceId,
-    long ranFunctionId // <--- AGGIUNTO
+    long ranFunctionId
 );
 
 void generate_e2apv2_subscription_delete_response(

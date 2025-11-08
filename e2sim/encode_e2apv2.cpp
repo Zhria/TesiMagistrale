@@ -212,7 +212,7 @@ long get_function_id_from_control(E2AP_PDU_t *e2ap_pdu)
 void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
                                                  std::vector<ran_func_info> all_funcs)
 {
-  // ========= GlobalE2node-ID.gNB =========
+  // GlobalE2node-ID.gNB
   GlobalgNB_ID_t *gnb = getGNBStore();
 
   GlobalE2node_gNB_ID_t *e2gnb = (GlobalE2node_gNB_ID_t *)calloc(1, sizeof(*e2gnb));
@@ -236,21 +236,21 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   globale2nodeid->present = GlobalE2node_ID_PR_gNB;
   globale2nodeid->choice.gNB = e2gnb;
 
-  // ========= IE: TransactionID =========
+  // IE: TransactionID
   E2setupRequestIEs_t *ie_txid = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_txid));
   ie_txid->id = ProtocolIE_ID_id_TransactionID;
   ie_txid->criticality = Criticality_reject;
   ie_txid->value.present = E2setupRequestIEs__value_PR_TransactionID;
   ie_txid->value.choice.TransactionID = 1;
 
-  // ========= IE: GlobalE2node-ID =========
+  // IE: GlobalE2node-ID
   E2setupRequestIEs_t *ie_global = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_global));
   ie_global->id = ProtocolIE_ID_id_GlobalE2node_ID;
   ie_global->criticality = Criticality_reject;
   ie_global->value.present = E2setupRequestIEs__value_PR_GlobalE2node_ID;
   ie_global->value.choice.GlobalE2node_ID = *globale2nodeid;
 
-  // ========= IE: RANfunctions-Added =========
+  // IE: RANfunctions-Added
   E2setupRequestIEs_t *ie_ranf = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_ranf));
   ASN_STRUCT_RESET(asn_DEF_E2setupRequestIEs, ie_ranf);
   ie_ranf->id = ProtocolIE_ID_id_RANfunctionsAdded;
@@ -285,7 +285,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
     ASN_SEQUENCE_ADD(&ie_ranf->value.choice.RANfunctions_List.list, item);
   }
 
-  // ========= IE: E2nodeComponentConfigAddition-List =========
+  // IE: E2nodeComponentConfigAddition-List
   E2setupRequestIEs_t *ie_add = (E2setupRequestIEs_t *)calloc(1, sizeof(*ie_add));
   ie_add->id = ProtocolIE_ID_id_E2nodeComponentConfigAddition;
   ie_add->criticality = Criticality_reject;
@@ -324,14 +324,14 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
 
   ASN_SEQUENCE_ADD(&ie_add->value.choice.E2nodeComponentConfigAddition_List.list, add_ie);
 
-  // ========= Build E2setupRequest =========
+  // Build E2setupRequest
   E2setupRequest_t *req = (E2setupRequest_t *)calloc(1, sizeof(*req));
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_global);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_ranf);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_txid);
   ASN_SEQUENCE_ADD(&req->protocolIEs.list, ie_add);
 
-  // ========= Wrap nell'InitiatingMessage =========
+  // Wrap nell'InitiatingMessage
   InitiatingMessage_t *init = (InitiatingMessage_t *)calloc(1, sizeof(*init));
   init->procedureCode = ProcedureCode_id_E2setup;
   init->criticality = Criticality_reject;
@@ -680,7 +680,6 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
                                                       long actionId, long seqNum, uint8_t *ind_header_buf,
                                                       int header_length, uint8_t *ind_message_buf, int message_length)
 {
-  logln("[generate_e2apv2_indication_request_parameterized] init function\n");
   RICindication_IEs_t *ricind_ies = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
   RICindication_IEs_t *ricind_ies2 = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
   RICindication_IEs_t *ricind_ies3 = (RICindication_IEs_t *)calloc(1, sizeof(RICindication_IEs_t));
@@ -755,8 +754,6 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
     logln("constraints: %s\n", errbuf);
     logln("constraints errlen=%zu\n", errlen);
   }
-  // logln( "[generate_e2apv2_indication_request_parameterized] E2AP PDU Indication Request Parameterized\n");
-  // xer_fprint(stderr, &asn_DEF_E2AP_PDU, e2ap_pdu);
 }
 
 /* =========================================================================

@@ -1,10 +1,7 @@
-// encode_kpm.cpp
 #include "encode_kpm.hpp"
 #include <ctime>
 
-// -----------------------------
-// Utility locali
-// -----------------------------
+// Utility helpers
 
 static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
@@ -31,13 +28,11 @@ static inline void rec_add_double(MeasurementRecord_t *rec, double v)
   ASN_SEQUENCE_ADD(&rec->list, item);
 }
 
-// -----------------------------
 // RAN Function Description (v3)
-// -----------------------------
 
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
 {
-  // --- RANfunction-Name / OID / Instance
+  // RANfunction-Name / OID / Instance
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_ShortName, "ORAN-E2SM-KPM", strlen("ORAN-E2SM-KPM"));
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_Description, "KPM monitor", strlen("KPM monitor"));
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_E2SM_OID, "1.3.6.1.4.1.53148.1.1.2.2", strlen("1.3.6.1.4.1.53148.1.1.2.2"));
@@ -49,21 +44,21 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   desc->ric_ReportStyle_List =
       (decltype(desc->ric_ReportStyle_List))calloc(1, sizeof(*desc->ric_ReportStyle_List));
 
-  // --- EventTrigger style: Periodic (Format 1)
+  // EventTrigger style: Periodic (Format 1)
   RIC_EventTriggerStyle_Item_t *et = (RIC_EventTriggerStyle_Item_t *)calloc(1, sizeof(*et));
   et->ric_EventTriggerStyle_Type = 1;
   OCTET_STRING_fromBuf(&et->ric_EventTriggerStyle_Name, "Periodic report",strlen("Periodic report"));
   et->ric_EventTriggerFormat_Type = 1; // KPM EventTrigger Format 1
   ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
-  // --- Report style type 1 con Header/Message Format 1/1.
+  // Report style type 1 con Header/Message Format 1/1.
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
   rs->ric_ReportStyle_Type = 1; // usa 4 se il tuo xApp lo richiede
   OCTET_STRING_fromBuf(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF",strlen("KPM v3 N3IWF"));
   rs->ric_IndicationHeaderFormat_Type = 1;
   rs->ric_IndicationMessageFormat_Type = 1;
 
-  // --- measInfoActionList (ALMENO 1 misura!)
+  // measInfoActionList (almeno una misura)
   // helper per aggiungere 1 misura con noLabel
   auto add_meas = [&](const char *name)
   {
@@ -78,7 +73,7 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
     add_meas(kpi.c_str());
   }
 
-  // --- chiudi lo style
+  // chiudi lo style
   ASN_SEQUENCE_ADD(&desc->ric_ReportStyle_List->list, rs);
 }
 
@@ -91,13 +86,11 @@ void get_current_timestamp(OCTET_STRING_t *os)
   for (int i = 0; i < 8; ++i)
     buf[7 - i] = (uint8_t)((ts >> (8 * i)) & 0xFF);
 
-  // Copia profonda nel campo ASN. Usa la funzione standard generata da asn1c.
+  // Copia profonda nel campo ASN effettuata con la funzione standard asn1c.
   OCTET_STRING_fromBuf(os, (const char *)buf, 8);
 }
 
-// ---------------------------------------
 // Indication Header - Format 1
-// ---------------------------------------
 void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
 {
   memset(hdr, 0, sizeof(*hdr));
@@ -106,18 +99,17 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
   E2SM_KPM_IndicationHeader_Format1_t *h1 = (E2SM_KPM_IndicationHeader_Format1_t *)calloc(1, sizeof(*h1));
 
   // In KPM v3 il campo è (tipicamente) scritto "colletStartTime" (refuso nel naming)
-  // È un OCTET STRING(4..8). Qui metto una stringa timestamp semplice.
+  // È un OCTET STRING (4..8); qui inseriamo un timestamp semplice.
   get_current_timestamp(&h1->colletStartTime);
   h1->senderName = (PrintableString_t *)calloc(1, sizeof(PrintableString_t));
   OCTET_STRING_fromBuf(h1->senderName, "O-RAN N3IWF", strlen("O-RAN N3IWF"));
   h1->fileFormatversion = (PrintableString_t *)calloc(1, sizeof(PrintableString_t));
   OCTET_STRING_fromBuf(h1->fileFormatversion, "3.0", strlen("3.0"));
 
-  hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1; // by value
+  hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1;
   
 }
 
-// ---------------------------------------------------------------------------------
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
   memset(indMsg, 0, sizeof(*indMsg));

@@ -12,9 +12,7 @@ constexpr long kRcOutcomeStatus = 50001;
 constexpr long kRcOutcomeNotes = 50002;
 }
 
-// -----------------------------
-// Utility locali
-// -----------------------------
+// Utility helpers
 static void add_event_trigger(RANFunctionDefinition_EventTrigger *ev){
     //ADD EVENT TRIGGER STYLE
     RIC_EventTriggerStyle_Item_t *et = (RIC_EventTriggerStyle_Item_t*)calloc(1, sizeof(RIC_EventTriggerStyle_Item_t));
@@ -150,7 +148,7 @@ static void add_policy_style(RANFunctionDefinition_Policy *policy){
 
 void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* desc){
 
-  // --- RANfunction-Name / OID / Instance
+  // RANfunction-Name / OID / Instance
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_ShortName, "ORAN-E2SM-RC", strlen("ORAN-E2SM-RC"));
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_Description, "RAN Control", strlen("RAN Control"));
   OCTET_STRING_fromBuf(&desc->ranFunction_Name.ranFunction_E2SM_OID, "1.3.6.1.4.1.53148.1.1.2.3", strlen("1.3.6.1.4.1.53148.1.1.2.3"));
