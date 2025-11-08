@@ -230,8 +230,7 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
-    logln("in sctp send data func\n");
-    logln("data.len is %d\n", data.len);
+    logln("[SCTP_SEND_DATA] data.len is %d\n", data.len);
 
     if (socket_fd < 0)
     {
@@ -254,7 +253,9 @@ int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
         0            // context
     );
 
-    logln("after getting sent_len: %d\n", sent_len);
+    if(sent_len != data.len) {
+        logln("[SCTP] sctp_sendmsg sent %d bytes, expected %d\n", sent_len, data.len);
+    }
 
     if (sent_len == -1)
     {

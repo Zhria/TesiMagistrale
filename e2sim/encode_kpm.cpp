@@ -4,8 +4,6 @@
 // Utility helpers
 
 static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
-
-  logln("  Adding measurement name function: %s\n", name);
   if (!list) return;  // oppure assert/alloca, ma non dereferenziare
   MeasurementInfoItem_t *it = (MeasurementInfoItem_t *)calloc(1, sizeof(MeasurementInfoItem_t));
   it->measType.present = MeasurementType_PR_measName;
@@ -21,7 +19,6 @@ static inline void add_meas_name(MeasurementInfoList_t *list,const char *name) {
 
 static inline void rec_add_double(MeasurementRecord_t *rec, double v)
 {
-  logln("  Adding measurement record: %.2f\n", v);
   MeasurementRecordItem_t *item = (MeasurementRecordItem_t *)calloc(1, sizeof(*item));
   item->present = MeasurementRecordItem_PR_real;
   item->choice.real = v;
