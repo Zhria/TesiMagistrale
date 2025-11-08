@@ -2,8 +2,7 @@
 #include "n3iwf_utils.hpp"
 
 namespace {
-constexpr long kRcControlStyleTypeLegacy = 1;
-constexpr long kRcControlStyleTypeConnectedMobility = 3;
+constexpr long kRcControlStyleTypeHandover = 3;
 constexpr long kRcControlActionIdHandover = 1;
 constexpr long kRcParamUeId = 41001;
 constexpr long kRcParamTargetCellPci = 45001;
@@ -166,10 +165,7 @@ void encode_rc_function_definition(E2SM_RC_RANFunctionDefinition* desc){
 
   desc->ranFunctionDefinition_Control = (RANFunctionDefinition_Control*)calloc(1, sizeof(RANFunctionDefinition_Control));
   add_control_style(desc->ranFunctionDefinition_Control,
-                    kRcControlStyleTypeLegacy,
-                    "Handover Control");
-  add_control_style(desc->ranFunctionDefinition_Control,
-                    kRcControlStyleTypeConnectedMobility,
+                    kRcControlStyleTypeHandover,
                     "Connected mode mobility control");
 /* 
   desc->ranFunctionDefinition_Insert=(RANFunctionDefinition_Insert*)calloc(1,sizeof(RANFunctionDefinition_Insert));
