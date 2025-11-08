@@ -124,6 +124,38 @@ static void stop_all_kpm_workers() {
   }
 }
 
+void stop_kpm_subscription(long requestorId, long instanceId, long ranFunctionId) {
+  std::vector<SubscriptionKey> keys_to_stop;
+  {
+    std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
+    for (const auto &entry : g_kpm_workers) {
+      const auto &key = entry.first;
+      if (ranFunctionId >= 0 && key.ranFunctionId != ranFunctionId) {
+        continue;
+      }
+      if (requestorId >= 0 && key.requestorId != requestorId) {
+        continue;
+      }
+      if (instanceId >= 0 && key.instanceId != instanceId) {
+        continue;
+      }
+      keys_to_stop.push_back(key);
+    }
+  }
+
+  if (keys_to_stop.empty()) {
+    logln("KPM subscription delete: no active worker for req=%ld inst=%ld ranFunc=%ld",
+          requestorId, instanceId, ranFunctionId);
+    return;
+  }
+
+  for (const auto &key : keys_to_stop) {
+    logln("KPM subscription delete: stopping worker req=%ld inst=%ld ranFunc=%ld action=%ld",
+          key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
+    stop_kpm_worker(key);
+  }
+}
+
 static void graceful_sctp_close(int fd)
 {
   // 1) annuncia fine scritture -> kernel invia SHUTDOWN all peer
@@ -189,39 +221,61 @@ int main(int argc, char *argv[])
   return 0;
 }
 
+static void log_kpm_parameters(const std::map<std::string, double> &kpi)
+{
+  if (kpi.empty())
+  {
+    return;
+  }
+  std::string line;
+  line.reserve(kpi.size() * 16);
+  bool first = true;
+  for (const auto &entry : kpi)
+  {
+    if (!first)
+    {
+      line.append(", ");
+    }
+    first = false;
+    line.append(entry.first);
+    line.push_back('=');
+    line.append(std::to_string(entry.second));
+  }
+  logln("KPM report parameters: %s", line.c_str());
+}
+
 /* ============================================================
  * REPORT LOOP (genera e invia Indication in base ai file JSON)
  * ============================================================ */
 void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod, const std::shared_ptr<std::atomic_bool> &stop_token)
 {
-  logln("Starting report loop with period %ld milliseconds\n", granularityPeriod);
   long seqNum = 1;
   asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
 
-  // Encoder KPM v3 (RAN Container CU-CP)
-  // encode_kpm_report_rancontainer_cucp_parameterized(ind_msg3, plmnid_buf, nrcellid_buf, crnti_buf, serving_buf, neighbor_buf);
-  // ----- HEADER v3 (Format1) -----
   for (;;)
   {
-    if (g_app_stop.load(std::memory_order_relaxed)) {
+    if (g_app_stop.load(std::memory_order_relaxed))
+    {
       break;
     }
-    if (stop_token && stop_token->load(std::memory_order_relaxed)) {
+    if (stop_token && stop_token->load(std::memory_order_relaxed))
+    {
       break;
     }
 
-    logln("Report loop iteration with seqNum %ld\n", seqNum);
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
-    if (g_app_stop.load(std::memory_order_relaxed)) {
+    if (g_app_stop.load(std::memory_order_relaxed))
+    {
       break;
     }
-    if (stop_token && stop_token->load(std::memory_order_relaxed)) {
+    if (stop_token && stop_token->load(std::memory_order_relaxed))
+    {
       break;
     }
 
     std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
-    if (kpi.empty()) {
-      logln("Report loop: no KPM metrics available for seqNum %ld", seqNum);
+    if (kpi.empty())
+    {
       continue;
     }
     E2SM_KPM_IndicationHeader_t hdr;
@@ -240,17 +294,15 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     E2SM_KPM_IndicationMessage_t *ind_msg =
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
-    // ----- MESSAGE v3: UE RF basic (ex RANcontainer CU-CP) -----
 
     kpm_fill_ue_rf_basic(ind_msg, kpi);
-    if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format1) {
+    if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format1)
+    {
       logln("KPM indication message was not populated, skipping seqNum %ld", seqNum);
       ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
       continue;
     }
-    logln("Encoded KPM indication message (Format1)\n");
-    xer_fprint(stderr, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
 
     char errbuf[512] = {0};
     size_t errlen = sizeof(errbuf);
@@ -258,7 +310,6 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     if (rc != 0)
     {
       logln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
-      // opzionale: vai in continue
       continue;
     }
 
@@ -277,7 +328,9 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       logln("calloc failed for pdu\n");
       continue;
     }
-    // ----- E2AP wrapper -----
+
+    log_kpm_parameters(kpi);
+
     generate_e2apv2_indication_request_parameterized(
         pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
         hdr_buf, (int)ehr.encoded, msg_buf, (int)emr.encoded);
@@ -289,9 +342,6 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     seqNum++;
   }
-
-  logln("KPM report loop exiting for requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld\n",
-           requestorId, instanceId, ranFunctionId, actionId);
 }
 
 static void start_kpm_worker(const SubscriptionKey &key,

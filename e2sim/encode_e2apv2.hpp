@@ -79,6 +79,12 @@ void generate_e2apv2_subscription_response_success(
     long ranFunctionId // <--- AGGIUNTO
 );
 
+void generate_e2apv2_subscription_delete_response(
+    E2AP_PDU *e2ap_pdu,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId);
+
 void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 
 void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu);

@@ -49,6 +49,7 @@ extern "C"
 #include "RICeventTriggerDefinition.h"
 #include "RICsubscriptionRequest.h"
 #include "RICsubscriptionResponse.h"
+#include "RICsubscriptionDeleteResponse.h"
 #include "RICcontrolRequest.h"
 #include "RICcontrolAcknowledge.h"
 #include "RICcontrolFailure.h"
@@ -530,6 +531,41 @@ void generate_e2apv2_subscription_response_success(E2AP_PDU *e2ap_pdu, const lon
   if (errlen && error_buf)
     printf("constraints: %s\n", error_buf);
   free(error_buf);
+}
+
+void generate_e2apv2_subscription_delete_response(
+    E2AP_PDU *e2ap_pdu,
+    long reqRequestorId,
+    long reqInstanceId,
+    long ranFunctionId) {
+  SuccessfulOutcome_t *successoutcome = (SuccessfulOutcome_t *)calloc(1, sizeof(*successoutcome));
+  successoutcome->procedureCode = ProcedureCode_id_RICsubscriptionDelete;
+  successoutcome->criticality = Criticality_reject;
+  successoutcome->value.present = SuccessfulOutcome__value_PR_RICsubscriptionDeleteResponse;
+
+  RICsubscriptionDeleteResponse_t *resp = &successoutcome->value.choice.RICsubscriptionDeleteResponse;
+
+  {
+    RICsubscriptionDeleteResponse_IEs_t *ie = (RICsubscriptionDeleteResponse_IEs_t *)calloc(1, sizeof(*ie));
+    ie->id = ProtocolIE_ID_id_RICrequestID;
+    ie->criticality = Criticality_reject;
+    ie->value.present = RICsubscriptionDeleteResponse_IEs__value_PR_RICrequestID;
+    ie->value.choice.RICrequestID.ricRequestorID = reqRequestorId;
+    ie->value.choice.RICrequestID.ricInstanceID = reqInstanceId;
+    ASN_SEQUENCE_ADD(&resp->protocolIEs.list, ie);
+  }
+
+  {
+    RICsubscriptionDeleteResponse_IEs_t *ie = (RICsubscriptionDeleteResponse_IEs_t *)calloc(1, sizeof(*ie));
+    ie->id = ProtocolIE_ID_id_RANfunctionID;
+    ie->criticality = Criticality_reject;
+    ie->value.present = RICsubscriptionDeleteResponse_IEs__value_PR_RANfunctionID;
+    ie->value.choice.RANfunctionID = ranFunctionId;
+    ASN_SEQUENCE_ADD(&resp->protocolIEs.list, ie);
+  }
+
+  e2ap_pdu->present = E2AP_PDU_PR_successfulOutcome;
+  e2ap_pdu->choice.successfulOutcome = successoutcome;
 }
 
 /* =========================================================================

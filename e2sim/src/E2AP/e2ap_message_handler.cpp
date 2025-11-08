@@ -27,6 +27,10 @@
 #include "kpm_callbacks.hpp"
 #include "n3iwf_utils.hpp"
 
+extern "C" {
+#include "RICsubscriptionDeleteRequest.h"
+}
+
 #include <unistd.h>
 
 void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
@@ -188,6 +192,80 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     default:
       logln("[E2AP] Invalid message index=%d in E2AP-PDU %d", index,
                 (int)ProcedureCode_id_RICcontrol);
+      break;
+    }
+    break;
+
+  case ProcedureCode_id_RICsubscriptionDelete:
+    switch (index)
+    {
+    case E2AP_PDU_PR_initiatingMessage:
+    {
+      logln("[E2AP] Received RIC-SUBSCRIPTION-DELETE-REQUEST");
+      long reqRequestorId = -1;
+      long reqInstanceId = -1;
+      long ranFunctionId = -1;
+
+      RICsubscriptionDeleteRequest_t &del_req =
+          pdu->choice.initiatingMessage->value.choice.RICsubscriptionDeleteRequest;
+      int count = del_req.protocolIEs.list.count;
+      auto **ies = (RICsubscriptionDeleteRequest_IEs_t **)del_req.protocolIEs.list.array;
+      for (int i = 0; i < count; ++i)
+      {
+        RICsubscriptionDeleteRequest_IEs_t *next_ie = ies[i];
+        if (!next_ie)
+          continue;
+        switch (next_ie->value.present)
+        {
+        case RICsubscriptionDeleteRequest_IEs__value_PR_RICrequestID:
+          reqRequestorId = next_ie->value.choice.RICrequestID.ricRequestorID;
+          reqInstanceId = next_ie->value.choice.RICrequestID.ricInstanceID;
+          break;
+        case RICsubscriptionDeleteRequest_IEs__value_PR_RANfunctionID:
+          ranFunctionId = next_ie->value.choice.RANfunctionID;
+          break;
+        default:
+          break;
+        }
+      }
+
+      logln("[E2AP] Delete request payload -> requestorId=%ld instanceId=%ld ranFunctionId=%ld",
+            reqRequestorId, reqInstanceId, ranFunctionId);
+
+      if (ranFunctionId == 2)
+      {
+        stop_kpm_subscription(reqRequestorId, reqInstanceId, ranFunctionId);
+      }
+
+      if (reqRequestorId >= 0 && reqInstanceId >= 0 && ranFunctionId >= 0 && e2sim)
+      {
+        E2AP_PDU *resp_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
+        if (resp_pdu)
+        {
+          generate_e2apv2_subscription_delete_response(
+              resp_pdu, reqRequestorId, reqInstanceId, ranFunctionId);
+          e2sim->encode_and_send_sctp_data(resp_pdu);
+          ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, resp_pdu);
+        }
+        else
+        {
+          logln("[E2AP] Failed to allocate response PDU for delete request");
+        }
+      }
+      else
+      {
+        logln("[E2AP] Missing identifiers for delete request, skipping response");
+      }
+      break;
+    }
+    case E2AP_PDU_PR_successfulOutcome:
+      logln("[E2AP] Received RIC-SUBSCRIPTION-DELETE-RESPONSE");
+      break;
+    case E2AP_PDU_PR_unsuccessfulOutcome:
+      logln("[E2AP] Received RIC-SUBSCRIPTION-DELETE-FAILURE");
+      break;
+    default:
+      logln("[E2AP] Invalid message index=%d in RIC-SUBSCRIPTION-DELETE PDU", index);
       break;
     }
     break;
