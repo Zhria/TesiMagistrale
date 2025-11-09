@@ -85,7 +85,7 @@ static void add_control_style(RANFunctionDefinition_Control *ctl,
     if (ctrl->ric_ControlAction_List) {
         auto *action = (RANFunctionDefinition_Control_Action_Item*)calloc(1, sizeof(RANFunctionDefinition_Control_Action_Item));
         action->ric_ControlAction_ID = kRcControlActionIdHandover;
-        OCTET_STRING_fromBuf(&action->ric_ControlAction_Name, "Handover Decision", strlen("Handover Decision"));
+        OCTET_STRING_fromBuf(&action->ric_ControlAction_Name, "Handover Control", strlen("Handover Control"));
 
         action->ran_ControlActionParameters_List = (decltype(action->ran_ControlActionParameters_List))calloc(1, sizeof(*action->ran_ControlActionParameters_List));
         if (action->ran_ControlActionParameters_List) {
