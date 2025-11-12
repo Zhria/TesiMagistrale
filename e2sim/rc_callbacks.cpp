@@ -393,6 +393,7 @@ void stop_all_rc_workers() {
 
 namespace {
 
+constexpr long kRcControlStyleTypeHandover = 3;
 constexpr long kRcControlActionIdHandover = 1;
 constexpr long kRcParamUeId = 41001;
 constexpr long kRcParamTargetCellPci = 45001;
@@ -525,73 +526,115 @@ static std::string ran_value_to_string(const RANParameter_Value_t &value) {
     }
 }
 
+static bool is_supported_control_param(long id) {
+    switch (id) {
+    case kRcParamUeId:
+    case kRcParamTargetCellPci:
+    case kRcParamTargetGNbId:
+    case kRcParamHoCause:
+        return true;
+    default:
+        return false;
+    }
+}
+
 static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
     E2SM_RC_ControlHeader_t *decoded = nullptr;
+    auto fail = [&](const std::string &msg) -> bool {
+        err = msg;
+        if (decoded) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+            decoded = nullptr;
+        }
+        return false;
+    };
     asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
                                    &asn_DEF_E2SM_RC_ControlHeader,
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
-        err = "Unable to decode E2SM RC ControlHeader";
-        if (decoded) {
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-        }
-        return false;
+        return fail("Unable to decode E2SM RC ControlHeader");
     }
     if (decoded->ric_controlHeader_formats.present !=
         E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
-        err = "Unsupported ControlHeader format";
-        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-        return false;
+        return fail("Unsupported ControlHeader format");
     }
     auto *fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
-    if (fmt1) {
-        ctx.style_type = fmt1->ric_Style_Type;
-        ctx.control_action_id = fmt1->ric_ControlAction_ID;
-        ctx.ue_identity = describe_ueid(&fmt1->ueID);
+    if (!fmt1) {
+        return fail("ControlHeader Format1 payload missing");
     }
+    if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover) {
+        return fail("Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type));
+    }
+    if (fmt1->ric_ControlAction_ID != kRcControlActionIdHandover) {
+        return fail("Unsupported RC control action ID " + std::to_string(fmt1->ric_ControlAction_ID));
+    }
+    ctx.style_type = fmt1->ric_Style_Type;
+    ctx.control_action_id = fmt1->ric_ControlAction_ID;
+    ctx.ue_identity = describe_ueid(&fmt1->ueID);
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
     return true;
 }
 
 static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContext &ctx, std::string &err) {
     E2SM_RC_ControlMessage_t *decoded = nullptr;
+    auto fail = [&](const std::string &msg_text) -> bool {
+        err = msg_text;
+        if (decoded) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
+            decoded = nullptr;
+        }
+        return false;
+    };
     asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
                                    &asn_DEF_E2SM_RC_ControlMessage,
                                    (void **)&decoded, msg.buf, msg.size);
     if (dr.code != RC_OK || !decoded) {
-        err = "Unable to decode E2SM RC ControlMessage";
-        if (decoded) {
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
-        }
-        return false;
+        return fail("Unable to decode E2SM RC ControlMessage");
     }
     if (decoded->ric_controlMessage_formats.present !=
         E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1) {
-        err = "Unsupported ControlMessage format";
-        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
-        return false;
+        return fail("Unsupported ControlMessage format");
     }
     auto *fmt1 = decoded->ric_controlMessage_formats.choice.controlMessage_Format1;
-    if (fmt1) {
-        for (int i = 0; i < fmt1->ranP_List.list.count; ++i) {
-            auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
-            if (!item) continue;
-            if (item->ranParameter_valueType.present != RANParameter_ValueType_PR_ranP_Choice_ElementTrue ||
-                !item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
-                continue;
-            }
-            const auto *val = item->ranParameter_valueType.choice.ranP_Choice_ElementTrue;
-            RcParamValue entry;
-            entry.id = item->ranParameter_ID;
-            entry.name = rc_param_name(entry.id);
-            entry.value_type = val->ranParameter_value.present;
-            entry.printable_value = ran_value_to_string(val->ranParameter_value);
-            if (val->ranParameter_value.present == RANParameter_Value_PR_valueInt) {
-                entry.has_int = true;
-                entry.int_value = val->ranParameter_value.choice.valueInt;
-            }
-            ctx.params.push_back(std::move(entry));
+    if (!fmt1) {
+        return fail("ControlMessage Format1 payload missing");
+    }
+    for (int i = 0; i < fmt1->ranP_List.list.count; ++i) {
+        auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
+        if (!item) {
+            return fail("ControlMessage list contains null entry");
         }
+        if (!is_supported_control_param(item->ranParameter_ID)) {
+            return fail("Unsupported RC control parameter ID " + std::to_string(item->ranParameter_ID));
+        }
+        if (item->ranParameter_valueType.present != RANParameter_ValueType_PR_ranP_Choice_ElementTrue ||
+            !item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
+            return fail("Unsupported RC control parameter encoding for ID " +
+                        std::to_string(item->ranParameter_ID));
+        }
+        const auto *val = item->ranParameter_valueType.choice.ranP_Choice_ElementTrue;
+        RcParamValue entry;
+        entry.id = item->ranParameter_ID;
+        entry.name = rc_param_name(entry.id);
+        entry.value_type = val->ranParameter_value.present;
+        entry.printable_value = ran_value_to_string(val->ranParameter_value);
+        if (val->ranParameter_value.present == RANParameter_Value_PR_valueInt) {
+            entry.has_int = true;
+            entry.int_value = val->ranParameter_value.choice.valueInt;
+        }
+        ctx.params.push_back(std::move(entry));
+    }
+    if (ctx.params.empty()) {
+        return fail("RC control message does not contain any RAN parameters");
+    }
+    const bool has_ue = find_param(ctx, kRcParamUeId) != nullptr;
+    if (!has_ue) {
+        return fail("RC control message missing UE identifier parameter");
+    }
+    const bool has_target_pci = find_param(ctx, kRcParamTargetCellPci) != nullptr;
+    const bool has_target_gnb = find_param(ctx, kRcParamTargetGNbId) != nullptr;
+    if (!has_target_pci && !has_target_gnb) {
+        return fail("RC control message missing target cell/gNB parameters");
     }
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
     return true;
