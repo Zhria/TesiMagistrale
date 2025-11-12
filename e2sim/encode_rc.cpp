@@ -89,17 +89,22 @@ static void add_control_style(RANFunctionDefinition_Control *ctl,
 
         action->ran_ControlActionParameters_List = (decltype(action->ran_ControlActionParameters_List))calloc(1, sizeof(*action->ran_ControlActionParameters_List));
         if (action->ran_ControlActionParameters_List) {
-            auto add_param = [&](long id, const char *name) {
-                ControlAction_RANParameter_Item *param = (ControlAction_RANParameter_Item*)calloc(1, sizeof(ControlAction_RANParameter_Item));
-                if (!param) return;
-                param->ranParameter_ID = id;
-                OCTET_STRING_fromBuf(&param->ranParameter_name, name, strlen(name));
+            const auto control_params = getAllowedControlMetricsRC();
+            for (const auto &entry : control_params) {
+                if (entry.first >= kRcOutcomeStatus) {
+                    continue; // outcome parameters belong to ACK/FAIL payload
+                }
+                ControlAction_RANParameter_Item *param =
+                    (ControlAction_RANParameter_Item*)calloc(1, sizeof(ControlAction_RANParameter_Item));
+                if (!param) {
+                    continue;
+                }
+                param->ranParameter_ID = entry.first;
+                OCTET_STRING_fromBuf(&param->ranParameter_name,
+                                     entry.second.c_str(),
+                                     entry.second.size());
                 ASN_SEQUENCE_ADD(&action->ran_ControlActionParameters_List->list, param);
-            };
-            add_param(kRcParamUeId, "UE ID");
-            add_param(kRcParamTargetCellPci, "Target PCI");
-            add_param(kRcParamTargetGNbId, "Target gNB ID");
-            add_param(kRcParamHoCause, "Handover Cause");
+            }
         }
         ASN_SEQUENCE_ADD(&ctrl->ric_ControlAction_List->list, action);
     }

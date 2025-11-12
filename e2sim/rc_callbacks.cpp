@@ -527,15 +527,18 @@ static std::string ran_value_to_string(const RANParameter_Value_t &value) {
 }
 
 static bool is_supported_control_param(long id) {
-    switch (id) {
-    case kRcParamUeId:
-    case kRcParamTargetCellPci:
-    case kRcParamTargetGNbId:
-    case kRcParamHoCause:
-        return true;
-    default:
-        return false;
-    }
+    static const std::unordered_set<long> kSupportedIds = [] {
+        std::unordered_set<long> ids;
+        const auto metrics = getAllowedControlMetricsRC();
+        for (const auto &kv : metrics) {
+            if (kv.first == kRcOutcomeStatus || kv.first == kRcOutcomeNotes) {
+                continue; // outcome-only parameters are not part of control messages
+            }
+            ids.insert(kv.first);
+        }
+        return ids;
+    }();
+    return kSupportedIds.find(id) != kSupportedIds.end();
 }
 
 static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
