@@ -527,7 +527,7 @@ static std::string ran_value_to_string(const RANParameter_Value_t &value) {
 
 static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
     E2SM_RC_ControlHeader_t *decoded = nullptr;
-    asn_dec_rval_t dr = asn_decode(nullptr, ATS_UNALIGNED_BASIC_PER,
+    asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
                                    &asn_DEF_E2SM_RC_ControlHeader,
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
@@ -555,7 +555,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
 
 static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContext &ctx, std::string &err) {
     E2SM_RC_ControlMessage_t *decoded = nullptr;
-    asn_dec_rval_t dr = asn_decode(nullptr, ATS_UNALIGNED_BASIC_PER,
+    asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
                                    &asn_DEF_E2SM_RC_ControlMessage,
                                    (void **)&decoded, msg.buf, msg.size);
     if (dr.code != RC_OK || !decoded) {
@@ -669,7 +669,7 @@ static bool encode_rc_control_outcome_view(const ControlOutcomeField *fields,
     }
 
     buffer.resize(MAX_SCTP_BUFFER);
-    asn_enc_rval_t er = asn_encode_to_buffer(nullptr, ATS_UNALIGNED_BASIC_PER,
+    asn_enc_rval_t er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
                                              &asn_DEF_E2SM_RC_ControlOutcome,
                                              outcome, buffer.data(), buffer.size());
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlOutcome, outcome);
@@ -934,7 +934,7 @@ static void run_rc_report_loop(const SubscriptionKey &key,
 
         uint8_t hdr_buf[MAX_SCTP_BUFFER];
         asn_enc_rval_t hdr_enc = asn_encode_to_buffer(
-            nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationHeader,
+            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationHeader,
             hdr, hdr_buf, sizeof(hdr_buf));
         if (hdr_enc.encoded < 0) {
             logln("RC report loop: header encode failed (%s)",
@@ -1009,7 +1009,7 @@ static void run_rc_report_loop(const SubscriptionKey &key,
 
         uint8_t msg_buf[MAX_SCTP_BUFFER];
         asn_enc_rval_t msg_enc = asn_encode_to_buffer(
-            nullptr, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationMessage,
+            nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_IndicationMessage,
             msg, msg_buf, sizeof(msg_buf));
         if (msg_enc.encoded < 0) {
             logln("RC report loop: message encode failed (%s)",
@@ -1515,14 +1515,14 @@ void registerRCfunctionDefinition(E2Sim &e2){
   g_rc_ranfunc_def = rc_ranfunc_desc;
 
   E2SM_RC_RANFunctionDefinition *check = NULL;
-  asn_dec_rval_t dr = asn_decode(NULL, ATS_UNALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_RANFunctionDefinition, (void **)&check, ranfunc_ostr_rc->buf, ranfunc_ostr_rc->size);
+  asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_RANFunctionDefinition, (void **)&check, ranfunc_ostr_rc->buf, ranfunc_ostr_rc->size);
   if (dr.code != RC_OK)
   {
-    logln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+    logln("Self-test decode RC FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
   }
   else
   {
-    logln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+    logln("Self-test decode RC OK (consumed=%zu)\n", dr.consumed);
   }
 
   return;
