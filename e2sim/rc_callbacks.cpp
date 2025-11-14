@@ -417,7 +417,7 @@ struct ControlOutcomeField {
 struct RcParamValue {
     long id{0};
     std::string name;
-    RANParameter_Value_PR value_type{RANParameter_Value_PR_NOTHING};
+    RANParameter_ValueType_PR value_type{RANParameter_ValueType_PR_NOTHING};
     std::string printable_value;
     bool has_int{false};
     long int_value{0};
@@ -952,14 +952,18 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     }
     for (int i = 0; i < fmt1->ranP_List.list.count; ++i) {
         auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
-        if (!item || !item->ranParameter_valueType) {
+        if (!item) {
             return fail("ControlMessage list contains null entry");
         }
         if (!is_supported_control_param(item->ranParameter_ID)) {
             logln("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
             continue;
         }
-        append_param_entry(ctx, item->ranParameter_ID, *item->ranParameter_valueType);
+        if (item->ranParameter_valueType.present == RANParameter_ValueType_PR_NOTHING) {
+            logln("[RC CONTROL] Parameter ID %ld missing value", item->ranParameter_ID);
+            continue;
+        }
+        append_param_entry(ctx, item->ranParameter_ID, item->ranParameter_valueType);
     }
     if (ctx.params.empty()) {
         return fail("RC control message does not contain any RAN parameters");
