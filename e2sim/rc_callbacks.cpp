@@ -789,6 +789,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
     if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlHeader");
     }
+    logln("[RC CONTROL] ControlHeader decoded (size=%ld)", hdr.size);
     if (decoded->ric_controlHeader_formats.present !=
         E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
         return fail("Unsupported ControlHeader format");
@@ -806,6 +807,10 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
     ctx.style_type = fmt1->ric_Style_Type;
     ctx.control_action_id = fmt1->ric_ControlAction_ID;
     ctx.ue_identity = describe_ueid(&fmt1->ueID);
+    logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
+          ctx.style_type,
+          ctx.control_action_id,
+          ctx.ue_identity.c_str());
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
     return true;
 }
@@ -826,6 +831,7 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlMessage");
     }
+    logln("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
     if (decoded->ric_controlMessage_formats.present !=
         E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1) {
         return fail("Unsupported ControlMessage format");
@@ -871,6 +877,10 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     if (!has_target_pci && !has_target_gnb) {
         return fail("RC control message missing target cell/gNB parameters");
     }
+    logln("[RC CONTROL] Message OK params=%zu targetPCI=%d targetGNb=%d",
+          ctx.params.size(),
+          has_target_pci ? 1 : 0,
+          has_target_gnb ? 1 : 0);
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
     return true;
 }
@@ -879,10 +889,12 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
                                            json &payload,
                                            std::string &error)
 {
+    logln("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
     auto ran_ue = resolve_ran_ue_ngap_id(ctx);
     if (!ran_ue)
     {
         error = "Unable to resolve ranUeNgapId for UE";
+        logln("[RC CONTROL] %s", error.c_str());
         return false;
     }
 
@@ -890,6 +902,7 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
     if (target_gnb.empty())
     {
         error = "Missing target gNB identifier parameter";
+        logln("[RC CONTROL] %s", error.c_str());
         return false;
     }
 
@@ -897,6 +910,7 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
     if (target_id_b64.empty())
     {
         error = "Unable to encode target identifier";
+        logln("[RC CONTROL] %s", error.c_str());
         return false;
     }
 
@@ -924,6 +938,7 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
         metadata_json["hoCause"] = ho_cause;
     }
     payload["metadata"] = metadata_json;
+    logln("[RC CONTROL] HO payload ready: ranUe=%ld targetLen=%zu", *ran_ue, target_gnb.size());
     return true;
 }
 
@@ -947,6 +962,7 @@ static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,
     long http_code = 0;
     std::string http_body;
     std::string curl_error;
+    logln("[RC CONTROL] POST %s (%zu bytes)", url.c_str(), payload_str.size());
     if (!http_post_json(url, payload_str, http_code, http_body, curl_error))
     {
         response.success = false;
@@ -957,6 +973,7 @@ static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,
 
     if (http_code >= 200 && http_code < 300)
     {
+        logln("[RC CONTROL] HO HTTP success code=%ld", http_code);
         response.success = true;
         if (!http_body.empty())
         {
@@ -972,6 +989,7 @@ static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,
     response.success = false;
     response.failure_cause = CauseRICrequest_control_failed_to_execute;
     response.description = "N3IWF HTTP " + std::to_string(http_code);
+    logln("[RC CONTROL] HO HTTP failure code=%ld", http_code);
     if (!http_body.empty())
     {
         response.description += ": " + http_body;
@@ -1707,6 +1725,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
     logln("[RC CONTROL] Invalid PDU received");
     return;
   }
+  logln("[RC CONTROL] Received RICcontrolRequest");
 
   RICcontrolRequest_t &orig_req =
       ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
@@ -1781,6 +1800,11 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         buf_ptr,
         outcome_buf.size());
     e2.encode_and_send_sctp_data(rsp);
+    logln("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
+          ctx.requestor_id,
+          ctx.instance_id,
+          cause_value,
+          reason.c_str());
   };
 
   if (!decode_error.empty())
@@ -1823,6 +1847,10 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         buf_ptr,
         outcome_buf.size());
     e2.encode_and_send_sctp_data(rsp);
+    logln("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
+          ctx.requestor_id,
+          ctx.instance_id,
+          outcome_buf.size());
   };
 
   if (exec_result.success)
