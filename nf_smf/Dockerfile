@@ -16,15 +16,12 @@ RUN set -eux; \
         libmnl0 \
         libsctp1 \
         libyaml-0-2 \
-        tzdata; \
-    if [ "$DEBUG_TOOLS" = "true" ]; then \
-        apt-get install -y --no-install-recommends \
-            vim \
-            strace \
-            net-tools \
-            curl \
-            netcat-openbsd; \
-    fi; \
+        tzdata \
+        vim \
+        strace \
+        net-tools \
+        curl \
+        netcat-openbsd; \
     rm -rf /var/lib/apt/lists/*
 
 # Set working dir
