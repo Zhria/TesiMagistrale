@@ -72,6 +72,9 @@ extern "C"
 #include "E2SM-RC-ControlHeader.h"
 #include "E2SM-RC-ControlHeader-Format1.h"
 #include "UEID-GNB.h"
+#include "UEID-GNB-DU.h"
+#include "UEID-GNB-CU-UP.h"
+#include "UEID-NG-ENB.h"
 #include "E2SM-RC-ControlMessage.h"
 #include "E2SM-RC-ControlMessage-Format1.h"
 #include "E2SM-RC-ControlMessage-Format1-Item.h"
@@ -85,6 +88,7 @@ extern "C"
 #include "RANParameter-STRUCTURE.h"
 #include "RANParameter-STRUCTURE-Item.h"
 #include "RANParameter-LIST.h"
+#include "INTEGER.h"
 #include "RIC-EventTriggerCondition-ID.h"
 #include "Cause.h"
 
@@ -96,6 +100,7 @@ extern "C"
 #include "encode_rc.hpp"
 #include "encode_e2apv2.hpp"
 #include "e2sim_defs.h"
+#include "rc_ids.hpp"
 
 
 
@@ -400,15 +405,6 @@ void stop_all_rc_workers() {
 
 namespace {
 
-constexpr long kRcControlStyleTypeHandover = 3;
-constexpr long kRcControlActionIdHandover = 1;
-constexpr long kRcParamUeId = 41001;
-constexpr long kRcParamTargetCellPci = 45001;
-constexpr long kRcParamTargetGNbId = 45002;
-constexpr long kRcParamHoCause = 45010;
-constexpr long kRcOutcomeStatus = 50001;
-constexpr long kRcOutcomeNotes = 50002;
-
 struct ControlOutcomeField {
     long id;
     std::string_view value;
@@ -433,6 +429,10 @@ struct RcControlContext {
     OCTET_STRING_t call_process_id{0};
     bool call_process_id_present{false};
     std::string ue_identity;
+    long header_ran_ue_id{-1};
+    long header_amf_ue_id{-1};
+    bool header_ran_ue_id_present{false};
+    bool header_amf_ue_id_present{false};
     std::vector<RcParamValue> params;
 };
 
@@ -639,29 +639,19 @@ static std::string convert_hex_or_ascii_to_base64(const std::string &value)
 
 static std::optional<int64_t> resolve_ran_ue_ngap_id(const RcControlContext &ctx)
 {
-    std::string ue_param(get_param_value(ctx, kRcParamUeId));
-    if (ue_param.empty())
+    if (ctx.header_ran_ue_id_present)
     {
-        return std::nullopt;
+        return ctx.header_ran_ue_id;
     }
-    try
+    if (ctx.header_amf_ue_id_present)
     {
-        size_t processed = 0;
-        int64_t value = std::stoll(ue_param, &processed, 10);
-        if (processed == ue_param.size())
+        auto assoc = findRcAssociationByAmfUeId(ctx.header_amf_ue_id);
+        if (assoc && assoc->ue.ran_ue_ngap_id >= 0)
         {
-            return value;
+            return assoc->ue.ran_ue_ngap_id;
         }
     }
-    catch (...)
-    {
-    }
 
-    auto assoc = findRcAssociationByMac(ue_param);
-    if (assoc && assoc->ue.ran_ue_ngap_id >= 0)
-    {
-        return assoc->ue.ran_ue_ngap_id;
-    }
     return std::nullopt;
 }
 
@@ -742,6 +732,21 @@ static std::string_view get_param_value(const RcControlContext &ctx, long id) {
     return param ? std::string_view(param->printable_value) : std::string_view{};
 }
 
+static std::optional<long> get_param_int_value(const RcControlContext &ctx, long id) {
+    const RcParamValue *param = find_param(ctx, id);
+    if (!param) {
+        return std::nullopt;
+    }
+    if (param->has_int) {
+        return param->int_value;
+    }
+    int64_t value = 0;
+    if (parse_first_integer(param->printable_value, value)) {
+        return static_cast<long>(value);
+    }
+    return std::nullopt;
+}
+
 static std::string ran_value_to_string(const RANParameter_Value_t &value) {
     switch (value.present) {
     case RANParameter_Value_PR_valueBoolean:
@@ -795,6 +800,81 @@ static std::string describe_ran_value_type(const RANParameter_ValueType_t &value
         return "<list-null>";
     default:
         return "<unsupported-value-type>";
+    }
+}
+
+static bool octet_string_to_long(const OCTET_STRING_t *oct, long &out)
+{
+    if (!oct || !oct->buf || oct->size <= 0 || oct->size > 8)
+    {
+        return false;
+    }
+    uint64_t value = 0;
+    for (int i = 0; i < oct->size; ++i)
+    {
+        value = (value << 8) | static_cast<uint8_t>(oct->buf[i]);
+    }
+    out = static_cast<long>(value);
+    return true;
+}
+
+static void update_ctx_ids_from_ueid(const UEID_t *ueid, RcControlContext &ctx)
+{
+    if (!ueid)
+    {
+        return;
+    }
+    auto set_amf = [&](const AMF_UE_NGAP_ID_t &src) {
+        long value = 0;
+        if (asn_INTEGER2long(&src, &value) == 0)
+        {
+            ctx.header_amf_ue_id = value;
+            ctx.header_amf_ue_id_present = true;
+            logln("[RC CONTROL] Header AMF UE NGAP ID=%ld", value);
+        }
+    };
+    auto set_ran = [&](const OCTET_STRING_t *oct) {
+        long value = 0;
+        if (octet_string_to_long(oct, value))
+        {
+            ctx.header_ran_ue_id = value;
+            ctx.header_ran_ue_id_present = true;
+            logln("[RC CONTROL] Header RAN UE ID=%ld", value);
+        }
+    };
+
+    switch (ueid->present)
+    {
+    case UEID_PR_gNB_UEID:
+        if (ueid->choice.gNB_UEID)
+        {
+            set_amf(ueid->choice.gNB_UEID->amf_UE_NGAP_ID);
+            if (ueid->choice.gNB_UEID->ran_UEID)
+            {
+                set_ran(ueid->choice.gNB_UEID->ran_UEID);
+            }
+        }
+        break;
+    case UEID_PR_gNB_DU_UEID:
+        if (ueid->choice.gNB_DU_UEID && ueid->choice.gNB_DU_UEID->ran_UEID)
+        {
+            set_ran(ueid->choice.gNB_DU_UEID->ran_UEID);
+        }
+        break;
+    case UEID_PR_gNB_CU_UP_UEID:
+        if (ueid->choice.gNB_CU_UP_UEID && ueid->choice.gNB_CU_UP_UEID->ran_UEID)
+        {
+            set_ran(ueid->choice.gNB_CU_UP_UEID->ran_UEID);
+        }
+        break;
+    case UEID_PR_ng_eNB_UEID:
+        if (ueid->choice.ng_eNB_UEID)
+        {
+            set_amf(ueid->choice.ng_eNB_UEID->amf_UE_NGAP_ID);
+        }
+        break;
+    default:
+        break;
     }
 }
 
@@ -873,7 +953,7 @@ static bool is_supported_control_param(long id) {
         std::unordered_set<long> ids;
         const auto metrics = getAllowedControlMetricsRC();
         for (const auto &kv : metrics) {
-            if (kv.first == kRcOutcomeStatus || kv.first == kRcOutcomeNotes) {
+            if (kv.first == kRcOutcomeStatus || kv.first == kRcOutcomeNotes || kv.first == kRcParamUeId) {
                 continue; // outcome-only parameters are not part of control messages
             }
             ids.insert(kv.first);
@@ -917,6 +997,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
     ctx.style_type = fmt1->ric_Style_Type;
     ctx.control_action_id = fmt1->ric_ControlAction_ID;
     ctx.ue_identity = describe_ueid(&fmt1->ueID);
+    update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
     logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
           ctx.style_type,
           ctx.control_action_id,
@@ -970,19 +1051,14 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     if (ctx.params.empty()) {
         return fail("RC control message does not contain any RAN parameters");
     }
-    const bool has_ue = find_param(ctx, kRcParamUeId) != nullptr;
-    if (!has_ue) {
-        return fail("RC control message missing UE identifier parameter");
+    const bool has_target_gnb = find_param(ctx, kRcParamTargetGNbId) != nullptr;
+    if (!has_target_gnb) {
+        return fail("RC control message missing target gNB parameter");
     }
     const bool has_target_pci = find_param(ctx, kRcParamTargetCellPci) != nullptr;
-    const bool has_target_gnb = find_param(ctx, kRcParamTargetGNbId) != nullptr;
-    if (!has_target_pci && !has_target_gnb) {
-        return fail("RC control message missing target cell/gNB parameters");
-    }
-    logln("[RC CONTROL] Message OK params=%zu targetPCI=%d targetGNb=%d",
+    logln("[RC CONTROL] Message OK params=%zu targetPCI=%d targetGNb=1",
           ctx.params.size(),
-          has_target_pci ? 1 : 0,
-          has_target_gnb ? 1 : 0);
+          has_target_pci ? 1 : 0);
     for (const auto &param : ctx.params)
     {
         logln("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
@@ -1032,6 +1108,8 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
     std::string metadata_ue = ctx.ue_identity;
     std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
     std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
+    auto target_pci_value = get_param_int_value(ctx, kRcParamTargetCellPci);
+    auto ho_cause_value = get_param_int_value(ctx, kRcParamHoCause);
 
     json metadata_json = json::object();
     if (!metadata_ue.empty())
@@ -1039,11 +1117,19 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
         metadata_json["ueIdentity"] = metadata_ue;
     }
     metadata_json["targetGnbRaw"] = target_gnb;
-    if (!target_pci.empty())
+    if (target_pci_value)
+    {
+        metadata_json["targetCellPci"] = *target_pci_value;
+    }
+    else if (!target_pci.empty())
     {
         metadata_json["targetCellPci"] = target_pci;
     }
-    if (!ho_cause.empty())
+    if (ho_cause_value)
+    {
+        metadata_json["hoCause"] = *ho_cause_value;
+    }
+    else if (!ho_cause.empty())
     {
         metadata_json["hoCause"] = ho_cause;
     }
@@ -1116,9 +1202,7 @@ static RcControlExecutionResult execute_rc_control_command(const RcControlContex
         return result;
     }
 
-    const std::string ue = !ctx.ue_identity.empty()
-                               ? ctx.ue_identity
-                               : std::string(get_param_value(ctx, kRcParamUeId));
+    const std::string ue = ctx.ue_identity;
     const std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
     const std::string target_gnb = std::string(get_param_value(ctx, kRcParamTargetGNbId));
     const std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));

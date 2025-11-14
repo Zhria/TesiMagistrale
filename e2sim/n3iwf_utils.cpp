@@ -215,12 +215,6 @@ std::map<long,std::string> getAllowedControlMetricsRC(){
         {19, "List of Secondary cells to be setup"},
         {20, "Secondary cell Item to be setup"},
         {21, "Secondary Cell ID"},
-        {41001, "UE ID"},
-        {45001, "Target PCI"},
-        {45002, "Target gNB ID"},
-        {45010, "Handover Cause"},
-        {50001, "Execution Status"},
-        {50002, "Execution Notes"}
     };
 }
 

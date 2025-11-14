@@ -230,7 +230,6 @@ int sctp_start_client(const char *server_ip_str, int server_port, const char *lo
 
 int sctp_send_data(int &socket_fd, sctp_buffer_t &data)
 {
-    logln("[SCTP_SEND_DATA] data.len is %d\n", data.len);
 
     if (socket_fd < 0)
     {

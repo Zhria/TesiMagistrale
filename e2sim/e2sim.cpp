@@ -107,7 +107,6 @@ std::unordered_map<long, OCTET_STRING_t *> E2Sim::get_registered_e2sm() {
 void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 {
   std::lock_guard<std::mutex> lock(g_sctp_send_mutex);
-  logln("About to encode and send SCTP data\n");
   sctp_buffer_t data;
 
   auto buffer_size = MAX_SCTP_BUFFER;

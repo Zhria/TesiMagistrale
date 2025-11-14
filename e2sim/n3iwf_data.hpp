@@ -104,5 +104,6 @@ struct RcSnapshot {
 bool loadRcSnapshot(RcSnapshot &out);
 std::vector<RcAssociationSnapshot> getRcAssociations();
 std::optional<RcAssociationSnapshot> findRcAssociationByRanUeId(int64_t ran_ue_ngap_id);
+std::optional<RcAssociationSnapshot> findRcAssociationByAmfUeId(int64_t amf_ue_ngap_id);
 std::optional<RcAssociationSnapshot> findRcAssociationByMac(const std::string &mac);
 void setRcLogFileName(const std::string &name);

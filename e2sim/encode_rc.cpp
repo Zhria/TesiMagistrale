@@ -1,12 +1,6 @@
 #include "encode_rc.hpp"
 #include "n3iwf_utils.hpp"
-
-namespace {
-constexpr long kRcControlStyleTypeHandover = 3;
-constexpr long kRcControlActionIdHandover = 1;
-constexpr long kRcOutcomeStatus = 50001;
-constexpr long kRcOutcomeNotes = 50002;
-}
+#include "rc_ids.hpp"
 
 // Utility helpers
 static void add_event_trigger(RANFunctionDefinition_EventTrigger *ev){
@@ -87,9 +81,6 @@ static void add_control_style(RANFunctionDefinition_Control *ctl,
         if (action->ran_ControlActionParameters_List) {
             const auto control_params = getAllowedControlMetricsRC();
             for (const auto &entry : control_params) {
-                if (entry.first >= kRcOutcomeStatus) {
-                    continue; // outcome parameters belong to ACK/FAIL payload
-                }
                 ControlAction_RANParameter_Item *param =
                     (ControlAction_RANParameter_Item*)calloc(1, sizeof(ControlAction_RANParameter_Item));
                 if (!param) {
@@ -104,7 +95,7 @@ static void add_control_style(RANFunctionDefinition_Control *ctl,
         }
         ASN_SEQUENCE_ADD(&ctrl->ric_ControlAction_List->list, action);
     }
-
+    /* Not needed by the xApp
     ctrl->ran_ControlOutcomeParameters_List = (decltype(ctrl->ran_ControlOutcomeParameters_List))calloc(1, sizeof(*ctrl->ran_ControlOutcomeParameters_List));
     if (ctrl->ran_ControlOutcomeParameters_List) {
         auto add_out_param = [&](long id, const char *name) {
@@ -117,7 +108,7 @@ static void add_control_style(RANFunctionDefinition_Control *ctl,
         add_out_param(kRcOutcomeStatus, "Execution Status");
         add_out_param(kRcOutcomeNotes, "Execution Notes");
     }
-
+    */
     ASN_SEQUENCE_ADD(&ctl->ric_ControlStyle_List.list, ctrl);
     return;
 }

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <optional>
 #include <filesystem>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <cstdlib>
@@ -48,6 +49,11 @@ static std::string g_basePath = []{
   if (const char* p = std::getenv("E2_LOG_BASE")) return std::string(p);
   return std::string("/home/e2sim/log/");  // default nel tuo container
 }();
+
+static std::mutex g_rc_snapshot_mutex;
+static RcSnapshot g_cached_rc_snapshot;
+static bool g_rc_snapshot_valid = false;
+static fs::file_time_type g_rc_snapshot_mtime{};
 
 void setBasePath(const std::string& path) {
   g_basePath = path;
@@ -907,9 +913,41 @@ bool loadRcSnapshot(RcSnapshot &out) {
   return true;
 }
 
+static bool loadRcSnapshotCached(RcSnapshot &out) {
+  const std::string full = joinPathFile(g_basePath, g_rcFileName);
+  std::error_code ec;
+  const auto current_mtime = fs::last_write_time(full, ec);
+  const bool have_mtime = !ec;
+
+  {
+    std::lock_guard<std::mutex> lock(g_rc_snapshot_mutex);
+    if (g_rc_snapshot_valid && (!have_mtime || current_mtime == g_rc_snapshot_mtime)) {
+      out = g_cached_rc_snapshot;
+      return true;
+    }
+  }
+
+  RcSnapshot fresh;
+  if (!loadRcSnapshot(fresh)) {
+    return false;
+  }
+
+  {
+    std::lock_guard<std::mutex> lock(g_rc_snapshot_mutex);
+    g_cached_rc_snapshot = fresh;
+    g_rc_snapshot_valid = true;
+    if (have_mtime) {
+      g_rc_snapshot_mtime = current_mtime;
+    }
+    out = g_cached_rc_snapshot;
+  }
+
+  return true;
+}
+
 std::vector<RcAssociationSnapshot> getRcAssociations() {
   RcSnapshot snap;
-  if (!loadRcSnapshot(snap)) {
+  if (!loadRcSnapshotCached(snap)) {
     return {};
   }
   return snap.associations;
@@ -919,9 +957,28 @@ std::optional<RcAssociationSnapshot> findRcAssociationByRanUeId(int64_t ran_ue_n
   if (ran_ue_ngap_id < 0) {
     return std::nullopt;
   }
-  auto associations = getRcAssociations();
-  for (const auto &assoc : associations) {
+  RcSnapshot snap;
+  if (!loadRcSnapshotCached(snap)) {
+    return std::nullopt;
+  }
+  for (const auto &assoc : snap.associations) {
     if (assoc.ue.ran_ue_ngap_id == ran_ue_ngap_id) {
+      return assoc;
+    }
+  }
+  return std::nullopt;
+}
+
+std::optional<RcAssociationSnapshot> findRcAssociationByAmfUeId(int64_t amf_ue_ngap_id) {
+  if (amf_ue_ngap_id < 0) {
+    return std::nullopt;
+  }
+  RcSnapshot snap;
+  if (!loadRcSnapshotCached(snap)) {
+    return std::nullopt;
+  }
+  for (const auto &assoc : snap.associations) {
+    if (assoc.ue.amf_ue_ngap_id == amf_ue_ngap_id) {
       return assoc;
     }
   }
@@ -933,8 +990,11 @@ std::optional<RcAssociationSnapshot> findRcAssociationByMac(const std::string &m
     return std::nullopt;
   }
   const std::string target = normalize_mac(mac);
-  auto associations = getRcAssociations();
-  for (const auto &assoc : associations) {
+  RcSnapshot snap;
+  if (!loadRcSnapshotCached(snap)) {
+    return std::nullopt;
+  }
+  for (const auto &assoc : snap.associations) {
     if (normalize_mac(assoc.mac) == target) {
       return assoc;
     }
