@@ -941,6 +941,8 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlMessage");
     }
+    logln("[RC CONTROL] Raw ControlMessage PER dump:");
+    xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlMessage, decoded);
     logln("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
     if (decoded->ric_controlMessage_formats.present !=
         E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1) {
