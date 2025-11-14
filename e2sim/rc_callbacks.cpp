@@ -444,6 +444,8 @@ struct N3iwfTriggerResponse {
     long failure_cause{CauseRICrequest_control_failed_to_execute};
 };
 
+static std::string_view get_param_value(const RcControlContext &ctx, long id);
+
 static std::once_flag g_curl_init_flag;
 
 namespace {
