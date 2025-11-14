@@ -4,10 +4,6 @@
 namespace {
 constexpr long kRcControlStyleTypeHandover = 3;
 constexpr long kRcControlActionIdHandover = 1;
-constexpr long kRcParamUeId = 41001;
-constexpr long kRcParamTargetCellPci = 45001;
-constexpr long kRcParamTargetGNbId = 45002;
-constexpr long kRcParamHoCause = 45010;
 constexpr long kRcOutcomeStatus = 50001;
 constexpr long kRcOutcomeNotes = 50002;
 }

@@ -28,6 +28,8 @@
 #include <limits>
 #include <functional>
 #include <cctype>
+#include <optional>
+#include <curl/curl.h>
 
 
 #include "rc_callbacks.hpp"
@@ -436,6 +438,236 @@ struct RcControlExecutionResult {
     long cause_value{CauseRICrequest_action_not_supported};
 };
 
+struct N3iwfTriggerResponse {
+    bool success{false};
+    std::string description;
+    long failure_cause{CauseRICrequest_control_failed_to_execute};
+};
+
+static std::once_flag g_curl_init_flag;
+
+namespace {
+
+constexpr const char *kDefaultHandoverUrl = "http://127.0.0.1:9085/rc/handover";
+constexpr long kHttpTimeoutMs = 5000;
+
+} // namespace
+
+static void ensure_curl_initialized()
+{
+    std::call_once(g_curl_init_flag, [] {
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+    });
+}
+
+static size_t curl_write_callback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    size_t total = size * nmemb;
+    auto *buffer = static_cast<std::string *>(userp);
+    buffer->append(static_cast<const char *>(contents), total);
+    return total;
+}
+
+static bool http_post_json(const std::string &url,
+                           const std::string &payload,
+                           long &http_code,
+                           std::string &response_body,
+                           std::string &error_message)
+{
+    ensure_curl_initialized();
+    CURL *curl = curl_easy_init();
+    if (!curl)
+    {
+        error_message = "curl_easy_init failed";
+        return false;
+    }
+
+    struct curl_slist *headers = nullptr;
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.c_str());
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(payload.size()));
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, kHttpTimeoutMs);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "e2sim-rc" );
+
+    CURLcode res = curl_easy_perform(curl);
+    if (res != CURLE_OK)
+    {
+        error_message = curl_easy_strerror(res);
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+    return true;
+}
+
+static int hex_value(char c)
+{
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return 10 + (c - 'a');
+    if (c >= 'A' && c <= 'F')
+        return 10 + (c - 'A');
+    return -1;
+}
+
+static bool hex_to_bytes(std::string_view text, std::vector<uint8_t> &out)
+{
+    std::string cleaned;
+    cleaned.reserve(text.size());
+    for (size_t i = 0; i < text.size(); ++i)
+    {
+        char c = text[i];
+        if (std::isspace(static_cast<unsigned char>(c)) || c == ':' || c == '-')
+        {
+            continue;
+        }
+        if (c == '0' && (i + 1) < text.size() && (text[i + 1] == 'x' || text[i + 1] == 'X'))
+        {
+            ++i; // skip the 'x'
+            continue;
+        }
+        cleaned.push_back(c);
+    }
+
+    if (cleaned.empty() || (cleaned.size() % 2) != 0)
+    {
+        return false;
+    }
+
+    out.clear();
+    out.reserve(cleaned.size() / 2);
+    for (size_t i = 0; i < cleaned.size(); i += 2)
+    {
+        int hi = hex_value(cleaned[i]);
+        int lo = hex_value(cleaned[i + 1]);
+        if (hi < 0 || lo < 0)
+        {
+            out.clear();
+            return false;
+        }
+        out.push_back(static_cast<uint8_t>((hi << 4) | lo));
+    }
+    return !out.empty();
+}
+
+static std::string base64_encode(const uint8_t *data, size_t len)
+{
+    static const char kBase64Alphabet[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve(((len + 2) / 3) * 4);
+    size_t i = 0;
+    while (i + 2 < len)
+    {
+        uint32_t triple = (static_cast<uint32_t>(data[i]) << 16) |
+                          (static_cast<uint32_t>(data[i + 1]) << 8) |
+                          static_cast<uint32_t>(data[i + 2]);
+        out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
+        out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
+        out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
+        out.push_back(kBase64Alphabet[triple & 0x3F]);
+        i += 3;
+    }
+    if (i < len)
+    {
+        uint32_t triple = static_cast<uint32_t>(data[i]) << 16;
+        if ((i + 1) < len)
+        {
+            triple |= static_cast<uint32_t>(data[i + 1]) << 8;
+        }
+        out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
+        out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
+        if ((i + 1) < len)
+        {
+            out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
+        }
+        else
+        {
+            out.push_back('=');
+        }
+        out.push_back('=');
+    }
+    return out;
+}
+
+static std::string bytes_to_base64(const std::vector<uint8_t> &bytes)
+{
+    if (bytes.empty())
+    {
+        return {};
+    }
+    return base64_encode(bytes.data(), bytes.size());
+}
+
+static std::string string_to_base64(const std::string &value)
+{
+    if (value.empty())
+    {
+        return {};
+    }
+    return base64_encode(reinterpret_cast<const uint8_t *>(value.data()), value.size());
+}
+
+static std::string convert_hex_or_ascii_to_base64(const std::string &value)
+{
+    std::vector<uint8_t> bytes;
+    if (hex_to_bytes(value, bytes))
+    {
+        return bytes_to_base64(bytes);
+    }
+    return string_to_base64(value);
+}
+
+static std::optional<int64_t> resolve_ran_ue_ngap_id(const RcControlContext &ctx)
+{
+    std::string ue_param(get_param_value(ctx, kRcParamUeId));
+    if (ue_param.empty())
+    {
+        return std::nullopt;
+    }
+    try
+    {
+        size_t processed = 0;
+        int64_t value = std::stoll(ue_param, &processed, 10);
+        if (processed == ue_param.size())
+        {
+            return value;
+        }
+    }
+    catch (...)
+    {
+    }
+
+    auto assoc = findRcAssociationByMac(ue_param);
+    if (assoc && assoc->ue.ran_ue_ngap_id >= 0)
+    {
+        return assoc->ue.ran_ue_ngap_id;
+    }
+    return std::nullopt;
+}
+
+static std::string handover_endpoint_url()
+{
+    const char *env = std::getenv("RC_HANDOVER_TRIGGER_URL");
+    if (env && *env)
+    {
+        return std::string(env);
+    }
+    return std::string(kDefaultHandoverUrl);
+}
+
 static void release_octet_string(OCTET_STRING_t &str) {
     if (str.buf) {
         free(str.buf);
@@ -643,6 +875,110 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     return true;
 }
 
+static bool build_handover_request_payload(const RcControlContext &ctx,
+                                           json &payload,
+                                           std::string &error)
+{
+    auto ran_ue = resolve_ran_ue_ngap_id(ctx);
+    if (!ran_ue)
+    {
+        error = "Unable to resolve ranUeNgapId for UE";
+        return false;
+    }
+
+    std::string target_gnb = std::string(get_param_value(ctx, kRcParamTargetGNbId));
+    if (target_gnb.empty())
+    {
+        error = "Missing target gNB identifier parameter";
+        return false;
+    }
+
+    std::string target_id_b64 = convert_hex_or_ascii_to_base64(target_gnb);
+    if (target_id_b64.empty())
+    {
+        error = "Unable to encode target identifier";
+        return false;
+    }
+
+    payload = json::object();
+    payload["ranUeNgapId"] = *ran_ue;
+    payload["directForwarding"] = false;
+    payload["targetId"] = target_id_b64;
+
+    std::string metadata_ue = ctx.ue_identity;
+    std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
+    std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
+
+    json metadata_json = json::object();
+    if (!metadata_ue.empty())
+    {
+        metadata_json["ueIdentity"] = metadata_ue;
+    }
+    metadata_json["targetGnbRaw"] = target_gnb;
+    if (!target_pci.empty())
+    {
+        metadata_json["targetCellPci"] = target_pci;
+    }
+    if (!ho_cause.empty())
+    {
+        metadata_json["hoCause"] = ho_cause;
+    }
+    payload["metadata"] = metadata_json;
+    return true;
+}
+
+static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,
+                                                   const std::string &command_desc) {
+    logln("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
+
+    N3iwfTriggerResponse response;
+    json payload;
+    std::string payload_error;
+    if (!build_handover_request_payload(ctx, payload, payload_error))
+    {
+        response.success = false;
+        response.description = payload_error;
+        response.failure_cause = CauseRICrequest_control_message_invalid;
+        return response;
+    }
+
+    std::string url = handover_endpoint_url();
+    std::string payload_str = payload.dump();
+    long http_code = 0;
+    std::string http_body;
+    std::string curl_error;
+    if (!http_post_json(url, payload_str, http_code, http_body, curl_error))
+    {
+        response.success = false;
+        response.description = "HTTP POST failed: " + curl_error;
+        response.failure_cause = CauseRICrequest_control_failed_to_execute;
+        return response;
+    }
+
+    if (http_code >= 200 && http_code < 300)
+    {
+        response.success = true;
+        if (!http_body.empty())
+        {
+            response.description = std::string("HTTP ") + std::to_string(http_code) + ": " + http_body;
+        }
+        else
+        {
+            response.description = "HTTP " + std::to_string(http_code) + " (no body)";
+        }
+        return response;
+    }
+
+    response.success = false;
+    response.failure_cause = CauseRICrequest_control_failed_to_execute;
+    response.description = "N3IWF HTTP " + std::to_string(http_code);
+    if (!http_body.empty())
+    {
+        response.description += ": " + http_body;
+    }
+    return response;
+}
+
 static RcControlExecutionResult execute_rc_control_command(const RcControlContext &ctx) {
     RcControlExecutionResult result;
     if (ctx.control_action_id != kRcControlActionIdHandover) {
@@ -670,10 +1006,29 @@ static RcControlExecutionResult execute_rc_control_command(const RcControlContex
     if (!ho_cause.empty()) {
         oss << " cause=" << ho_cause;
     }
+    const std::string command_desc = oss.str();
+    auto ho_response = trigger_n3iwf_handover(ctx, command_desc);
 
-    result.success = true;
-    result.status = oss.str();
-    result.outcome_items.emplace_back(kRcOutcomeStatus, "ACK: " + result.status);
+    if (ho_response.success) {
+        result.success = true;
+        result.status = command_desc;
+        result.outcome_items.emplace_back(kRcOutcomeStatus, "ACK: " + command_desc);
+        if (!ho_cause.empty()) {
+            result.outcome_items.emplace_back(kRcOutcomeNotes, "Cause=" + ho_cause);
+        }
+        if (!ho_response.description.empty()) {
+            result.outcome_items.emplace_back(kRcOutcomeNotes, ho_response.description);
+        }
+        return result;
+    }
+
+    const std::string failure_detail = ho_response.description.empty()
+                                           ? "N3IWF rejected the handover trigger"
+                                           : ho_response.description;
+    result.success = false;
+    result.cause_value = ho_response.failure_cause;
+    result.status = command_desc.empty() ? failure_detail : (command_desc + " - " + failure_detail);
+    result.outcome_items.emplace_back(kRcOutcomeStatus, "FAIL: " + failure_detail);
     if (!ho_cause.empty()) {
         result.outcome_items.emplace_back(kRcOutcomeNotes, "Cause=" + ho_cause);
     }

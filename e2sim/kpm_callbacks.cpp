@@ -329,7 +329,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       continue;
     }
 
-    log_kpm_parameters(kpi);
+    //log_kpm_parameters(kpi);
 
     generate_e2apv2_indication_request_parameterized(
         pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,

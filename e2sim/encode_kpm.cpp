@@ -141,7 +141,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     free(fmt1);
     return;
   }
-  logln("  Total measurements added: %d\n", fmt1->measInfoList->list.count);
+  //logln("Total measurements added: %d\n", fmt1->measInfoList->list.count);
   ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
