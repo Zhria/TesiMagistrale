@@ -82,6 +82,7 @@ extern "C"
 #include "E2SM-RC-ControlOutcome-Format1.h"
 #include "E2SM-RC-ControlOutcome-Format1-Item.h"
 #include "RANParameter-ValueType-Choice-ElementTrue.h"
+#include "RANParameter-ValueType-Choice-ElementFalse.h"
 #include "RANParameter-ValueType-Choice-List.h"
 #include "RANParameter-ValueType-Choice-Structure.h"
 #include "RANParameter-Value.h"
@@ -747,6 +748,15 @@ static std::optional<long> get_param_int_value(const RcControlContext &ctx, long
     return std::nullopt;
 }
 
+static std::string get_target_identifier_value(const RcControlContext &ctx) {
+    std::string value = std::string(get_param_value(ctx, kRcParamTargetNrCgi));
+    if (!value.empty()) {
+        return value;
+    }
+    value = std::string(get_param_value(ctx, kRcLegacyParamTargetGNbId));
+    return value;
+}
+
 static std::string ran_value_to_string(const RANParameter_Value_t &value) {
     switch (value.present) {
     case RANParameter_Value_PR_valueBoolean:
@@ -770,17 +780,36 @@ static std::string ran_value_to_string(const RANParameter_Value_t &value) {
     }
 }
 
+static const RANParameter_Value_t *get_element_value(const RANParameter_ValueType_t &valueType)
+{
+    if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementTrue &&
+        valueType.choice.ranP_Choice_ElementTrue)
+    {
+        return &valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+    }
+    if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementFalse &&
+        valueType.choice.ranP_Choice_ElementFalse)
+    {
+        return valueType.choice.ranP_Choice_ElementFalse->ranParameter_value;
+    }
+    return nullptr;
+}
+
 static std::string describe_ran_value_type(const RANParameter_ValueType_t &valueType)
 {
     switch (valueType.present)
     {
     case RANParameter_ValueType_PR_ranP_Choice_ElementTrue:
-        if (valueType.choice.ranP_Choice_ElementTrue)
+        if (const auto *val = get_element_value(valueType))
         {
-            return ran_value_to_string(valueType.choice.ranP_Choice_ElementTrue->ranParameter_value);
+            return ran_value_to_string(*val);
         }
         return "<element-null>";
     case RANParameter_ValueType_PR_ranP_Choice_ElementFalse:
+        if (const auto *val = get_element_value(valueType))
+        {
+            return ran_value_to_string(*val);
+        }
         return "<element-false>";
     case RANParameter_ValueType_PR_ranP_Choice_Structure:
         if (valueType.choice.ranP_Choice_Structure &&
@@ -885,14 +914,12 @@ static void append_param_entry(RcControlContext &ctx, long id, const RANParamete
     entry.name = rc_param_name(id);
     entry.value_type = valueType.present;
     entry.printable_value = describe_ran_value_type(valueType);
-    if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementTrue &&
-        valueType.choice.ranP_Choice_ElementTrue)
+    if (const auto *val = get_element_value(valueType))
     {
-        const auto *val = valueType.choice.ranP_Choice_ElementTrue;
-        if (val->ranParameter_value.present == RANParameter_Value_PR_valueInt)
+        if (val->present == RANParameter_Value_PR_valueInt)
         {
             entry.has_int = true;
-            entry.int_value = val->ranParameter_value.choice.valueInt;
+            entry.int_value = val->choice.valueInt;
         }
     }
     ctx.params.push_back(std::move(entry));
@@ -1051,14 +1078,13 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     if (ctx.params.empty()) {
         return fail("RC control message does not contain any RAN parameters");
     }
-    const bool has_target_gnb = find_param(ctx, kRcParamTargetGNbId) != nullptr;
+    const bool has_target_gnb = find_param(ctx,1) != nullptr;
     if (!has_target_gnb) {
-        return fail("RC control message missing target gNB parameter");
+        return fail("RC control message missing target gNB/NR CGI parameters");
     }
-    const bool has_target_pci = find_param(ctx, kRcParamTargetCellPci) != nullptr;
-    logln("[RC CONTROL] Message OK params=%zu targetPCI=%d targetGNb=1",
+    logln("[RC CONTROL] Message OK params=%zu targetGNb=%d",
           ctx.params.size(),
-          has_target_pci ? 1 : 0);
+          has_target_gnb ? 1 : 0);
     for (const auto &param : ctx.params)
     {
         logln("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
@@ -1084,10 +1110,10 @@ static bool build_handover_request_payload(const RcControlContext &ctx,
         return false;
     }
 
-    std::string target_gnb = std::string(get_param_value(ctx, kRcParamTargetGNbId));
+    std::string target_gnb = get_target_identifier_value(ctx);
     if (target_gnb.empty())
     {
-        error = "Missing target gNB identifier parameter";
+        error = "Missing target gNB/NR CGI identifier";
         logln("[RC CONTROL] %s", error.c_str());
         return false;
     }
@@ -1204,7 +1230,7 @@ static RcControlExecutionResult execute_rc_control_command(const RcControlContex
 
     const std::string ue = ctx.ue_identity;
     const std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
-    const std::string target_gnb = std::string(get_param_value(ctx, kRcParamTargetGNbId));
+    const std::string target_gnb = get_target_identifier_value(ctx);
     const std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
 
     std::ostringstream oss;
