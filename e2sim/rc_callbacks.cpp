@@ -1001,7 +1001,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
         return false;
     };
     asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
-                                   &asn_DEF_E2SM_RC_ControlHeader,
+                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlHeader");
