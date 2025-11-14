@@ -79,7 +79,12 @@ extern "C"
 #include "E2SM-RC-ControlOutcome-Format1.h"
 #include "E2SM-RC-ControlOutcome-Format1-Item.h"
 #include "RANParameter-ValueType-Choice-ElementTrue.h"
+#include "RANParameter-ValueType-Choice-List.h"
+#include "RANParameter-ValueType-Choice-Structure.h"
 #include "RANParameter-Value.h"
+#include "RANParameter-STRUCTURE.h"
+#include "RANParameter-STRUCTURE-Item.h"
+#include "RANParameter-LIST.h"
 #include "RIC-EventTriggerCondition-ID.h"
 #include "Cause.h"
 
@@ -760,6 +765,109 @@ static std::string ran_value_to_string(const RANParameter_Value_t &value) {
     }
 }
 
+static std::string describe_ran_value_type(const RANParameter_ValueType_t &valueType)
+{
+    switch (valueType.present)
+    {
+    case RANParameter_ValueType_PR_ranP_Choice_ElementTrue:
+        if (valueType.choice.ranP_Choice_ElementTrue)
+        {
+            return ran_value_to_string(valueType.choice.ranP_Choice_ElementTrue->ranParameter_value);
+        }
+        return "<element-null>";
+    case RANParameter_ValueType_PR_ranP_Choice_ElementFalse:
+        return "<element-false>";
+    case RANParameter_ValueType_PR_ranP_Choice_Structure:
+        if (valueType.choice.ranP_Choice_Structure &&
+            valueType.choice.ranP_Choice_Structure->ranParameter_Structure &&
+            valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters)
+        {
+            auto &seq = valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters->list;
+            return std::string("<structure items=") + std::to_string(seq.count) + ">";
+        }
+        return "<structure-null>";
+    case RANParameter_ValueType_PR_ranP_Choice_List:
+        if (valueType.choice.ranP_Choice_List && valueType.choice.ranP_Choice_List->ranParameter_List)
+        {
+            auto &structures = valueType.choice.ranP_Choice_List->ranParameter_List->list_of_ranParameter.list;
+            return std::string("<list structures=") + std::to_string(structures.count) + ">";
+        }
+        return "<list-null>";
+    default:
+        return "<unsupported-value-type>";
+    }
+}
+
+static void append_param_entry(RcControlContext &ctx, long id, const RANParameter_ValueType_t &valueType)
+{
+    RcParamValue entry;
+    entry.id = id;
+    entry.name = rc_param_name(id);
+    entry.value_type = valueType.present;
+    entry.printable_value = describe_ran_value_type(valueType);
+    if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementTrue &&
+        valueType.choice.ranP_Choice_ElementTrue)
+    {
+        const auto *val = valueType.choice.ranP_Choice_ElementTrue;
+        if (val->ranParameter_value.present == RANParameter_Value_PR_valueInt)
+        {
+            entry.has_int = true;
+            entry.int_value = val->ranParameter_value.choice.valueInt;
+        }
+    }
+    ctx.params.push_back(std::move(entry));
+
+    if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_Structure)
+    {
+        auto *structure_choice = valueType.choice.ranP_Choice_Structure;
+        if (structure_choice &&
+            structure_choice->ranParameter_Structure &&
+            structure_choice->ranParameter_Structure->sequence_of_ranParameters)
+        {
+            auto &seq = structure_choice->ranParameter_Structure->sequence_of_ranParameters->list;
+            for (int i = 0; i < seq.count; ++i)
+            {
+                auto *item = static_cast<RANParameter_STRUCTURE_Item_t *>(seq.array[i]);
+                if (!item || !item->ranParameter_valueType)
+                {
+                    continue;
+                }
+                append_param_entry(ctx,
+                                   item->ranParameter_ID,
+                                   *item->ranParameter_valueType);
+            }
+        }
+    }
+    else if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_List)
+    {
+        auto *list_choice = valueType.choice.ranP_Choice_List;
+        if (list_choice && list_choice->ranParameter_List)
+        {
+            auto &structures = list_choice->ranParameter_List->list_of_ranParameter.list;
+            for (int si = 0; si < structures.count; ++si)
+            {
+                auto *structure = static_cast<RANParameter_STRUCTURE_t *>(structures.array[si]);
+                if (!structure || !structure->sequence_of_ranParameters)
+                {
+                    continue;
+                }
+                auto &seq = structure->sequence_of_ranParameters->list;
+                for (int i = 0; i < seq.count; ++i)
+                {
+                    auto *item = static_cast<RANParameter_STRUCTURE_Item_t *>(seq.array[i]);
+                    if (!item || !item->ranParameter_valueType)
+                    {
+                        continue;
+                    }
+                    append_param_entry(ctx,
+                                       item->ranParameter_ID,
+                                       *item->ranParameter_valueType);
+                }
+            }
+        }
+    }
+}
+
 static bool is_supported_control_param(long id) {
     static const std::unordered_set<long> kSupportedIds = [] {
         std::unordered_set<long> ids;
@@ -844,28 +952,14 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
     }
     for (int i = 0; i < fmt1->ranP_List.list.count; ++i) {
         auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
-        if (!item) {
+        if (!item || !item->ranParameter_valueType) {
             return fail("ControlMessage list contains null entry");
         }
         if (!is_supported_control_param(item->ranParameter_ID)) {
-            return fail("Unsupported RC control parameter ID " + std::to_string(item->ranParameter_ID));
+            logln("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
+            continue;
         }
-        if (item->ranParameter_valueType.present != RANParameter_ValueType_PR_ranP_Choice_ElementTrue ||
-            !item->ranParameter_valueType.choice.ranP_Choice_ElementTrue) {
-            return fail("Unsupported RC control parameter encoding for ID " +
-                        std::to_string(item->ranParameter_ID));
-        }
-        const auto *val = item->ranParameter_valueType.choice.ranP_Choice_ElementTrue;
-        RcParamValue entry;
-        entry.id = item->ranParameter_ID;
-        entry.name = rc_param_name(entry.id);
-        entry.value_type = val->ranParameter_value.present;
-        entry.printable_value = ran_value_to_string(val->ranParameter_value);
-        if (val->ranParameter_value.present == RANParameter_Value_PR_valueInt) {
-            entry.has_int = true;
-            entry.int_value = val->ranParameter_value.choice.valueInt;
-        }
-        ctx.params.push_back(std::move(entry));
+        append_param_entry(ctx, item->ranParameter_ID, *item->ranParameter_valueType);
     }
     if (ctx.params.empty()) {
         return fail("RC control message does not contain any RAN parameters");
@@ -883,6 +977,14 @@ static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContex
           ctx.params.size(),
           has_target_pci ? 1 : 0,
           has_target_gnb ? 1 : 0);
+    for (const auto &param : ctx.params)
+    {
+        logln("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
+              param.id,
+              param.name.c_str(),
+              static_cast<int>(param.value_type),
+              param.printable_value.c_str());
+    }
     ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
     return true;
 }

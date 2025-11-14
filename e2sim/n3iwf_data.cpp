@@ -782,7 +782,6 @@ static inline double percent_or_zero(int64_t num, int64_t den) {
 
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
-  logln("Getting KPM metrics with granularityPeriod %ld milliseconds\n", granularityPeriod);
   RcSnapshot rc_snapshot;
   if (!loadRcSnapshot(rc_snapshot)) {
     logln("[n3iwf] Unable to load RC snapshot, skipping metrics collection");
