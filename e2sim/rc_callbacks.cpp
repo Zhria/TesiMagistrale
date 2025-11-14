@@ -994,6 +994,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
     E2SM_RC_ControlHeader_t *decoded = nullptr;
     auto fail = [&](const std::string &msg) -> bool {
         err = msg;
+        logln("[RC CONTROL] Header decode fail: %s", msg.c_str());
         if (decoded) {
             ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
             decoded = nullptr;
@@ -1001,7 +1002,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
         return false;
     };
     asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
-                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
+                                   &asn_DEF_E2SM_RC_ControlHeader,
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlHeader");
@@ -1526,7 +1527,7 @@ bool decode_rc_actiondef_format1(const OCTET_STRING_t *ad,std::vector<long> &out
     return true;
 }
 
-
+/*
 static void run_rc_report_loop(const SubscriptionKey &key,
                                int et_format,
                                std::vector<long> param_ids,
@@ -1692,8 +1693,8 @@ static void run_rc_report_loop(const SubscriptionKey &key,
 
     logln("RC report loop stop: requestorId=%ld instanceId=%ld ranFunctionId=%ld actionId=%ld",
              key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
-}
-
+}*/
+/*
 static void start_rc_worker(const SubscriptionKey &key,
                             int et_format,
                             const std::vector<long> &param_ids)
@@ -1707,9 +1708,9 @@ static void start_rc_worker(const SubscriptionKey &key,
 
     std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
     g_rc_workers.emplace(key, RcWorkerCtx{std::move(worker), stop_flag});
-}
+}*/
 
-
+/*
 void start_rc_report_pipeline(const SubscriptionKey &key,
                               int et_format,
                               const std::vector<long> &ad_param_ids)
@@ -1719,8 +1720,8 @@ void start_rc_report_pipeline(const SubscriptionKey &key,
              ad_param_ids.size(), et_format);
 
     start_rc_worker(key, et_format, ad_param_ids);
-}
-
+}*/
+/*
 static void reject_rc_subscription_request(const RICsubscriptionRequest_t &orig_req) {
     long reqRequestorId = -1;
     long reqInstanceId = -1;
@@ -1796,7 +1797,7 @@ static void ensure_rc_worker_from_control(const RcControlContext &ctx) {
     start_rc_report_pipeline(key, kDefaultRcEventTriggerFormat, params);
 }
 
-
+*/
 /* ============================================================
  * SUBSCRIPTION CALLBACK RC 
  * ============================================================ 
