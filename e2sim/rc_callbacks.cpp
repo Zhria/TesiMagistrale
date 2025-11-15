@@ -1049,10 +1049,9 @@ static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlCon
 
     E2SM_RC_ControlHeader_t *decoded = nullptr;
     asn_dec_rval_t const ret = aper_decode(NULL, & asn_DEF_E2SM_RC_ControlHeader, (void **)&decoded, hdr.buf, hdr.size, 0, 0);
-    assert(ret.code == RC_OK);
     logln("Controlheader decoded as E2SM_RC_ControlHeader (size=%ld)", hdr.size);
     xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
-    
+
 
     auto fail = [&](const std::string &msg) -> bool {
         err = msg;
