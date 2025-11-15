@@ -991,28 +991,23 @@ static bool is_supported_control_param(long id) {
 }
 
 static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
-    E2SM_RC_ControlHeader_t *decoded = nullptr;
+    E2SM_RC_ControlHeader_Format1 *fmt1 = nullptr;
     auto fail = [&](const std::string &msg) -> bool {
         err = msg;
         logln("[RC CONTROL] Header decode fail: %s", msg.c_str());
-        if (decoded) {
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            decoded = nullptr;
+        if (fmt1) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+            fmt1 = nullptr;
         }
         return false;
     };
     asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
-                                   &asn_DEF_E2SM_RC_ControlHeader,
-                                   (void **)&decoded, hdr.buf, hdr.size);
-    if (dr.code != RC_OK || !decoded) {
+                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
+                                   (void **)&fmt1, hdr.buf, hdr.size);
+    if (dr.code != RC_OK || !fmt1) {
         return fail("Unable to decode E2SM RC ControlHeader");
     }
     logln("[RC CONTROL] ControlHeader decoded (size=%ld)", hdr.size);
-    if (decoded->ric_controlHeader_formats.present !=
-        E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
-        return fail("Unsupported ControlHeader format");
-    }
-    auto *fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
     if (!fmt1) {
         return fail("ControlHeader Format1 payload missing");
     }
@@ -1030,7 +1025,7 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
           ctx.style_type,
           ctx.control_action_id,
           ctx.ue_identity.c_str());
-    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
     return true;
 }
 

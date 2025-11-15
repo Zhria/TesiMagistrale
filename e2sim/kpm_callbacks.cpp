@@ -177,7 +177,6 @@ static void graceful_sctp_close(int fd)
 static void on_term(int)
 {
   g_app_stop.store(true, std::memory_order_relaxed);
-
   // (opzionale) manda un E2AP Reset verso il RIC
   // send_e2ap_reset_request(g_sctp_fd);
 
@@ -190,7 +189,7 @@ static void on_term(int)
   // libera risorse (ASN.1, heap, thread join, ecc.)
   // cleanup_asn1();
   // join_threads();
-
+  logln("E2 Simulator exiting cleanly\n");
   _exit(0); // uscita rapida dopo cleanup
 }
 /* ============================================================
