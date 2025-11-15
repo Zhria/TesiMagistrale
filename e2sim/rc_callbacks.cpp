@@ -1008,7 +1008,16 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
                                    &asn_DEF_E2SM_RC_ControlHeader,
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
+        
+        logln("Tento di decodificare come controlheader format 1 ");
+        dr = asn_decode(nullptr, syntax,
+                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
+                                   (void **)&decoded, hdr.buf, hdr.size);
+        if (dr.code!=RC_OK|| !decoded){
+            return fail("Unable to decode E2SM RC ControlHeader Format1");
+        }        
         return fail("Unable to decode E2SM RC ControlHeader");
+
     }
     logln("[RC CONTROL] Raw ControlHeader PER dump:");
     xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
