@@ -990,66 +990,135 @@ static bool is_supported_control_param(long id) {
     return kSupportedIds.find(id) != kSupportedIds.end();
 }
 
-static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err) {
-    const enum asn_transfer_syntax syntax = ATS_ALIGNED_BASIC_PER;
-    logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
-    logln("Received ControlHeader PER dump:");
-    E2SM_RC_ControlHeader *decoded = nullptr;
-    auto fail = [&](const std::string &msg) -> bool {
-        err = msg;
-        logln("[RC CONTROL] Header decode fail: %s", msg.c_str());
-        if (decoded) {
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            decoded = nullptr;
+static const char *per_syntax_name(enum asn_transfer_syntax syntax) {
+    switch (syntax) {
+    case ATS_ALIGNED_BASIC_PER:
+        return "APER";
+    case ATS_UNALIGNED_BASIC_PER:
+        return "UPER";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+static void log_octet_string_hex_dump(const char *label, const OCTET_STRING_t &value) {
+    if (!value.buf || value.size <= 0) {
+        logln("%s<empty>", label);
+        return;
+    }
+    std::string hex;
+    hex.reserve(static_cast<size_t>(value.size) * 3);
+    for (int i = 0; i < value.size; ++i) {
+        unsigned byte = static_cast<unsigned>(static_cast<uint8_t>(value.buf[i]));
+        char buf[4];
+        std::snprintf(buf, sizeof(buf), "%02X", byte);
+        hex.append(buf);
+        if (i + 1 < value.size) {
+            hex.push_back(' ');
         }
+    }
+    logln("%s%s", label, hex.c_str());
+}
+
+static bool populate_rc_control_header_ctx(const E2SM_RC_ControlHeader_Format1_t *fmt1,
+                                           RcControlContext &ctx,
+                                           std::string &err) {
+    if (!fmt1) {
+        err = "ControlHeader Format1 payload missing";
         return false;
-    };
-    asn_dec_rval_t dr = asn_decode(nullptr, syntax,
-                                   &asn_DEF_E2SM_RC_ControlHeader,
-                                   (void **)&decoded, hdr.buf, hdr.size);
-    if (dr.code != RC_OK || !decoded) {
-        
-        logln("Tento di decodificare come controlheader format 1. DR.code=%d", dr.code);
-        logln("decoder pointing address %s",decoded==nullptr ? "nullptr" : "not null");
-        dr = asn_decode(nullptr, syntax,
-                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
-                                   (void **)&decoded, hdr.buf, hdr.size);
-        if (dr.code!=RC_OK|| !decoded){
-            logln("Decodifica fallita anche come controlheader format 1. DR.code=%d", dr.code);
-            return fail("Unable to decode E2SM RC ControlHeader Format1");
-        }else{
-            logln("Decodificato come controlheader format 1 ");
-            return fail("Unable to decode E2SM RC ControlHeader");
-        }
-
     }
-    if (!decoded) {
-        return fail("ControlHeader Format1 payload missing");
-    }
-
-    E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
-    if (decoded->ric_controlHeader_formats.present !=
-        E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
-        return fail("Unsupported ControlHeader format");
-    }
-    fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
-
     if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover) {
-        return fail("Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type));
+        err = "Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type);
+        return false;
     }
     if (fmt1->ric_ControlAction_ID != kRcControlActionIdHandover) {
-        return fail("Unsupported RC control action ID " + std::to_string(fmt1->ric_ControlAction_ID));
+        err = "Unsupported RC control action ID " + std::to_string(fmt1->ric_ControlAction_ID);
+        return false;
     }
     ctx.style_type = fmt1->ric_Style_Type;
     ctx.control_action_id = fmt1->ric_ControlAction_ID;
     ctx.ue_identity = describe_ueid(&fmt1->ueID);
     update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
-    logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
-          ctx.style_type,
-          ctx.control_action_id,
-          ctx.ue_identity.c_str());
-    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
     return true;
+}
+
+static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err) {
+    logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
+    log_octet_string_hex_dump("[RC CONTROL] Received ControlHeader PER dump: ", hdr);
+    auto fail = [&](const std::string &msg) -> bool {
+        err = msg;
+        logln("[RC CONTROL] Header decode fail: %s", msg.c_str());
+        return false;
+    };
+
+    const enum asn_transfer_syntax syntaxes[] = {
+        ATS_ALIGNED_BASIC_PER,
+        ATS_UNALIGNED_BASIC_PER,
+    };
+
+    for (enum asn_transfer_syntax syntax : syntaxes) {
+        E2SM_RC_ControlHeader *decoded = nullptr;
+        asn_dec_rval_t dr = asn_decode(nullptr, syntax,
+                                       &asn_DEF_E2SM_RC_ControlHeader,
+                                       (void **)&decoded, hdr.buf, hdr.size);
+        if (dr.code == RC_OK && decoded) {
+            logln("[RC CONTROL] Raw ControlHeader PER dump (%s):", per_syntax_name(syntax));
+            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
+            if (decoded->ric_controlHeader_formats.present !=
+                E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+                return fail("Unsupported ControlHeader format");
+            }
+            auto *fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
+            if (!populate_rc_control_header_ctx(fmt1, ctx, err)) {
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+                return fail(err);
+            }
+            logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
+                  ctx.style_type,
+                  ctx.control_action_id,
+                  ctx.ue_identity.c_str());
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+            return true;
+        }
+        if (decoded) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+        }
+        logln("[RC CONTROL] ControlHeader decode via %s failed (code=%d consumed=%zu)",
+              per_syntax_name(syntax),
+              static_cast<int>(dr.code),
+              dr.consumed);
+    }
+
+    for (enum asn_transfer_syntax syntax : syntaxes) {
+        E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
+        asn_dec_rval_t dr = asn_decode(nullptr, syntax,
+                                       &asn_DEF_E2SM_RC_ControlHeader_Format1,
+                                       (void **)&fmt1, hdr.buf, hdr.size);
+        if (dr.code == RC_OK && fmt1) {
+            logln("[RC CONTROL] Raw ControlHeader Format1 PER dump (%s):", per_syntax_name(syntax));
+            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+            if (!populate_rc_control_header_ctx(fmt1, ctx, err)) {
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+                return fail(err);
+            }
+            logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s (decoded as standalone Format1)",
+                  ctx.style_type,
+                  ctx.control_action_id,
+                  ctx.ue_identity.c_str());
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+            return true;
+        }
+        if (fmt1) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+        }
+        logln("[RC CONTROL] ControlHeader Format1 decode via %s failed (code=%d consumed=%zu)",
+              per_syntax_name(syntax),
+              static_cast<int>(dr.code),
+              dr.consumed);
+    }
+
+    return fail("Unable to decode E2SM RC ControlHeader");
 }
 
 static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContext &ctx, std::string &err) {
