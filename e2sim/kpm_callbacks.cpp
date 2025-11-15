@@ -264,18 +264,11 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
-    if (g_app_stop.load(std::memory_order_relaxed))
-    {
-      break;
-    }
-    if (stop_token && stop_token->load(std::memory_order_relaxed))
-    {
-      break;
-    }
-
+  
     std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
     if (kpi.empty())
     {
+      logln("KPM report loop: no KPI metrics available, skipping seqNum %ld", seqNum);
       continue;
     }
     E2SM_KPM_IndicationHeader_t hdr;
@@ -339,6 +332,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+    logln("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld",
+          requestorId, instanceId, ranFunctionId, actionId, seqNum);  
 
     seqNum++;
   }
