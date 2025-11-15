@@ -1015,8 +1015,10 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
                                    (void **)&decoded, hdr.buf, hdr.size);
         if (dr.code!=RC_OK|| !decoded){
             return fail("Unable to decode E2SM RC ControlHeader Format1");
-        }        
-        return fail("Unable to decode E2SM RC ControlHeader");
+        }else{
+            logln("Decodificato come controlheader format 1 ");
+            return fail("Unable to decode E2SM RC ControlHeader");
+        }
 
     }
     logln("[RC CONTROL] Raw ControlHeader PER dump:");
