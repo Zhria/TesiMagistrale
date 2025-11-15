@@ -990,7 +990,7 @@ static bool is_supported_control_param(long id) {
     return kSupportedIds.find(id) != kSupportedIds.end();
 }
 
-static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
+static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err) {
     const enum asn_transfer_syntax syntax = ATS_ALIGNED_BASIC_PER;
     logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
     logln("Received ControlHeader PER dump:");
@@ -1009,11 +1009,13 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
                                    (void **)&decoded, hdr.buf, hdr.size);
     if (dr.code != RC_OK || !decoded) {
         
-        logln("Tento di decodificare come controlheader format 1 ");
+        logln("Tento di decodificare come controlheader format 1. DR.code=%d", dr.code);
+        logln("decoder pointing address %s",decoded==nullptr ? "nullptr" : "not null");
         dr = asn_decode(nullptr, syntax,
                                    &asn_DEF_E2SM_RC_ControlHeader_Format1,
                                    (void **)&decoded, hdr.buf, hdr.size);
         if (dr.code!=RC_OK|| !decoded){
+            logln("Decodifica fallita anche come controlheader format 1. DR.code=%d", dr.code);
             return fail("Unable to decode E2SM RC ControlHeader Format1");
         }else{
             logln("Decodificato come controlheader format 1 ");
@@ -1021,9 +1023,6 @@ static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext
         }
 
     }
-    logln("[RC CONTROL] Raw ControlHeader PER dump:");
-    xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
-    logln("[RC CONTROL] ControlHeader decoded (size=%ld)", hdr.size);
     if (!decoded) {
         return fail("ControlHeader Format1 payload missing");
     }
