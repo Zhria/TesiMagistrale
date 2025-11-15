@@ -991,26 +991,39 @@ static bool is_supported_control_param(long id) {
 }
 
 static bool decode_rc_control_header(const OCTET_STRING_t &hdr, RcControlContext &ctx, std::string &err) {
-    E2SM_RC_ControlHeader_Format1 *fmt1 = nullptr;
+    const enum asn_transfer_syntax syntax = ATS_ALIGNED_BASIC_PER;
+    logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
+    logln("Received ControlHeader PER dump:");
+    E2SM_RC_ControlHeader *decoded = nullptr;
     auto fail = [&](const std::string &msg) -> bool {
         err = msg;
         logln("[RC CONTROL] Header decode fail: %s", msg.c_str());
-        if (fmt1) {
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
-            fmt1 = nullptr;
+        if (decoded) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+            decoded = nullptr;
         }
         return false;
     };
-    asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
-                                   &asn_DEF_E2SM_RC_ControlHeader_Format1,
-                                   (void **)&fmt1, hdr.buf, hdr.size);
-    if (dr.code != RC_OK || !fmt1) {
+    asn_dec_rval_t dr = asn_decode(nullptr, syntax,
+                                   &asn_DEF_E2SM_RC_ControlHeader,
+                                   (void **)&decoded, hdr.buf, hdr.size);
+    if (dr.code != RC_OK || !decoded) {
         return fail("Unable to decode E2SM RC ControlHeader");
     }
+    logln("[RC CONTROL] Raw ControlHeader PER dump:");
+    xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
     logln("[RC CONTROL] ControlHeader decoded (size=%ld)", hdr.size);
-    if (!fmt1) {
+    if (!decoded) {
         return fail("ControlHeader Format1 payload missing");
     }
+
+    E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
+    if (decoded->ric_controlHeader_formats.present !=
+        E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
+        return fail("Unsupported ControlHeader format");
+    }
+    fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
+
     if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover) {
         return fail("Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type));
     }
