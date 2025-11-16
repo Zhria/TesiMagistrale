@@ -585,7 +585,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     {
       RICsubscriptionDetails_t subDetails = next_ie->value.choice.RICsubscriptionDetails;
       RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
-
+      xer_fprint((stdout), &asn_DEF_RICactions_ToBeSetup_List, &actionList);
       int actionCount = actionList.list.count;
 
       RICaction_ToBeSetup_ItemIEs_t **item_array =
