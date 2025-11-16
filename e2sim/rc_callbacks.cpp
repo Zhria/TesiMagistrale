@@ -2046,6 +2046,8 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
   RICcontrolRequest_t &orig_req =
       ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
 
+  xer_fprint(stdout, &asn_DEF_RICcontrolRequest, &orig_req);
+
   auto **ies = (RICcontrolRequest_IEs_t **)orig_req.protocolIEs.list.array;
   int ie_count = orig_req.protocolIEs.list.count;
 
