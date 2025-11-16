@@ -1042,9 +1042,7 @@ static bool populate_rc_control_header_ctx(const E2SM_RC_ControlHeader_Format1_t
     return true;
 }
 
-static bool decode_rc_control_header(const RICcontrolHeader_t &hdr,
-                                     RcControlContext &ctx,
-                                     std::string &err) {
+static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err) {
     logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
     logln("Received ControlHeader PER dump:");
 
@@ -1066,8 +1064,29 @@ static bool decode_rc_control_header(const RICcontrolHeader_t &hdr,
         if (decoded) {
             ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
         }
+    }
+
+    //tento il decoding specificando il format 1
+    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+    ret = aper_decode(
+        nullptr,
+        &asn_DEF_E2SM_RC_ControlHeader_Format1,
+        (void**)&decoded,
+        hdr.buf,
+        hdr.size,
+        0, 0
+    );
+
+      if (ret.code != RC_OK || !decoded) {
+        err = "Unable to decode E2SM RC ControlHeader Format 1";
+        logln("[RC CONTROL] Header decode fail: %s (code=%d, consumed=%ld)",
+              err.c_str(), ret.code, ret.consumed);
+        if (decoded) {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+        }
         return false;
     }
+
 
     logln("Controlheader decoded as E2SM_RC_ControlHeader (size=%ld)", hdr.size);
     xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
