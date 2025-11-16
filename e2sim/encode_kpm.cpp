@@ -103,7 +103,76 @@ static bool build_ran_ueid_from_long(int64_t id, RANUEID_t *&out)
   return true;
 }
 
-// Costruisce un UEID di tipo gNB-DU usando il ran_ue_ngap_id dell'associazione.
+
+// Costruisce un UEID di tipo gNB-UEID usando AMF_UE_NGAP_ID e GUAMI/global PLMN.
+static bool fill_ueid_from_assoc_gnb(const RcAssociationSnapshot &assoc, UEID_t &ueid)
+{
+  int64_t amf_id = assoc.ue.amf_ue_ngap_id;
+  if (amf_id < 0)
+  {
+    return false;
+  }
+
+  memset(&ueid, 0, sizeof(ueid));
+  UEID_GNB_t *g = (UEID_GNB_t *)calloc(1, sizeof(UEID_GNB_t));
+  if (!g)
+  {
+    return false;
+  }
+
+  if (asn_long2INTEGER(&g->amf_UE_NGAP_ID, amf_id) != 0)
+  {
+    free(g);
+    return false;
+  }
+
+  // Costruisci GUAMI con PLMN dall'ID gNB globale (se disponibile), altrimenti default zero.
+  GlobalgNB_ID_t *gnb_store = getGNBStore();
+  PLMNIdentity_t plmn{};
+  if (gnb_store && gnb_store->plmn_id.buf && gnb_store->plmn_id.size > 0)
+  {
+    OCTET_STRING_fromBuf(&plmn,
+                         (const char *)gnb_store->plmn_id.buf,
+                         (int)gnb_store->plmn_id.size);
+  }
+  else
+  {
+    uint8_t plmn_bytes[3] = {0, 0, 0};
+    OCTET_STRING_fromBuf(&plmn, (const char *)plmn_bytes, 3);
+  }
+  g->guami.pLMNIdentity = plmn;
+
+  // AMFRegionID: BIT STRING (SIZE(8))
+  g->guami.aMFRegionID.size = 1;
+  g->guami.aMFRegionID.buf = (uint8_t *)calloc(1, g->guami.aMFRegionID.size);
+  g->guami.aMFRegionID.bits_unused = 0;
+
+  // AMFSetID: BIT STRING (SIZE(10))
+  g->guami.aMFSetID.size = 2;
+  g->guami.aMFSetID.buf = (uint8_t *)calloc(1, g->guami.aMFSetID.size);
+  g->guami.aMFSetID.bits_unused = 6;
+
+  // AMFPointer: BIT STRING (SIZE(6))
+  g->guami.aMFPointer.size = 1;
+  g->guami.aMFPointer.buf = (uint8_t *)calloc(1, g->guami.aMFPointer.size);
+  g->guami.aMFPointer.bits_unused = 2;
+
+  // RAN UE ID opzionale: riusa ran_ue_ngap_id se presente.
+  if (assoc.ue.ran_ue_ngap_id >= 0)
+  {
+    RANUEID_t *ran_oct = nullptr;
+    if (build_ran_ueid_from_long(assoc.ue.ran_ue_ngap_id, ran_oct))
+    {
+      g->ran_UEID = ran_oct;
+    }
+  }
+
+  ueid.present = UEID_PR_gNB_UEID;
+  ueid.choice.gNB_UEID = g;
+  return true;
+}
+
+// Fallback: costruisce un UEID di tipo gNB-DU usando il ran_ue_ngap_id dell'associazione.
 static bool fill_ueid_from_assoc_du(const RcAssociationSnapshot &assoc, UEID_t &ueid)
 {
   int64_t ran_id = assoc.ue.ran_ue_ngap_id;
@@ -273,7 +342,8 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
       continue;
     }
 
-    if (!fill_ueid_from_assoc_du(assoc, item->ueID))
+    bool have_ueid = fill_ueid_from_assoc_gnb(assoc, item->ueID);
+    if (!have_ueid)
     {
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
       free(item);

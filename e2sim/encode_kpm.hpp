@@ -55,6 +55,7 @@ extern "C" {
   #include "RIC-ReportStyle-Item.h"
 
   #include "UEID.h"
+  #include "UEID-GNB.h"
   #include "UEID-GNB-DU.h"
   #include "RANUEID.h"
   #include "GNB-CU-UE-F1AP-ID.h"
