@@ -287,10 +287,11 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     E2SM_KPM_IndicationMessage_t *ind_msg =
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
 
-    kpm_fill_ue_rf_basic(ind_msg, kpi);
-    if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format1)
+    std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
+    kpm_fill_ind_msg_format3(ind_msg, assocs, kpi);
+    if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format3)
     {
-      logln("KPM indication message was not populated, skipping seqNum %ld", seqNum);
+      logln("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
       ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
       continue;

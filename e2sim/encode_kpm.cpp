@@ -1,4 +1,5 @@
 #include "encode_kpm.hpp"
+#include "n3iwf_data.hpp"
 #include <ctime>
 
 // Utility helpers
@@ -25,6 +26,114 @@ static inline void rec_add_double(MeasurementRecord_t *rec, double v)
   ASN_SEQUENCE_ADD(&rec->list, item);
 }
 
+// Riempie una struttura E2SM_KPM_IndicationMessage_Format1_t con la lista di KPI.
+// Ritorna true se almeno una misura è stata aggiunta, false in caso di errore o lista vuota.
+static bool fill_ind_msg_format1_struct(E2SM_KPM_IndicationMessage_Format1_t &fmt1,
+                                        const std::map<std::string, double> &kpi)
+{
+  memset(&fmt1, 0, sizeof(fmt1));
+
+  MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(MeasurementDataItem_t));
+  if (!mdi)
+  {
+    return false;
+  }
+
+  MeasurementInfoList_t *measInfoList = (MeasurementInfoList_t *)calloc(1, sizeof(MeasurementInfoList_t));
+  if (!measInfoList)
+  {
+    free(mdi);
+    return false;
+  }
+  fmt1.measInfoList = measInfoList;
+
+  for (const auto &kv : kpi)
+  {
+    const char *name = kv.first.c_str();
+    double value = kv.second;
+    if (value != -1)
+    {
+      add_meas_name(fmt1.measInfoList, name);
+      rec_add_double(&mdi->measRecord, value);
+    }
+  }
+
+  if (fmt1.measInfoList->list.count == 0 ||
+      mdi->measRecord.list.count != fmt1.measInfoList->list.count)
+  {
+    logln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
+    free(mdi);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1.measInfoList);
+    free(fmt1.measInfoList);
+    fmt1.measInfoList = nullptr;
+    return false;
+  }
+
+  ASN_SEQUENCE_ADD(&fmt1.measData.list, mdi);
+  return true;
+}
+
+// Converte un intero (RAN UE NGAP ID) in RANUEID (OCTET STRING di 8 byte, big-endian)
+static bool build_ran_ueid_from_long(int64_t id, RANUEID_t *&out)
+{
+  if (id < 0)
+  {
+    return false;
+  }
+  RANUEID_t *ran = (RANUEID_t *)calloc(1, sizeof(RANUEID_t));
+  if (!ran)
+  {
+    return false;
+  }
+  ran->size = 8;
+  ran->buf = (uint8_t *)calloc(1, ran->size);
+  if (!ran->buf)
+  {
+    free(ran);
+    return false;
+  }
+  uint64_t value = (uint64_t)id;
+  for (int i = (int)ran->size - 1; i >= 0; --i)
+  {
+    ran->buf[i] = (uint8_t)(value & 0xFFu);
+    value >>= 8;
+  }
+  out = ran;
+  return true;
+}
+
+// Costruisce un UEID di tipo gNB-DU usando il ran_ue_ngap_id dell'associazione.
+static bool fill_ueid_from_assoc_du(const RcAssociationSnapshot &assoc, UEID_t &ueid)
+{
+  int64_t ran_id = assoc.ue.ran_ue_ngap_id;
+  if (ran_id < 0)
+  {
+    return false;
+  }
+
+  memset(&ueid, 0, sizeof(ueid));
+  UEID_GNB_DU_t *du = (UEID_GNB_DU_t *)calloc(1, sizeof(UEID_GNB_DU_t));
+  if (!du)
+  {
+    return false;
+  }
+
+  du->gNB_CU_UE_F1AP_ID = (GNB_CU_UE_F1AP_ID_t)ran_id;
+
+  RANUEID_t *ran_oct = nullptr;
+  if (!build_ran_ueid_from_long(ran_id, ran_oct))
+  {
+    free(du);
+    return false;
+  }
+  du->ran_UEID = ran_oct;
+
+  ueid.present = UEID_PR_gNB_DU_UEID;
+  ueid.choice.gNB_DU_UEID = du;
+  return true;
+}
+
 // RAN Function Description (v3)
 
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
@@ -48,12 +157,15 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   et->ric_EventTriggerFormat_Type = 1; // KPM EventTrigger Format 1
   ASN_SEQUENCE_ADD(&desc->ric_EventTriggerStyle_List->list, et);
 
-  // Report style type 1 con Header/Message Format 1/1.
+  // Report style type 1:
+  // - ActionDefinition: Format 1
+  // - IndicationHeader: Format 1
+  // - IndicationMessage: Format 3 (UEMeasurementReportList wrapping Format1)
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
   rs->ric_ReportStyle_Type = 1; // usa 4 se il tuo xApp lo richiede
   OCTET_STRING_fromBuf(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF",strlen("KPM v3 N3IWF"));
   rs->ric_IndicationHeaderFormat_Type = 1;
-  rs->ric_IndicationMessageFormat_Type = 1;
+  rs->ric_IndicationMessageFormat_Type = 3;
 
   // measInfoActionList (almeno una misura)
   // helper per aggiungere 1 misura con noLabel
@@ -113,36 +225,78 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   indMsg->indicationMessage_formats.present =
       E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format1;
 
-  E2SM_KPM_IndicationMessage_Format1_t *fmt1 = (E2SM_KPM_IndicationMessage_Format1_t *)calloc(1, sizeof(*fmt1));
-  MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(*mdi));
-  fmt1->measInfoList = (MeasurementInfoList_t*)calloc(1, sizeof(*fmt1->measInfoList));
-
-  for (const auto &kv : kpi)
+  E2SM_KPM_IndicationMessage_Format1_t *fmt1 =
+      (E2SM_KPM_IndicationMessage_Format1_t *)calloc(1, sizeof(*fmt1));
+  if (!fmt1)
   {
-    const char *name = kv.first.c_str();
-    double value = kv.second;
-    // Un record con i 3 valori
-    if (value != -1)
-    {
-      // Aggiungi il nome della misura (se non c'è già) e l'etichetta (vuota)
-      add_meas_name(fmt1->measInfoList, name);
-      rec_add_double(&mdi->measRecord, value);
-    }
+    return;
   }
 
-  if (fmt1->measInfoList->list.count == 0 || mdi->measRecord.list.count != fmt1->measInfoList->list.count)
+  if (!fill_ind_msg_format1_struct(*fmt1, kpi))
   {
-    logln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
-    // niente da inviare: pulisci e rientra
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
-    free(mdi);
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1->measInfoList);
-    free(fmt1->measInfoList);
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1);
     free(fmt1);
     return;
   }
-  //logln("Total measurements added: %d\n", fmt1->measInfoList->list.count);
-  ASN_SEQUENCE_ADD(&fmt1->measData.list, mdi);
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
+}
+
+void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
+                              const std::vector<RcAssociationSnapshot> &assocs,
+                              const std::map<std::string, double> &kpi)
+{
+  memset(indMsg, 0, sizeof(*indMsg));
+  indMsg->indicationMessage_formats.present =
+      E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format3;
+
+  E2SM_KPM_IndicationMessage_Format3_t *fmt3 =
+      (E2SM_KPM_IndicationMessage_Format3_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format3_t));
+  if (!fmt3)
+  {
+    return;
+  }
+
+  size_t added = 0;
+  for (const auto &assoc : assocs)
+  {
+    // Considera solo UE con un ran_ue_ngap_id valido
+    if (assoc.ue.ran_ue_ngap_id < 0)
+    {
+      continue;
+    }
+
+    UEMeasurementReportItem_t *item =
+        (UEMeasurementReportItem_t *)calloc(1, sizeof(UEMeasurementReportItem_t));
+    if (!item)
+    {
+      continue;
+    }
+
+    if (!fill_ueid_from_assoc_du(assoc, item->ueID))
+    {
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
+      free(item);
+      continue;
+    }
+
+    if (!fill_ind_msg_format1_struct(item->measReport, kpi))
+    {
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format1, &item->measReport);
+      free(item);
+      continue;
+    }
+
+    ASN_SEQUENCE_ADD(&fmt3->ueMeasReportList.list, item);
+    ++added;
+  }
+
+  if (added == 0)
+  {
+    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage_Format3, fmt3);
+    return;
+  }
+
+  indMsg->indicationMessage_formats.choice.indicationMessage_Format3 = fmt3;
 }
