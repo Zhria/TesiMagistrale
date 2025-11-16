@@ -63,22 +63,21 @@ static E2Sim e2;
 std::atomic_bool g_app_stop{false};
 extern int client_fd;
 
-// Verifica locale: decodifica il messaggio KPM appena encodato (PER aligned)
+// Verifica locale: decodifica il messaggio KPM appena encodato (PER aligned, emr.encoded = byte count)
 // per assicurarsi che sia internamente consistente prima di inviarlo allo xApp.
-static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_bits)
+static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
 {
-  if (!buf || encoded_bits == 0)
+  if (!buf || encoded_len_bytes == 0)
   {
     return false;
   }
 
-  size_t encoded_bytes = (encoded_bits + 7) / 8;
   E2SM_KPM_IndicationMessage_t *decoded = nullptr;
 
   asn_dec_rval_t dr = asn_decode(
       nullptr, ATS_ALIGNED_BASIC_PER,
       &asn_DEF_E2SM_KPM_IndicationMessage,
-      (void **)&decoded, buf, encoded_bytes);
+      (void **)&decoded, buf, encoded_len_bytes);
 
   if (dr.code != RC_OK || !decoded)
   {
