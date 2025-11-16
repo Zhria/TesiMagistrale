@@ -38,6 +38,9 @@ extern "C"
 #include "E2SM-RC-EventTrigger-Format4.h"
 #include "E2SM-RC-ActionDefinition-Format1-Item.h"
 #include "E2SM-RC-ActionDefinition-Format1.h"
+
+// KPM ActionDefinition Format4 (per-UE conditional subscriptions)
+#include "E2SM-KPM-ActionDefinition-Format4.h"
 }
 
 #include "kpm_callbacks.hpp"
@@ -455,16 +458,25 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   if (dr.code != RC_OK || !ad)
     return false;
 
-  // Accetta solo Format1
-  if (ad->actionDefinition_formats.present !=
+  // Supporta ActionDefinition Format1 (classico) e Format4 (UE-conditional, con subscriptionInfo in Format1)
+  E2SM_KPM_ActionDefinition_Format1_t *f1 = nullptr;
+
+  if (ad->actionDefinition_formats.present ==
       E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format1)
   {
-    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
-    return false;
+    f1 = ad->actionDefinition_formats.choice.actionDefinition_Format1;
+  }
+  else if (ad->actionDefinition_formats.present ==
+           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
+  {
+    E2SM_KPM_ActionDefinition_Format4_t *f4 =
+        ad->actionDefinition_formats.choice.actionDefinition_Format4;
+    if (f4)
+    {
+      f1 = &f4->subscriptionInfo;
+    }
   }
 
-  E2SM_KPM_ActionDefinition_Format1_t *f1 =
-      ad->actionDefinition_formats.choice.actionDefinition_Format1;
   if (!f1)
   {
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
