@@ -1046,7 +1046,7 @@ static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlCon
     logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
     logln("Received ControlHeader PER dump:");
 
-    E2SM_RC_ControlHeader_t *decoded = nullptr;
+    E2SM_RC_ControlHeader_Format1_t *decoded = nullptr;
     /*
     asn_dec_rval_t ret = aper_decode(
         nullptr,
@@ -1090,18 +1090,17 @@ static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlCon
     xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
 
     // Verifica che il formato sia Format1
-    if (decoded->ric_controlHeader_formats.present !=
+    /*if (decoded->ric_controlHeader_formats.present !=
         E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
         err = "Unsupported ControlHeader format (present="
               + std::to_string(decoded->ric_controlHeader_formats.present) + ")";
         logln("[RC CONTROL] %s", err.c_str());
         ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
         return false;
-    }
+    }*/
 
-    E2SM_RC_ControlHeader_Format1_t *fmt1 =
-        decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
-
+    //E2SM_RC_ControlHeader_Format1_t *fmt1 =decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
+    E2SM_RC_ControlHeader_Format1_t *fmt1 =decoded; //uso direttamente il decoded
     if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover) {
         err = "Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type);
         logln("[RC CONTROL] %s", err.c_str());
