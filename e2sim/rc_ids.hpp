@@ -5,8 +5,8 @@
 
 #include "n3iwf_utils.hpp"
 
-long kRcControlStyleTypeHandover = 3;
-long kRcControlActionIdHandover = 1;
+inline long kRcControlStyleTypeHandover = 3;
+inline long kRcControlActionIdHandover = 1;
 
 inline long lookup_rc_control_param_id(std::string_view name, long fallback) {
   const auto metrics = getAllowedControlMetricsRC();

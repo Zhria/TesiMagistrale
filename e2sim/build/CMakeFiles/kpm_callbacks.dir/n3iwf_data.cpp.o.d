@@ -557,6 +557,12 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GranularityPeriod.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format2.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementCondUEidList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format3.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEMeasurementReportList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEMeasurementReportList.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEMeasurementReportItem.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-IndicationMessage-Format1.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoList.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfoItem.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementType.h \
@@ -580,5 +586,11 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NULL.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID-GNB-DU.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UE-F1AP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANUEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANUEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UE-F1AP-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Cause.h \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_data.hpp
