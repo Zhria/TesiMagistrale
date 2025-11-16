@@ -445,7 +445,12 @@ static void start_kpm_worker(const SubscriptionKey &key,
 static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def, std::vector<std::string> &out_meas, GranularityPeriod_t *granularityPeriod)
 {
   if (!act_def || !act_def->buf || act_def->size == 0)
+  {
+    logln("[KPM SUB] ActionDefinition missing or empty");
     return false;
+  }
+
+  logln("[KPM SUB] Decoding ActionDefinition, size=%ld bytes", (long)act_def->size);
 
   E2SM_KPM_ActionDefinition_t *ad = nullptr;
   asn_dec_rval_t dr = aper_decode(
@@ -456,7 +461,12 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
       /*skip_bits*/ 0, /*unused_bits*/ 0);
 
   if (dr.code != RC_OK || !ad)
+  {
+    logln("[KPM SUB] ActionDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
     return false;
+  }
+
+  logln("[KPM SUB] ActionDefinition decoded: present=%d", ad->actionDefinition_formats.present);
 
   // Supporta ActionDefinition Format1 (classico) e Format4 (UE-conditional, con subscriptionInfo in Format1)
   E2SM_KPM_ActionDefinition_Format1_t *f1 = nullptr;
@@ -474,11 +484,13 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     if (f4)
     {
       f1 = &f4->subscriptionInfo;
+      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
     }
   }
 
   if (!f1)
   {
+    logln("[KPM SUB] Unsupported ActionDefinition format, cannot find Format1 content");
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     return false;
   }
@@ -486,6 +498,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   int n = f1->measInfoList.list.count;
   if (n <= 0)
   {
+    logln("[KPM SUB] ActionDefinition measInfoList is empty");
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     return false;
   }
@@ -513,6 +526,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   *granularityPeriod = f1->granulPeriod;
 
   ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
+  logln("[KPM SUB] Extracted %d measurement names, granularityPeriod=%ld", (int)out_meas.size(), (long)*granularityPeriod);
   return !out_meas.empty();
 }
 
@@ -586,9 +600,12 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         RICactionType_t actionType =
             next_item->value.choice.RICaction_ToBeSetup_Item.ricActionType;
 
+        logln("[KPM SUB] Found RICaction: id=%ld type=%ld (0=report)", (long)actionId, (long)actionType);
+
         // Consideriamo solo REPORT (coerente con KPM)
         if (actionType != RICactionType_report)
         {
+          logln("[KPM SUB] Action %ld rejected: type %ld is not REPORT", (long)actionId, (long)actionType);
           any_metric_not_allowed = true;
           rejectedActions.push_back(actionId);
           continue;
@@ -597,23 +614,32 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         std::vector<std::string> meas_names;
         if (!extract_meas_names_from_kpm_actiondef(act_def, meas_names, &granularityPeriod))
         {
+          logln("[KPM SUB] Action %ld rejected: unable to extract measurement names from ActionDefinition", (long)actionId);
           any_metric_not_allowed = true;
           rejectedActions.push_back(actionId);
           continue;
         }
 
+        logln("[KPM SUB] Action %ld has %d requested measurements", (long)actionId, (int)meas_names.size());
+
         for (auto &m : meas_names)
         {
           if (std::find(getAllowedKPI().begin(), getAllowedKPI().end(), m) == getAllowedKPI().end())
           {
+            logln("[KPM SUB] Measurement '%s' not allowed by simulator, action %ld will be rejected", m.c_str(), (long)actionId);
             any_metric_not_allowed = true;
             rejectedActions.push_back(actionId);
           }
         }
         if (!any_metric_not_allowed)
         {
+          logln("[KPM SUB] Action %ld accepted", (long)actionId);
           acceptedActions.push_back(actionId);
           reqActionId = actionId; // salva l'ultimo actionId accettato
+        }
+        else
+        {
+          logln("[KPM SUB] any_metric_not_allowed already true, action %ld considered rejected", (long)actionId);
         }
       }
       break;
@@ -643,7 +669,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
-    logln("At least one action not allowed, rejecting subscription\n");
+    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n",
+          accept_size, reject_size);
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;
