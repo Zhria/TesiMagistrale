@@ -63,6 +63,76 @@ static E2Sim e2;
 std::atomic_bool g_app_stop{false};
 extern int client_fd;
 
+// Verifica locale: decodifica il messaggio KPM appena encodato (PER aligned)
+// per assicurarsi che sia internamente consistente prima di inviarlo allo xApp.
+static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_bits)
+{
+  if (!buf || encoded_bits == 0)
+  {
+    return false;
+  }
+
+  size_t encoded_bytes = (encoded_bits + 7) / 8;
+  E2SM_KPM_IndicationMessage_t *decoded = nullptr;
+
+  asn_dec_rval_t dr = asn_decode(
+      nullptr, ATS_ALIGNED_BASIC_PER,
+      &asn_DEF_E2SM_KPM_IndicationMessage,
+      (void **)&decoded, buf, encoded_bytes);
+
+  if (dr.code != RC_OK || !decoded)
+  {
+    logln("KPM self-decode failed (code=%d, consumed=%zu)", dr.code, dr.consumed);
+    if (decoded)
+    {
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, decoded);
+    }
+    return false;
+  }
+
+  bool ok = true;
+
+  if (decoded->indicationMessage_formats.present ==
+      E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format3)
+  {
+    auto *fmt3 = decoded->indicationMessage_formats.choice.indicationMessage_Format3;
+    if (!fmt3 || fmt3->ueMeasReportList.list.count == 0)
+    {
+      logln("KPM self-decode: Format3 with empty ueMeasReportList");
+      ok = false;
+    }
+    else
+    {
+      for (int i = 0; i < fmt3->ueMeasReportList.list.count; ++i)
+      {
+        UEMeasurementReportItem_t *item = fmt3->ueMeasReportList.list.array[i];
+        if (!item)
+        {
+          ok = false;
+          break;
+        }
+        E2SM_KPM_IndicationMessage_Format1_t &f1 = item->measReport;
+        if (f1.measData.list.count == 0)
+        {
+          logln("KPM self-decode: UE[%d] has empty measData", i);
+          ok = false;
+          break;
+        }
+        MeasurementDataItem_t *mdi = f1.measData.list.array[0];
+        if (!mdi || mdi->measRecord.list.count == 0)
+        {
+          logln("KPM self-decode: UE[%d] has empty measRecord", i);
+          ok = false;
+          break;
+        }
+      }
+    }
+  }
+
+  ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, decoded);
+  return ok;
+}
+
 struct KpmWorkerCtx {
   std::shared_ptr<std::atomic_bool> stop_flag;
   std::thread worker;
@@ -319,6 +389,15 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       logln("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
       continue;
     }
+
+    if (!kpm_self_decode_check(msg_buf, (size_t)emr.encoded))
+    {
+      logln("KPM self-decode check failed, skipping seqNum %ld", seqNum);
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      continue;
+    }
+
     E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (pdu == NULL)
     {
