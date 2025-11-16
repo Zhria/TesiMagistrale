@@ -476,9 +476,10 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   {
     f1 = ad->actionDefinition_formats.choice.actionDefinition_Format1;
   }
-  else if (ad->actionDefinition_formats.present ==
+  else/* if (ad->actionDefinition_formats.present ==
            E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
-  {
+  */
+ {
     E2SM_KPM_ActionDefinition_Format4_t *f4 =
         ad->actionDefinition_formats.choice.actionDefinition_Format4;
     if (f4)
