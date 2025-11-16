@@ -233,9 +233,9 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
   rs->ric_ReportStyle_Type = 4; // usa 4 se il tuo xApp lo richiede
   OCTET_STRING_fromBuf(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF",strlen("KPM v3 N3IWF"));
-  rs->ric_ActionFormat_Type = 4;
-  rs->ric_IndicationHeaderFormat_Type = 1;
-  rs->ric_IndicationMessageFormat_Type = 3;
+  rs->ric_ActionFormat_Type = E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4;
+  rs->ric_IndicationHeaderFormat_Type = E2SM_KPM_IndicationHeader__indicationHeader_formats_PR_indicationHeader_Format1;
+  rs->ric_IndicationMessageFormat_Type = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format3;
 
   // measInfoActionList (almeno una misura)
   // helper per aggiungere 1 misura con noLabel

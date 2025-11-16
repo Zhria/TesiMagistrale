@@ -39,8 +39,11 @@ extern "C"
 #include "E2SM-RC-ActionDefinition-Format1-Item.h"
 #include "E2SM-RC-ActionDefinition-Format1.h"
 
-// KPM ActionDefinition Format4 (per-UE conditional subscriptions)
+// KPM ActionDefinition Formats (per-UE conditional subscriptions, UEID-based, ecc.)
 #include "E2SM-KPM-ActionDefinition-Format4.h"
+#include "E2SM-KPM-ActionDefinition-Format2.h"
+#include "E2SM-KPM-ActionDefinition-Format3.h"
+#include "E2SM-KPM-ActionDefinition-Format5.h"
 }
 
 #include "kpm_callbacks.hpp"
@@ -442,7 +445,9 @@ static void start_kpm_worker(const SubscriptionKey &key,
   g_kpm_workers.emplace(key, KpmWorkerCtx{std::move(worker), stop_flag});
 }
 
-static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def, std::vector<std::string> &out_meas, GranularityPeriod_t *granularityPeriod)
+static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
+                                                  std::vector<std::string> &out_meas,
+                                                  GranularityPeriod_t *granularityPeriod)
 {
   if (!act_def || !act_def->buf || act_def->size == 0)
   {
@@ -468,14 +473,30 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 
   logln("[KPM SUB] ActionDefinition decoded: present=%d", ad->actionDefinition_formats.present);
 
-  // Supporta ActionDefinition Format1 (classico) e Format4 (UE-conditional, con subscriptionInfo in Format1)
+  // Cerchiamo ovunque un blocco Format1 da cui leggere il granularityPeriod
   E2SM_KPM_ActionDefinition_Format1_t *f1 = nullptr;
+  GranularityPeriod_t gp = 0;
+  bool have_gp = false;
 
+  // Format1: direttamente
   if (ad->actionDefinition_formats.present ==
-      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format2)
+      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format1)
   {
     f1 = ad->actionDefinition_formats.choice.actionDefinition_Format1;
   }
+  // Format2: per-UE, con subscriptInfo (Format1)
+  else if (ad->actionDefinition_formats.present ==
+           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format2)
+  {
+    E2SM_KPM_ActionDefinition_Format2_t *f2 =
+        ad->actionDefinition_formats.choice.actionDefinition_Format2;
+    if (f2)
+    {
+      f1 = &f2->subscriptInfo;
+      logln("[KPM SUB] Using subscriptInfo (Format1) from ActionDefinition Format2");
+    }
+  }
+  // Format4: UE-conditional, con subscriptionInfo (Format1)
   else if (ad->actionDefinition_formats.present ==
            E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
   {
@@ -487,47 +508,79 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
       logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
     }
   }
-
-  if (!f1)
+  // Format5: per-UE (per subscription), con subscriptionInfo (Format1)
+  else if (ad->actionDefinition_formats.present ==
+           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format5)
   {
-    logln("[KPM SUB] Unsupported ActionDefinition format, cannot find Format1 content");
-    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
-    return false;
-  }
-
-  int n = f1->measInfoList.list.count;
-  if (n <= 0)
-  {
-    logln("[KPM SUB] ActionDefinition measInfoList is empty");
-    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
-    return false;
-  }
-
-  // array: void** → cast a MeasurementInfoItem_t**
-  MeasurementInfoItem_t **arr =
-      (MeasurementInfoItem_t **)f1->measInfoList.list.array;
-
-  for (int i = 0; i < n; ++i)
-  {
-    MeasurementInfoItem_t *mi = arr[i];
-    if (!mi)
-      continue;
-
-    // measType può essere measName o measID
-    // In genere MeasurementType_t è un campo non-pointer
-    MeasurementType_t *mt = &mi->measType;
-
-    if (mt->present == MeasurementType_PR_measName && mt->choice.measName.buf && mt->choice.measName.size > 0)
+    E2SM_KPM_ActionDefinition_Format5_t *f5 =
+        ad->actionDefinition_formats.choice.actionDefinition_Format5;
+    if (f5)
     {
-      out_meas.emplace_back((char *)mt->choice.measName.buf, mt->choice.measName.size);
+      f1 = &f5->subscriptionInfo;
+      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format5");
     }
   }
 
-  *granularityPeriod = f1->granulPeriod;
+  // Format3: ha il granularityPeriod direttamente, ma non un Format1 interno
+  if (ad->actionDefinition_formats.present ==
+      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format3)
+  {
+    E2SM_KPM_ActionDefinition_Format3_t *f3 =
+        ad->actionDefinition_formats.choice.actionDefinition_Format3;
+    if (f3)
+    {
+      gp = f3->granulPeriod;
+      have_gp = true;
+      logln("[KPM SUB] Using granulPeriod from ActionDefinition Format3");
+    }
+  }
+
+  if (f1)
+  {
+    gp = f1->granulPeriod;
+    have_gp = true;
+  }
+
+  if (!have_gp)
+  {
+    logln("[KPM SUB] Unsupported ActionDefinition format, cannot find granularityPeriod");
+    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
+    return false;
+  }
+
+  // Se abbiamo un blocco Format1 interno possiamo opzionalmente estrarre i nomi delle misure,
+  // ma non falliamo se la lista è vuota: il chiamante è interessato soprattutto al granularityPeriod.
+  if (f1)
+  {
+    int n = f1->measInfoList.list.count;
+    if (n > 0)
+    {
+      MeasurementInfoItem_t **arr =
+          (MeasurementInfoItem_t **)f1->measInfoList.list.array;
+
+      for (int i = 0; i < n; ++i)
+      {
+        MeasurementInfoItem_t *mi = arr[i];
+        if (!mi)
+          continue;
+
+        MeasurementType_t *mt = &mi->measType;
+        if (mt->present == MeasurementType_PR_measName &&
+            mt->choice.measName.buf && mt->choice.measName.size > 0)
+        {
+          out_meas.emplace_back((char *)mt->choice.measName.buf,
+                                mt->choice.measName.size);
+        }
+      }
+    }
+  }
+
+  *granularityPeriod = gp;
 
   ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
-  logln("[KPM SUB] Extracted %d measurement names, granularityPeriod=%ld", (int)out_meas.size(), (long)*granularityPeriod);
-  return !out_meas.empty();
+  logln("[KPM SUB] Extracted %d measurement names (may be 0), granularityPeriod=%ld",
+        (int)out_meas.size(), (long)*granularityPeriod);
+  return true;
 }
 
 /* ============================================================
