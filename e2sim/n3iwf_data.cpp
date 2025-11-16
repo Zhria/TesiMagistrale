@@ -520,6 +520,175 @@ static RcChildSaInfoSnapshot parse_child_sa(const json& child) {
   return out;
 }
 
+static RcMaskedImeisvSnapshot parse_masked_imeisv(const json& masked) {
+  RcMaskedImeisvSnapshot out;
+  if (!masked.is_object()) return out;
+  if (auto it_val = masked.find("Value"); it_val != masked.end() && it_val->is_object()) {
+    if (auto it_b = it_val->find("Bytes"); it_b != it_val->end()) {
+      out.bytes_b64 = json_to_string(*it_b);
+    }
+    if (auto it_l = it_val->find("BitLength"); it_l != it_val->end()) {
+      out.bit_length = static_cast<int>(json_to_i64(*it_l));
+    }
+  }
+  return out;
+}
+
+static RcGuamiSnapshot parse_guami(const json& guami) {
+  RcGuamiSnapshot out;
+  if (!guami.is_object()) return out;
+  if (auto it_plmn = guami.find("PLMNIdentity"); it_plmn != guami.end() && it_plmn->is_object()) {
+    if (auto it_v = it_plmn->find("Value"); it_v != it_plmn->end()) {
+      out.plmn_value = json_to_string(*it_v);
+    }
+  }
+  auto parse_bitfield = [](const json& obj, std::string& bytes_out, int& bitlen_out) {
+    if (!obj.is_object()) return;
+    if (auto it_val = obj.find("Value"); it_val != obj.end() && it_val->is_object()) {
+      if (auto it_b = it_val->find("Bytes"); it_b != it_val->end()) {
+        bytes_out = json_to_string(*it_b);
+      }
+      if (auto it_l = it_val->find("BitLength"); it_l != it_val->end()) {
+        bitlen_out = static_cast<int>(json_to_i64(*it_l));
+      }
+    }
+  };
+
+  if (auto it = guami.find("AMFRegionID"); it != guami.end()) {
+    parse_bitfield(*it, out.amf_region_bytes, out.amf_region_bit_length);
+  }
+  if (auto it = guami.find("AMFSetID"); it != guami.end()) {
+    parse_bitfield(*it, out.amf_set_bytes, out.amf_set_bit_length);
+  }
+  if (auto it = guami.find("AMFPointer"); it != guami.end()) {
+    parse_bitfield(*it, out.amf_pointer_bytes, out.amf_pointer_bit_length);
+  }
+  return out;
+}
+
+static RcSnssaiSnapshot parse_snssai(const json& snssai) {
+  RcSnssaiSnapshot out;
+  if (!snssai.is_object()) return out;
+  if (auto it_sst = snssai.find("SST"); it_sst != snssai.end() && it_sst->is_object()) {
+    if (auto it_v = it_sst->find("Value"); it_v != it_sst->end()) {
+      out.sst_value = json_to_string(*it_v);
+    }
+  }
+  if (auto it_sd = snssai.find("SD"); it_sd != snssai.end() && it_sd->is_object()) {
+    if (auto it_v = it_sd->find("Value"); it_v != it_sd->end()) {
+      out.sd_value = json_to_string(*it_v);
+    }
+  }
+  return out;
+}
+
+static RcPduSessionQosFlowSnapshot parse_qos_flow(const json& flow) {
+  RcPduSessionQosFlowSnapshot out;
+  if (!flow.is_object()) return out;
+  if (auto it = flow.find("identifier"); it != flow.end()) {
+    out.identifier = static_cast<int32_t>(json_to_i64(*it));
+  }
+  if (auto it_params = flow.find("parameters"); it_params != flow.end() && it_params->is_object()) {
+    const auto& params = *it_params;
+    if (auto it_qc = params.find("QosCharacteristics"); it_qc != params.end() && it_qc->is_object()) {
+      const auto& qc = *it_qc;
+      if (auto it_nd = qc.find("NonDynamic5QI"); it_nd != qc.end() && it_nd->is_object()) {
+        const auto& nd = *it_nd;
+        if (auto it_fiveqi = nd.find("FiveQI"); it_fiveqi != nd.end() && it_fiveqi->is_object()) {
+          if (auto it_v = it_fiveqi->find("Value"); it_v != it_fiveqi->end()) {
+            out.five_qi = static_cast<int32_t>(json_to_i64(*it_v));
+          }
+        }
+      }
+    }
+    if (auto it_arp = params.find("AllocationAndRetentionPriority"); it_arp != params.end() && it_arp->is_object()) {
+      const auto& arp = *it_arp;
+      if (auto it_pl = arp.find("PriorityLevelARP"); it_pl != arp.end() && it_pl->is_object()) {
+        if (auto it_v = it_pl->find("Value"); it_v != it_pl->end()) {
+          out.arp_priority_level = static_cast<int32_t>(json_to_i64(*it_v));
+        }
+      }
+      if (auto it_pc = arp.find("PreEmptionCapability"); it_pc != arp.end() && it_pc->is_object()) {
+        if (auto it_v = it_pc->find("Value"); it_v != it_pc->end()) {
+          out.arp_pre_emption_capability = static_cast<int32_t>(json_to_i64(*it_v));
+        }
+      }
+      if (auto it_pv = arp.find("PreEmptionVulnerability"); it_pv != arp.end() && it_pv->is_object()) {
+        if (auto it_v = it_pv->find("Value"); it_v != it_pv->end()) {
+          out.arp_pre_emption_vulnerability = static_cast<int32_t>(json_to_i64(*it_v));
+        }
+      }
+    }
+  }
+  return out;
+}
+
+static RcPduSessionSnapshot parse_pdu_session(const json& sess) {
+  RcPduSessionSnapshot out;
+  if (!sess.is_object()) return out;
+  if (auto it = sess.find("id"); it != sess.end()) {
+    out.id = static_cast<int32_t>(json_to_i64(*it));
+  }
+  if (auto it_type = sess.find("type"); it_type != sess.end() && it_type->is_object()) {
+    if (auto it_v = it_type->find("Value"); it_v != it_type->end()) {
+      out.type_value = static_cast<int32_t>(json_to_i64(*it_v));
+    }
+  }
+  if (auto it_ambr = sess.find("ambr"); it_ambr != sess.end() && it_ambr->is_object()) {
+    const auto& ambr = *it_ambr;
+    if (auto it_dl = ambr.find("PDUSessionAggregateMaximumBitRateDL"); it_dl != ambr.end() && it_dl->is_object()) {
+      if (auto it_v = it_dl->find("Value"); it_v != it_dl->end()) {
+        out.ambr_dl = json_to_u64(*it_v);
+      }
+    }
+    if (auto it_ul = ambr.find("PDUSessionAggregateMaximumBitRateUL"); it_ul != ambr.end() && it_ul->is_object()) {
+      if (auto it_v = it_ul->find("Value"); it_v != it_ul->end()) {
+        out.ambr_ul = json_to_u64(*it_v);
+      }
+    }
+  }
+  if (auto it_sn = sess.find("snssai"); it_sn != sess.end() && it_sn->is_object()) {
+    out.snssai = parse_snssai(*it_sn);
+  }
+  if (auto it = sess.find("securityCipher"); it != sess.end()) {
+    out.security_cipher = json_to_bool(*it);
+  }
+  if (auto it = sess.find("securityIntegrity"); it != sess.end()) {
+    out.security_integrity = json_to_bool(*it);
+  }
+  if (auto it_gtp = sess.find("gtpConnInfo"); it_gtp != sess.end() && it_gtp->is_object()) {
+    const auto& gtp = *it_gtp;
+    if (auto it_ip = gtp.find("upfIpAddr"); it_ip != gtp.end()) {
+      out.upf_ip_addr = json_to_string(*it_ip);
+    }
+    if (auto it_udp = gtp.find("upfUdpAddr"); it_udp != gtp.end() && it_udp->is_object()) {
+      if (auto it_uip = it_udp->find("ip"); it_uip != it_udp->end()) {
+        out.upf_udp_ip = json_to_string(*it_uip);
+      }
+      if (auto it_port = it_udp->find("port"); it_port != it_udp->end()) {
+        out.upf_udp_port = static_cast<int32_t>(json_to_i64(*it_port));
+      }
+    }
+    if (auto it = gtp.find("incomingTeid"); it != gtp.end()) {
+      out.incoming_teid = json_to_u64(*it);
+    }
+    if (auto it = gtp.find("outgoingTeid"); it != gtp.end()) {
+      out.outgoing_teid = json_to_u64(*it);
+    }
+  }
+  if (auto it = sess.find("qfiList"); it != sess.end()) {
+    out.qfi_list_b64 = json_to_string(*it);
+  }
+  if (auto it_qos = sess.find("qosFlows"); it_qos != sess.end() && it_qos->is_object()) {
+    for (const auto& [key, val] : it_qos->items()) {
+      (void)key;
+      if (!val.is_object()) continue;
+      out.qos_flows.push_back(parse_qos_flow(val));
+    }
+  }
+  return out;
+}
+
 static RcStationSnapshot parse_station_snapshot(const json& station,
                                                 const std::string& fallback_iface,
                                                 const std::string& fallback_mac,
@@ -561,6 +730,34 @@ static RcUeInfoSnapshot parse_ue_snapshot(const json& ue) {
       out.child_sa.push_back(parse_child_sa(sa));
     }
   }
+   if (auto it = ue.find("maskedImeisv"); it != ue.end()) {
+     out.masked_imeisv = parse_masked_imeisv(*it);
+   }
+   if (auto it = ue.find("guami"); it != ue.end()) {
+     out.guami = parse_guami(*it);
+   }
+   if (auto it = ue.find("allowedNssai"); it != ue.end() && it->is_object()) {
+     if (auto it_list = it->find("List"); it_list != it->end() && it_list->is_array()) {
+       for (const auto& entry : *it_list) {
+         if (!entry.is_object()) continue;
+         if (auto it_sn = entry.find("SNSSAI"); it_sn != entry.end() && it_sn->is_object()) {
+           out.allowed_nssai.push_back(parse_snssai(*it_sn));
+         }
+       }
+     }
+   }
+   if (auto it = ue.find("pduSessionReleaseList"); it != ue.end() && it->is_object()) {
+     if (auto it_list = it->find("List"); it_list != it->end() && it_list->is_array()) {
+       out.pdu_session_release_ids = json_to_int64_vector(*it_list);
+     }
+   }
+   if (auto it = ue.find("pduSessionList"); it != ue.end() && it->is_object()) {
+     for (const auto& [key, val] : it->items()) {
+       (void)key;
+       if (!val.is_object()) continue;
+       out.pdu_sessions.push_back(parse_pdu_session(val));
+     }
+   }
   for (const auto& [key, val] : ue.items()) {
     out.extra_fields[key] = json_to_string(val);
   }

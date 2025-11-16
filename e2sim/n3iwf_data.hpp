@@ -57,6 +57,51 @@ struct RcChildSaInfoSnapshot {
     std::vector<int64_t> pdu_session_ids;
 };
 
+struct RcMaskedImeisvSnapshot {
+    std::string bytes_b64;
+    int bit_length{0};
+};
+
+struct RcGuamiSnapshot {
+    std::string plmn_value;
+    std::string amf_region_bytes;
+    int amf_region_bit_length{0};
+    std::string amf_set_bytes;
+    int amf_set_bit_length{0};
+    std::string amf_pointer_bytes;
+    int amf_pointer_bit_length{0};
+};
+
+struct RcSnssaiSnapshot {
+    std::string sst_value;
+    std::string sd_value;
+};
+
+struct RcPduSessionQosFlowSnapshot {
+    int32_t identifier{0};
+    int32_t five_qi{0};
+    int32_t arp_priority_level{0};
+    int32_t arp_pre_emption_capability{0};
+    int32_t arp_pre_emption_vulnerability{0};
+};
+
+struct RcPduSessionSnapshot {
+    int32_t id{0};
+    int32_t type_value{0};
+    uint64_t ambr_dl{0};
+    uint64_t ambr_ul{0};
+    RcSnssaiSnapshot snssai;
+    bool security_cipher{false};
+    bool security_integrity{false};
+    std::string upf_ip_addr;
+    std::string upf_udp_ip;
+    int32_t upf_udp_port{0};
+    uint64_t incoming_teid{0};
+    uint64_t outgoing_teid{0};
+    std::string qfi_list_b64;
+    std::vector<RcPduSessionQosFlowSnapshot> qos_flows;
+};
+
 struct RcUeInfoSnapshot {
     int64_t ran_ue_ngap_id{-1};
     int64_t amf_ue_ngap_id{-1};
@@ -74,6 +119,11 @@ struct RcUeInfoSnapshot {
     bool ue_behind_nat{false};
     bool n3iwf_behind_nat{false};
     std::vector<RcChildSaInfoSnapshot> child_sa;
+    RcMaskedImeisvSnapshot masked_imeisv;
+    RcGuamiSnapshot guami;
+    std::vector<RcSnssaiSnapshot> allowed_nssai;
+    std::vector<int64_t> pdu_session_release_ids;
+    std::vector<RcPduSessionSnapshot> pdu_sessions;
     std::map<std::string, std::string> extra_fields;
 };
 
