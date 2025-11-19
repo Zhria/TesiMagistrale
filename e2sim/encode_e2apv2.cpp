@@ -748,8 +748,7 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
 
   char errbuf[512] = {0};
   size_t errlen;
-  asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, errbuf, &errlen);
-  if (errlen > 0)
+  if (asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, errbuf, &errlen)==-1)
   {
     logln("constraints: %s\n", errbuf);
     logln("constraints errlen=%zu\n", errlen);
