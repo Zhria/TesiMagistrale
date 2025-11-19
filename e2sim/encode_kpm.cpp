@@ -354,7 +354,7 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
     if (!fill_ind_msg_format1_struct(item->measReport, kpi))
     {
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
-      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format1, &item->measReport);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format3, &item->measReport);
       free(item);
       continue;
     }
