@@ -29,7 +29,7 @@
 #define X2AP_PPID           (452984832) //27 = 1b, PPID = 1b000000(hex) -> 452984832(dec)
 #define X2AP_SCTP_PORT      36421
 #define RIC_SCTP_SRC_PORT   36422
-#define MAX_SCTP_BUFFER     10000
+#define MAX_SCTP_BUFFER     8192
 #define WORKDIR_ENV         "E2SIM_DIR" //environment variable
 #define DEFAULT_LOCAL_IP    "192.168.17.94"
 

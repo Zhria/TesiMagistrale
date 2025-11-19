@@ -44,6 +44,8 @@ extern "C"
 #include "E2SM-KPM-ActionDefinition-Format2.h"
 #include "E2SM-KPM-ActionDefinition-Format3.h"
 #include "E2SM-KPM-ActionDefinition-Format5.h"
+#include "E2SM-KPM-EventTriggerDefinition.h"
+#include "E2SM-KPM-EventTriggerDefinition-Format1.h"
 }
 
 #include "kpm_callbacks.hpp"
@@ -133,6 +135,9 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
       }
     }
   }
+
+  logln("KPM IndicationMessage XER dump");
+  xer_fprint(stdout, &asn_DEF_E2SM_KPM_IndicationMessage, decoded);
 
   ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, decoded);
   return ok;
@@ -367,24 +372,10 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format3)
     {
       logln("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
-      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
-      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
       continue;
     }
 
-    char errbuf[512] = {0};
-    size_t errlen = sizeof(errbuf);
-    int rc = asn_check_constraints(&asn_DEF_E2SM_KPM_IndicationMessage, ind_msg, errbuf, &errlen);
-    if (rc != 0)
-    {
-      logln("Constraint check FAILED for IndicationMessage: %s\n", errbuf[0] ? errbuf : "no details");
-      continue;
-    }
-
-    uint8_t msg_buf[8192];
-
-    logln("KPM IndicationMessage XER dump for seqNum=%ld:", seqNum);
-    xer_fprint(stdout, &asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+    uint8_t msg_buf[MAX_SCTP_BUFFER];
 
     asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
                                               ind_msg, msg_buf, sizeof(msg_buf));
@@ -593,7 +584,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
   int count = orig_req.protocolIEs.list.count;
-
+  xer_fprint((stdout), &asn_DEF_RICsubscriptionRequest, &orig_req);
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
@@ -611,6 +602,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   std::vector<long> rejectedActions; // actionId
   bool any_metric_not_allowed = false;
   GranularityPeriod_t granularityPeriod = 0;
+  long reportingPeriod = 0;
 
   for (int i = 0; i < count; i++)
   {
@@ -631,20 +623,43 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     }
     case RICsubscriptionRequest_IEs__value_PR_RANfunctionID:
     {
-      // non usato qui
+      long ranFuncId = next_ie->value.choice.RANfunctionID;
+      if( ranFuncId != 2 ) // KPM
+      {
+        logln("Received Subscription Request for unsupported RANfunctionID %ld, ignoring\n", ranFuncId);
+        return;
+      }
       break;
     }
     case RICsubscriptionRequest_IEs__value_PR_RICsubscriptionDetails:
     {
       RICsubscriptionDetails_t subDetails = next_ie->value.choice.RICsubscriptionDetails;
       RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
-      xer_fprint((stdout), &asn_DEF_RICactions_ToBeSetup_List, &actionList);
-      int actionCount = actionList.list.count;
+      //Recupero event trigger definition
+      RICeventTriggerDefinition_t eventTriggerDefinition = subDetails.ricEventTriggerDefinition;
+      E2SM_KPM_EventTriggerDefinition_t *ad = nullptr;
+      asn_dec_rval_t dr = aper_decode( nullptr,
+      &asn_DEF_E2SM_KPM_EventTriggerDefinition,(void **)&ad,eventTriggerDefinition.buf, eventTriggerDefinition.size,0, 0);
+
+      if (dr.code != RC_OK || !ad)
+      {
+        logln("[KPM SUB] TriggerDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
+        return;
+      }
+      if (ad->eventDefinition_formats.present == E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1){
+        E2SM_KPM_EventTriggerDefinition_Format1_t *f1=ad->eventDefinition_formats.choice.eventDefinition_Format1;
+        if (f1)
+        {
+          reportingPeriod = f1->reportingPeriod;
+          logln("[KPM SUB] Extracted reportingPeriod=%ld from EventTriggerDefinition Format1",(long)reportingPeriod);
+        }
+      }
+      
 
       RICaction_ToBeSetup_ItemIEs_t **item_array =
           (RICaction_ToBeSetup_ItemIEs_t **)actionList.list.array;
 
-      for (int j = 0; j < actionCount; j++)
+      for (int j = 0; j < actionList.list.count; j++)
       {
         RICaction_ToBeSetup_ItemIEs_t *next_item = item_array[j];
 
