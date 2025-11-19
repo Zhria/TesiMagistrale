@@ -1042,7 +1042,7 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
       continue;
     }
   }
-
+/*
   result["UE.ActiveUeCount"] = static_cast<double>(acc.ue_count);
   if (acc.signal_count > 0) {
     result["UE.SignalStrengthAvgDbm"] = acc.signal_sum / static_cast<double>(acc.signal_count);
@@ -1072,7 +1072,7 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
     result["UE.RxBitrateAvgMbps"] =
         (acc.rx_bitrate_sum / static_cast<double>(acc.rx_bitrate_count)) / 1'000'000.0;
   }
-
+*/
   return result;
 }
 

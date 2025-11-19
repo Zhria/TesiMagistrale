@@ -144,7 +144,7 @@ std::vector<std::string> getAllowedKPI() {
         "DRB.RlcSduTransmittedVolumeUL" , // RLC SDU Transmitted Volume UL per UE/DRB O-RAN metric
         "DRB.RlcPacketDropRateDLDist", // RLC Packet Drop Rate DL per UE/DRB
         "DRB.RlcPacketLossRateULDist", // RLC Packet Loss Rate UL per UE/DRB
-        // Extended UE level KPIs derived from RC logger
+        /*// Extended UE level KPIs derived from RC logger
         "UE.ActiveUeCount",
         "UE.SignalStrengthAvgDbm",
         "UE.TxBytesWiFi",
@@ -155,7 +155,7 @@ std::vector<std::string> getAllowedKPI() {
         "UE.ConnectionTimeAvgSec",
         "UE.InactiveTimeAvgSec",
         "UE.TxBitrateAvgMbps",
-        "UE.RxBitrateAvgMbps"
+        "UE.RxBitrateAvgMbps"*/
     };
 }
 
