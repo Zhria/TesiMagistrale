@@ -231,9 +231,9 @@ void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)
   // - IndicationHeader: Format 1
   // - IndicationMessage: Format 3 (UEMeasurementReportList wrapping Format1)
   RIC_ReportStyle_Item_t *rs = (RIC_ReportStyle_Item_t *)calloc(1, sizeof(*rs));
-  rs->ric_ReportStyle_Type = 4; // usa 4 se il tuo xApp lo richiede
+  rs->ric_ReportStyle_Type = 5; // usa 4 se il tuo xApp lo richiede
   OCTET_STRING_fromBuf(&rs->ric_ReportStyle_Name, "KPM v3 N3IWF",strlen("KPM v3 N3IWF"));
-  rs->ric_ActionFormat_Type = E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4;
+  rs->ric_ActionFormat_Type = E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format5;
   rs->ric_IndicationHeaderFormat_Type = E2SM_KPM_IndicationHeader__indicationHeader_formats_PR_indicationHeader_Format1;
   rs->ric_IndicationMessageFormat_Type = E2SM_KPM_IndicationMessage__indicationMessage_formats_PR_indicationMessage_Format3;
 
