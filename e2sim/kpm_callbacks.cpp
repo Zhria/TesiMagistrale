@@ -473,18 +473,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   {
     f1 = ad->actionDefinition_formats.choice.actionDefinition_Format1;
   }
-  // Format2: per-UE, con subscriptInfo (Format1)
-  else if (ad->actionDefinition_formats.present ==
-           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format2)
-  {
-    E2SM_KPM_ActionDefinition_Format2_t *f2 =
-        ad->actionDefinition_formats.choice.actionDefinition_Format2;
-    if (f2)
-    {
-      f1 = &f2->subscriptInfo;
-      logln("[KPM SUB] Using subscriptInfo (Format1) from ActionDefinition Format2");
-    }
-  }
   // Format4: UE-conditional, con subscriptionInfo (Format1)
   else if (ad->actionDefinition_formats.present ==
            E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
@@ -497,6 +485,20 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
       logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
     }
   }
+  // Format2: per-UE, con subscriptInfo (Format1)
+  else if (ad->actionDefinition_formats.present ==
+           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format2)
+  {
+    E2SM_KPM_ActionDefinition_Format2_t *f2 =
+        ad->actionDefinition_formats.choice.actionDefinition_Format2;
+    if (f2)
+    {
+      f1 = &f2->subscriptInfo;
+      logln("[KPM SUB] Using subscriptInfo (Format1) from ActionDefinition Format2");
+      logln("[KPM SUB] UEID :");
+      xer_fprint(stdout, &asn_DEF_UEID, &f2->ueID);
+    }
+  }
   // Format5: per-UE (per subscription), con subscriptionInfo (Format1)
   else if (ad->actionDefinition_formats.present ==
            E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format5)
@@ -507,20 +509,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     {
       f1 = &f5->subscriptionInfo;
       logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format5");
-    }
-  }
-
-  // Format3: ha il granularityPeriod direttamente, ma non un Format1 interno
-  if (ad->actionDefinition_formats.present ==
-      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format3)
-  {
-    E2SM_KPM_ActionDefinition_Format3_t *f3 =
-        ad->actionDefinition_formats.choice.actionDefinition_Format3;
-    if (f3)
-    {
-      gp = f3->granulPeriod;
-      have_gp = true;
-      logln("[KPM SUB] Using granulPeriod from ActionDefinition Format3");
     }
   }
 
@@ -565,8 +553,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   }
 
   *granularityPeriod = gp;
-
-  ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
   logln("[KPM SUB] Extracted %d measurement names (may be 0), granularityPeriod=%ld",
         (int)out_meas.size(), (long)*granularityPeriod);
   return true;
@@ -735,8 +721,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
-    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n",
-          accept_size, reject_size);
+    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n",accept_size, reject_size);
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;

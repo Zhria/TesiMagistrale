@@ -1181,20 +1181,3 @@ std::optional<RcAssociationSnapshot> findRcAssociationByAmfUeId(int64_t amf_ue_n
   }
   return std::nullopt;
 }
-
-std::optional<RcAssociationSnapshot> findRcAssociationByMac(const std::string &mac) {
-  if (mac.empty()) {
-    return std::nullopt;
-  }
-  const std::string target = normalize_mac(mac);
-  RcSnapshot snap;
-  if (!loadRcSnapshotCached(snap)) {
-    return std::nullopt;
-  }
-  for (const auto &assoc : snap.associations) {
-    if (normalize_mac(assoc.mac) == target) {
-      return assoc;
-    }
-  }
-  return std::nullopt;
-}
