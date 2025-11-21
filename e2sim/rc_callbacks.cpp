@@ -840,7 +840,7 @@ namespace
 
     static std::string get_target_identifier_value(const RcControlContext &ctx)
     {
-        std::string value = std::string(get_param_value(ctx, kRcParamTargetNrCgi));
+        std::string value = std::string(get_param_value(ctx, kRcParamTargetCellPci));
         if (!value.empty())
         {
             return value;

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -163,7 +164,8 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		writeHTTPError(w, http.StatusBadRequest, errors.New("ranUeNgapId is required"))
 		return
 	}
-	targetID, err := decodeTargetID(payload.TargetID)
+	ctx := currentN3iwfContext()
+	targetID, err := decodeTargetID(ctx, payload.TargetID)
 	if err != nil {
 		writeHTTPError(w, http.StatusBadRequest, err)
 		return
@@ -190,20 +192,16 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func decodeTargetID(encoded string) (*ngapType.TargetID, error) {
+func decodeTargetID(ctx *n3iwf_context.N3IWFContext, encoded string) (*ngapType.TargetID, error) {
 	encoded = strings.TrimSpace(encoded)
 	if encoded == "" {
 		return nil, errors.New("targetId is required")
 	}
-	der, err := base64.StdEncoding.DecodeString(encoded)
-	if err != nil {
-		return nil, fmt.Errorf("invalid targetId encoding: %w", err)
+	// Interpretazione "friendly" mcc-mnc-id (es. 208-93-135) o simile.
+	if targetID, err := buildTargetIDFromString(ctx, encoded); err == nil {
+		return targetID, nil
 	}
-	targetID := new(ngapType.TargetID)
-	if err := aper.UnmarshalWithParams(der, targetID, "valueExt"); err != nil {
-		return nil, fmt.Errorf("unable to decode targetId: %w", err)
-	}
-	return targetID, nil
+	return nil, fmt.Errorf("unable to decode targetId (expected string mcc-mnc-id), got: %s", encoded)
 }
 
 func decodeOptionalBytes(encoded string) ([]byte, error) {
@@ -225,6 +223,174 @@ func writeHTTPSuccess(w http.ResponseWriter, payload interface{}) {
 func writeHTTPError(w http.ResponseWriter, status int, err error) {
 	logger.MainLog.Errorf("RC handover HTTP error: %v", err)
 	writeHTTPJSON(w, status, map[string]interface{}{"error": err.Error()})
+}
+
+// currentN3iwfContext returns the context currently registered in the handler.
+func currentN3iwfContext() *n3iwf_context.N3IWFContext {
+	handoverHandlerMu.RLock()
+	defer handoverHandlerMu.RUnlock()
+	if handoverHandler == nil {
+		return nil
+	}
+	return handoverHandler.ctx
+}
+
+// buildTargetIDFromString accetta formati semplici tipo "208-93-135"
+// (MCC-MNC-N3IWFID) e costruisce un TargetID con GlobalN3IWFID.
+// I valori PLMN/TAC sono prelevati dalla config N3IWF, l'ID dalla stringa.
+func buildTargetIDFromString(ctx *n3iwf_context.N3IWFContext, raw string) (*ngapType.TargetID, error) {
+	if ctx == nil {
+		return nil, fmt.Errorf("n3iwf context not available")
+	}
+	cfg := ctx.Config()
+	if cfg == nil || cfg.Configuration == nil || cfg.Configuration.N3IWFInfo == nil ||
+		len(cfg.Configuration.N3IWFInfo.SupportedTAList) == 0 {
+		return nil, fmt.Errorf("n3iwf configuration missing supportedTAList")
+	}
+
+	supportedTA := cfg.Configuration.N3IWFInfo.SupportedTAList[0]
+	if len(supportedTA.BroadcastPLMNList) == 0 {
+		return nil, fmt.Errorf("n3iwf configuration missing BroadcastPLMNList")
+	}
+	plmnInfo := supportedTA.BroadcastPLMNList[0].PLMNID
+
+	// TAC nella config è in esadecimale (3 byte)
+	tacStr := strings.TrimSpace(supportedTA.TAC)
+	tacBytes, err := parseTacHex(tacStr)
+	if err != nil {
+		return nil, fmt.Errorf("invalid TAC in config: %w", err)
+	}
+
+	// L'ID (N3IWFID) è preso dalla stringa in input (ultimo gruppo numerico).
+	parts := splitDigits(raw)
+	if len(parts) == 0 {
+		return nil, fmt.Errorf("cannot parse targetId string (need an ID): %s", raw)
+	}
+	idStr := parts[len(parts)-1]
+	n3iwfID, err := strconv.ParseUint(idStr, 10, 16)
+	if err != nil {
+		return nil, fmt.Errorf("invalid N3IWF ID: %w", err)
+	}
+
+	plmn, err := encodePLMN(plmnInfo.Mcc, plmnInfo.Mnc)
+	if err != nil {
+		return nil, err
+	}
+	bs := aper.BitString{
+		Bytes:     []byte{byte(n3iwfID >> 8), byte(n3iwfID)},
+		BitLength: 16,
+	}
+
+	global := ngapType.GlobalRANNodeID{
+		Present: ngapType.GlobalRANNodeIDPresentGlobalN3IWFID,
+		GlobalN3IWFID: &ngapType.GlobalN3IWFID{
+			PLMNIdentity: plmn,
+			N3IWFID: ngapType.N3IWFID{
+				Present: ngapType.N3IWFIDPresentN3IWFID,
+				N3IWFID: &bs,
+			},
+		},
+	}
+
+	tac := ngapType.TAC{Value: tacBytes}
+	tai := ngapType.TAI{
+		PLMNIdentity: plmn,
+		TAC:          tac,
+	}
+
+	target := &ngapType.TargetID{
+		Present: ngapType.TargetIDPresentTargetRANNodeID,
+		TargetRANNodeID: &ngapType.TargetRANNodeID{
+			GlobalRANNodeID: global,
+			SelectedTAI:     tai,
+		},
+	}
+	return target, nil
+}
+
+// splitDigits estrae gruppi numerici separati da qualsiasi separatore non cifra.
+func splitDigits(s string) []string {
+	fields := strings.FieldsFunc(s, func(r rune) bool { return r < '0' || r > '9' })
+	var out []string
+	for _, f := range fields {
+		if f != "" {
+			out = append(out, f)
+		}
+	}
+	return out
+}
+
+// encodePLMN converte MCC/MNC in 3 byte BCD (TS 38.413).
+func encodePLMN(mcc, mnc string) (ngapType.PLMNIdentity, error) {
+	toDigit := func(b byte) (byte, error) {
+		if b < '0' || b > '9' {
+			return 0, fmt.Errorf("invalid digit: %c", b)
+		}
+		return b - '0', nil
+	}
+
+	d1, err := toDigit(mcc[0])
+	if err != nil {
+		return ngapType.PLMNIdentity{}, err
+	}
+	d2, err := toDigit(mcc[1])
+	if err != nil {
+		return ngapType.PLMNIdentity{}, err
+	}
+	d3, err := toDigit(mcc[2])
+	if err != nil {
+		return ngapType.PLMNIdentity{}, err
+	}
+
+	var m1, m2, m3 byte = 0x0F, 0, 0
+	if len(mnc) == 2 {
+		// 2-digit MNC, usa filler 0xF
+		m2, err = toDigit(mnc[0])
+		if err != nil {
+			return ngapType.PLMNIdentity{}, err
+		}
+		m3, err = toDigit(mnc[1])
+		if err != nil {
+			return ngapType.PLMNIdentity{}, err
+		}
+	} else {
+		m1, err = toDigit(mnc[2])
+		if err != nil {
+			return ngapType.PLMNIdentity{}, err
+		}
+		m2, err = toDigit(mnc[0])
+		if err != nil {
+			return ngapType.PLMNIdentity{}, err
+		}
+		m3, err = toDigit(mnc[1])
+		if err != nil {
+			return ngapType.PLMNIdentity{}, err
+		}
+	}
+
+	// BCD codifica: byte0 = MCC2|MCC1, byte1 = MNC3|MCC3, byte2 = MNC2|MNC1
+	plmnBytes := []byte{
+		(d2 << 4) | d1,
+		(m1 << 4) | d3,
+		(m3 << 4) | m2,
+	}
+	return ngapType.PLMNIdentity{Value: plmnBytes}, nil
+}
+
+func parseTacHex(tac string) ([]byte, error) {
+	tac = strings.TrimSpace(tac)
+	if len(tac) != 6 {
+		return nil, fmt.Errorf("TAC must be 3 bytes hex, got '%s'", tac)
+	}
+	out := make([]byte, 3)
+	for i := 0; i < 3; i++ {
+		b, err := strconv.ParseUint(tac[i*2:i*2+2], 16, 8)
+		if err != nil {
+			return nil, fmt.Errorf("invalid TAC hex: %w", err)
+		}
+		out[i] = byte(b)
+	}
+	return out, nil
 }
 
 func writeHTTPJSON(w http.ResponseWriter, status int, payload interface{}) {
