@@ -683,6 +683,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.cpp" "CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/n3iwf_utils.cpp.o.d"
   "/home/zakaria/TesiMagistrale/e2sim/rc_callbacks.cpp" "CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o.d"
   "/home/zakaria/TesiMagistrale/e2sim/src/DEF/e2sim_defs.cpp" "CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o.d"
+  "/home/zakaria/TesiMagistrale/e2sim/src/DEF/global_ts.cpp" "CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o.d"
   "/home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_message_handler.cpp" "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o.d"
   "/home/zakaria/TesiMagistrale/e2sim/src/SCTP/e2sim_sctp.cpp" "CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o" "gcc" "CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o.d"
   )

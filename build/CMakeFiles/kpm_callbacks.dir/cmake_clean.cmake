@@ -1347,6 +1347,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/kpm_callbacks.dir/rc_callbacks.cpp.o.d"
   "CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o"
   "CMakeFiles/kpm_callbacks.dir/src/DEF/e2sim_defs.cpp.o.d"
+  "CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o"
+  "CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o.d"
   "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o"
   "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o.d"
   "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_message_handler.cpp.o"

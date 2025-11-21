@@ -4045,6 +4045,12 @@
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/g++  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -std=gnu++17 -o CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/DEF/global_ts.cpp",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/src/DEF/global_ts.cpp",
+  "output": "CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
   "command": "/usr/bin/gcc  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -o CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o -c /home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_asn1c_codec.c",
   "file": "/home/zakaria/TesiMagistrale/e2sim/src/E2AP/e2ap_asn1c_codec.c",
   "output": "CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o"
@@ -8104,6 +8110,12 @@
   "command": "/usr/bin/g++  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -std=gnu++17 -o CMakeFiles/rc_control_test.dir/src/DEF/e2sim_defs.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/DEF/e2sim_defs.cpp",
   "file": "/home/zakaria/TesiMagistrale/e2sim/src/DEF/e2sim_defs.cpp",
   "output": "CMakeFiles/rc_control_test.dir/src/DEF/e2sim_defs.cpp.o"
+},
+{
+  "directory": "/home/zakaria/TesiMagistrale/build",
+  "command": "/usr/bin/g++  -I/home/zakaria/TesiMagistrale/e2sim/. -I/home/zakaria/TesiMagistrale/e2sim/./src -I/home/zakaria/TesiMagistrale/e2sim/./src/DEF -I/home/zakaria/TesiMagistrale/e2sim/./src/SCTP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP -I/home/zakaria/TesiMagistrale/e2sim/./src/E2AP/E2SM -I/home/zakaria/TesiMagistrale/e2sim/./ASN1c -isystem /home/zakaria/anaconda3/include -g -std=gnu++17 -o CMakeFiles/rc_control_test.dir/src/DEF/global_ts.cpp.o -c /home/zakaria/TesiMagistrale/e2sim/src/DEF/global_ts.cpp",
+  "file": "/home/zakaria/TesiMagistrale/e2sim/src/DEF/global_ts.cpp",
+  "output": "CMakeFiles/rc_control_test.dir/src/DEF/global_ts.cpp.o"
 },
 {
   "directory": "/home/zakaria/TesiMagistrale/build",

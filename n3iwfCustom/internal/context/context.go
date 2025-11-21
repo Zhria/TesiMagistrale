@@ -70,7 +70,7 @@ type N3IWFContext struct {
 func NewContext(n3iwf n3iwf) (*N3IWFContext, error) {
 	n := &N3IWFContext{
 		n3iwf:                n3iwf,
-		RANUENGAPIDGenerator: idgenerator.NewGenerator(0, math.MaxInt64),
+		RANUENGAPIDGenerator: idgenerator.NewGenerator(1, math.MaxInt64), //Updated minValue to avoid RANUENGAPID=0
 		TEIDGenerator:        idgenerator.NewGenerator(1, math.MaxUint32),
 	}
 	cfg := n3iwf.Config()

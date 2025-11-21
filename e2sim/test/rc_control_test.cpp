@@ -251,7 +251,8 @@ static bool encode_control_message(RICcontrolMessage_t &out_msg)
   RANParameter_Value_t &val =
       item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
   val.present = RANParameter_Value_PR_valuePrintableString;
-  const char *target_id = "00112233AABBCCDD"; // esempio di identificatore NR CGI
+  // Identificatore di destinazione (es. PLMN 208-93 e N3IWF ID 136)
+  const char *target_id = "208-93-136";
   OCTET_STRING_fromBuf(&val.choice.valuePrintableString,
                        target_id,
                        (int)strlen(target_id));

@@ -18337,6 +18337,33 @@ src/DEF/e2sim_defs.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/rc_control_test.dir/build.make CMakeFiles/rc_control_test.dir/src/DEF/e2sim_defs.cpp.s
 .PHONY : src/DEF/e2sim_defs.cpp.s
 
+src/DEF/global_ts.o: src/DEF/global_ts.cpp.o
+.PHONY : src/DEF/global_ts.o
+
+# target to build an object file
+src/DEF/global_ts.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rc_control_test.dir/build.make CMakeFiles/rc_control_test.dir/src/DEF/global_ts.cpp.o
+.PHONY : src/DEF/global_ts.cpp.o
+
+src/DEF/global_ts.i: src/DEF/global_ts.cpp.i
+.PHONY : src/DEF/global_ts.i
+
+# target to preprocess a source file
+src/DEF/global_ts.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rc_control_test.dir/build.make CMakeFiles/rc_control_test.dir/src/DEF/global_ts.cpp.i
+.PHONY : src/DEF/global_ts.cpp.i
+
+src/DEF/global_ts.s: src/DEF/global_ts.cpp.s
+.PHONY : src/DEF/global_ts.s
+
+# target to generate assembly for a file
+src/DEF/global_ts.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/kpm_callbacks.dir/build.make CMakeFiles/kpm_callbacks.dir/src/DEF/global_ts.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/rc_control_test.dir/build.make CMakeFiles/rc_control_test.dir/src/DEF/global_ts.cpp.s
+.PHONY : src/DEF/global_ts.cpp.s
+
 src/E2AP/e2ap_asn1c_codec.o: src/E2AP/e2ap_asn1c_codec.c.o
 .PHONY : src/E2AP/e2ap_asn1c_codec.o
 
@@ -20474,6 +20501,9 @@ help:
 	@echo "... src/DEF/e2sim_defs.o"
 	@echo "... src/DEF/e2sim_defs.i"
 	@echo "... src/DEF/e2sim_defs.s"
+	@echo "... src/DEF/global_ts.o"
+	@echo "... src/DEF/global_ts.i"
+	@echo "... src/DEF/global_ts.s"
 	@echo "... src/E2AP/e2ap_asn1c_codec.o"
 	@echo "... src/E2AP/e2ap_asn1c_codec.i"
 	@echo "... src/E2AP/e2ap_asn1c_codec.s"
