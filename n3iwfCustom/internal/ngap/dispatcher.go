@@ -94,6 +94,8 @@ func (s *Server) NGAPDispatch(conn *sctp.SCTPConn, msg []byte) {
 			s.HandleNGSetupResponse(sctpAddr, conn, pdu)
 		case ngapType.ProcedureCodeNGReset:
 			s.HandleNGResetAcknowledge(amf, pdu)
+		case ngapType.ProcedureCodeHandoverPreparation:
+			s.HandleHandoverCommand(amf, pdu)
 		case ngapType.ProcedureCodePDUSessionResourceModifyIndication:
 			s.HandlePDUSessionResourceModifyConfirm(amf, pdu)
 		case ngapType.ProcedureCodeRANConfigurationUpdate:
@@ -114,6 +116,8 @@ func (s *Server) NGAPDispatch(conn *sctp.SCTPConn, msg []byte) {
 			s.HandleNGSetupFailure(sctpAddr, conn, pdu)
 		case ngapType.ProcedureCodeRANConfigurationUpdate:
 			s.HandleRANConfigurationUpdateFailure(amf, pdu)
+		case ngapType.ProcedureCodeHandoverPreparation:
+			s.HandleHandoverPreparationFailure(amf, pdu)
 		default:
 			ngapLog.Warnf("Not implemented NGAP message(unsuccessfulOutcome), procedureCode:%d]\n",
 				unsuccessfulOutcome.ProcedureCode.Value)

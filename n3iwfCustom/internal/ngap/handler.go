@@ -3701,6 +3701,144 @@ func (s *Server) HandleHandoverRequest(
 	}
 }
 
+func (s *Server) HandleHandoverPreparationFailure(
+	amf *n3iwf_context.N3IWFAMF,
+	pdu *ngapType.NGAPPDU,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Warn("Handle Handover Preparation Failure")
+
+	var amfUeNgapID *ngapType.AMFUENGAPID
+	var ranUeNgapID *ngapType.RANUENGAPID
+	var cause *ngapType.Cause
+	var criticalityDiagnostics *ngapType.CriticalityDiagnostics
+
+	metricStatusOk := false
+	defer ngap_metrics.IncrMetricsRcvMsg(ngap_metrics.HANDOVER_PREPARATION_FAILURE, &metricStatusOk, cause)
+
+	if pdu == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+
+	unsuccessfulOutcome := pdu.UnsuccessfulOutcome
+	if unsuccessfulOutcome == nil {
+		ngapLog.Error("UnsuccessfulOutcome is nil")
+		return
+	}
+
+	handoverPreparationFailure := unsuccessfulOutcome.Value.HandoverPreparationFailure
+	if handoverPreparationFailure == nil {
+		ngapLog.Error("HandoverPreparationFailure is nil")
+		return
+	}
+
+	for _, ie := range handoverPreparationFailure.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+			amfUeNgapID = ie.Value.AMFUENGAPID
+		case ngapType.ProtocolIEIDRANUENGAPID:
+			ranUeNgapID = ie.Value.RANUENGAPID
+		case ngapType.ProtocolIEIDCause:
+			cause = ie.Value.Cause
+		case ngapType.ProtocolIEIDCriticalityDiagnostics:
+			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
+		default:
+			ngapLog.Tracef("Unhandled IE in HandoverPreparationFailure: %d", ie.Id.Value)
+		}
+	}
+
+	if amfUeNgapID == nil {
+		ngapLog.Warn("AMF UE NGAP ID missing in HandoverPreparationFailure")
+	}
+	if ranUeNgapID != nil {
+		amfID := int64(0)
+		if amfUeNgapID != nil {
+			amfID = amfUeNgapID.Value
+		}
+		if ranUe, ok := s.Context().RanUePoolLoad(ranUeNgapID.Value); ok {
+			ngapLog.Warnf("Handover preparation failed for RanUeNgapId=%d (AMF UE NGAP ID=%d)",
+				ranUeNgapID.Value, amfID)
+			_ = ranUe
+		} else {
+			ngapLog.Warnf("Handover preparation failed for unknown RanUeNgapId=%d", ranUeNgapID.Value)
+		}
+	}
+
+	if cause != nil {
+		printAndGetCause(cause)
+	}
+	if criticalityDiagnostics != nil {
+		printCriticalityDiagnostics(criticalityDiagnostics)
+	}
+
+	metricStatusOk = true
+}
+
+func (s *Server) HandleHandoverCommand(
+	amf *n3iwf_context.N3IWFAMF,
+	pdu *ngapType.NGAPPDU,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Warn("Handle Handover Command (not fully supported, dropping)")
+
+	var amfUeNgapID *ngapType.AMFUENGAPID
+	var ranUeNgapID *ngapType.RANUENGAPID
+	var criticalityDiagnostics *ngapType.CriticalityDiagnostics
+	var cause *ngapType.Cause
+
+	metricStatusOk := false
+	defer ngap_metrics.IncrMetricsRcvMsg(ngap_metrics.HANDOVER_COMMAND, &metricStatusOk, cause)
+
+	if pdu == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+
+	successfulOutcome := pdu.SuccessfulOutcome
+	if successfulOutcome == nil {
+		ngapLog.Error("SuccessfulOutcome is nil")
+		return
+	}
+
+	handoverCommand := successfulOutcome.Value.HandoverCommand
+	if handoverCommand == nil {
+		ngapLog.Error("HandoverCommand is nil")
+		return
+	}
+
+	for _, ie := range handoverCommand.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+			amfUeNgapID = ie.Value.AMFUENGAPID
+		case ngapType.ProtocolIEIDRANUENGAPID:
+			ranUeNgapID = ie.Value.RANUENGAPID
+		case ngapType.ProtocolIEIDCriticalityDiagnostics:
+			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
+		default:
+			ngapLog.Tracef("Unhandled IE in HandoverCommand: %d", ie.Id.Value)
+		}
+	}
+
+	if ranUeNgapID != nil {
+		amfID := int64(0)
+		if amfUeNgapID != nil {
+			amfID = amfUeNgapID.Value
+		}
+		ngapLog.Warnf("Received HandoverCommand for RanUeNgapId=%d (AMF UE NGAP ID=%d) but it is not handled",
+			ranUeNgapID.Value, amfID)
+	} else {
+		ngapLog.Warn("Received HandoverCommand without RAN UE NGAP ID")
+	}
+
+	if criticalityDiagnostics != nil {
+		printCriticalityDiagnostics(criticalityDiagnostics)
+	}
+
+	metricStatusOk = true
+	_ = amf
+}
+
 func (s *Server) HandleSendSendUEContextRelease(
 	ngapEvent n3iwf_context.NgapEvt,
 ) {
