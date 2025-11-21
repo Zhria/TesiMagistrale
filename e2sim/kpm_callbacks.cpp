@@ -46,6 +46,10 @@ extern "C"
 #include "E2SM-KPM-ActionDefinition-Format5.h"
 #include "E2SM-KPM-EventTriggerDefinition.h"
 #include "E2SM-KPM-EventTriggerDefinition-Format1.h"
+#include "E2SM-KPM-IndicationHeader-Format1.h"
+#include "E2SM-KPM-IndicationMessage-Format3.h"
+#include "MatchingUeCondPerSubItem.h"
+#include "MatchingUeCondPerSubList.h"
 }
 
 #include "kpm_callbacks.hpp"
@@ -143,7 +147,8 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
   return ok;
 }
 
-struct KpmWorkerCtx {
+struct KpmWorkerCtx
+{
   std::shared_ptr<std::atomic_bool> stop_flag;
   std::thread worker;
 
@@ -160,14 +165,16 @@ struct KpmWorkerCtx {
 static std::mutex g_kpm_workers_mutex;
 static std::map<SubscriptionKey, KpmWorkerCtx> g_kpm_workers;
 
-static void stop_kpm_worker(const SubscriptionKey &key) {
+static void stop_kpm_worker(const SubscriptionKey &key)
+{
   std::shared_ptr<std::atomic_bool> stop_flag;
   std::thread worker;
 
   {
     std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
     auto it = g_kpm_workers.find(key);
-    if (it == g_kpm_workers.end()) {
+    if (it == g_kpm_workers.end())
+    {
       return;
     }
     stop_flag = it->second.stop_flag;
@@ -175,21 +182,26 @@ static void stop_kpm_worker(const SubscriptionKey &key) {
     g_kpm_workers.erase(it);
   }
 
-  if (stop_flag) {
+  if (stop_flag)
+  {
     stop_flag->store(true);
   }
-  if (worker.joinable()) {
+  if (worker.joinable())
+  {
     worker.join();
   }
 }
 
-static void stop_all_kpm_workers() {
+static void stop_all_kpm_workers()
+{
   std::vector<std::thread> workers_to_join;
 
   {
     std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
-    for (auto &entry : g_kpm_workers) {
-      if (entry.second.stop_flag) {
+    for (auto &entry : g_kpm_workers)
+    {
+      if (entry.second.stop_flag)
+      {
         entry.second.stop_flag->store(true);
       }
       workers_to_join.emplace_back(std::move(entry.second.worker));
@@ -197,39 +209,48 @@ static void stop_all_kpm_workers() {
     g_kpm_workers.clear();
   }
 
-  for (auto &t : workers_to_join) {
-    if (t.joinable()) {
+  for (auto &t : workers_to_join)
+  {
+    if (t.joinable())
+    {
       t.join();
     }
   }
 }
 
-void stop_kpm_subscription(long requestorId, long instanceId, long ranFunctionId) {
+void stop_kpm_subscription(long requestorId, long instanceId, long ranFunctionId)
+{
   std::vector<SubscriptionKey> keys_to_stop;
   {
     std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
-    for (const auto &entry : g_kpm_workers) {
+    for (const auto &entry : g_kpm_workers)
+    {
       const auto &key = entry.first;
-      if (ranFunctionId >= 0 && key.ranFunctionId != ranFunctionId) {
+      if (ranFunctionId >= 0 && key.ranFunctionId != ranFunctionId)
+      {
         continue;
       }
-      if (requestorId >= 0 && key.requestorId != requestorId) {
+      if (requestorId >= 0 && key.requestorId != requestorId)
+      {
         continue;
       }
-      if (instanceId >= 0 && key.instanceId != instanceId) {
+      if (instanceId >= 0 && key.instanceId != instanceId)
+      {
         continue;
       }
       keys_to_stop.push_back(key);
     }
   }
 
-  if (keys_to_stop.empty()) {
+  if (keys_to_stop.empty())
+  {
     logln("KPM subscription delete: no active worker for req=%ld inst=%ld ranFunc=%ld",
           requestorId, instanceId, ranFunctionId);
     return;
   }
 
-  for (const auto &key : keys_to_stop) {
+  for (const auto &key : keys_to_stop)
+  {
     logln("KPM subscription delete: stopping worker req=%ld inst=%ld ranFunc=%ld action=%ld",
           key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
     stop_kpm_worker(key);
@@ -293,7 +314,6 @@ int main(int argc, char *argv[])
   registerKPMfunctionDefinition();
 
   registerRCfunctionDefinition(e2);
-  
 
   // Avvia loop del simulatore
   e2.run_loop(argc, argv);
@@ -343,7 +363,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
-  
+
     std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
     if (kpi.empty())
     {
@@ -401,16 +421,16 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       continue;
     }
 
-    //log_kpm_parameters(kpi);
+    // log_kpm_parameters(kpi);
 
     generate_e2apv2_indication_request_parameterized(pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
-        hdr_buf, (int)ehr.encoded, msg_buf, (int)emr.encoded);
+                                                     hdr_buf, (int)ehr.encoded, msg_buf, (int)emr.encoded);
 
     e2.encode_and_send_sctp_data(pdu);
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
-    logln("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld",requestorId, instanceId, ranFunctionId, actionId, seqNum);  
+    logln("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld", requestorId, instanceId, ranFunctionId, actionId, seqNum);
 
     seqNum++;
   }
@@ -421,14 +441,14 @@ static void start_kpm_worker(const SubscriptionKey &key,
                              long instanceId,
                              long ranFunctionId,
                              long actionId,
-                             GranularityPeriod_t granularityPeriod) {
+                             GranularityPeriod_t granularityPeriod)
+{
   stop_kpm_worker(key);
 
   auto stop_flag = std::make_shared<std::atomic_bool>(false);
 
-  std::thread worker([requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag]() {
-    run_report_loop(requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag);
-  });
+  std::thread worker([requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag]()
+                     { run_report_loop(requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag); });
 
   std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
   g_kpm_workers.emplace(key, KpmWorkerCtx{std::move(worker), stop_flag});
@@ -462,78 +482,50 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 
   logln("[KPM SUB] ActionDefinition decoded: present=%d", ad->actionDefinition_formats.present);
 
-  // Cerchiamo ovunque un blocco Format1 da cui leggere il granularityPeriod
   E2SM_KPM_ActionDefinition_Format1_t *f1 = nullptr;
   GranularityPeriod_t gp = 0;
-  bool have_gp = false;
-
-  // Format1: direttamente
+  MatchingUeCondPerSubList_t matchingConditions;
+  E2SM_KPM_ActionDefinition_Format4_t *f4 = nullptr;
   if (ad->actionDefinition_formats.present ==
-      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format1)
+      E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
   {
-    f1 = ad->actionDefinition_formats.choice.actionDefinition_Format1;
-  }
-  // Format4: UE-conditional, con subscriptionInfo (Format1)
-  else if (ad->actionDefinition_formats.present ==
-           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format4)
-  {
-    E2SM_KPM_ActionDefinition_Format4_t *f4 =
-        ad->actionDefinition_formats.choice.actionDefinition_Format4;
+    f4 = ad->actionDefinition_formats.choice.actionDefinition_Format4;
     if (f4)
     {
+      matchingConditions = f4->matchingUeCondList;
       f1 = &f4->subscriptionInfo;
       logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
+      gp = f1->granulPeriod;
     }
   }
-  // Format2: per-UE, con subscriptInfo (Format1)
-  else if (ad->actionDefinition_formats.present ==
-           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format2)
+  else
   {
-    E2SM_KPM_ActionDefinition_Format2_t *f2 =
-        ad->actionDefinition_formats.choice.actionDefinition_Format2;
-    if (f2)
-    {
-      f1 = &f2->subscriptInfo;
-      logln("[KPM SUB] Using subscriptInfo (Format1) from ActionDefinition Format2");
-      logln("[KPM SUB] UEID :");
-      xer_fprint(stdout, &asn_DEF_UEID, &f2->ueID);
-    }
-  }
-  // Format5: per-UE (per subscription), con subscriptionInfo (Format1)
-  else if (ad->actionDefinition_formats.present ==
-           E2SM_KPM_ActionDefinition__actionDefinition_formats_PR_actionDefinition_Format5)
-  {
-    E2SM_KPM_ActionDefinition_Format5_t *f5 =
-        ad->actionDefinition_formats.choice.actionDefinition_Format5;
-    if (f5)
-    {
-      f1 = &f5->subscriptionInfo;
-      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format5");
-    }
-  }
-
-  if (f1)
-  {
-    gp = f1->granulPeriod;
-    have_gp = true;
-  }
-
-  if (!have_gp)
-  {
-    logln("[KPM SUB] Unsupported ActionDefinition format, cannot find granularityPeriod");
+    logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     return false;
   }
 
-  // Se abbiamo un blocco Format1 interno possiamo opzionalmente estrarre i nomi delle misure,
-  // ma non falliamo se la lista è vuota: il chiamante è interessato soprattutto al granularityPeriod.
+  // Mi aspetto delle matching conditions riguardo a sst e sd.
+  for (int i = 0; i < matchingConditions.list.count; ++i)
+  {
+    MatchingUeCondPerSubItem_t *item = matchingConditions.list.array[i];
+    if (!item)
+      continue;
+
+    if (item->testCondInfo.testType.present == TestCond_Type_PR_sNSSAI)
+    {
+      logln("[KPM SUB] Found matching condition on sNSSAI");
+    }
+  }
+
+  *granularityPeriod = gp;
+
   if (f1)
   {
     int n = f1->measInfoList.list.count;
     if (n > 0)
     {
-      MeasurementInfoItem_t **arr =
-          (MeasurementInfoItem_t **)f1->measInfoList.list.array;
+      MeasurementInfoItem_t **arr = (MeasurementInfoItem_t **)f1->measInfoList.list.array;
 
       for (int i = 0; i < n; ++i)
       {
@@ -542,8 +534,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
           continue;
 
         MeasurementType_t *mt = &mi->measType;
-        if (mt->present == MeasurementType_PR_measName &&
-            mt->choice.measName.buf && mt->choice.measName.size > 0)
+        if (mt->present == MeasurementType_PR_measName && mt->choice.measName.buf && mt->choice.measName.size > 0)
         {
           out_meas.emplace_back((char *)mt->choice.measName.buf,
                                 mt->choice.measName.size);
@@ -552,7 +543,6 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     }
   }
 
-  *granularityPeriod = gp;
   logln("[KPM SUB] Extracted %d measurement names (may be 0), granularityPeriod=%ld",
         (int)out_meas.size(), (long)*granularityPeriod);
   return true;
@@ -593,7 +583,6 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     RICsubscriptionRequest_IEs_t *next_ie = ies[i];
     pres = next_ie->value.present;
 
-
     switch (pres)
     {
     case RICsubscriptionRequest_IEs__value_PR_RICrequestID:
@@ -608,7 +597,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     case RICsubscriptionRequest_IEs__value_PR_RANfunctionID:
     {
       long ranFuncId = next_ie->value.choice.RANfunctionID;
-      if( ranFuncId != 2 ) // KPM
+      if (ranFuncId != 2) // KPM
       {
         logln("Received Subscription Request for unsupported RANfunctionID %ld, ignoring\n", ranFuncId);
         return;
@@ -619,26 +608,26 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     {
       RICsubscriptionDetails_t subDetails = next_ie->value.choice.RICsubscriptionDetails;
       RICactions_ToBeSetup_List_t actionList = subDetails.ricAction_ToBeSetup_List;
-      //Recupero event trigger definition
+      // Recupero event trigger definition
       RICeventTriggerDefinition_t eventTriggerDefinition = subDetails.ricEventTriggerDefinition;
       E2SM_KPM_EventTriggerDefinition_t *ad = nullptr;
-      asn_dec_rval_t dr = aper_decode( nullptr,
-      &asn_DEF_E2SM_KPM_EventTriggerDefinition,(void **)&ad,eventTriggerDefinition.buf, eventTriggerDefinition.size,0, 0);
+      asn_dec_rval_t dr = aper_decode(nullptr,
+                                      &asn_DEF_E2SM_KPM_EventTriggerDefinition, (void **)&ad, eventTriggerDefinition.buf, eventTriggerDefinition.size, 0, 0);
 
       if (dr.code != RC_OK || !ad)
       {
         logln("[KPM SUB] TriggerDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
         return;
       }
-      if (ad->eventDefinition_formats.present == E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1){
-        E2SM_KPM_EventTriggerDefinition_Format1_t *f1=ad->eventDefinition_formats.choice.eventDefinition_Format1;
+      if (ad->eventDefinition_formats.present == E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
+      {
+        E2SM_KPM_EventTriggerDefinition_Format1_t *f1 = ad->eventDefinition_formats.choice.eventDefinition_Format1;
         if (f1)
         {
           reportingPeriod = f1->reportingPeriod;
-          logln("[KPM SUB] Extracted reportingPeriod=%ld from EventTriggerDefinition Format1",(long)reportingPeriod);
+          logln("[KPM SUB] Extracted reportingPeriod=%ld from EventTriggerDefinition Format1", (long)reportingPeriod);
         }
       }
-      
 
       RICaction_ToBeSetup_ItemIEs_t **item_array =
           (RICaction_ToBeSetup_ItemIEs_t **)actionList.list.array;
@@ -721,7 +710,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
-    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n",accept_size, reject_size);
+    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n", accept_size, reject_size);
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;
@@ -732,10 +721,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   e2.encode_and_send_sctp_data(e2ap_pdu);
 
   long funcId = 2; // KPM
-  if (accept_size > 0 && reqActionId >= 0) {
+  if (accept_size > 0 && reqActionId >= 0)
+  {
     SubscriptionKey key{reqRequestorId, reqInstanceId, funcId, reqActionId};
     start_kpm_worker(key, reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
-  } else {
+  }
+  else
+  {
     logln("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
   }
 }
@@ -753,7 +745,8 @@ void registerKPMfunctionDefinition()
 
   // Deve riempire i campi secondo KPM v3
   encode_kpm_function_description(ranfunc_desc);
-
+  logln("KPM RANfunction-Description XER dump:");
+  xer_fprint(stdout, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
   // Codifica della RANfunction-Description
   const size_t e2smbuffer_size = 16384;
   uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
@@ -797,8 +790,8 @@ void registerKPMfunctionDefinition()
   // Registra la SM (FunctionID=2) e callback subscription
   e2.register_e2sm(2, ranfunc_ostr);
   e2.register_subscription_callback(2, &callback_kpm_subscription_request);
-  const char* oid = "1.3.6.1.4.1.53148.1.1.2.2"; 
-  PrintableString_t* ranFunctionOIDe = (PrintableString_t*)calloc(1, sizeof(PrintableString_t));
+  const char *oid = "1.3.6.1.4.1.53148.1.1.2.2";
+  PrintableString_t *ranFunctionOIDe = (PrintableString_t *)calloc(1, sizeof(PrintableString_t));
   OCTET_STRING_fromBuf(ranFunctionOIDe, oid, strlen(oid));
   e2.register_e2sm_oid(2, ranFunctionOIDe);
 
