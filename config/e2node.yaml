@@ -12,4 +12,4 @@ configuration:
   # HTTP endpoint used by the RC callbacks to trigger N3IWF handover.
   # If set, this overrides the built‑in default and the RC code will
   # send POST /rc/handover to this URL.
-  n3iwfHandoverUrl: "http://192.168.10.254:9085/rc/handover"
+  n3iwfHandoverUrl: "http://10.100.200.15:9085/rc/handover"
