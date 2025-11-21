@@ -508,8 +508,8 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     }
 
     logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
-    ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
-    return false;
+    // ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
+    // return false;
   }
 
   // Mi aspetto delle matching conditions riguardo a sst e sd.
