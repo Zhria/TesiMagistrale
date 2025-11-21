@@ -32,6 +32,9 @@ extern "C" {
 #include "../rc_callbacks.hpp"
 #include "../n3iwf_data.hpp"
 
+// Stub per soddisfare il link da e2ap_message_handler.cpp (non usato in questo test)
+void stop_kpm_subscription(long, long, long) {}
+
 // Simple helper: build a RANUEID (OCTET STRING) from a 64-bit integer, big-endian.
 static bool build_ran_ueid_from_long(long id, RANUEID_t *&out)
 {

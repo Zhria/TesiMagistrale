@@ -67,7 +67,7 @@ extern "C"
 #include <atomic>
 #include <signal.h>
 
-struct timespec ts; // DEFINIZIONE (una sola volta in tutto l’eseguibile)
+extern struct timespec ts;
 
 using namespace std;
 using json = nlohmann::json;

@@ -62,4 +62,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/kpm_callbacks.dir/DependInfo.cmake"
+  "CMakeFiles/rc_control_test.dir/DependInfo.cmake"
   )

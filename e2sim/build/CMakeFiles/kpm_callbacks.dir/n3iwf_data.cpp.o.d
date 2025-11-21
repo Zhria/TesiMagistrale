@@ -587,9 +587,16 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/MeasurementInfo-Action-Item.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID-GNB.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/AMF-UE-NGAP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GUAMI.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/AMFRegionID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/AMFSetID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/AMFPointer.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANUEID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NG-RANnodeUEXnAPID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/UEID-GNB-DU.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UE-F1AP-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANUEID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANUEID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UE-F1AP-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Cause.h \

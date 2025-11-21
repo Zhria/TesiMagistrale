@@ -53,32 +53,41 @@ file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/e2sim.cpp"
   "${E2SIM_ROOT}/encode_kpm.cpp"
   "${E2SIM_ROOT}/encode_rc.cpp"
-
-  "${E2SIM_ROOT}/kpm_callbacks.cpp"
   "${E2SIM_ROOT}/rc_callbacks.cpp"
-  "${E2SIM_ROOT}/encode_e2apv2.cpp" 
+  "${E2SIM_ROOT}/encode_e2apv2.cpp"
   "${E2SIM_ROOT}/n3iwf_data.cpp"
   "${E2SIM_ROOT}/n3iwf_utils.cpp"
-
   "${E2SIM_ROOT}/src/DEF/*.cpp"
   "${E2SIM_ROOT}/src/SCTP/*.cpp"
   "${E2SIM_ROOT}/src/E2AP/*.c"
   "${E2SIM_ROOT}/src/E2AP/*.cpp"
   "${E2SIM_ROOT}/ASN1c/*.c"
+)
 
-  )
+add_executable(kpm_callbacks
+  "${E2SIM_ROOT}/kpm_callbacks.cpp"
+  ${E2SIM_SOURCES}
+)
 
-#add_executable(e2sim ${E2SIM_SOURCES})
-add_executable(kpm_callbacks ${E2SIM_SOURCES})
-#target_link_libraries( e2sim ${SCTP_STD_LIB} )
 target_link_libraries( kpm_callbacks ${SCTP_STD_LIB}
     CURL::libcurl
     yaml-cpp                      
     nlohmann_json::nlohmann_json 
     Threads::Threads
  )
-#target_link_libraries( e2sim Threads::Threads )
-#target_link_libraries( kpm_callbacks Threads::Threads  )
+
+# Test standalone per RICcontrolRequest che chiama direttamente callback_rc_control_request
+add_executable(rc_control_test
+  "${E2SIM_ROOT}/test/rc_control_test.cpp"
+  ${E2SIM_SOURCES}
+)
+
+target_link_libraries( rc_control_test ${SCTP_STD_LIB}
+    CURL::libcurl
+    yaml-cpp
+    nlohmann_json::nlohmann_json
+    Threads::Threads
+)
 
 #----------------------------------------------
 #file(GLOB RICSIM_SOURCES
@@ -93,4 +102,3 @@ target_link_libraries( kpm_callbacks ${SCTP_STD_LIB}
 #  )
 #add_executable(ricsim ${RICSIM_SOURCES})
 #target_link_libraries( ricsim ${SCTP_STD_LIB}  )
-
