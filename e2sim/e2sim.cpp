@@ -38,7 +38,7 @@ std::mutex g_sctp_send_mutex;
 
 using namespace std;
 
-int client_fd = 0;
+int client_fd = -1;
 
 static inline void set_octet_string(OCTET_STRING_t* dst, const void* src, size_t len) {
   if (!dst) return;

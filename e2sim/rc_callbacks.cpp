@@ -1236,7 +1236,7 @@ namespace
         {
             return fail("RC control message does not contain any RAN parameters");
         }
-        const bool has_target_gnb = find_param(ctx, 1) != nullptr;
+        const bool has_target_gnb = !get_target_identifier_value(ctx).empty();
         if (!has_target_gnb)
         {
             return fail("RC control message missing target gNB/NR CGI parameters");
