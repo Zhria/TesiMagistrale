@@ -550,6 +550,8 @@ namespace
 
         struct curl_slist *headers = nullptr;
         headers = curl_slist_append(headers, "Content-Type: application/json");
+        logln("[RC CTRL] HTTP POST %s", url.c_str());
+        logln("[RC CTRL] Payload: %s", payload.c_str());
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
