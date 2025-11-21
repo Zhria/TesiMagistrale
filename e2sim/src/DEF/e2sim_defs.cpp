@@ -138,6 +138,14 @@ options_t read_input_options(int argc, char *argv[])
         localAddr = cfg["localAddress"].as<std::string>("");
       }
 
+      // URL HTTP per il trigger dell'handover verso l'N3IWF (opzionale).
+      // Se presente, viene propagata alla logica RC tramite variabile
+      // d'ambiente RC_HANDOVER_TRIGGER_URL, evitando indirizzi hardcoded.
+      std::string hoUrl;
+      if (cfg["n3iwfHandoverUrl"] && cfg["n3iwfHandoverUrl"].IsScalar()) {
+        hoUrl = cfg["n3iwfHandoverUrl"].as<std::string>("");
+      }
+
       int ricPort = -1;
       if (cfg["ricPort"]) {
         ricPort = cfg["ricPort"].as<int>(-1);
@@ -166,6 +174,14 @@ options_t read_input_options(int argc, char *argv[])
       options.local_ip = locAddr;
 
       LOG_I("Loaded RIC from config: %s:%d", options.server_ip, options.server_port);
+
+      if (!hoUrl.empty()) {
+        if (setenv("RC_HANDOVER_TRIGGER_URL", hoUrl.c_str(), 1) != 0) {
+          LOG_E("Failed to set RC_HANDOVER_TRIGGER_URL from config (n3iwfHandoverUrl)\n");
+        } else {
+          LOG_I("Using N3IWF handover URL from config: %s", hoUrl.c_str());
+        }
+      }
     } catch (const std::exception& e) {
       LOG_E("Failed to parse YAML config %s: %s\n", config_path, e.what());
       std::exit(1);
