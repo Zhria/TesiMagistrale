@@ -507,23 +507,23 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
       gp = f1->granulPeriod;
     }
 
-    logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
+    // logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
     // ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     // return false;
   }
 
   // Mi aspetto delle matching conditions riguardo a sst e sd.
-  for (int i = 0; i < matchingConditions.list.count; ++i)
-  {
-    MatchingUeCondPerSubItem_t *item = matchingConditions.list.array[i];
-    if (!item)
-      continue;
+  // for (int i = 0; i < matchingConditions.list.count; ++i)
+  // {
+  //   MatchingUeCondPerSubItem_t *item = matchingConditions.list.array[i];
+  //   if (!item)
+  //     continue;
 
-    if (item->testCondInfo.testType.present == TestCond_Type_PR_sNSSAI)
-    {
-      logln("[KPM SUB] Found matching condition on sNSSAI");
-    }
-  }
+  //   if (item->testCondInfo.testType.present == TestCond_Type_PR_sNSSAI)
+  //   {
+  //     logln("[KPM SUB] Found matching condition on sNSSAI");
+  //   }
+  // }
 
   *granularityPeriod = gp;
 
