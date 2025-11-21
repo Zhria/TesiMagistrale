@@ -500,6 +500,13 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
   }
   else
   {
+    E2SM_KPM_ActionDefinition_Format2_t *f2 = ad->actionDefinition_formats.choice.actionDefinition_Format2;
+    if(f2){
+      f1 = &f2->subscriptInfo;
+      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format2");
+      gp = f1->granulPeriod;
+    }
+
     logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     return false;
@@ -543,7 +550,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     }
   }
 
-  logln("[KPM SUB] Extracted %d measurement names (may be 0), granularityPeriod=%ld",
+  logln("[KPM SUB] Extracted %d measurement names, granularityPeriod=%ld",
         (int)out_meas.size(), (long)*granularityPeriod);
   return true;
 }
