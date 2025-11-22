@@ -67,7 +67,7 @@ services:
     command: ./amf -c ./config/amfcfg.yaml
     ports:
         - "8000:8000" 
-        - "38412:38412/udp"
+        - "38412:38412/sctp"
     volumes:
       - ./config/amfcfg.yaml:/free5gc/config/amfcfg.yaml
       - ./cert:/free5gc/cert
