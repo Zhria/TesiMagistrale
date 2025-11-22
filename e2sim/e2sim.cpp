@@ -157,7 +157,7 @@ int E2Sim::run_loop(int argc, char* argv[]){
   //Generate E2AP PDU for E2 Setup Request
   logln("About to generate E2AP PDU for E2 Setup Request\n");
   logln("Number of RAN Functions: %zu\n", all_funcs.size());
-  generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs);
+  generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs, ops.gNB_CU_UP_ID, ops.gNB_DU_ID);
 
   logln("After generating e2setup req ----------------------------------------------------------\n");
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
