@@ -1,7 +1,9 @@
 package ngap
 
 import (
+	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"math"
 	"net"
@@ -11,11 +13,14 @@ import (
 	"github.com/wmnsk/go-gtp/gtpv1"
 
 	"github.com/free5gc/aper"
+	"github.com/free5gc/ike"
+	ike_message "github.com/free5gc/ike/message"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/nas/nas_security"
 	"github.com/free5gc/n3iwf/internal/ngap/message"
 	"github.com/free5gc/n3iwf/internal/rc"
+	"github.com/free5gc/n3iwf/pkg/factory"
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/sctp"
@@ -3735,7 +3740,11 @@ func (s *Server) HandleHandoverRequest(
 		return
 	}
 
-	targetToSource := []byte(fmt.Sprintf("N3IWF:%s", gtpBindAddr))
+	targetToSource, err := buildTargetToSourceContainer(sharedCtx, s.Config(), securityContext)
+	if err != nil {
+		ngapLog.Errorf("Build target-to-source container failed: %v", err)
+		return
+	}
 
 	ackPkt, err := message.BuildHandoverRequestAcknowledge(
 		n3iwfUe,
@@ -3933,6 +3942,12 @@ func (s *Server) HandleHandoverCommand(
 		}
 	}
 
+	if targetToSourceContainer != nil && ranUe != nil {
+		shared := ranUe.GetSharedCtx()
+		shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
+		sendTargetToSourceToUE(shared)
+	}
+
 	if ranUeNgapID != nil {
 		amfID := int64(0)
 		if amfUeNgapID != nil {
@@ -3948,6 +3963,164 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	metricStatusOk = true
+}
+
+type targetAccessInfo struct {
+	N3IwfIP      string `json:"n3iwfIp"`
+	FQDN         string `json:"fqdn,omitempty"`
+	IKEPort      uint16 `json:"ikePort"`
+	NATTPort     uint16 `json:"nattPort"`
+	NATTraversal bool   `json:"natTraversal"`
+}
+
+type targetNASInfo struct {
+	NCC  int64  `json:"ncc,omitempty"`
+	NH   string `json:"nh,omitempty"`
+	GUTI string `json:"guti,omitempty"`
+}
+
+type targetPduSessionInfo struct {
+	ID      int64   `json:"id"`
+	UPFAddr string  `json:"upfAddr,omitempty"`
+	TEID    uint32  `json:"teid"`
+	QFIList []uint8 `json:"qfiList,omitempty"`
+}
+
+type wifiConfig struct {
+	// TODO: populate Wi-Fi roaming parameters (SSID list, priority, EAP creds, etc.)
+}
+
+type targetToSourceInfo struct {
+	Access      targetAccessInfo       `json:"access"`
+	NAS         targetNASInfo          `json:"nas"`
+	PDUSessions []targetPduSessionInfo `json:"pduSessions,omitempty"`
+	Wifi        *wifiConfig            `json:"wifi,omitempty"`
+}
+
+const notifyTypeTargetToSource uint16 = 40960 // private-use notify type carrying TargetToSource info
+
+func buildTargetToSourceContainer(
+	sharedCtx *n3iwf_context.RanUeSharedCtx,
+	cfg *factory.Config,
+	secCtx *ngapType.SecurityContext,
+) ([]byte, error) {
+	if sharedCtx == nil {
+		return nil, errors.New("nil shared UE context")
+	}
+	if cfg == nil {
+		return nil, errors.New("nil config")
+	}
+
+	access := targetAccessInfo{
+		N3IwfIP:      cfg.GetIPSecGatewayAddr(),
+		FQDN:         cfg.GetFQDN(),
+		IKEPort:      500,
+		NATTPort:     4500,
+		NATTraversal: true,
+	}
+
+	nas := targetNASInfo{}
+	if secCtx != nil {
+		nas.NCC = secCtx.NextHopChainingCount.Value
+		nas.NH = base64.StdEncoding.EncodeToString(secCtx.NextHopNH.Value.Bytes)
+	}
+	if sharedCtx.Guti != "" {
+		nas.GUTI = sharedCtx.Guti
+	}
+
+	var pduSessions []targetPduSessionInfo
+	for id, sess := range sharedCtx.PduSessionList {
+		if sess == nil || sess.GTPConnInfo == nil {
+			continue
+		}
+		info := targetPduSessionInfo{
+			ID:      id,
+			UPFAddr: sess.GTPConnInfo.UPFIPAddr,
+			TEID:    sess.GTPConnInfo.OutgoingTEID,
+			QFIList: append([]uint8(nil), sess.QFIList...),
+		}
+		pduSessions = append(pduSessions, info)
+	}
+
+	wifi := getWifiConfig()
+
+	payload := targetToSourceInfo{
+		Access:      access,
+		NAS:         nas,
+		PDUSessions: pduSessions,
+		Wifi:        wifi,
+	}
+
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal targetToSource: %w", err)
+	}
+	return data, nil
+}
+
+// getWifiConfig is a stub placeholder to be completed with Wi-Fi roaming data retrieval.
+func getWifiConfig() *wifiConfig {
+	return nil
+}
+
+func sendTargetToSourceToUE(shared *n3iwf_context.RanUeSharedCtx) {
+	ngapLog := logger.NgapLog
+	if shared == nil || len(shared.TargetToSourceContainer) == 0 {
+		return
+	}
+	n3iwfCtx := shared.N3iwfCtx
+	if n3iwfCtx == nil {
+		ngapLog.Warn("No N3IWF context to send TargetToSource to UE")
+		return
+	}
+	spi, ok := n3iwfCtx.IkeSpiLoad(shared.RanUeNgapId)
+	if !ok {
+		ngapLog.Warnf("No IKE SPI mapping for RanUeNgapId=%d", shared.RanUeNgapId)
+		return
+	}
+	ikeUe, ok := n3iwfCtx.IkeUePoolLoad(spi)
+	if !ok || ikeUe == nil || ikeUe.N3IWFIKESecurityAssociation == nil || ikeUe.IKEConnection == nil {
+		ngapLog.Warnf("Cannot load IKE UE for SPI=%d", spi)
+		return
+	}
+
+	var payload ike_message.IKEPayloadContainer
+	payload.BuildNotification(ike_message.TypeNone, notifyTypeTargetToSource, nil, shared.TargetToSourceContainer)
+	sendPayloadToUE(ikeUe, &payload)
+}
+
+// sendPayloadToUE encodes and sends an IKE message with the given payload to the UE.
+// SendUeInformationExchange from ike not used because it creates an import dependency cycle.
+func sendPayloadToUE(ikeUe *n3iwf_context.N3IWFIkeUe, payload *ike_message.IKEPayloadContainer) {
+	ikeLog := logger.IKELog
+	if ikeUe == nil || ikeUe.N3IWFIKESecurityAssociation == nil || ikeUe.IKEConnection == nil {
+		ikeLog.Warn("sendPayloadToUE: missing IKE UE or connection")
+		return
+	}
+	ikeSA := ikeUe.N3IWFIKESecurityAssociation
+	msg := ike_message.NewMessage(
+		ikeSA.RemoteSPI,
+		ikeSA.LocalSPI,
+		ike_message.INFORMATIONAL,
+		false,
+		false,
+		ikeSA.ResponderMessageID,
+		nil,
+	)
+	if payload != nil && len(*payload) > 0 {
+		msg.Payloads = append(msg.Payloads, *payload...)
+	}
+	pkt, err := ike.EncodeEncrypt(msg, ikeSA.IKESAKey, ike_message.Role_Responder)
+	if err != nil {
+		ikeLog.Errorf("sendPayloadToUE: encode failed: %+v", err)
+		return
+	}
+	if ikeUe.IKEConnection.N3IWFAddr.Port == 4500 {
+		pkt = append([]byte{0, 0, 0, 0}, pkt...)
+	}
+	if _, err := ikeUe.IKEConnection.Conn.WriteToUDP(pkt, ikeUe.IKEConnection.UEAddr); err != nil {
+		ikeLog.Errorf("sendPayloadToUE: send failed: %+v", err)
+	}
 }
 
 func (s *Server) HandleSendSendUEContextRelease(
