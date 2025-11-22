@@ -57,7 +57,10 @@ typedef struct {
   char* server_ip;
   int   server_port;
   char* local_ip;
+  long  gNB_CU_UP_ID;
+  long  gNB_DU_ID;
   //... extend as needed
+
 } options_t;
 
 options_t read_input_options(int argc, char *argv[]);

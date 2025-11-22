@@ -145,7 +145,14 @@ options_t read_input_options(int argc, char *argv[])
       if (cfg["n3iwfHandoverUrl"] && cfg["n3iwfHandoverUrl"].IsScalar()) {
         hoUrl = cfg["n3iwfHandoverUrl"].as<std::string>("");
       }
-
+      long gnbCuUpId = -1;
+      if (cfg["gnbCuUpId"]) {
+        gnbCuUpId = cfg["gnbCuUpId"].as<long>(-1);
+      }
+      long gnbDuId = -1;
+      if (cfg["gnbDuId"]) {
+        gnbDuId = cfg["gnbDuId"].as<long>(-1);
+      }
       int ricPort = -1;
       if (cfg["ricPort"]) {
         ricPort = cfg["ricPort"].as<int>(-1);
@@ -172,6 +179,8 @@ options_t read_input_options(int argc, char *argv[])
       options.server_ip   = ipdup;
       options.server_port = ricPort;
       options.local_ip = locAddr;
+      options.gNB_CU_UP_ID = gnbCuUpId;
+      options.gNB_DU_ID = gnbDuId;
 
       LOG_I("Loaded RIC from config: %s:%d", options.server_ip, options.server_port);
 

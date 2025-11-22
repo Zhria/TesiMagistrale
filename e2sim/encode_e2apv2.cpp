@@ -210,7 +210,7 @@ long get_function_id_from_control(E2AP_PDU_t *e2ap_pdu)
  * E2setupRequest (parametrica) – include RANfunctionsAdded con KPM v3
  * ========================================================================= */
 void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
-                                                 std::vector<ran_func_info> all_funcs)
+                                                 std::vector<ran_func_info> all_funcs, long CU_UP_ID, long DU_ID)
 {
   // GlobalE2node-ID.gNB
   GlobalgNB_ID_t *gnb = getGNBStore();
@@ -218,16 +218,14 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   GlobalE2node_gNB_ID_t *e2gnb = (GlobalE2node_gNB_ID_t *)calloc(1, sizeof(*e2gnb));
   e2gnb->global_gNB_ID = *gnb;
 
-  // CU-UP-ID (>0)
   e2gnb->gNB_CU_UP_ID = (GNB_CU_UP_ID_t *)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
-  if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, 1) != 0)
+  if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, CU_UP_ID) != 0)
   {
     logln("asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
 
-  // DU-ID (>0) – opzionale secondo il tuo scenario
   e2gnb->gNB_DU_ID = (GNB_DU_ID_t *)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
-  if (asn_long2INTEGER(e2gnb->gNB_DU_ID, 1) != 0)
+  if (asn_long2INTEGER(e2gnb->gNB_DU_ID, DU_ID) != 0)
   {
     logln("asn_long2INTEGER(gNB_DU_ID) failed\n");
   }

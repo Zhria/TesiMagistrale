@@ -13,3 +13,5 @@ configuration:
   # If set, this overrides the built‑in default and the RC code will
   # send POST /rc/handover to this URL.
   n3iwfHandoverUrl: "http://10.100.200.15:9085/rc/handover"
+  gnbCuUpId: 1 # gNB CU-UP ID to be used in E2AP messages
+  gnbDuId: 1    # gNB DU ID to be used in E2AP messages
