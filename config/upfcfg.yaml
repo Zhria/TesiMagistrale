@@ -13,7 +13,7 @@ gtpu:
   # The IP list of the N3/N9 interfaces on this UPF
   # If there are multiple connection, set addr to 0.0.0.0 or list all the addresses
   ifList:
-    - addr: 10.100.200.17 #upf.free5gc.org
+    - addr: 0.0.0.0 #10.100.200.17 #upf.free5gc.org
       type: N3
       # name: upf.5gc.nctu.me
       # ifname: gtpif

@@ -6,6 +6,9 @@ services:
       args:
         DEBUG_TOOLS: "false"
     command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
+    ports:
+      - "2152:2152/udp"  # GTP-U
+      - "8805:8805/udp"  # PFCP
     volumes:
       - ./config/upfcfg.yaml:/free5gc/config/upfcfg.yaml
       - ./config/upf-iptables.sh:/free5gc/upf-iptables.sh
@@ -62,8 +65,9 @@ services:
       args:
         DEBUG_TOOLS: "false"
     command: ./amf -c ./config/amfcfg.yaml
-    expose:
-      - "8000"
+    ports:
+        - "8000:8000" 
+        - "38412:38412/udp"
     volumes:
       - ./config/amfcfg.yaml:/free5gc/config/amfcfg.yaml
       - ./cert:/free5gc/cert
