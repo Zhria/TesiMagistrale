@@ -26,30 +26,29 @@
 #include <assert.h>
 */
 
-//#include <stdio>
-//#include <unistd.h>
-//#include <assert.h>
+// #include <stdio>
+// #include <unistd.h>
+// #include <assert.h>
 #include <vector>
 
-//#include "e2sim_sctp.hpp"
-//#include "e2ap_message_handler.hpp"
+// #include "e2sim_sctp.hpp"
+// #include "e2ap_message_handler.hpp"
 #include "encode_kpm.hpp"
 
-
-extern "C" {
-  //#include "e2sim_defs.h"
+extern "C"
+{
+    // #include "e2sim_defs.h"
 #include "E2AP-PDU.h"
 #include "asn_application.h"
 #include "Cause.h"
-
-
 }
 
-struct ran_func_info {
-       long ranFunctionId;
-       OCTET_STRING_t *ranFunctionDesc;
-       long ranFunctionRev;
-       PrintableString_t *ranFunctionOId;
+struct ran_func_info
+{
+    long ranFunctionId;
+    OCTET_STRING_t *ranFunctionDesc;
+    long ranFunctionRev;
+    PrintableString_t *ranFunctionOId;
 };
 
 long get_function_id_from_subscription(E2AP_PDU_t *e2ap_pdu);
@@ -59,8 +58,8 @@ void buildSubsReq(E2AP_PDU_t *pdu);
 
 void generate_e2apv2_setup_request(E2AP_PDU_t *setup_req_pdu);
 
-//void generate_e2apv1_setup_request_parameterized(E2AP_PDU_t *setup_req_pdu, long ranFuncId, uint8_t* ranFuncDesc, int ranFuncLength);
-void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *setup_req_pdu, std::vector<ran_func_info> all_funcs);
+// void generate_e2apv1_setup_request_parameterized(E2AP_PDU_t *setup_req_pdu, long ranFuncId, uint8_t* ranFuncDesc, int ranFuncLength);
+void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu, std::vector<ran_func_info> all_funcs, long CU_UP_ID, long DU_ID);
 
 void generate_e2apv2_setup_response(E2AP_PDU_t *setup_resp_pdu);
 
@@ -76,8 +75,7 @@ void generate_e2apv2_subscription_response_success(
     int reject_size,
     long reqRequestorId,
     long reqInstanceId,
-    long ranFunctionId
-);
+    long ranFunctionId);
 
 void generate_e2apv2_subscription_delete_response(
     E2AP_PDU *e2ap_pdu,
@@ -88,16 +86,15 @@ void generate_e2apv2_subscription_delete_response(
 void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu, long requestorId, long instanceId, long ranFunctionId, long actionId, long seqNum, uint8_t *ind_header_buf, int header_length, uint8_t *ind_message_buf, int message_length);
 
 void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu);
-void build_ric_service_update(E2AP_PDU_t* pdu_out,
-                                     const std::vector<ran_func_info>& funcs,
-                                     long txid /* es. 2 */);
+void build_ric_service_update(E2AP_PDU_t *pdu_out,
+                              const std::vector<ran_func_info> &funcs,
+                              long txid /* es. 2 */);
 void generate_e2apv2_subscription_failure(
     E2AP_PDU *e2ap_pdu,
     long reqRequestorId,
     long reqInstanceId,
     long ranFunctionId,
-    const long *notAdmittedIds, int notAdmittedCount
-  );
+    const long *notAdmittedIds, int notAdmittedCount);
 
 void generate_e2apv2_control_ack(
     E2AP_PDU_t *e2ap_pdu,
