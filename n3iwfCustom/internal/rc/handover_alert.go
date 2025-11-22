@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/free5gc/aper"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
@@ -38,7 +39,14 @@ type HandoverAlertHandler struct {
 var (
 	handoverHandlerMu sync.RWMutex
 	handoverHandler   *HandoverAlertHandler
+	hoWaitersMu       sync.Mutex
+	hoWaiters         = make(map[int64][]chan hoResult)
 )
+
+type hoResult struct {
+	status string
+	err    error
+}
 
 func NewHandoverAlertHandler(
 	ctx *n3iwf_context.N3IWFContext,
@@ -186,10 +194,22 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		writeHTTPError(w, http.StatusBadGateway, err)
 		return
 	}
-	writeHTTPSuccess(w, map[string]interface{}{
-		"status":  "handover_triggered",
-		"ranUeId": payload.RanUeNgapId,
-	})
+	waitCh := registerHandoverWaiter(alert.RanUeNgapId)
+	defer unregisterHandoverWaiter(alert.RanUeNgapId, waitCh)
+
+	select {
+	case res := <-waitCh:
+		if res.err != nil {
+			writeHTTPError(w, http.StatusBadGateway, res.err)
+			return
+		}
+		writeHTTPSuccess(w, map[string]interface{}{
+			"status":  res.status,
+			"ranUeId": payload.RanUeNgapId,
+		})
+	case <-time.After(60 * time.Second):
+		writeHTTPError(w, http.StatusGatewayTimeout, fmt.Errorf("handover result timed out"))
+	}
 }
 
 func decodeTargetID(ctx *n3iwf_context.N3IWFContext, encoded string) (*ngapType.TargetID, error) {
@@ -218,6 +238,50 @@ func decodeOptionalBytes(encoded string) ([]byte, error) {
 
 func writeHTTPSuccess(w http.ResponseWriter, payload interface{}) {
 	writeHTTPJSON(w, http.StatusAccepted, payload)
+}
+
+// registerHandoverWaiter registers a waiter for a given UE handover and returns the channel to wait on.
+func registerHandoverWaiter(ranUeNgapId int64) chan hoResult {
+	hoWaitersMu.Lock()
+	defer hoWaitersMu.Unlock()
+	ch := make(chan hoResult, 1)
+	hoWaiters[ranUeNgapId] = append(hoWaiters[ranUeNgapId], ch)
+	return ch
+}
+
+func unregisterHandoverWaiter(ranUeNgapId int64, ch chan hoResult) {
+	hoWaitersMu.Lock()
+	defer hoWaitersMu.Unlock()
+	waiters := hoWaiters[ranUeNgapId]
+	n := 0
+	for _, w := range waiters {
+		if w != ch {
+			waiters[n] = w
+			n++
+		}
+	}
+	if n == 0 {
+		delete(hoWaiters, ranUeNgapId)
+	} else {
+		hoWaiters[ranUeNgapId] = waiters[:n]
+	}
+}
+
+// NotifyHandoverResult signals completion (success or failure) of a handover for a UE.
+// Returns true if at least one waiter was notified.
+func NotifyHandoverResult(ranUeNgapId int64, status string, err error) bool {
+	hoWaitersMu.Lock()
+	waiters := hoWaiters[ranUeNgapId]
+	delete(hoWaiters, ranUeNgapId)
+	hoWaitersMu.Unlock()
+
+	if len(waiters) == 0 {
+		return false
+	}
+	for _, ch := range waiters {
+		ch <- hoResult{status: status, err: err}
+	}
+	return true
 }
 
 func writeHTTPError(w http.ResponseWriter, status int, err error) {

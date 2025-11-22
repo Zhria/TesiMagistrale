@@ -63,10 +63,15 @@ type RanUeSharedCtx struct {
 	TemporaryPDUSessionSetupData *PDUSessionSetupTemporaryData
 
 	// Others
+	HandoverType                     *ngapType.HandoverType
+	HandoverCause                    *ngapType.Cause
 	Guami                            *ngapType.GUAMI
 	IndexToRfsp                      int64
 	Ambr                             *ngapType.UEAggregateMaximumBitRate
 	AllowedNssai                     *ngapType.AllowedNSSAI
+	MobilityRestrictionList          *ngapType.MobilityRestrictionList
+	SourceToTargetContainer          []byte
+	TargetToSourceContainer          []byte
 	RadioCapability                  *ngapType.UERadioCapability                // TODO: This is for RRC, can be deleted
 	CoreNetworkAssistanceInformation *ngapType.CoreNetworkAssistanceInformation // TS 38.413 9.3.1.15
 	IMSVoiceSupported                int32
@@ -87,6 +92,8 @@ type PDUSession struct {
 	MaximumIntegrityDataRateUplink   *ngapType.MaximumIntegrityProtectedDataRate
 	MaximumIntegrityDataRateDownlink *ngapType.MaximumIntegrityProtectedDataRate
 	GTPConnInfo                      *GTPConnectionInfo
+	ForwardingUPTNLInfo              *ngapType.UPTransportLayerInformation
+	QosFlowsToForward                []ngapType.QosFlowIdentifier
 	QFIList                          []uint8
 	QosFlows                         map[int64]*QosFlow // QosFlowIdentifier as key
 }

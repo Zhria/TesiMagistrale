@@ -15,6 +15,7 @@ import (
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/nas/nas_security"
 	"github.com/free5gc/n3iwf/internal/ngap/message"
+	"github.com/free5gc/n3iwf/internal/rc"
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/sctp"
@@ -3528,16 +3529,38 @@ func (s *Server) HandleHandoverRequest(
 	var ueSecurityCapabilities *ngapType.UESecurityCapabilities
 	var securityContext *ngapType.SecurityContext
 	var pduSessionResourceSetupListHOReq *ngapType.PDUSessionResourceSetupListHOReq
+	var handoverType *ngapType.HandoverType
+	var cause *ngapType.Cause
+	var ueAggregateMaximumBitRate *ngapType.UEAggregateMaximumBitRate
+	var allowedNssai *ngapType.AllowedNSSAI
+	var maskedIMEISV *ngapType.MaskedIMEISV
+	var mobilityRestrictionList *ngapType.MobilityRestrictionList
+	var guami *ngapType.GUAMI
+	var sourceToTargetContainer *ngapType.SourceToTargetTransparentContainer
 	var iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
 
 	for _, ie := range handoverRequest.ProtocolIEs.List {
 		switch ie.Id.Value {
 		case ngapType.ProtocolIEIDAMFUENGAPID:
 			amfUeNgapID = ie.Value.AMFUENGAPID
+		case ngapType.ProtocolIEIDHandoverType:
+			handoverType = ie.Value.HandoverType
+		case ngapType.ProtocolIEIDCause:
+			cause = ie.Value.Cause
+		case ngapType.ProtocolIEIDUEAggregateMaximumBitRate:
+			ueAggregateMaximumBitRate = ie.Value.UEAggregateMaximumBitRate
 		case ngapType.ProtocolIEIDUESecurityCapabilities:
 			ueSecurityCapabilities = ie.Value.UESecurityCapabilities
 		case ngapType.ProtocolIEIDSecurityContext:
 			securityContext = ie.Value.SecurityContext
+		case ngapType.ProtocolIEIDAllowedNSSAI:
+			allowedNssai = ie.Value.AllowedNSSAI
+		case ngapType.ProtocolIEIDMaskedIMEISV:
+			maskedIMEISV = ie.Value.MaskedIMEISV
+		case ngapType.ProtocolIEIDMobilityRestrictionList:
+			mobilityRestrictionList = ie.Value.MobilityRestrictionList
+		case ngapType.ProtocolIEIDGUAMI:
+			guami = ie.Value.GUAMI
 		case ngapType.ProtocolIEIDPDUSessionResourceSetupListHOReq:
 			pduSessionResourceSetupListHOReq = ie.Value.PDUSessionResourceSetupListHOReq
 			if pduSessionResourceSetupListHOReq == nil {
@@ -3545,6 +3568,8 @@ func (s *Server) HandleHandoverRequest(
 					ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
 				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
 			}
+		case ngapType.ProtocolIEIDSourceToTargetTransparentContainer:
+			sourceToTargetContainer = ie.Value.SourceToTargetTransparentContainer
 		default:
 			ngapLog.Tracef("Unhandled IE in HandoverRequest: %d", ie.Id.Value)
 		}
@@ -3574,6 +3599,35 @@ func (s *Server) HandleHandoverRequest(
 	sharedCtx.AmfUeNgapId = amfUeNgapID.Value
 	if ueSecurityCapabilities != nil {
 		sharedCtx.SecurityCapabilities = ueSecurityCapabilities
+	}
+	if handoverType != nil {
+		handoverTypeCopy := *handoverType
+		sharedCtx.HandoverType = &handoverTypeCopy
+	}
+	if cause != nil {
+		causeCopy := *cause
+		sharedCtx.HandoverCause = &causeCopy
+	}
+	if ueAggregateMaximumBitRate != nil {
+		sharedCtx.Ambr = ueAggregateMaximumBitRate
+	}
+	if allowedNssai != nil {
+		allowedCopy := *allowedNssai
+		sharedCtx.AllowedNssai = &allowedCopy
+	}
+	if maskedIMEISV != nil {
+		sharedCtx.MaskedIMEISV = maskedIMEISV
+	}
+	if mobilityRestrictionList != nil {
+		mobilityCopy := *mobilityRestrictionList
+		sharedCtx.MobilityRestrictionList = &mobilityCopy
+	}
+	if guami != nil {
+		guamiCopy := *guami
+		sharedCtx.Guami = &guamiCopy
+	}
+	if sourceToTargetContainer != nil {
+		sharedCtx.SourceToTargetContainer = append([]byte(nil), sourceToTargetContainer.Value...)
 	}
 	amf.N3iwfRanUeList[n3iwfUe.RanUeNgapId] = n3iwfUe
 
@@ -3676,6 +3730,7 @@ func (s *Server) HandleHandoverRequest(
 			ngapLog.Errorf("Build HandoverPreparationFailure failed: %+v", err)
 			return
 		}
+		rc.NotifyHandoverResult(n3iwfUe.GetSharedCtx().RanUeNgapId, "handover_preparation_failed", fmt.Errorf("all pdu sessions failed"))
 		message.SendToAmf(amf, pkt)
 		return
 	}
@@ -3694,6 +3749,7 @@ func (s *Server) HandleHandoverRequest(
 	}
 
 	message.SendToAmf(amf, ackPkt)
+	rc.NotifyHandoverResult(n3iwfUe.GetSharedCtx().RanUeNgapId, "handover_prepared", nil)
 
 	if securityContext != nil {
 		ngapLog.Debugf("Received security context NH/NCC for handover (NCC=%d)", securityContext.NextHopChainingCount.Value)
@@ -3760,6 +3816,7 @@ func (s *Server) HandleHandoverPreparationFailure(
 			ngapLog.Warnf("Handover preparation failed for RanUeNgapId=%d (AMF UE NGAP ID=%d)",
 				ranUeNgapID.Value, amfID)
 			_ = ranUe
+			rc.NotifyHandoverResult(ranUeNgapID.Value, "handover_preparation_failed", fmt.Errorf("handover preparation failure"))
 		} else {
 			ngapLog.Warnf("Handover preparation failed for unknown RanUeNgapId=%d", ranUeNgapID.Value)
 		}
@@ -3780,12 +3837,16 @@ func (s *Server) HandleHandoverCommand(
 	pdu *ngapType.NGAPPDU,
 ) {
 	ngapLog := logger.NgapLog
-	ngapLog.Warn("Handle Handover Command (not fully supported, dropping)")
+	ngapLog.Info("Handle Handover Command")
 
 	var amfUeNgapID *ngapType.AMFUENGAPID
 	var ranUeNgapID *ngapType.RANUENGAPID
 	var criticalityDiagnostics *ngapType.CriticalityDiagnostics
 	var cause *ngapType.Cause
+	var handoverType *ngapType.HandoverType
+	var pduSessionHandoverList *ngapType.PDUSessionResourceHandoverList
+	var targetToSourceContainer *ngapType.TargetToSourceTransparentContainer
+	var ranUe n3iwf_context.RanUe
 
 	metricStatusOk := false
 	defer ngap_metrics.IncrMetricsRcvMsg(ngap_metrics.HANDOVER_COMMAND, &metricStatusOk, cause)
@@ -3813,6 +3874,12 @@ func (s *Server) HandleHandoverCommand(
 			amfUeNgapID = ie.Value.AMFUENGAPID
 		case ngapType.ProtocolIEIDRANUENGAPID:
 			ranUeNgapID = ie.Value.RANUENGAPID
+		case ngapType.ProtocolIEIDHandoverType:
+			handoverType = ie.Value.HandoverType
+		case ngapType.ProtocolIEIDPDUSessionResourceHandoverList:
+			pduSessionHandoverList = ie.Value.PDUSessionResourceHandoverList
+		case ngapType.ProtocolIEIDTargetToSourceTransparentContainer:
+			targetToSourceContainer = ie.Value.TargetToSourceTransparentContainer
 		case ngapType.ProtocolIEIDCriticalityDiagnostics:
 			criticalityDiagnostics = ie.Value.CriticalityDiagnostics
 		default:
@@ -3821,12 +3888,57 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	if ranUeNgapID != nil {
+		if ue, ok := s.Context().RanUePoolLoad(ranUeNgapID.Value); ok {
+			ranUe = ue
+		} else {
+			ngapLog.Warnf("HandoverCommand refers to unknown RanUeNgapId=%d", ranUeNgapID.Value)
+		}
+	}
+
+	if ranUe != nil {
+		shared := ranUe.GetSharedCtx()
+		if handoverType != nil {
+			handoverTypeCopy := *handoverType
+			shared.HandoverType = &handoverTypeCopy
+		}
+		if targetToSourceContainer != nil {
+			shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
+		}
+	}
+
+	if pduSessionHandoverList != nil && ranUe != nil {
+		for _, item := range pduSessionHandoverList.List {
+			pduSessionID := item.PDUSessionID.Value
+			session := ranUe.GetSharedCtx().FindPDUSession(pduSessionID)
+			if session == nil {
+				ngapLog.Warnf("HandoverCommand contains PDU Session %d not found in UE context", pduSessionID)
+				continue
+			}
+
+			var transfer ngapType.HandoverCommandTransfer
+			if err := aper.UnmarshalWithParams(item.HandoverCommandTransfer, &transfer, "valueExt"); err != nil {
+				ngapLog.Errorf("Decode HandoverCommandTransfer for PDU Session %d failed: %v", pduSessionID, err)
+				continue
+			}
+
+			if transfer.DLForwardingUPTNLInformation != nil {
+				session.ForwardingUPTNLInfo = transfer.DLForwardingUPTNLInformation
+			}
+			session.QosFlowsToForward = session.QosFlowsToForward[:0]
+			if transfer.QosFlowToBeForwardedList != nil {
+				for _, flow := range transfer.QosFlowToBeForwardedList.List {
+					session.QosFlowsToForward = append(session.QosFlowsToForward, flow.QosFlowIdentifier)
+				}
+			}
+		}
+	}
+
+	if ranUeNgapID != nil {
 		amfID := int64(0)
 		if amfUeNgapID != nil {
 			amfID = amfUeNgapID.Value
 		}
-		ngapLog.Warnf("Received HandoverCommand for RanUeNgapId=%d (AMF UE NGAP ID=%d) but it is not handled",
-			ranUeNgapID.Value, amfID)
+		ngapLog.Infof("Handled HandoverCommand for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapID.Value, amfID)
 	} else {
 		ngapLog.Warn("Received HandoverCommand without RAN UE NGAP ID")
 	}
@@ -3836,7 +3948,6 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	metricStatusOk = true
-	_ = amf
 }
 
 func (s *Server) HandleSendSendUEContextRelease(
