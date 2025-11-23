@@ -3967,6 +3967,7 @@ func (s *Server) HandleHandoverCommand(
 
 type targetAccessInfo struct {
 	N3IwfIP      string `json:"n3iwfIp"`
+	N3IwfBindIP  string `json:"n3iwfBindIp,omitempty"`
 	FQDN         string `json:"fqdn,omitempty"`
 	IKEPort      uint16 `json:"ikePort"`
 	NATTPort     uint16 `json:"nattPort"`
@@ -4013,6 +4014,7 @@ func buildTargetToSourceContainer(
 
 	access := targetAccessInfo{
 		N3IwfIP:      cfg.GetIPSecGatewayAddr(),
+		N3IwfBindIP:  cfg.GetIKEBindAddr(),
 		FQDN:         cfg.GetFQDN(),
 		IKEPort:      500,
 		NATTPort:     4500,
