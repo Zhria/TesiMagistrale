@@ -1109,6 +1109,13 @@ func (s *Server) continueCreateChildSA(
 
 	ikeSecurityAssociation.ResponderMessageID++
 
+	// Trigger Path Switch when handover reuses NAS security and not already sent
+	if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
+		if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity && !shared.PathSwitchSent {
+			s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
+		}
+	}
+
 	// If needed, setup another PDU session
 	s.CreatePDUSessionChildSA(ikeUe, temporaryPDUSessionSetupData)
 }

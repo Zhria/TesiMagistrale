@@ -2968,6 +2968,8 @@ func (s *Server) HandleEvent(ngapEvent n3iwf_context.NgapEvt) {
 		s.HandleSendInitialContextSetupResponse(ngapEvent)
 	case n3iwf_context.SendHandoverRequired:
 		s.HandleSendHandoverRequired(ngapEvent)
+	case n3iwf_context.SendPathSwitchRequest:
+		s.HandleSendPathSwitchRequest(ngapEvent)
 	default:
 		ngapLog.Errorf("Undefine NGAP event type")
 		return
@@ -3499,6 +3501,45 @@ func (s *Server) HandleSendHandoverRequired(
 	}
 
 	message.SendToAmf(sharedCtx.AMF, pkt)
+}
+
+// HandleSendPathSwitchRequest builds and sends PathSwitchRequest (NGAP) for an active UE
+// after the UE is connected to target N3IWF.
+func (s *Server) HandleSendPathSwitchRequest(
+	ngapEvent n3iwf_context.NgapEvt,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Trace("Handle SendPathSwitchRequest Event")
+
+	evt := ngapEvent.(*n3iwf_context.SendPathSwitchRequestEvt)
+	ranUeNgapId := evt.RanUeNgapId
+	n3iwfCtx := s.Context()
+
+	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapId)
+	if !ok {
+		ngapLog.Errorf("Cannot get RanUE from ranUeNgapId : %+v", ranUeNgapId)
+		return
+	}
+
+	sharedCtx := ranUe.GetSharedCtx()
+	if sharedCtx.AMF == nil {
+		ngapLog.Errorf("RanUE[%d] has no associated AMF", ranUeNgapId)
+		return
+	}
+	if sharedCtx.PathSwitchSent {
+		ngapLog.Debugf("PathSwitch already sent for RanUeNgapId=%d", ranUeNgapId)
+		return
+	}
+
+	pkt, err := message.BuildPathSwitchRequest(ranUe, s.Config().GetN3iwfGtpBindAddress())
+	if err != nil {
+		ngapLog.Errorf("Build PathSwitchRequest failed: %+v", err)
+		return
+	}
+
+	message.SendToAmf(sharedCtx.AMF, pkt)
+	sharedCtx.PathSwitchSent = true
+	ngapLog.Infof("Sent PathSwitchRequest for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapId, sharedCtx.AmfUeNgapId)
 }
 
 func (s *Server) HandleHandoverRequest(

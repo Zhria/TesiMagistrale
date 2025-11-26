@@ -23,6 +23,7 @@ const (
 	SendUplinkNASTransport
 	SendInitialContextSetupResponse
 	SendHandoverRequired
+	SendPathSwitchRequest
 )
 
 type EvtError string
@@ -82,6 +83,20 @@ func NewSendInitialUEMessageEvt(ranUeNgapId int64, ipv4Addr string, ipv4Port int
 		IPv4Addr:    ipv4Addr,
 		IPv4Port:    ipv4Port,
 		NasPDU:      nasPDU,
+	}
+}
+
+type SendPathSwitchRequestEvt struct {
+	RanUeNgapId int64
+}
+
+func (sendPathSwitchRequestEvt *SendPathSwitchRequestEvt) Type() NgapEventType {
+	return SendPathSwitchRequest
+}
+
+func NewSendPathSwitchRequestEvt(ranUeNgapId int64) *SendPathSwitchRequestEvt {
+	return &SendPathSwitchRequestEvt{
+		RanUeNgapId: ranUeNgapId,
 	}
 }
 
