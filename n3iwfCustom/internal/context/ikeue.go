@@ -35,6 +35,10 @@ type N3IWFIkeUe struct {
 	// Security
 	Kn3iwf []uint8 // 32 bytes (256 bits), value is from NGAP IE "Security Key"
 
+	// Handover security context
+	NextHopNH            []byte
+	NextHopChainingCount int64
+
 	// NAS IKE Connection
 	IKEConnection *UDPSocketInfo
 

@@ -1213,6 +1213,19 @@ func (s *Server) HandleUnmarshalEAP5GDataResponse(ikeEvt n3iwf_context.IkeEvt) {
 
 	n3iwfCtx.IkeSpiNgapIdMapping(ikeUe.N3IWFIKESecurityAssociation.LocalSPI, ranUeNgapId)
 
+	if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapId); ok {
+		if shared := ranUe.GetSharedCtx(); shared != nil {
+			if len(shared.NextHopNH) > 0 {
+				ikeUe.NextHopNH = append([]byte(nil), shared.NextHopNH...)
+			}
+			ikeUe.NextHopChainingCount = shared.NextHopChainingCount
+			if shared.ReuseNasSecurity {
+				logger.IKELog.Infof("Handover context detected (NH/NCC), skipping InitialUEMessage/Registration")
+				return
+			}
+		}
+	}
+
 	s.SendNgapEvt(n3iwf_context.NewSendInitialUEMessageEvt(
 		ranUeNgapId,
 		ikeSecurityAssociation.IKEConnection.UEAddr.IP.To4().String(),

@@ -3761,8 +3761,14 @@ func (s *Server) HandleHandoverRequest(
 	rc.NotifyHandoverResult(n3iwfUe.GetSharedCtx().RanUeNgapId, "handover_prepared", nil)
 
 	if securityContext != nil {
-		ngapLog.Debugf("Received security context NH/NCC for handover (NCC=%d)", securityContext.NextHopChainingCount.Value)
-		// TODO: apply NH to IKE context when available
+		sharedCtx.NextHopChainingCount = securityContext.NextHopChainingCount.Value
+		sharedCtx.NextHopNH = append([]byte(nil), securityContext.NextHopNH.Value.Bytes...)
+		sharedCtx.ReuseNasSecurity = true
+		ngapLog.Debugf(
+			"Received security context NH/NCC for handover (NCC=%d, NH len=%d)",
+			sharedCtx.NextHopChainingCount,
+			len(sharedCtx.NextHopNH),
+		)
 	}
 }
 

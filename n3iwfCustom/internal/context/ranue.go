@@ -79,6 +79,13 @@ type RanUeSharedCtx struct {
 	PduSessionReleaseList            ngapType.PDUSessionResourceReleasedListRelRes
 	UeCtxRelState                    UeCtxRelState
 	PduSessResRelState               PduSessResRelState
+
+	// NH/NCC handed over by AMF (for same-AMF mobility)
+	NextHopNH            []byte
+	NextHopChainingCount int64
+
+	// If true, reuse NAS security (handover) instead of triggering new Registration
+	ReuseNasSecurity bool
 }
 
 type PDUSession struct {
