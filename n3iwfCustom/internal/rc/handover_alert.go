@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/free5gc/aper"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
@@ -194,22 +193,11 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		writeHTTPError(w, http.StatusBadGateway, err)
 		return
 	}
-	waitCh := registerHandoverWaiter(alert.RanUeNgapId)
-	defer unregisterHandoverWaiter(alert.RanUeNgapId, waitCh)
-
-	select {
-	case res := <-waitCh:
-		if res.err != nil {
-			writeHTTPError(w, http.StatusBadGateway, res.err)
-			return
-		}
-		writeHTTPSuccess(w, map[string]interface{}{
-			"status":  res.status,
-			"ranUeId": payload.RanUeNgapId,
-		})
-	case <-time.After(60 * time.Second):
-		writeHTTPError(w, http.StatusGatewayTimeout, fmt.Errorf("handover result timed out"))
-	}
+	// Risposta immediata: il trigger è stato accettato, l'esito arriverà sui log/telemetria
+	writeHTTPSuccess(w, map[string]interface{}{
+		"status":  "triggered",
+		"ranUeId": payload.RanUeNgapId,
+	})
 }
 
 func decodeTargetID(ctx *n3iwf_context.N3IWFContext, encoded string) (*ngapType.TargetID, error) {
