@@ -16,6 +16,7 @@ import (
 	"github.com/free5gc/ike"
 	ike_message "github.com/free5gc/ike/message"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	n3iwf_ike "github.com/free5gc/n3iwf/internal/ike"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/nas/nas_security"
 	"github.com/free5gc/n3iwf/internal/ngap/message"
@@ -3993,6 +3994,14 @@ func (s *Server) HandleHandoverCommand(
 		shared := ranUe.GetSharedCtx()
 		shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
 		sendTargetToSourceToUE(shared)
+	}
+
+	// Stop any further IKE traffic from this source N3IWF toward the UE after HO command
+	if ranUeNgapID != nil {
+		if spi, ok := s.Context().IkeSpiLoad(ranUeNgapID.Value); ok {
+			logger.NgapLog.Infof("Sending IKE delete towards UE for RanUeNgapId=%d after HandoverCommand", ranUeNgapID.Value)
+			n3iwf_ike.SendIKEDeleteRequest(s.Context(), spi)
+		}
 	}
 
 	if ranUeNgapID != nil {

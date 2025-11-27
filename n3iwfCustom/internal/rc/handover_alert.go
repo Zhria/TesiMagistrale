@@ -228,33 +228,6 @@ func writeHTTPSuccess(w http.ResponseWriter, payload interface{}) {
 	writeHTTPJSON(w, http.StatusAccepted, payload)
 }
 
-// registerHandoverWaiter registers a waiter for a given UE handover and returns the channel to wait on.
-func registerHandoverWaiter(ranUeNgapId int64) chan hoResult {
-	hoWaitersMu.Lock()
-	defer hoWaitersMu.Unlock()
-	ch := make(chan hoResult, 1)
-	hoWaiters[ranUeNgapId] = append(hoWaiters[ranUeNgapId], ch)
-	return ch
-}
-
-func unregisterHandoverWaiter(ranUeNgapId int64, ch chan hoResult) {
-	hoWaitersMu.Lock()
-	defer hoWaitersMu.Unlock()
-	waiters := hoWaiters[ranUeNgapId]
-	n := 0
-	for _, w := range waiters {
-		if w != ch {
-			waiters[n] = w
-			n++
-		}
-	}
-	if n == 0 {
-		delete(hoWaiters, ranUeNgapId)
-	} else {
-		hoWaiters[ranUeNgapId] = waiters[:n]
-	}
-}
-
 // NotifyHandoverResult signals completion (success or failure) of a handover for a UE.
 // Returns true if at least one waiter was notified.
 func NotifyHandoverResult(ranUeNgapId int64, status string, err error) bool {
