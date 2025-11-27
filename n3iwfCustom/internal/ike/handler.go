@@ -1129,13 +1129,18 @@ func (s *Server) HandleInformational(
 	ikeLog := logger.IKELog
 	ikeLog.Infoln("Handle Informational")
 
+	if ikeSecurityAssociation == nil || ikeSecurityAssociation.IkeUE == nil {
+		ikeLog.Warnf("Informational received for nil UE context (sa=%p), dropping", ikeSecurityAssociation)
+		return
+	}
+
 	var deletePayload *ike_message.Delete
 	var err error
 	responseIKEPayload := new(ike_message.IKEPayloadContainer)
 
 	n3iwfIke := ikeSecurityAssociation.IkeUE
 
-	if n3iwfIke.N3IWFIKESecurityAssociation.DPDReqRetransTimer != nil {
+	if n3iwfIke.N3IWFIKESecurityAssociation != nil && n3iwfIke.N3IWFIKESecurityAssociation.DPDReqRetransTimer != nil {
 		n3iwfIke.N3IWFIKESecurityAssociation.DPDReqRetransTimer.Stop()
 		n3iwfIke.N3IWFIKESecurityAssociation.DPDReqRetransTimer = nil
 		atomic.StoreInt32(&n3iwfIke.N3IWFIKESecurityAssociation.CurrentRetryTimes, 0)
