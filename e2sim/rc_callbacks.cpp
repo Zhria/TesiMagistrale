@@ -1096,30 +1096,10 @@ namespace
         logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
         logln("Received ControlHeader PER dump:");
 
-        E2SM_RC_ControlHeader_Format1_t *decoded = nullptr;
-        /*
+        E2SM_RC_ControlHeader_t *decoded = nullptr;
         asn_dec_rval_t ret = aper_decode(
             nullptr,
             &asn_DEF_E2SM_RC_ControlHeader,
-            (void**)&decoded,
-            hdr.buf,
-            hdr.size,
-            0, 0
-        );
-
-        if (ret.code != RC_OK || !decoded) {
-            err = "Unable to decode E2SM RC ControlHeader (CHOICE)";
-            logln("[RC CONTROL] Header decode fail: %s (code=%d, consumed=%ld)",
-                  err.c_str(), ret.code, ret.consumed);
-            if (decoded) {
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            }
-        }
-    */
-        // tento il decoding specificando il format 1
-        asn_dec_rval_t ret = aper_decode(
-            nullptr,
-            &asn_DEF_E2SM_RC_ControlHeader_Format1,
             (void **)&decoded,
             hdr.buf,
             hdr.size,
@@ -1127,36 +1107,42 @@ namespace
 
         if (ret.code != RC_OK || !decoded)
         {
-            err = "Unable to decode E2SM RC ControlHeader Format 1";
+            err = "Unable to decode E2SM RC ControlHeader (CHOICE)";
             logln("[RC CONTROL] Header decode fail: %s (code=%d, consumed=%ld)",
                   err.c_str(), ret.code, ret.consumed);
             if (decoded)
             {
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
             }
             return false;
         }
 
         logln("Controlheader decoded as E2SM_RC_ControlHeader (size=%ld)", hdr.size);
-        xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
+        xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
 
-        // Verifica che il formato sia Format1
-        /*if (decoded->ric_controlHeader_formats.present !=
-            E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1) {
+        if (decoded->ric_controlHeader_formats.present !=
+            E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1)
+        {
             err = "Unsupported ControlHeader format (present="
                   + std::to_string(decoded->ric_controlHeader_formats.present) + ")";
             logln("[RC CONTROL] %s", err.c_str());
             ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
             return false;
-        }*/
+        }
 
-        // E2SM_RC_ControlHeader_Format1_t *fmt1 =decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
-        E2SM_RC_ControlHeader_Format1_t *fmt1 = decoded; // uso direttamente il decoded
+        E2SM_RC_ControlHeader_Format1_t *fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
+        if (!fmt1)
+        {
+            err = "Missing ControlHeader Format1 choice";
+            logln("[RC CONTROL] %s", err.c_str());
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+            return false;
+        }
         if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover)
         {
             err = "Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type);
             logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
             return false;
         }
 
@@ -1164,7 +1150,7 @@ namespace
         {
             err = "Unsupported RC control action ID " + std::to_string(fmt1->ric_ControlAction_ID);
             logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
             return false;
         }
 
@@ -1178,7 +1164,7 @@ namespace
               ctx.control_action_id,
               ctx.ue_identity.c_str());
 
-        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, decoded);
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
         return true;
     }
 
@@ -1195,9 +1181,7 @@ namespace
             }
             return false;
         };
-        asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,
-                                       &asn_DEF_E2SM_RC_ControlMessage,
-                                       (void **)&decoded, msg.buf, msg.size);
+        asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_RC_ControlMessage, (void **)&decoded, msg.buf, msg.size);
         if (dr.code != RC_OK || !decoded)
         {
             return fail("Unable to decode E2SM RC ControlMessage");
