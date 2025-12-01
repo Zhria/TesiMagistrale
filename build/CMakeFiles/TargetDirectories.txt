@@ -1,5 +1,4 @@
 /home/zakaria/TesiMagistrale/build/CMakeFiles/kpm_callbacks.dir
 /home/zakaria/TesiMagistrale/build/CMakeFiles/rc_control_test.dir
-/home/zakaria/TesiMagistrale/build/CMakeFiles/test_kpm_report_loop.dir
 /home/zakaria/TesiMagistrale/build/CMakeFiles/edit_cache.dir
 /home/zakaria/TesiMagistrale/build/CMakeFiles/rebuild_cache.dir

@@ -94,26 +94,34 @@ target_link_libraries( rc_control_test ${SCTP_STD_LIB}
     Threads::Threads
 )
 
-# Standalone KPM v3 encode/decode exercise
-add_executable(test_kpm_report_loop
-  "${E2SIM_ROOT}/test/test_kpm_report_loop.cpp"
-  ${E2SIM_SOURCES}
-)
+# Standalone KPM v3 encode/decode exercise (optional; disable by default)
+option(BUILD_TEST_KPM_REPORT_LOOP "Build the test_kpm_report_loop target" OFF)
+set(FLEXRIC_KPM_LIB "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so"
+    CACHE FILEPATH "Path to libkpm_sm.so from FlexRIC (KPM v3)")
 
-
-
-# Link against the FlexRIC KPM v3 decoder helpers -- To test only
-set(FLEXRIC_KPM_LIB "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so")
-target_link_libraries( test_kpm_report_loop ${SCTP_STD_LIB}
-    CURL::libcurl
-    yaml-cpp
-    nlohmann_json::nlohmann_json
-    Threads::Threads
-    ${FLEXRIC_KPM_LIB}
-)
-set_target_properties(test_kpm_report_loop PROPERTIES
-  BUILD_RPATH "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00"
-)
+if(BUILD_TEST_KPM_REPORT_LOOP)
+  if(EXISTS "${FLEXRIC_KPM_LIB}")
+    add_executable(test_kpm_report_loop
+      "${E2SIM_ROOT}/test/test_kpm_report_loop.cpp"
+      ${E2SIM_SOURCES}
+    )
+    target_link_libraries( test_kpm_report_loop ${SCTP_STD_LIB}
+        CURL::libcurl
+        yaml-cpp
+        nlohmann_json::nlohmann_json
+        Threads::Threads
+        ${FLEXRIC_KPM_LIB}
+    )
+    # Keep rpath so the linker can find the FlexRIC .so at runtime
+    get_filename_component(_flexric_dir "${FLEXRIC_KPM_LIB}" DIRECTORY)
+    set_target_properties(test_kpm_report_loop PROPERTIES
+      BUILD_RPATH "${_flexric_dir}"
+      INSTALL_RPATH "${_flexric_dir}"
+    )
+  else()
+    message(WARNING "BUILD_TEST_KPM_REPORT_LOOP=ON but FLEXRIC_KPM_LIB not found at ${FLEXRIC_KPM_LIB}, skipping target.")
+  endif()
+endif()
 
 #----------------------------------------------
 #file(GLOB RICSIM_SOURCES

@@ -14,6 +14,9 @@
 # EXTERNAL cache entries
 ########################
 
+//Build the test_kpm_report_loop target
+BUILD_TEST_KPM_REPORT_LOOP:BOOL=OFF
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 
@@ -225,6 +228,9 @@ CURL_LIBRARY_DEBUG:FILEPATH=CURL_LIBRARY_DEBUG-NOTFOUND
 
 //Path to a library.
 CURL_LIBRARY_RELEASE:FILEPATH=/usr/lib/x86_64-linux-gnu/libcurl.so
+
+//Path to libkpm_sm.so from FlexRIC (KPM v3)
+FLEXRIC_KPM_LIB:FILEPATH=/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so
 
 //Arguments to supply to pkg-config
 PKG_CONFIG_ARGN:STRING=
