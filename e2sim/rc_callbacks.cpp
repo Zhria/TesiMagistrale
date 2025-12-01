@@ -1096,62 +1096,124 @@ namespace
         logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
         logln("Received ControlHeader PER dump:");
 
-        E2SM_RC_ControlHeader_t *decoded = nullptr;
-        asn_dec_rval_t ret = aper_decode(
-            nullptr,
-            &asn_DEF_E2SM_RC_ControlHeader,
-            (void **)&decoded,
-            hdr.buf,
-            hdr.size,
-            0, 0);
+        // Alcuni xApp inviano il ControlHeader come CHOICE completo, altri solo come Format1:
+        // proviamo più decodifiche (aligned/unaligned, CHOICE/Format1) finché troviamo uno stile valido.
+        E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
+        E2SM_RC_ControlHeader_t *choice_holder = nullptr;
+        bool fmt1_from_choice = false;
 
-        if (ret.code != RC_OK || !decoded)
-        {
-            err = "Unable to decode E2SM RC ControlHeader (CHOICE)";
-            logln("[RC CONTROL] Header decode fail: %s (code=%d, consumed=%ld)",
-                  err.c_str(), ret.code, ret.consumed);
-            if (decoded)
+        auto cleanup = [&]() {
+            if (choice_holder)
             {
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, choice_holder);
+                choice_holder = nullptr;
             }
+            else if (fmt1)
+            {
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
+            }
+            fmt1 = nullptr;
+            fmt1_from_choice = false;
+        };
+
+        auto try_decode = [&](asn_transfer_syntax syntax, bool use_choice, const char *label) -> bool {
+            cleanup();
+            asn_dec_rval_t ret{};
+            if (use_choice)
+            {
+                ret = asn_decode(nullptr,
+                                 syntax,
+                                 &asn_DEF_E2SM_RC_ControlHeader,
+                                 (void **)&choice_holder,
+                                 hdr.buf,
+                                 hdr.size);
+                if (ret.code != RC_OK || !choice_holder)
+                {
+                    return false;
+                }
+                if (choice_holder->ric_controlHeader_formats.present !=
+                    E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1)
+                {
+                    return false;
+                }
+                fmt1 = choice_holder->ric_controlHeader_formats.choice.controlHeader_Format1;
+                fmt1_from_choice = true;
+            }
+            else
+            {
+                ret = asn_decode(nullptr,
+                                 syntax,
+                                 &asn_DEF_E2SM_RC_ControlHeader_Format1,
+                                 (void **)&fmt1,
+                                 hdr.buf,
+                                 hdr.size);
+                fmt1_from_choice = false;
+                if (ret.code != RC_OK || !fmt1)
+                {
+                    return false;
+                }
+            }
+            logln("[RC CONTROL] %s decode ok (consumed=%ld)", label, ret.consumed);
+            return true;
+        };
+
+        auto validate_style = [&](const char *label) -> bool {
+            if (!fmt1)
+            {
+                return false;
+            }
+            if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover ||
+                fmt1->ric_ControlAction_ID != kRcControlActionIdHandover)
+            {
+                logln("[RC CONTROL] %s decoded style/action %ld/%ld (expected %ld/%ld)",
+                      label,
+                      fmt1->ric_Style_Type,
+                      fmt1->ric_ControlAction_ID,
+                      kRcControlStyleTypeHandover,
+                      kRcControlActionIdHandover);
+                return false;
+            }
+            return true;
+        };
+
+        bool decoded_ok = false;
+        const char *decode_label = nullptr;
+        if (try_decode(ATS_ALIGNED_BASIC_PER, true, "CHOICE (aligned)") && validate_style("CHOICE (aligned)"))
+        {
+            decoded_ok = true;
+            decode_label = "CHOICE (aligned)";
+        }
+        else if (try_decode(ATS_UNALIGNED_BASIC_PER, true, "CHOICE (unaligned)") && validate_style("CHOICE (unaligned)"))
+        {
+            decoded_ok = true;
+            decode_label = "CHOICE (unaligned)";
+        }
+        else if (try_decode(ATS_ALIGNED_BASIC_PER, false, "Format1 (aligned)") && validate_style("Format1 (aligned)"))
+        {
+            decoded_ok = true;
+            decode_label = "Format1 (aligned)";
+        }
+        else if (try_decode(ATS_UNALIGNED_BASIC_PER, false, "Format1 (unaligned)") && validate_style("Format1 (unaligned)"))
+        {
+            decoded_ok = true;
+            decode_label = "Format1 (unaligned)";
+        }
+
+        if (!decoded_ok)
+        {
+            err = "Unable to decode supported E2SM RC ControlHeader";
+            cleanup();
             return false;
         }
 
-        logln("Controlheader decoded as E2SM_RC_ControlHeader (size=%ld)", hdr.size);
-        xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, decoded);
-
-        if (decoded->ric_controlHeader_formats.present !=
-            E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1)
+        logln("Controlheader decoded via %s (size=%ld)", decode_label, hdr.size);
+        if (fmt1_from_choice)
         {
-            err = "Unsupported ControlHeader format (present="
-                  + std::to_string(decoded->ric_controlHeader_formats.present) + ")";
-            logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            return false;
+            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, choice_holder);
         }
-
-        E2SM_RC_ControlHeader_Format1_t *fmt1 = decoded->ric_controlHeader_formats.choice.controlHeader_Format1;
-        if (!fmt1)
+        else
         {
-            err = "Missing ControlHeader Format1 choice";
-            logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            return false;
-        }
-        if (fmt1->ric_Style_Type != kRcControlStyleTypeHandover)
-        {
-            err = "Unsupported RC control style type " + std::to_string(fmt1->ric_Style_Type);
-            logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            return false;
-        }
-
-        if (fmt1->ric_ControlAction_ID != kRcControlActionIdHandover)
-        {
-            err = "Unsupported RC control action ID " + std::to_string(fmt1->ric_ControlAction_ID);
-            logln("[RC CONTROL] %s", err.c_str());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
-            return false;
+            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
         }
 
         ctx.style_type = fmt1->ric_Style_Type;
@@ -1159,12 +1221,13 @@ namespace
         ctx.ue_identity = describe_ueid(&fmt1->ueID);
         update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
 
-        logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
+        logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s (decoded with %s)",
               ctx.style_type,
               ctx.control_action_id,
-              ctx.ue_identity.c_str());
+              ctx.ue_identity.c_str(),
+              decode_label ? decode_label : "unknown");
 
-        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader, decoded);
+        cleanup();
         return true;
     }
 
