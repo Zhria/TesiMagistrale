@@ -23,7 +23,6 @@ extern asn_TYPE_operation_t asn_OP_ENUMERATED;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 #define ENUMERATED_compare INTEGER_compare
-#define ENUMERATED_copy    INTEGER_copy
 
 #define ENUMERATED_constraint asn_generic_no_constraint
 

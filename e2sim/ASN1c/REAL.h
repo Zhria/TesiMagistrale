@@ -54,7 +54,6 @@ asn_struct_print_f REAL_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f REAL_compare;
-asn_struct_copy_f    REAL_copy;
 
 #define REAL_constraint asn_generic_no_constraint
 

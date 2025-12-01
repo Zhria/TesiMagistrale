@@ -142,17 +142,12 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
     ssize_t bytes;
     int repeat;
     asn_dec_rval_t rv;
-    size_t initial_consumed = pd->moved;  /* Track initial position */
 
     rv.consumed = 0;
     rv.code = RC_FAIL;
 
     do {
         bytes = aper_get_length(pd, -1, -1, -1, &repeat);
-        if (bytes < 0) {
-            /* Invalid length - return error */
-            return rv;
-        }
         if (bytes > 10 * ASN_DUMMY_BYTES)
         {
             return rv;
@@ -164,13 +159,7 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
                 return rv;
         }
 
-        if (per_get_many_bits(pd, (dummy_ptr ? dummy_ptr : dummy), 0, bytes << 3) < 0) {
-            /* Error during bit consumption */
-            if (dummy_ptr) {
-                FREEMEM(dummy_ptr);
-            }
-            return rv;
-        }
+        per_get_many_bits(pd, (dummy_ptr ? dummy_ptr : dummy), 0, bytes << 3);
 
         if (dummy_ptr)
         {
@@ -179,9 +168,7 @@ OPEN_TYPE_aper_unknown_type_discard_bytes (asn_per_data_t *pd) {
         }
     } while (repeat);
 
-    /* Update consumed to reflect actual bits consumed */
-    rv.consumed = pd->moved - initial_consumed;
-    rv.code = RC_OK;
-    return rv;
+     rv.code = RC_OK;
+     return rv;
 #undef ASN_DUMMY_BYTES
 }

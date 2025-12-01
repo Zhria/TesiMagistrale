@@ -40,11 +40,15 @@ aper_decode(const asn_codec_ctx_t *opt_codec_ctx,
 	asn_codec_ctx_t s_codec_ctx;
 	asn_dec_rval_t rval;
 	asn_per_data_t pd;
-
+	printf("Starting APER decode\n");
 	if(skip_bits < 0 || skip_bits > 7
 		|| unused_bits < 0 || unused_bits > 7
 		|| (unused_bits > 0 && !size))
-		ASN__DECODE_FAILED;
+		{
+			printf("Invalid skip_bits or unused_bits\n");
+			ASN__DECODE_FAILED;
+
+		}
 
 	/*
 	 * Stack checker requires that the codec context
@@ -84,6 +88,7 @@ aper_decode(const asn_codec_ctx_t *opt_codec_ctx,
 				  rval.consumed, pd.moved);
 		assert(rval.consumed == pd.moved);
 	} else {
+		printf("APER decoding failed with code %d\n", rval.code);
 		/* Calculate actual consumed bits even for non-OK results */
 		rval.consumed = ((pd.buffer - (const uint8_t *)buffer) << 3)
 		+ pd.nboff - skip_bits;

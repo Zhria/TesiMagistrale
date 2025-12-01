@@ -18,7 +18,6 @@ asn_TYPE_operation_t asn_OP_ANY = {
     0,
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
     OCTET_STRING_compare,
-    OCTET_STRING_copy,
 #if !defined(ASN_DISABLE_BER_SUPPORT)
     OCTET_STRING_decode_ber,
     OCTET_STRING_encode_der,
@@ -76,9 +75,6 @@ asn_TYPE_descriptor_t asn_DEF_ANY = {
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
         0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
-#if !defined(ASN_DISABLE_JER_SUPPORT)
-        0,
-#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
         asn_generic_no_constraint
     },  /* No constraints */
     0, 0,  /* No members */

@@ -27,7 +27,6 @@ asn_struct_print_f NULL_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f NULL_compare;
-asn_struct_copy_f    NULL_copy;
 
 #define NULL_constraint asn_generic_no_constraint
 

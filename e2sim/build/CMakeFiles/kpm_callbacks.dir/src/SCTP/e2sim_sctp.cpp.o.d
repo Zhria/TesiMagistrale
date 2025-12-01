@@ -215,24 +215,15 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_length.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_tag.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_bit_data.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunction-Name.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PrintableString.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
@@ -241,9 +232,7 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SEQUENCE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_encoder.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
@@ -258,7 +247,6 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ProcedureCode.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Criticality.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ENUMERATED.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ANY.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_ioc.h \
@@ -298,6 +286,11 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42setupRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42setupResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICsubscriptionRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICsubscriptionDeleteRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICcontrolRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceQuery.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ErrorIndication.h \
@@ -310,11 +303,9 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-gNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/PLMN-Identity.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/BIT_STRING.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-CU-UP-ID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/INTEGER.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-DU-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalgNB-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GNB-ID-Choice.h \
@@ -384,6 +375,8 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICaction-NotAdmitted-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/CriticalityDiagnostics.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TriggeringMessage.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/XAPP-ID.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICsubscription-List-withCause.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeRemovedForModification-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICactions-ToBeModifiedForModification-List.h \
@@ -413,13 +406,13 @@ CMakeFiles/kpm_callbacks.dir/src/SCTP/e2sim_sctp.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICqueryDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICqueryOutcome.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TransactionID.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalE2node-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctions-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAddition-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/GlobalRIC-ID.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsID-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RANfunctionsIDcause-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeComponentConfigAdditionAck-List.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2nodeConnected-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/TimeToWait.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdate-List.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2connectionUpdateRemove-List.h \

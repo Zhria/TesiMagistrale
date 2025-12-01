@@ -28,7 +28,6 @@ asn_struct_print_f BOOLEAN_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f BOOLEAN_compare;
-asn_struct_copy_f    BOOLEAN_copy;
 
 #define BOOLEAN_constraint asn_generic_no_constraint
 

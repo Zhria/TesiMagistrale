@@ -518,6 +518,7 @@ asn_decode(const asn_codec_ctx_t *opt_codec_ctx,
 
     case ATS_UNALIGNED_BASIC_PER:
     case ATS_UNALIGNED_CANONICAL_PER:
+    printf("Decoding using UNALIGNED PER\n");
 #if !defined(ASN_DISABLE_UPER_SUPPORT)
         return uper_decode_complete(opt_codec_ctx, td, sptr, buffer, size);
 #else
@@ -527,6 +528,7 @@ asn_decode(const asn_codec_ctx_t *opt_codec_ctx,
 
     case ATS_ALIGNED_BASIC_PER:
     case ATS_ALIGNED_CANONICAL_PER:
+    printf("Decoding using ALIGNED PER\n");
 #if !defined(ASN_DISABLE_APER_SUPPORT)
         return aper_decode_complete(opt_codec_ctx, td, sptr, buffer, size);
 #else

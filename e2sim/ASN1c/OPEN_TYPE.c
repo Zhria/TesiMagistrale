@@ -14,7 +14,6 @@ asn_TYPE_operation_t asn_OP_OPEN_TYPE = {
     0,
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
     OPEN_TYPE_compare,
-    OPEN_TYPE_copy,
 #if !defined(ASN_DISABLE_BER_SUPPORT)
     OPEN_TYPE_decode_ber,
     OPEN_TYPE_encode_der,

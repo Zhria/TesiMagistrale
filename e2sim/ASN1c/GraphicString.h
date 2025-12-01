@@ -23,7 +23,6 @@ extern asn_TYPE_operation_t asn_OP_GraphicString;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 #define GraphicString_compare OCTET_STRING_compare
-#define GraphicString_copy    OCTET_STRING_copy
 
 #define GraphicString_constraint asn_generic_unknown_constraint
 

@@ -32,7 +32,6 @@ asn_struct_print_f OBJECT_IDENTIFIER_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 #define OBJECT_IDENTIFIER_compare OCTET_STRING_compare
-#define OBJECT_IDENTIFIER_copy    OCTET_STRING_copy
 
 asn_constr_check_f OBJECT_IDENTIFIER_constraint;
 

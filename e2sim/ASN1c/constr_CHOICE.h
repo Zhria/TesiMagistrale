@@ -46,7 +46,6 @@ asn_struct_print_f CHOICE_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f CHOICE_compare;
-asn_struct_copy_f    CHOICE_copy;
 
 asn_constr_check_f CHOICE_constraint;
 

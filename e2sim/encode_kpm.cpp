@@ -172,37 +172,6 @@ static bool fill_ueid_from_assoc_gnb(const RcAssociationSnapshot &assoc, UEID_t 
   return true;
 }
 
-// Fallback: costruisce un UEID di tipo gNB-DU usando il ran_ue_ngap_id dell'associazione.
-static bool fill_ueid_from_assoc_du(const RcAssociationSnapshot &assoc, UEID_t &ueid)
-{
-  int64_t ran_id = assoc.ue.ran_ue_ngap_id;
-  if (ran_id < 0)
-  {
-    return false;
-  }
-
-  memset(&ueid, 0, sizeof(ueid));
-  UEID_GNB_DU_t *du = (UEID_GNB_DU_t *)calloc(1, sizeof(UEID_GNB_DU_t));
-  if (!du)
-  {
-    return false;
-  }
-
-  du->gNB_CU_UE_F1AP_ID = (GNB_CU_UE_F1AP_ID_t)ran_id;
-
-  RANUEID_t *ran_oct = nullptr;
-  if (!build_ran_ueid_from_long(ran_id, ran_oct))
-  {
-    free(du);
-    return false;
-  }
-  du->ran_UEID = ran_oct;
-
-  ueid.present = UEID_PR_gNB_DU_UEID;
-  ueid.choice.gNB_DU_UEID = du;
-  return true;
-}
-
 // RAN Function Description (v3)
 
 void encode_kpm_function_description(E2SM_KPM_RANfunction_Description_t *desc)

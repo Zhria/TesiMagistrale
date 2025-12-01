@@ -64,6 +64,11 @@ file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/ASN1c/*.c"
 )
 
+# asn_config.h disables BER/UPER/OER/JER support, so drop their helpers.
+# Keep only the aligned-PER/XER bits we actually use.
+list(FILTER E2SIM_SOURCES EXCLUDE REGEX ".*/ASN1c/(ber_|der_|jer_|oer_|uper_).*\\.c$")
+list(FILTER E2SIM_SOURCES EXCLUDE REGEX ".*/ASN1c/.*_(ber|jer|oer|uper)\\.c$")
+
 add_executable(kpm_callbacks
   "${E2SIM_ROOT}/kpm_callbacks.cpp"
   ${E2SIM_SOURCES}
@@ -87,6 +92,27 @@ target_link_libraries( rc_control_test ${SCTP_STD_LIB}
     yaml-cpp
     nlohmann_json::nlohmann_json
     Threads::Threads
+)
+
+# Standalone KPM v3 encode/decode exercise
+add_executable(test_kpm_report_loop
+  "${E2SIM_ROOT}/test/test_kpm_report_loop.cpp"
+  ${E2SIM_SOURCES}
+)
+
+
+
+# Link against the FlexRIC KPM v3 decoder helpers -- To test only
+set(FLEXRIC_KPM_LIB "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so")
+target_link_libraries( test_kpm_report_loop ${SCTP_STD_LIB}
+    CURL::libcurl
+    yaml-cpp
+    nlohmann_json::nlohmann_json
+    Threads::Threads
+    ${FLEXRIC_KPM_LIB}
+)
+set_target_properties(test_kpm_report_loop PROPERTIES
+  BUILD_RPATH "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00"
 )
 
 #----------------------------------------------

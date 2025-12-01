@@ -37,7 +37,6 @@ asn_struct_print_f NativeReal_print;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f NativeReal_compare;
-asn_struct_copy_f    NativeReal_copy;
 
 #define NativeReal_constraint asn_generic_no_constraint
 

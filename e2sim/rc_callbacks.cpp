@@ -1258,8 +1258,7 @@ namespace
         return true;
     }
 
-    static bool build_handover_request_payload(const RcControlContext &ctx,
-                                               json &payload, std::string &error)
+    static bool build_handover_request_payload(const RcControlContext &ctx,json &payload, std::string &error)
     {
         logln("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
         auto ran_ue = resolve_ran_ue_ngap_id(ctx);
@@ -1324,8 +1323,7 @@ namespace
         return true;
     }
 
-    static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,
-                                                       const std::string &command_desc)
+    static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,const std::string &command_desc)
     {
         logln("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
 

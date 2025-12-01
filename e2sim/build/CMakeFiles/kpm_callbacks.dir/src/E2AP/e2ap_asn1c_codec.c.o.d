@@ -75,30 +75,19 @@ CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_TYPE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_length.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_tlv_tag.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ber_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/der_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/xer_encoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/jer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_support.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_bit_data.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/per_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constraints.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_random_fill.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/oer_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_internal.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
  /usr/include/assert.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_decoder.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_support.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/uper_encoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_decoder.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_support.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/aper_encoder.h \
@@ -109,7 +98,6 @@ CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_codecs_prim.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/Criticality.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeEnumerated.h \
- /home/zakaria/TesiMagistrale/e2sim/./ASN1c/NativeInteger.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ENUMERATED.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ANY.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/OCTET_STRING.h \
@@ -155,6 +143,11 @@ CMakeFiles/kpm_callbacks.dir/src/E2AP/e2ap_asn1c_codec.c.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalResponse.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2RemovalFailure.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42setupRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42setupResponse.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICsubscriptionRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICsubscriptionDeleteRequest.h \
+ /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E42RICcontrolRequest.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICindication.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RICserviceQuery.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/ErrorIndication.h \

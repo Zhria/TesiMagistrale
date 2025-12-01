@@ -22,7 +22,6 @@ asn_TYPE_operation_t asn_OP_INTEGER = {
     0,
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
     INTEGER_compare,
-    INTEGER_copy,
 #if !defined(ASN_DISABLE_BER_SUPPORT)
     ber_decode_primitive,
     INTEGER_encode_der,
@@ -87,9 +86,6 @@ asn_TYPE_descriptor_t asn_DEF_INTEGER = {
 #if !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT)
         0,
 #endif  /* !defined(ASN_DISABLE_UPER_SUPPORT) || !defined(ASN_DISABLE_APER_SUPPORT) */
-#if !defined(ASN_DISABLE_JER_SUPPORT)
-        0,
-#endif  /* !defined(ASN_DISABLE_JER_SUPPORT) */
         asn_generic_no_constraint
     },
     0, 0,  /* No members */
@@ -100,16 +96,16 @@ asn_TYPE_descriptor_t asn_DEF_INTEGER = {
  * INTEGER specific human-readable output.
  */
 ssize_t
-INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_consume_bytes_f *cb, void *app_key, int plainOrXEROrJER) {
+INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_consume_bytes_f *cb, void *app_key, int plainOrXER) {
     const asn_INTEGER_specifics_t *specs =
         (const asn_INTEGER_specifics_t *)td->specifics;
 	char scratch[32];
 	uint8_t *buf = st->buf;
 	uint8_t *buf_end = st->buf + st->size;
-	intmax_t value = 0;
+	intmax_t value;
 	ssize_t wrote = 0;
-	char *p = NULL;
-	int ret = -1;
+	char *p;
+	int ret;
 
 	if(specs && specs->field_unsigned)
 		ret = asn_INTEGER2umax(st, (uintmax_t *)&value);
@@ -122,16 +118,13 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 		el = (value >= 0 || !specs || !specs->field_unsigned)
 			? INTEGER_map_value2enum(specs, value) : 0;
 		if(el) {
-			if(plainOrXEROrJER == 0)
+			if(plainOrXER == 0)
 				return asn__format_to_callback(cb, app_key,
 					"%" ASN_PRIdMAX " (%s)", value, el->enum_name);
-			else if (plainOrXEROrJER == 1)
+			else
 				return asn__format_to_callback(cb, app_key,
 					"<%s/>", el->enum_name);
-			else if (plainOrXEROrJER == 2)
-				return asn__format_to_callback(cb, app_key,
-					"\"%s\"", el->enum_name);
-		} else if(plainOrXEROrJER && specs && specs->strict_enumeration) {
+		} else if(plainOrXER && specs && specs->strict_enumeration) {
 			ASN_DEBUG("ASN.1 forbids dealing with "
 				"unknown value of ENUMERATED type");
 			errno = EPERM;
@@ -143,7 +136,7 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
                                                : "%" ASN_PRIdMAX,
                                            value);
         }
-	} else if(plainOrXEROrJER && specs && specs->strict_enumeration) {
+	} else if(plainOrXER && specs && specs->strict_enumeration) {
 		/*
 		 * Here and earlier, we cannot encode the ENUMERATED values
 		 * if there is no corresponding identifier.
@@ -156,13 +149,6 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 
 	/* Output in the long xx:yy:zz... format */
 	/* TODO: replace with generic algorithm (Knuth TAOCP Vol 2, 4.3.1) */
-	
-	/* For JER (JSON), large integers should be quoted as strings */
-	if(plainOrXEROrJER == 2) {
-		if(cb("\"", 1, app_key) < 0) return -1;
-		wrote += 1;
-	}
-	
 	for(p = scratch; buf < buf_end; buf++) {
 		const char * const h2c = "0123456789ABCDEF";
 		if((p - scratch) >= (ssize_t)(sizeof(scratch) - 4)) {
@@ -180,15 +166,7 @@ INTEGER__dump(const asn_TYPE_descriptor_t *td, const INTEGER_t *st, asn_app_cons
 		p--;	/* Remove the last ":" */
 
 	wrote += p - scratch;
-	if((cb(scratch, p - scratch, app_key) < 0)) return -1;
-	
-	/* Close quote for JER (JSON) */
-	if(plainOrXEROrJER == 2) {
-		if(cb("\"", 1, app_key) < 0) return -1;
-		wrote += 1;
-	}
-	
-	return wrote;
+	return (cb(scratch, p - scratch, app_key) < 0) ? -1 : wrote;
 }
 
 static int
@@ -233,7 +211,7 @@ asn__integer_convert(const uint8_t *b, const uint8_t *end) {
 int
 asn_INTEGER2imax(const INTEGER_t *iptr, intmax_t *lptr) {
 	uint8_t *b, *end;
-	size_t size = 0;
+	size_t size;
 
 	/* Sanity checking */
 	if(!iptr || !iptr->buf || !lptr) {
@@ -343,11 +321,11 @@ asn_umax2INTEGER(INTEGER_t *st, uintmax_t value) {
 int
 asn_imax2INTEGER(INTEGER_t *st, intmax_t value) {
 	uint8_t *buf, *bp;
-	volatile uint8_t *p;
-	volatile uint8_t *pstart;
-	volatile uint8_t *pend1;
+	uint8_t *p;
+	uint8_t *pstart;
+	uint8_t *pend1;
 	int littleEndian = 1;	/* Run-time detection */
-	volatile int add;
+	int add;
 
 	if(!st) {
 		errno = EINVAL;
@@ -435,33 +413,6 @@ asn_ulong2INTEGER(INTEGER_t *st, unsigned long value) {
     return asn_imax2INTEGER(st, value);
 }
 
-int asn_INTEGER2int64(const INTEGER_t *st, int64_t *value) {
-    intmax_t v;
-    if(asn_INTEGER2imax(st, &v) == 0) {
-        if(v < INT64_MIN || v > INT64_MAX) {
-            errno = ERANGE;
-            return -1;
-        }
-        *value = v;
-        return 0;
-    } else {
-        return -1;
-    }
-}
-
-int asn_INTEGER2uint64(const INTEGER_t *st, uint64_t *value) {
-    uintmax_t v;
-    if(asn_INTEGER2umax(st, &v) == 0) {
-        if(v > UINT64_MAX) {
-            errno = ERANGE;
-            return -1;
-        }
-        *value = v;
-        return 0;
-    } else {
-        return -1;
-    }
-}
 
 int
 asn_uint642INTEGER(INTEGER_t *st, uint64_t value) {
@@ -491,11 +442,11 @@ asn_uint642INTEGER(INTEGER_t *st, uint64_t value) {
 int
 asn_int642INTEGER(INTEGER_t *st, int64_t value) {
 	uint8_t *buf, *bp;
-	volatile uint8_t *p;
-	volatile uint8_t *pstart;
-	volatile uint8_t *pend1;
+	uint8_t *p;
+	uint8_t *pstart;
+	uint8_t *pend1;
 	int littleEndian = 1;	/* Run-time detection */
-	volatile int add;
+	int add;
 
 	if(!st) {
 		errno = EINVAL;
@@ -786,41 +737,4 @@ INTEGER_compare(const asn_TYPE_descriptor_t *td, const void *aptr,
         return 1;
     }
 
-}
-
-int
-INTEGER_copy(const asn_TYPE_descriptor_t *td, void **aptr,
-                     const void *bptr) {
-    (void)td;
-    INTEGER_t *a = *aptr;
-    const INTEGER_t *b = bptr;
-
-    if(!b) {
-        if(a) {
-            FREEMEM(a->buf);
-            FREEMEM(a);
-            *aptr = 0;
-        }
-        return 0;
-    }
-
-    if(!a) {
-        a = *aptr = CALLOC(1, sizeof(*a));
-        if(!a) return -1;
-    }
-
-    if(b->size) {
-        uint8_t* buf = MALLOC(b->size);
-        if(!buf) return -1;
-        memcpy(buf, b->buf, b->size);
-        FREEMEM(a->buf);
-        a->buf = buf;
-        a->size = b->size;
-    } else {
-        FREEMEM(a->buf);
-        a->buf = 0;
-        a->size = 0;
-    }
-
-    return 0;
 }

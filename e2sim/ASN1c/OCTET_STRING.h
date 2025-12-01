@@ -29,7 +29,6 @@ asn_struct_print_f OCTET_STRING_print_utf8;
 #endif  /* !defined(ASN_DISABLE_PRINT_SUPPORT) */
 
 asn_struct_compare_f OCTET_STRING_compare;
-asn_struct_copy_f    OCTET_STRING_copy;
 
 #define OCTET_STRING_constraint asn_generic_no_constraint
 
