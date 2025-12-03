@@ -9,9 +9,16 @@
 
 extern "C" {
 #include "asn_application.h"
+#include "E2AP-PDU.h"
+#include "InitiatingMessage.h"
+#include "ProtocolIE-Field.h"
+#include "RICcontrolRequest.h"
 #include "E2SM-RC-ControlHeader.h"
 #include "E2SM-RC-ControlHeader-Format1.h"
 }
+
+// Stub richiesto dal linker (usato da e2ap_message_handler ma non in questo test)
+void stop_kpm_subscription(long, long, long) {}
 
 namespace {
 
@@ -129,6 +136,43 @@ void decode_as_format1(const std::vector<uint8_t> &buf, bool aligned) {
   ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlHeader_Format1, fmt1);
 }
 
+bool extract_hdr_from_pdu(const std::vector<uint8_t> &buf,
+                          std::vector<uint8_t> &hdr_out) {
+  E2AP_PDU_t *pdu = nullptr;
+  asn_dec_rval_t ret = asn_decode(nullptr,
+                                  ATS_ALIGNED_BASIC_PER,
+                                  &asn_DEF_E2AP_PDU,
+                                  reinterpret_cast<void **>(&pdu),
+                                  buf.data(),
+                                  buf.size());
+  if (ret.code != RC_OK || !pdu) {
+    std::cerr << "E2AP decode failed code=" << ret.code
+              << " consumed=" << ret.consumed << "\n";
+    return false;
+  }
+
+  bool found = false;
+  if (pdu->present == E2AP_PDU_PR_initiatingMessage) {
+    InitiatingMessage_t *init = pdu->choice.initiatingMessage;
+    if (init && init->value.present == InitiatingMessage__value_PR_RICcontrolRequest) {
+      RICcontrolRequest_t &req = init->value.choice.RICcontrolRequest;
+      for (int i = 0; i < req.protocolIEs.list.count; ++i) {
+        auto *ie = static_cast<RICcontrolRequest_IEs_t *>(req.protocolIEs.list.array[i]);
+        if (ie && ie->id == ProtocolIE_ID_id_RICcontrolHeader &&
+            ie->value.present == RICcontrolRequest_IEs__value_PR_RICcontrolHeader) {
+          const RICcontrolHeader_t &hdr = ie->value.choice.RICcontrolHeader;
+          hdr_out.assign(hdr.buf, hdr.buf + hdr.size);
+          found = true;
+          break;
+        }
+      }
+    }
+  }
+
+  ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
+  return found;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -139,8 +183,14 @@ int main(int argc, char **argv) {
   }
   std::cout << "Loaded " << buf.size() << " bytes from " << path << "\n";
 
-  decode_as_choice(buf);
-  decode_as_format1(buf, true);
-  decode_as_format1(buf, false);
+  std::vector<uint8_t> hdr_buf;
+  if (!extract_hdr_from_pdu(buf, hdr_buf)) {
+    std::cout << "No E2AP PDU found or RICcontrolHeader missing; trying raw buffer as header\n";
+    hdr_buf = buf;
+  }
+
+  decode_as_choice(hdr_buf);
+  decode_as_format1(hdr_buf, true);
+  decode_as_format1(hdr_buf, false);
   return 0;
 }

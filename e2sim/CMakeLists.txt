@@ -94,6 +94,32 @@ target_link_libraries( rc_control_test ${SCTP_STD_LIB}
     Threads::Threads
 )
 
+# # Roundtrip RC control: decodifica un PDU prodotto da flexric-sm e passa per i callback RC
+# add_executable(rc_control_roundtrip
+#   "${E2SIM_ROOT}/test/rc_control_roundtrip.cpp"
+#   ${E2SIM_SOURCES}
+# )
+
+# target_link_libraries( rc_control_roundtrip ${SCTP_STD_LIB}
+#     CURL::libcurl
+#     yaml-cpp
+#     nlohmann_json::nlohmann_json
+#     Threads::Threads
+# )
+
+# # Minimal decoder exercise: decodifica ControlHeader hex (usato come test rapido)
+# add_executable(test_decoding_ric_control
+#   "${E2SIM_ROOT}/test_decoding_ric_control.cpp"
+#   ${E2SIM_SOURCES}
+# )
+
+# target_link_libraries( test_decoding_ric_control ${SCTP_STD_LIB}
+#     CURL::libcurl
+#     yaml-cpp
+#     nlohmann_json::nlohmann_json
+#     Threads::Threads
+# )
+
 # Standalone KPM v3 encode/decode exercise (optional; disable by default)
 option(BUILD_TEST_KPM_REPORT_LOOP "Build the test_kpm_report_loop target" OFF)
 set(FLEXRIC_KPM_LIB "/home/zakaria/flexricFeraudo/flexric-sm/build/src/sm/kpm_sm/kpm_sm_v03.00/libkpm_sm.so"
