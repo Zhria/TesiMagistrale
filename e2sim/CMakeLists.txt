@@ -82,17 +82,17 @@ target_link_libraries( kpm_callbacks ${SCTP_STD_LIB}
  )
 
 # Test standalone per RICcontrolRequest che chiama direttamente callback_rc_control_request
-add_executable(rc_control_test
-  "${E2SIM_ROOT}/test/rc_control_test.cpp"
-  ${E2SIM_SOURCES}
-)
+# add_executable(rc_control_test
+#   "${E2SIM_ROOT}/test/rc_control_test.cpp"
+#   ${E2SIM_SOURCES}
+# )
 
-target_link_libraries( rc_control_test ${SCTP_STD_LIB}
-    CURL::libcurl
-    yaml-cpp
-    nlohmann_json::nlohmann_json
-    Threads::Threads
-)
+# target_link_libraries( rc_control_test ${SCTP_STD_LIB}
+#     CURL::libcurl
+#     yaml-cpp
+#     nlohmann_json::nlohmann_json
+#     Threads::Threads
+# )
 
 # # Roundtrip RC control: decodifica un PDU prodotto da flexric-sm e passa per i callback RC
 # add_executable(rc_control_roundtrip

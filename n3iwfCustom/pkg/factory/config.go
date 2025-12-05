@@ -73,6 +73,12 @@ type AMFSCTPAddresses struct {
 	Port        int      `yaml:"port,omitempty" valid:"port,optional"` // Default port is 38412 if not defined.
 }
 
+type Wifi struct {
+	SSID                 string `yaml:"ssid,omitempty" valid:"required"`
+	Password             string `yaml:"password,omitempty" valid:"required"`
+	AccessPointInterface string `yaml:"accessPointInterface,omitempty" valid:"required"`
+}
+
 func (a *AMFSCTPAddresses) validate() error {
 	var errs govalidator.Errors
 
@@ -148,6 +154,7 @@ type Configuration struct {
 	CertificateAuthority string      `yaml:"certificateAuthority" valid:"optional"`
 	Certificate          string      `yaml:"certificate"          valid:"optional"`
 	LivenessCheck        *TimerValue `yaml:"livenessCheck"        valid:"required"`
+	Wifi                 *Wifi       `yaml:"wifi,omitempty"       valid:"optional"`
 }
 
 type Logger struct {
@@ -414,6 +421,18 @@ func (c *Config) GetLivenessCheck() TimerValue {
 	c.RLock()
 	defer c.RUnlock()
 	return *c.Configuration.LivenessCheck
+}
+
+func (c *Config) GetWifi() *Wifi {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.Wifi == nil {
+		return nil
+	}
+	if c.Configuration.Wifi.SSID == "" && c.Configuration.Wifi.Password == "" && c.Configuration.Wifi.AccessPointInterface == "" {
+		return nil
+	}
+	return deepcopy.Copy(c.Configuration.Wifi).(*Wifi)
 }
 
 type Tls struct {

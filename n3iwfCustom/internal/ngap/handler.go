@@ -4043,7 +4043,9 @@ type targetPduSessionInfo struct {
 }
 
 type wifiConfig struct {
-	// TODO: populate Wi-Fi roaming parameters (SSID list, priority, EAP creds, etc.)
+	SSID                 string `json:"ssid,omitempty"`
+	Password             string `json:"password,omitempty"`
+	AccessPointInterface string `json:"accessPointInterface,omitempty"`
 }
 
 type targetToSourceInfo struct {
@@ -4099,7 +4101,7 @@ func buildTargetToSourceContainer(
 		pduSessions = append(pduSessions, info)
 	}
 
-	wifi := getWifiConfig()
+	wifi := getWifiConfig(cfg)
 
 	payload := targetToSourceInfo{
 		Access:      access,
@@ -4115,9 +4117,23 @@ func buildTargetToSourceContainer(
 	return data, nil
 }
 
-// getWifiConfig is a stub placeholder to be completed with Wi-Fi roaming data retrieval.
-func getWifiConfig() *wifiConfig {
-	return nil
+func getWifiConfig(cfg *factory.Config) *wifiConfig {
+	if cfg == nil {
+		return nil
+	}
+	wifi := cfg.GetWifi()
+	if wifi == nil {
+		return nil
+	}
+	out := wifiConfig{
+		SSID:                 wifi.SSID,
+		Password:             wifi.Password,
+		AccessPointInterface: wifi.AccessPointInterface,
+	}
+	if out.SSID == "" && out.Password == "" && out.AccessPointInterface == "" {
+		return nil
+	}
+	return &out
 }
 
 func sendTargetToSourceToUE(shared *n3iwf_context.RanUeSharedCtx) {

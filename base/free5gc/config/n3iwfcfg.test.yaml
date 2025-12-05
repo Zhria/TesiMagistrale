@@ -41,6 +41,12 @@ configuration:
   # --- N3 Interfaces ---
   n3iwfGtpBindAddress: 10.200.200.2 # IP address of N3 interface (GTP) on this N3IWF
 
+  # --- Wi-Fi Access ---
+  wifi:
+    ssid: example-ssid # SSID of the Wi-Fi access point
+    password: example-pass # Passphrase/PSK for Wi-Fi access
+    accessPointInterface: wlan0 # Network interface used by the access point
+
   fqdn: n3iwf.free5gc.org # FQDN of this N3IWF
 
   # --- Security ---
