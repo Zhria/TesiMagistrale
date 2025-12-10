@@ -429,7 +429,7 @@ func (c *Config) GetWifi() *Wifi {
 	if c.Configuration == nil || c.Configuration.Wifi == nil {
 		return nil
 	}
-	if c.Configuration.Wifi.SSID == "" && c.Configuration.Wifi.Password == "" && c.Configuration.Wifi.AccessPointInterface == "" {
+	if c.Configuration.Wifi.SSID == "" && c.Configuration.Wifi.Password == "" {
 		return nil
 	}
 	return deepcopy.Copy(c.Configuration.Wifi).(*Wifi)

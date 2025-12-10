@@ -4043,9 +4043,8 @@ type targetPduSessionInfo struct {
 }
 
 type wifiConfig struct {
-	SSID                 string `json:"ssid,omitempty"`
-	Password             string `json:"password,omitempty"`
-	AccessPointInterface string `json:"accessPointInterface,omitempty"`
+	SSID     string `json:"ssid,omitempty"`
+	Password string `json:"password,omitempty"`
 }
 
 type targetToSourceInfo struct {
@@ -4126,11 +4125,10 @@ func getWifiConfig(cfg *factory.Config) *wifiConfig {
 		return nil
 	}
 	out := wifiConfig{
-		SSID:                 wifi.SSID,
-		Password:             wifi.Password,
-		AccessPointInterface: wifi.AccessPointInterface,
+		SSID:     wifi.SSID,
+		Password: wifi.Password,
 	}
-	if out.SSID == "" && out.Password == "" && out.AccessPointInterface == "" {
+	if out.SSID == "" && out.Password == "" {
 		return nil
 	}
 	return &out

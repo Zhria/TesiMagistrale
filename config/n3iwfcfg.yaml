@@ -43,9 +43,8 @@ configuration:
 
   # --- Wi-Fi Access ---
   wifi:
-    ssid: example-ssid # SSID of the Wi-Fi access point
-    password: example-pass # Passphrase/PSK for Wi-Fi access
-    accessPointInterface: wlan0 # Network interface used by the access point
+    ssid: mudproject # SSID of the Wi-Fi access point
+    password: MMWEdge3987#! # Passphrase/PSK for Wi-Fi access
 
   fqdn: n3iwf.free5gc.org # FQDN of this N3IWF
 
