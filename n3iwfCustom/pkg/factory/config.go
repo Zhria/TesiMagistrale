@@ -74,9 +74,8 @@ type AMFSCTPAddresses struct {
 }
 
 type Wifi struct {
-	SSID                 string `yaml:"ssid,omitempty" valid:"required"`
-	Password             string `yaml:"password,omitempty" valid:"required"`
-	AccessPointInterface string `yaml:"accessPointInterface,omitempty" valid:"required"`
+	SSID     string `yaml:"ssid,omitempty" valid:"required"`
+	Password string `yaml:"password,omitempty" valid:"required"`
 }
 
 func (a *AMFSCTPAddresses) validate() error {

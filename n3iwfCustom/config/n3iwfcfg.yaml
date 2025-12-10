@@ -45,7 +45,6 @@ configuration:
   wifi:
     ssid: example-ssid # SSID of the Wi-Fi access point
     password: example-pass # Passphrase/PSK for Wi-Fi access
-    accessPointInterface: wlan0 # Network interface used by the access point
 
   fqdn: n3iwf.free5gc.org # FQDN of this N3IWF
 
