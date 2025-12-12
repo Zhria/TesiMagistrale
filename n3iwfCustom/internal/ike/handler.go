@@ -291,6 +291,19 @@ func (s *Server) HandleIKEAUTH(
 
 	ikeSecurityAssociation.InitiatorMessageID = message.MessageID
 
+	// Ensure the IKESA is attached to a local UE context even when handover skips EAP/NAS flow.
+	if ikeSecurityAssociation.IkeUE == nil {
+		ikeUE := n3iwfCtx.NewN3iwfIkeUe(ikeSecurityAssociation.LocalSPI)
+		ikeSecurityAssociation.IkeUE = ikeUE
+		ikeUE.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+		ikeUE.IKEConnection = &n3iwf_context.UDPSocketInfo{
+			Conn:      udpConn,
+			N3IWFAddr: n3iwfAddr,
+			UEAddr:    ueAddr,
+		}
+		logger.IKELog.Infof("Created/attached local UE context for IKESA (handover/fast path)")
+	}
+
 	switch ikeSecurityAssociation.State {
 	case PreSignalling:
 		if initiatorID != nil {
