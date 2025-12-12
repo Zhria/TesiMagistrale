@@ -154,6 +154,32 @@ func (s *Server) HandleIKESAINIT(
 	ikeSecurityAssociation.RemoteSPI = message.InitiatorSPI
 	ikeSecurityAssociation.InitiatorMessageID = message.MessageID
 
+	// Pre-map this IKESA SPI to the pending handover RanUe (reuse NAS security)
+	if _, ok := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI); !ok {
+		mapped := false
+		n3iwfCtx.RANUePool.Range(func(key, value interface{}) bool {
+			ranId, ok := key.(int64)
+			if !ok {
+				return true
+			}
+			if _, exists := n3iwfCtx.IkeSpiLoad(ranId); exists {
+				return true
+			}
+			if ranUe, ok := value.(n3iwf_context.RanUe); ok {
+				if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity {
+					n3iwfCtx.IkeSpiNgapIdMapping(ikeSecurityAssociation.LocalSPI, ranId)
+					logger.IKELog.Infof("Mapped IKESA SPI %016x to handover RanUeNgapId=%d", ikeSecurityAssociation.LocalSPI, ranId)
+					mapped = true
+					return false
+				}
+			}
+			return true
+		})
+		if !mapped {
+			logger.IKELog.Debugf("No handover RanUe found to map IKESA SPI %016x", ikeSecurityAssociation.LocalSPI)
+		}
+	}
+
 	ikeSecurityAssociation.IKESAKey, localPublicValue, err = ike_security.NewIKESAKey(chooseProposal[0],
 		keyExcahge.KeyExchangeData, concatenatedNonce,
 		ikeSecurityAssociation.RemoteSPI, ikeSecurityAssociation.LocalSPI)
