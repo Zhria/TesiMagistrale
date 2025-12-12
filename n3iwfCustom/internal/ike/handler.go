@@ -291,6 +291,30 @@ func (s *Server) HandleIKEAUTH(
 
 	ikeSecurityAssociation.InitiatorMessageID = message.MessageID
 
+	// Handover fast-path: if NGAP told us to reuse NAS security but IkeUE is not yet attached, create it and bind to SA.
+	if ikeSecurityAssociation.IkeUE == nil {
+		if ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI); ok {
+			if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
+				if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity {
+					ikeUE := n3iwfCtx.NewN3iwfIkeUe(ikeSecurityAssociation.LocalSPI)
+					ikeUE.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+					ikeUE.IKEConnection = &n3iwf_context.UDPSocketInfo{
+						Conn:      udpConn,
+						N3IWFAddr: n3iwfAddr,
+						UEAddr:    ueAddr,
+					}
+					if len(shared.NextHopNH) > 0 {
+						ikeUE.NextHopNH = append([]byte(nil), shared.NextHopNH...)
+						ikeUE.NextHopChainingCount = shared.NextHopChainingCount
+					}
+					ikeSecurityAssociation.IkeUE = ikeUE
+					n3iwfCtx.IkeSpiNgapIdMapping(ikeSecurityAssociation.LocalSPI, ranNgapId)
+					logger.IKELog.Infof("Attached UE context for handover (reuse NAS security) ranUeNgapId=%d", ranNgapId)
+				}
+			}
+		}
+	}
+
 	switch ikeSecurityAssociation.State {
 	case PreSignalling:
 		if initiatorID != nil {
