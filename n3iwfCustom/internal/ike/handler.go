@@ -329,6 +329,18 @@ func (s *Server) HandleIKEAUTH(
 						N3IWFAddr: n3iwfAddr,
 						UEAddr:    ueAddr,
 					}
+					// Ensure UserLocationInformationN3IWF can be encoded in Uplink NAS Transport during handover.
+					// Without an IP/port, NGAP encoding fails (TransportLayerAddress sizeLB=1).
+					if ueAddr != nil && ueAddr.IP != nil {
+						if ip4 := ueAddr.IP.To4(); ip4 != nil {
+							shared.IPAddrv4 = ip4.String()
+							shared.IPAddrv6 = ""
+						} else {
+							shared.IPAddrv4 = ""
+							shared.IPAddrv6 = ueAddr.IP.String()
+						}
+						shared.PortNumber = int32(ueAddr.Port) // #nosec G115
+					}
 					if len(shared.NextHopNH) > 0 {
 						ikeUE.NextHopNH = append([]byte(nil), shared.NextHopNH...)
 						ikeUE.NextHopChainingCount = shared.NextHopChainingCount
