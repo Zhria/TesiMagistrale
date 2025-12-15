@@ -779,6 +779,12 @@ func HandleMobilityAndPeriodicRegistrationUpdating(ue *context.AmfUe, anType mod
 
 	amfSelf := context.GetSelf()
 
+	// Keep SecurityKey (KN3IWF) aligned with the current UL NAS COUNT for mobility updates over non-3GPP access.
+	// Without refreshing it here, the target N3IWF may verify IKE AUTH with a stale Kn3iwf, causing AUTHENTICATION_FAILED.
+	if anType == models.AccessType_NON_3_GPP_ACCESS && ue.SecurityContextIsValid() {
+		ue.DerivateAnKey(anType)
+	}
+
 	if ue.RegistrationRequest.UpdateType5GS != nil {
 		if ue.RegistrationRequest.UpdateType5GS.GetNGRanRcu() == nasMessage.NGRanRadioCapabilityUpdateNeeded {
 			ue.UeRadioCapability = ""
