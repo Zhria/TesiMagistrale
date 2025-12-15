@@ -1354,7 +1354,31 @@ func (s *Server) HandleSendEAPSuccessMsg(ikeEvt n3iwf_context.IkeEvt) {
 	pduSessionListLen := sendEAPSuccessMsgEvt.PduSessionListLen
 
 	n3iwfCtx := s.Context()
-	ikeSecurityAssociation, _ := n3iwfCtx.IKESALoad(localSPI)
+	ikeSecurityAssociation, ok := n3iwfCtx.IKESALoad(localSPI)
+	if !ok || ikeSecurityAssociation == nil {
+		ikeLog.Errorf("HandleSendEAPSuccessMsg(): IKESA not found for localSPI=%016x", localSPI)
+		return
+	}
+
+	if ikeSecurityAssociation.IkeUE == nil {
+		if ikeUE, ok := n3iwfCtx.IkeUePoolLoad(localSPI); ok && ikeUE != nil {
+			ikeSecurityAssociation.IkeUE = ikeUE
+			if ikeUE.N3IWFIKESecurityAssociation == nil {
+				ikeUE.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+			}
+		} else {
+			ikeUE := n3iwfCtx.NewN3iwfIkeUe(localSPI)
+			ikeUE.N3IWFIKESecurityAssociation = ikeSecurityAssociation
+			ikeSecurityAssociation.IkeUE = ikeUE
+		}
+
+		if ikeSecurityAssociation.IKEConnection != nil && ikeSecurityAssociation.IkeUE.IKEConnection == nil {
+			ikeSecurityAssociation.IkeUE.IKEConnection = ikeSecurityAssociation.IKEConnection
+		}
+		if ikeSecurityAssociation.IkeUE.IKEConnection != nil && ikeSecurityAssociation.IKEConnection == nil {
+			ikeSecurityAssociation.IKEConnection = ikeSecurityAssociation.IkeUE.IKEConnection
+		}
+	}
 
 	if kn3iwf != nil {
 		ikeSecurityAssociation.IkeUE.Kn3iwf = kn3iwf
@@ -1386,6 +1410,11 @@ func (s *Server) HandleSendEAPSuccessMsg(ikeEvt n3iwf_context.IkeEvt) {
 	responseIKEMessage := ike_message.NewMessage(ikeSecurityAssociation.RemoteSPI,
 		ikeSecurityAssociation.LocalSPI, ike_message.IKE_AUTH, true, false,
 		ikeSecurityAssociation.InitiatorMessageID, responseIKEPayload)
+
+	if ikeSecurityAssociation.IKEConnection == nil {
+		ikeLog.Errorf("HandleSendEAPSuccessMsg(): missing IKE connection for localSPI=%016x", localSPI)
+		return
+	}
 
 	// Send IKE message to UE
 	err = SendIKEMessageToUE(ikeSecurityAssociation.IKEConnection.Conn,
