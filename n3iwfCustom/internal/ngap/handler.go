@@ -2968,6 +2968,8 @@ func (s *Server) HandleEvent(ngapEvent n3iwf_context.NgapEvt) {
 		s.HandleSendInitialContextSetupResponse(ngapEvent)
 	case n3iwf_context.SendHandoverRequired:
 		s.HandleSendHandoverRequired(ngapEvent)
+	case n3iwf_context.SendHandoverNotify:
+		s.HandleSendHandoverNotify(ngapEvent)
 	case n3iwf_context.SendPathSwitchRequest:
 		s.HandleSendPathSwitchRequest(ngapEvent)
 	default:
@@ -3540,6 +3542,44 @@ func (s *Server) HandleSendPathSwitchRequest(
 	message.SendToAmf(sharedCtx.AMF, pkt)
 	sharedCtx.PathSwitchSent = true
 	ngapLog.Infof("Sent PathSwitchRequest for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapId, sharedCtx.AmfUeNgapId)
+}
+
+// HandleSendHandoverNotify builds and sends HandoverNotify (NGAP) after the UE connects to target N3IWF.
+func (s *Server) HandleSendHandoverNotify(
+	ngapEvent n3iwf_context.NgapEvt,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Trace("Handle SendHandoverNotify Event")
+
+	evt := ngapEvent.(*n3iwf_context.SendHandoverNotifyEvt)
+	ranUeNgapId := evt.RanUeNgapId
+	n3iwfCtx := s.Context()
+
+	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapId)
+	if !ok {
+		ngapLog.Errorf("Cannot get RanUE from ranUeNgapId : %+v", ranUeNgapId)
+		return
+	}
+
+	sharedCtx := ranUe.GetSharedCtx()
+	if sharedCtx.AMF == nil {
+		ngapLog.Errorf("RanUE[%d] has no associated AMF", ranUeNgapId)
+		return
+	}
+	if sharedCtx.HandoverNotifySent {
+		ngapLog.Debugf("HandoverNotify already sent for RanUeNgapId=%d", ranUeNgapId)
+		return
+	}
+
+	pkt, err := message.BuildHandoverNotify(ranUe)
+	if err != nil {
+		ngapLog.Errorf("Build HandoverNotify failed: %+v", err)
+		return
+	}
+
+	message.SendToAmf(sharedCtx.AMF, pkt)
+	sharedCtx.HandoverNotifySent = true
+	ngapLog.Infof("Sent HandoverNotify for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapId, sharedCtx.AmfUeNgapId)
 }
 
 func (s *Server) HandleHandoverRequest(

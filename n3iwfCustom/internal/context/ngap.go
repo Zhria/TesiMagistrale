@@ -23,6 +23,7 @@ const (
 	SendUplinkNASTransport
 	SendInitialContextSetupResponse
 	SendHandoverRequired
+	SendHandoverNotify
 	SendPathSwitchRequest
 )
 
@@ -96,6 +97,20 @@ func (sendPathSwitchRequestEvt *SendPathSwitchRequestEvt) Type() NgapEventType {
 
 func NewSendPathSwitchRequestEvt(ranUeNgapId int64) *SendPathSwitchRequestEvt {
 	return &SendPathSwitchRequestEvt{
+		RanUeNgapId: ranUeNgapId,
+	}
+}
+
+type SendHandoverNotifyEvt struct {
+	RanUeNgapId int64
+}
+
+func (sendHandoverNotifyEvt *SendHandoverNotifyEvt) Type() NgapEventType {
+	return SendHandoverNotify
+}
+
+func NewSendHandoverNotifyEvt(ranUeNgapId int64) *SendHandoverNotifyEvt {
+	return &SendHandoverNotifyEvt{
 		RanUeNgapId: ranUeNgapId,
 	}
 }

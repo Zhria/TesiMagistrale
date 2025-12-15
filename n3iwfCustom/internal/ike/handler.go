@@ -348,6 +348,8 @@ func (s *Server) HandleIKEAUTH(
 					ikeSecurityAssociation.IkeUE = ikeUE
 					n3iwfCtx.IkeSpiNgapIdMapping(ikeSecurityAssociation.LocalSPI, ranNgapId)
 					logger.IKELog.Infof("Attached UE context for handover (reuse NAS security) ranUeNgapId=%d", ranNgapId)
+
+					s.SendNgapEvt(n3iwf_context.NewSendHandoverNotifyEvt(ranNgapId))
 				}
 			}
 		}

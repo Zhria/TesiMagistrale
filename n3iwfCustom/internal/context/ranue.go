@@ -87,6 +87,9 @@ type RanUeSharedCtx struct {
 	// If true, reuse NAS security (handover) instead of triggering new Registration
 	ReuseNasSecurity bool
 
+	// Handover Notify has been sent for this UE
+	HandoverNotifySent bool
+
 	// Path Switch has been sent for this UE
 	PathSwitchSent bool
 }
