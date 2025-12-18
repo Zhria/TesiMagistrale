@@ -1,0 +1,4 @@
+./auth_hmac_md5_96.go
+./auth_hmac_sha1_96.go
+./auth_hmac_sha2_256_128.go
+./integ.go

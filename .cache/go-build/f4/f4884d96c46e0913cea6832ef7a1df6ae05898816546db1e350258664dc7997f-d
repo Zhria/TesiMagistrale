@@ -1,0 +1,3 @@
+./dh.go
+./dh_1024_bit_modp.go
+./dh_2048_bit_modp.go
