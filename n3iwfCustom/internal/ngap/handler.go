@@ -16,6 +16,7 @@ import (
 	"github.com/free5gc/ike"
 	ike_message "github.com/free5gc/ike/message"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/n3iwf/internal/handover/statesync"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/nas/nas_security"
 	"github.com/free5gc/n3iwf/internal/ngap/message"
@@ -3717,6 +3718,23 @@ func (s *Server) HandleHandoverRequest(
 	}
 	amf.N3iwfRanUeList[n3iwfUe.RanUeNgapId] = n3iwfUe
 
+	// Stateful IPSec handover: import IKE/ESP state embedded in the SourceToTarget transparent container (relayed via AMF).
+	if len(sharedCtx.SourceToTargetContainer) > 0 {
+		var stt ngapType.SourceNGRANNodeToTargetNGRANNodeTransparentContainer
+		if err := aper.UnmarshalWithParams(sharedCtx.SourceToTargetContainer, &stt, "valueExt"); err != nil {
+			ngapLog.Debugf("Handover state-sync: decode SourceToTarget container failed: %v", err)
+		} else if raw := stt.RRCContainer.Value; len(raw) > 0 && raw[0] == '{' {
+			var transfer statesync.StateTransfer
+			if err := json.Unmarshal(raw, &transfer); err != nil {
+				ngapLog.Warnf("Handover state-sync: parse embedded state failed: %v", err)
+			} else if err := statesync.ImportState(n3iwfCtx, s.Config(), &transfer); err != nil {
+				ngapLog.Warnf("Handover state-sync: import failed: %v", err)
+			} else {
+				ngapLog.Infof("Handover state-sync: imported IPSec state for AMF UE NGAP ID=%d", transfer.AMFUeNgapID)
+			}
+		}
+	}
+
 	gtpBindAddr := s.Config().GetN3iwfGtpBindAddress()
 	var admittedItems []message.HandoverAdmittedItem
 	var failedItems []message.HandoverFailedItem
@@ -4032,15 +4050,8 @@ func (s *Server) HandleHandoverCommand(
 	if targetToSourceContainer != nil && ranUe != nil {
 		shared := ranUe.GetSharedCtx()
 		shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
-		sendTargetToSourceToUE(shared)
-	}
 
-	// Stop any further IKE traffic from this source N3IWF toward the UE after HO command
-	if ranUeNgapID != nil {
-		if spi, ok := s.Context().IkeSpiLoad(ranUeNgapID.Value); ok {
-			logger.NgapLog.Infof("Sending IKE delete towards UE for RanUeNgapId=%d after HandoverCommand", ranUeNgapID.Value)
-			s.SendIkeEvt(n3iwf_context.NewIKEDeleteRequestEvt(spi))
-		}
+		sendTargetToSourceToUE(shared)
 	}
 
 	if ranUeNgapID != nil {

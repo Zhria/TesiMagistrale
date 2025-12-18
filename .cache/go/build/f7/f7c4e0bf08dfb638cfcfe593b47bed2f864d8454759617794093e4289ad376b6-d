@@ -1,0 +1,12 @@
+./3gpp_types.go
+./amf.go
+./context.go
+./gtp.go
+./ike.go
+./ikeue.go
+./n3iwf_ue.go
+./ngap.go
+./nwuup.go
+./ranue.go
+./testing_app.go
+./timer.go

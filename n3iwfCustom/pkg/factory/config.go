@@ -31,6 +31,8 @@ const (
 	N3iwfMetricsDefaultNamespace = "free5gc"
 
 	MAX_BUF_MSG_LEN int = 65535
+
+	N3iwfHandoverStateSyncDefaultPort = 8090
 )
 
 type N3IWFNFInfo struct {
@@ -76,6 +78,13 @@ type AMFSCTPAddresses struct {
 type Wifi struct {
 	SSID     string `yaml:"ssid,omitempty" valid:"required"`
 	Password string `yaml:"password,omitempty" valid:"required"`
+}
+
+type HandoverStateSync struct {
+	Enable   bool   `yaml:"enable" valid:"optional"`
+	BindAddr string `yaml:"bindAddr,omitempty" valid:"optional,host"`
+	Port     int    `yaml:"port,omitempty" valid:"optional,port"`
+	Token    string `yaml:"token,omitempty" valid:"optional"`
 }
 
 func (a *AMFSCTPAddresses) validate() error {
@@ -154,6 +163,7 @@ type Configuration struct {
 	Certificate          string      `yaml:"certificate"          valid:"optional"`
 	LivenessCheck        *TimerValue `yaml:"livenessCheck"        valid:"required"`
 	Wifi                 *Wifi       `yaml:"wifi,omitempty"       valid:"optional"`
+	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
 }
 
 type Logger struct {
@@ -432,6 +442,51 @@ func (c *Config) GetWifi() *Wifi {
 		return nil
 	}
 	return deepcopy.Copy(c.Configuration.Wifi).(*Wifi)
+}
+
+func (c *Config) GetHandoverStateSync() *HandoverStateSync {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil {
+		return nil
+	}
+	return deepcopy.Copy(c.Configuration.HandoverStateSync).(*HandoverStateSync)
+}
+
+func (c *Config) GetHandoverStateSyncEnabled() bool {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil {
+		return false
+	}
+	return c.Configuration.HandoverStateSync.Enable
+}
+
+func (c *Config) GetHandoverStateSyncBindAddr() string {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil || c.Configuration.HandoverStateSync.BindAddr == "" {
+		return "0.0.0.0"
+	}
+	return c.Configuration.HandoverStateSync.BindAddr
+}
+
+func (c *Config) GetHandoverStateSyncPort() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil || c.Configuration.HandoverStateSync.Port == 0 {
+		return N3iwfHandoverStateSyncDefaultPort
+	}
+	return c.Configuration.HandoverStateSync.Port
+}
+
+func (c *Config) GetHandoverStateSyncToken() string {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil {
+		return ""
+	}
+	return c.Configuration.HandoverStateSync.Token
 }
 
 type Tls struct {

@@ -286,6 +286,7 @@ func (s *Server) HandleIKEAUTH(
 	var eap *ike_message.EAP
 	var authentication *ike_message.Authentication
 	var configuration *ike_message.Configuration
+	var mobikeRequested bool
 	var ok bool
 
 	for _, ikePayload := range message.Payloads {
@@ -308,6 +309,12 @@ func (s *Server) HandleIKEAUTH(
 			authentication = ikePayload.(*ike_message.Authentication)
 		case ike_message.TypeCP:
 			configuration = ikePayload.(*ike_message.Configuration)
+		case ike_message.TypeN:
+			notification := ikePayload.(*ike_message.Notification)
+			if notification.ProtocolID == ike_message.TypeNone &&
+				notification.NotifyMessageType == ike_message.MOBIKE_SUPPORTED {
+				mobikeRequested = true
+			}
 		default:
 			ikeLog.Warnf(
 				"Get IKE payload (type %d) in IKE_AUTH message, this payload will not be handled by IKE handler",
@@ -539,6 +546,11 @@ func (s *Server) HandleIKEAUTH(
 		responseIKEPayload.Reset()
 		// Identification
 		responseIKEPayload.BuildIdentificationResponder(ike_message.ID_FQDN, []byte(cfg.GetFQDN()))
+
+		if mobikeRequested {
+			ikeSecurityAssociation.MobikeSupported = true
+			responseIKEPayload.BuildNotification(ike_message.TypeNone, ike_message.MOBIKE_SUPPORTED, nil, nil)
+		}
 
 		// Certificate
 		responseIKEPayload.BuildCertificate(
@@ -960,10 +972,26 @@ func (s *Server) HandleCREATECHILDSA(
 
 	n3iwfCtx := s.Context()
 
-	if !ikeSecurityAssociation.IKEConnection.UEAddr.IP.Equal(ueAddr.IP) ||
-		!ikeSecurityAssociation.IKEConnection.N3IWFAddr.IP.Equal(n3iwfAddr.IP) {
-		ikeLog.Warnf("Get unexpteced IP in SPI: %016x", ikeSecurityAssociation.LocalSPI)
-		return
+	if ikeSecurityAssociation.IKEConnection != nil &&
+		ikeSecurityAssociation.IKEConnection.UEAddr != nil &&
+		ikeSecurityAssociation.IKEConnection.N3IWFAddr != nil &&
+		(!ikeSecurityAssociation.IKEConnection.UEAddr.IP.Equal(ueAddr.IP) ||
+			!ikeSecurityAssociation.IKEConnection.N3IWFAddr.IP.Equal(n3iwfAddr.IP)) {
+		if ikeSecurityAssociation.MobikeSupported {
+			ikeLog.Infof("MOBIKE peer changed for SPI=%016x (old %s -> new %s), updating connection",
+				ikeSecurityAssociation.LocalSPI,
+				ikeSecurityAssociation.IKEConnection.UEAddr.String(),
+				ueAddr.String())
+			ikeSecurityAssociation.IKEConnection.Conn = udpConn
+			ikeSecurityAssociation.IKEConnection.UEAddr = ueAddr
+			ikeSecurityAssociation.IKEConnection.N3IWFAddr = n3iwfAddr
+			if ikeSecurityAssociation.IkeUE != nil {
+				ikeSecurityAssociation.IkeUE.IKEConnection = ikeSecurityAssociation.IKEConnection
+			}
+		} else {
+			ikeLog.Warnf("Get unexpected IP in SPI: %016x", ikeSecurityAssociation.LocalSPI)
+			return
+		}
 	}
 
 	// Parse payloads
@@ -1199,6 +1227,7 @@ func (s *Server) HandleInformational(
 	}
 
 	var deletePayload *ike_message.Delete
+	var updateSaAddrs bool
 	var err error
 	responseIKEPayload := new(ike_message.IKEPayloadContainer)
 
@@ -1214,10 +1243,22 @@ func (s *Server) HandleInformational(
 		switch ikePayload.Type() {
 		case ike_message.TypeD:
 			deletePayload = ikePayload.(*ike_message.Delete)
+		case ike_message.TypeN:
+			notification := ikePayload.(*ike_message.Notification)
+			if notification.ProtocolID == ike_message.TypeNone &&
+				notification.NotifyMessageType == ike_message.UPDATE_SA_ADDRESSES {
+				updateSaAddrs = true
+			}
 		default:
 			ikeLog.Warnf(
 				"Get IKE payload (type %d) in Inoformational message, this payload will not be handled by IKE handler",
 				ikePayload.Type())
+		}
+	}
+
+	if updateSaAddrs && !message.IsResponse() {
+		if err := s.handleMobikeUpdateSaAddresses(udpConn, n3iwfAddr, ueAddr, ikeSecurityAssociation); err != nil {
+			ikeLog.Errorf("HandleInformational(): MOBIKE update failed: %v", err)
 		}
 	}
 
@@ -1236,6 +1277,67 @@ func (s *Server) HandleInformational(
 			responseIKEPayload, false, true, message.MessageID,
 			udpConn, ueAddr, n3iwfAddr)
 	}
+}
+
+func (s *Server) handleMobikeUpdateSaAddresses(
+	udpConn *net.UDPConn,
+	n3iwfAddr, ueAddr *net.UDPAddr,
+	ikeSA *n3iwf_context.IKESecurityAssociation,
+) error {
+	if ikeSA == nil || ikeSA.IkeUE == nil {
+		return errors.New("nil IKE SA/UE context")
+	}
+	if n3iwfAddr == nil || ueAddr == nil {
+		return errors.New("missing UDP addresses")
+	}
+
+	cfg := s.Config()
+
+	// Update stored connection endpoints (used by later exchanges/timers).
+	ikeSA.IKEConnection = &n3iwf_context.UDPSocketInfo{
+		Conn:      udpConn,
+		N3IWFAddr: n3iwfAddr,
+		UEAddr:    ueAddr,
+	}
+	ikeSA.IkeUE.IKEConnection = ikeSA.IKEConnection
+
+	// Reinstall XFRM rules for each Child SA with updated outer IP/port tuple.
+	for _, child := range ikeSA.IkeUE.N3IWFChildSecurityAssociation {
+		if child == nil {
+			continue
+		}
+		child.PeerPublicIPAddr = ueAddr.IP
+		child.LocalPublicIPAddr = n3iwfAddr.IP
+		if child.EnableEncapsulate {
+			child.N3IWFPort = n3iwfAddr.Port
+			child.NATPort = ueAddr.Port
+		}
+
+		var ifid uint32 = cfg.GetXfrmIfaceId()
+		if len(child.XfrmStateList) > 0 {
+			if child.XfrmStateList[0].Ifid > 0 {
+				ifid = uint32(child.XfrmStateList[0].Ifid) // #nosec G115
+			}
+		}
+
+		// Delete existing XFRM state/policy rules but keep the XFRM interface.
+		for idx := range child.XfrmStateList {
+			st := child.XfrmStateList[idx]
+			_ = netlink.XfrmStateDel(&st)
+		}
+		for idx := range child.XfrmPolicyList {
+			p := child.XfrmPolicyList[idx]
+			_ = netlink.XfrmPolicyDel(&p)
+		}
+		child.XfrmStateList = nil
+		child.XfrmPolicyList = nil
+
+		if err := xfrm.ApplyXFRMRule(child.LocalIsInitiator, ifid, child); err != nil {
+			return fmt.Errorf("apply xfrm ifid=%d inboundSpi=0x%08x: %w", ifid, child.InboundSPI, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *Server) HandleEvent(ikeEvt n3iwf_context.IkeEvt) {

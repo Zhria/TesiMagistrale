@@ -3,6 +3,7 @@ package xfrm
 import (
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
@@ -100,7 +101,7 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 
 	// Commit xfrm state to netlink
 	var err error
-	if err = netlink.XfrmStateAdd(xfrmState); err != nil {
+	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 
@@ -127,7 +128,7 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	}
 
 	// Commit xfrm policy to netlink
-	if err = netlink.XfrmPolicyAdd(xfrmPolicy); err != nil {
+	if err = xfrmPolicyAddOrUpdate(xfrmPolicy); err != nil {
 		return errors.Wrapf(err, "Add XFRM policy")
 	}
 
@@ -163,7 +164,7 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	}
 
 	// Commit xfrm state to netlink
-	if err = netlink.XfrmStateAdd(xfrmState); err != nil {
+	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 
@@ -180,11 +181,38 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	}
 
 	// Commit xfrm policy to netlink
-	if err = netlink.XfrmPolicyAdd(xfrmPolicy); err != nil {
+	if err = xfrmPolicyAddOrUpdate(xfrmPolicy); err != nil {
 		return errors.Wrapf(err, "Add XFRM policy")
 	}
 
 	childSecurityAssociation.XfrmPolicyList = append(childSecurityAssociation.XfrmPolicyList, *xfrmPolicy)
+	return nil
+}
+
+func xfrmStateAddOrUpdate(state *netlink.XfrmState) error {
+	if state == nil {
+		return nil
+	}
+	if err := netlink.XfrmStateAdd(state); err != nil {
+		// netlink does not export syscall.EEXIST; match the iproute2-style string.
+		if strings.Contains(err.Error(), "file exists") {
+			return netlink.XfrmStateUpdate(state)
+		}
+		return err
+	}
+	return nil
+}
+
+func xfrmPolicyAddOrUpdate(policy *netlink.XfrmPolicy) error {
+	if policy == nil {
+		return nil
+	}
+	if err := netlink.XfrmPolicyAdd(policy); err != nil {
+		if strings.Contains(err.Error(), "file exists") {
+			return netlink.XfrmPolicyUpdate(policy)
+		}
+		return err
+	}
 	return nil
 }
 

@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/binary"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/free5gc/aper"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/n3iwf/internal/handover/statesync"
+	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/ngap"
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
@@ -416,6 +419,20 @@ func buildSourceToTargetTransparentContainer(sharedCtx *n3iwf_context.RanUeShare
 		return nil, errors.New("nil target ID")
 	}
 
+	rrcContainer := []byte{0x00}
+	if transfer, err := statesync.BuildTransferFromShared(sharedCtx); err == nil {
+		raw, err := json.Marshal(transfer)
+		if err != nil {
+			logger.NgapLog.Warnf("Handover state-sync: marshal transfer failed: %v", err)
+		} else if len(raw) > 48<<10 {
+			logger.NgapLog.Warnf("Handover state-sync: transfer too large (%d bytes), skipping embed", len(raw))
+		} else if len(raw) > 0 {
+			rrcContainer = raw
+		}
+	} else {
+		logger.NgapLog.Debugf("Handover state-sync: build transfer skipped: %v", err)
+	}
+
 	plmn, err := deriveTargetPLMN(sharedCtx, targetID)
 	if err != nil {
 		return nil, err
@@ -425,7 +442,7 @@ func buildSourceToTargetTransparentContainer(sharedCtx *n3iwf_context.RanUeShare
 
 	container := ngapType.SourceNGRANNodeToTargetNGRANNodeTransparentContainer{
 		RRCContainer: ngapType.RRCContainer{
-			Value: []byte{0x00},
+			Value: rrcContainer,
 		},
 		TargetCellID: ngapType.NGRANCGI{
 			Present: ngapType.NGRANCGIPresentNRCGI,

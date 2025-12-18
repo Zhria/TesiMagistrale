@@ -87,6 +87,9 @@ type IKESecurityAssociation struct {
 	UeBehindNAT    bool // If true, N3IWF should enable NAT traversal and
 	N3iwfBehindNAT bool // TODO: If true, N3IWF should send UDP keepalive periodically
 
+	// MOBIKE (RFC 4555)
+	MobikeSupported bool
+
 	// IKE UE context
 	IkeUE *N3IWFIkeUe
 
