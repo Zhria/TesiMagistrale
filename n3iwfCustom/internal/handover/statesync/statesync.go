@@ -163,6 +163,11 @@ func ImportStateForRanUe(
 		return errors.New("target ranUe shared ctx is nil")
 	}
 
+	if req.AMFUeNgapID != 0 && req.AMFUeNgapID != shared.AmfUeNgapId {
+		logger.MainLog.Warnf("Handover state-sync: AMF UE NGAP ID mismatch: transfer=%d target=%d (continuing import)",
+			req.AMFUeNgapID, shared.AmfUeNgapId)
+	}
+
 	if _, ok := n3iwfCtx.IKESALoad(req.IKESA.LocalSPI); ok {
 		logger.MainLog.Infof("Handover state-sync: IKESA for localSpi=%016x already exists; skipping import", req.IKESA.LocalSPI)
 		return nil
@@ -225,46 +230,6 @@ func ImportStateForRanUe(
 		req.AMFUeNgapID, shared.RanUeNgapId, req.IKESA.LocalSPI, len(req.ChildSAs))
 
 	return nil
-}
-
-func findRanUeByAmfUeNgapID(n3iwfCtx *n3iwf_context.N3IWFContext, amfUeNgapID int64) n3iwf_context.RanUe {
-	if n3iwfCtx == nil {
-		return nil
-	}
-
-	// Preferred lookup: AMFPool -> AMF UE list (authoritative association).
-	var found n3iwf_context.RanUe
-	n3iwfCtx.AMFPool.Range(func(_, v any) bool {
-		amf, ok := v.(*n3iwf_context.N3IWFAMF)
-		if !ok || amf == nil {
-			return true
-		}
-		if ue := amf.FindUeByAmfUeNgapID(amfUeNgapID); ue != nil {
-			found = ue
-			return false
-		}
-		return true
-	})
-	if found != nil {
-		return found
-	}
-
-	// Fallback lookup: RANUePool scan. This avoids a race/ordering dependency between
-	// (1) creating the RanUe entry and (2) registering it in the AMF UE list.
-	n3iwfCtx.RANUePool.Range(func(_, v any) bool {
-		ue, ok := v.(n3iwf_context.RanUe)
-		if !ok || ue == nil {
-			return true
-		}
-		shared := ue.GetSharedCtx()
-		if shared != nil && shared.AmfUeNgapId == amfUeNgapID {
-			found = ue
-			return false
-		}
-		return true
-	})
-
-	return found
 }
 
 func buildIKESA(cfg *factory.Config, in *IKESAState) (*n3iwf_context.IKESecurityAssociation, error) {
