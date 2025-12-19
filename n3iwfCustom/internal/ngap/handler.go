@@ -2209,6 +2209,174 @@ func (s *Server) HandlePDUSessionResourceReleaseCommand(
 	metricStatusOk = true
 }
 
+// HandlePathSwitchRequestAcknowledge handles AMF's successfulOutcome(PathSwitchRequestAcknowledge)
+// and updates user-plane information (e.g., UL TEID / UPF address) for each switched PDU session.
+//
+// Without processing this message, the target N3IWF may continue sending UL traffic using stale TEID/UPF endpoint,
+// causing UL packets to be dropped by UPF and resulting in no DL responses (e.g., ping/TCP stalls after handover).
+func (s *Server) HandlePathSwitchRequestAcknowledge(
+	amf *n3iwf_context.N3IWFAMF,
+	pdu *ngapType.NGAPPDU,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Infoln("Handle Path Switch Request Acknowledge")
+
+	var cause *ngapType.Cause
+	metricStatusOk := false
+	defer ngap_metrics.IncrMetricsRcvMsg("PathSwitchRequestAcknowledge", &metricStatusOk, cause)
+
+	if amf == nil {
+		ngapLog.Error("Corresponding AMF context not found")
+		return
+	}
+	if pdu == nil {
+		ngapLog.Error("NGAP Message is nil")
+		return
+	}
+	successfulOutcome := pdu.SuccessfulOutcome
+	if successfulOutcome == nil {
+		ngapLog.Error("Successful Outcome is nil")
+		return
+	}
+	if successfulOutcome.Value.PathSwitchRequestAcknowledge == nil {
+		ngapLog.Error("PathSwitchRequestAcknowledge is nil")
+		return
+	}
+
+	var (
+		amfUeNgapID *ngapType.AMFUENGAPID
+		ranUeNgapID *ngapType.RANUENGAPID
+
+		pduSessionResourceSwitchedList *ngapType.PDUSessionResourceSwitchedList
+		pduSessionResourceReleasedList *ngapType.PDUSessionResourceReleasedListPSAck
+
+		iesCriticalityDiagnostics ngapType.CriticalityDiagnosticsIEList
+	)
+
+	pathSwitchAck := successfulOutcome.Value.PathSwitchRequestAcknowledge
+	for _, ie := range pathSwitchAck.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+			ngapLog.Traceln("[NGAP] Decode IE AMFUENGAPID")
+			amfUeNgapID = ie.Value.AMFUENGAPID
+			if amfUeNgapID == nil {
+				item := buildCriticalityDiagnosticsIEItem(
+					ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDRANUENGAPID:
+			ngapLog.Traceln("[NGAP] Decode IE RANUENGAPID")
+			ranUeNgapID = ie.Value.RANUENGAPID
+			if ranUeNgapID == nil {
+				item := buildCriticalityDiagnosticsIEItem(
+					ngapType.CriticalityPresentReject, ie.Id.Value, ngapType.TypeOfErrorPresentMissing)
+				iesCriticalityDiagnostics.List = append(iesCriticalityDiagnostics.List, item)
+			}
+		case ngapType.ProtocolIEIDPDUSessionResourceSwitchedList:
+			ngapLog.Traceln("[NGAP] Decode IE PDUSessionResourceSwitchedList")
+			pduSessionResourceSwitchedList = ie.Value.PDUSessionResourceSwitchedList
+		case ngapType.ProtocolIEIDPDUSessionResourceReleasedListPSAck:
+			ngapLog.Traceln("[NGAP] Decode IE PDUSessionResourceReleasedListPSAck")
+			pduSessionResourceReleasedList = ie.Value.PDUSessionResourceReleasedListPSAck
+		default:
+			// Ignore other IEs (security context, allowed NSSAI, etc.) for user-plane purposes.
+		}
+	}
+
+	if ranUeNgapID == nil {
+		ngapLog.Error("PathSwitchRequestAcknowledge missing RAN UE NGAP ID")
+		return
+	}
+
+	n3iwfCtx := s.Context()
+	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapID.Value)
+	if !ok || ranUe == nil {
+		ngapLog.Errorf("Cannot find RanUE context for RanUeNgapId=%d", ranUeNgapID.Value)
+		return
+	}
+
+	shared := ranUe.GetSharedCtx()
+	if shared == nil {
+		ngapLog.Errorf("RanUE shared context is nil for RanUeNgapId=%d", ranUeNgapID.Value)
+		return
+	}
+
+	if amfUeNgapID != nil {
+		shared.AmfUeNgapId = amfUeNgapID.Value
+	}
+
+	// Apply per-PDU session switched information (UL TEID / UPF address).
+	if pduSessionResourceSwitchedList != nil {
+		for _, item := range pduSessionResourceSwitchedList.List {
+			pduID := item.PDUSessionID.Value
+
+			pduSession := ranUe.FindPDUSession(pduID)
+			if pduSession == nil {
+				ngapLog.Warnf("PathSwitchRequestAcknowledge: unknown PDU session id=%d (ranUeNgapId=%d)", pduID, ranUeNgapID.Value)
+				continue
+			}
+
+			var transfer ngapType.PathSwitchRequestAcknowledgeTransfer
+			if err := aper.UnmarshalWithParams(item.PathSwitchRequestAcknowledgeTransfer, &transfer, "valueExt"); err != nil {
+				ngapLog.Errorf("Decode PathSwitchRequestAcknowledgeTransfer for PDU session %d failed: %v", pduID, err)
+				continue
+			}
+
+			if pduSession.GTPConnInfo == nil {
+				pduSession.GTPConnInfo = &n3iwf_context.GTPConnectionInfo{}
+			}
+
+			// UL NG-U UP TNL Information: contains UPF address + TEID for UL.
+			if transfer.ULNGUUPTNLInformation != nil &&
+				transfer.ULNGUUPTNLInformation.Present == ngapType.UPTransportLayerInformationPresentGTPTunnel &&
+				transfer.ULNGUUPTNLInformation.GTPTunnel != nil {
+				gtpTunnel := transfer.ULNGUUPTNLInformation.GTPTunnel
+
+				upfIPv4, upfIPv6 := ngapConvert.IPAddressToString(gtpTunnel.TransportLayerAddress)
+				upfIP := upfIPv4
+				if upfIP == "" {
+					upfIP = upfIPv6
+				}
+				if upfIP == "" {
+					ngapLog.Warnf("PathSwitchRequestAcknowledge: empty UPF IP in UL NG-U TNL info (pduSession=%d)", pduID)
+				} else {
+					oldIP := pduSession.GTPConnInfo.UPFIPAddr
+					oldTEID := pduSession.GTPConnInfo.OutgoingTEID
+
+					newTEID := binary.BigEndian.Uint32(gtpTunnel.GTPTEID.Value)
+					pduSession.GTPConnInfo.UPFIPAddr = upfIP
+					pduSession.GTPConnInfo.OutgoingTEID = newTEID
+
+					upfAddr := upfIP + gtpv1.GTPUPort
+					if upfUDPAddr, err := net.ResolveUDPAddr("udp", upfAddr); err != nil {
+						ngapLog.Errorf("Resolve UPF addr [%s] failed: %v", upfAddr, err)
+					} else {
+						pduSession.GTPConnInfo.UPFUDPAddr = upfUDPAddr
+					}
+
+					ngapLog.Infof(
+						"PathSwitch ACK applied: ranUeNgapId=%d pduSession=%d upf=%s->%s ulTeid=%d->%d",
+						ranUeNgapID.Value, pduID, oldIP, upfIP, oldTEID, newTEID,
+					)
+				}
+			} else {
+				ngapLog.Warnf("PathSwitchRequestAcknowledge: missing UL NG-U TNL info (pduSession=%d)", pduID)
+			}
+		}
+	}
+
+	// Handle released PDU sessions (if any).
+	if pduSessionResourceReleasedList != nil {
+		for _, item := range pduSessionResourceReleasedList.List {
+			id := item.PDUSessionID.Value
+			ngapLog.Infof("PathSwitchRequestAcknowledge: PDU session %d released by AMF", id)
+			ranUe.GetSharedCtx().DeletePDUSession(id)
+		}
+	}
+
+	metricStatusOk = true
+}
+
 func (s *Server) HandleErrorIndication(
 	amf *n3iwf_context.N3IWFAMF,
 	pdu *ngapType.NGAPPDU,

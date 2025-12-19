@@ -96,6 +96,8 @@ func (s *Server) NGAPDispatch(conn *sctp.SCTPConn, msg []byte) {
 			s.HandleNGResetAcknowledge(amf, pdu)
 		case ngapType.ProcedureCodeHandoverPreparation:
 			s.HandleHandoverCommand(amf, pdu)
+		case ngapType.ProcedureCodePathSwitchRequest:
+			s.HandlePathSwitchRequestAcknowledge(amf, pdu)
 		case ngapType.ProcedureCodePDUSessionResourceModifyIndication:
 			s.HandlePDUSessionResourceModifyConfirm(amf, pdu)
 		case ngapType.ProcedureCodeRANConfigurationUpdate:
