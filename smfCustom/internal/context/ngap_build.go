@@ -3,6 +3,7 @@ package context
 import (
 	"encoding/binary"
 	"fmt"
+	"net"
 
 	"github.com/free5gc/aper"
 	"github.com/free5gc/ngap/ngapConvert"
@@ -326,15 +327,50 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 	ULNGUUPTNLInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
 	ULNGUUPTNLInformation.GTPTunnel = new(ngapType.GTPTunnel)
 
-	if n3IP, err := UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType); err != nil {
-		return nil, err
-	} else {
-		gtpTunnel := ULNGUUPTNLInformation.GTPTunnel
-		gtpTunnel.GTPTEID.Value = teidOct
-		gtpTunnel.TransportLayerAddress.Value = aper.BitString{
-			Bytes:     n3IP,
-			BitLength: uint64(len(n3IP) * 8),
+	var (
+		n3IP []byte
+		err  error
+	)
+
+	// Pick the UPF N3 interface IP that matches the current AN (N3IWF) address.
+	// This matters when UPF is multi-homed (e.g., 10.100.200.0/24 + 192.168.17.0/24).
+	anIP := ctx.Tunnel.ANInformation.IPAddress
+	if anIP4 := net.IP(anIP).To4(); anIP4 != nil && len(UpNode.N3Interfaces) > 1 {
+		for _, iface := range UpNode.N3Interfaces {
+			if iface == nil {
+				continue
+			}
+			ip, ipErr := iface.IP(ctx.SelectedPDUSessionType)
+			if ipErr != nil {
+				continue
+			}
+			ip4 := net.IP(ip).To4()
+			if ip4 == nil || len(ip4) != net.IPv4len {
+				continue
+			}
+			if ip4[0] == anIP4[0] && ip4[1] == anIP4[1] && ip4[2] == anIP4[2] {
+				n3IP = ip
+				break
+			}
 		}
+	}
+
+	// Fallback: previous behavior (first N3 interface).
+	if n3IP == nil {
+		if len(UpNode.N3Interfaces) == 0 || UpNode.N3Interfaces[0] == nil {
+			return nil, fmt.Errorf("no UPF N3 interface available")
+		}
+		n3IP, err = UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	gtpTunnel := ULNGUUPTNLInformation.GTPTunnel
+	gtpTunnel.GTPTEID.Value = teidOct
+	gtpTunnel.TransportLayerAddress.Value = aper.BitString{
+		Bytes:     n3IP,
+		BitLength: uint64(len(n3IP) * 8),
 	}
 
 	// Received UP security policy mismatch from SMF locally stored TS 33.501 6.6.1
