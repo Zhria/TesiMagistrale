@@ -334,8 +334,6 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 		err  error
 	)
 
-	// Pick the UPF N3 endpoint IP that matches the current AN (N3IWF) address.
-	// In free5GC, a single N3 interface may advertise multiple endpoint IPs (multi-homed UPF).
 	anIP := ctx.Tunnel.ANInformation.IPAddress
 	for _, iface := range UpNode.N3Interfaces {
 		if iface == nil {
