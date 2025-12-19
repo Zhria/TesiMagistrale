@@ -1657,10 +1657,11 @@ func (g *Gtp5g) WritePacket(far *gtp5gnl.FAR, qer *gtp5gnl.QER, pkt []byte) erro
 		Port: int(hc.Port),
 	}
 
+	// NOTE: using Warnf on purpose so this is visible even when UPF log level is "warn" (default in many configs).
 	if qer != nil {
-		g.log.Debugf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d qfi=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt), qer.QFI)
+		g.log.Warnf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d qfi=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt), qer.QFI)
 	} else {
-		g.log.Debugf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt))
+		g.log.Warnf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt))
 	}
 
 	msg := gtpv1.Message{
