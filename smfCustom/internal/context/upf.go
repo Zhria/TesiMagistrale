@@ -218,12 +218,10 @@ func (i *UPFInterfaceInfo) SelectIPForAN(pduSessType uint8, anIP net.IP) (net.IP
 		}
 	}
 
-	// IPv6 path (not used in current lab, but keep consistent behavior).
 	if (pduSessType == nasMessage.PDUSessionTypeIPv6 || pduSessType == nasMessage.PDUSessionTypeIPv4IPv6) && len(i.IPv6EndPointAddresses) != 0 {
 		return i.IPv6EndPointAddresses[0], nil
 	}
 
-	// Fallback to original resolver behavior (FQDN/first endpoint).
 	return i.IP(pduSessType)
 }
 
