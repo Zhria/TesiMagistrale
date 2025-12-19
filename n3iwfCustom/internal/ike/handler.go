@@ -1281,14 +1281,20 @@ func (s *Server) HandleInformational(
 			udpConn, ueAddr, n3iwfAddr)
 
 		// After acknowledging MOBIKE UPDATE_SA_ADDRESSES, trigger Path Switch for handover when NAS security is reused.
-		// This updates CN (AMF/SMF/UPF) to route DL packets to this N3IWF.
+		// For 5GS HO, HandoverNotify should be sent first (UE connected to target), then PathSwitchRequest.
+		// PathSwitch updates CN (AMF/SMF/UPF) to route DL packets to this N3IWF.
 		if triggerPathSwitch {
 			n3iwfCtx := s.Context()
 			ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI)
 			if ok {
 				if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
-					if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity && !shared.PathSwitchSent {
-						s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
+					if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity {
+						if !shared.HandoverNotifySent {
+							s.SendNgapEvt(n3iwf_context.NewSendHandoverNotifyEvt(ranNgapId))
+						}
+						if !shared.PathSwitchSent {
+							s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
+						}
 					}
 				}
 			}
@@ -1925,6 +1931,19 @@ func (s *Server) StartDPD(ikeUe *n3iwf_context.N3IWFIkeUe) {
 							ikeLog.Infof("Cannot find ranNgapId form SPI : %+v",
 								ikeSA.LocalSPI)
 							return
+						}
+
+						// During inter-N3IWF handover, the UE intentionally moves to a new access point / outer IP
+						// and may not respond to DPD probes from the source N3IWF.
+						// Triggering UEContextReleaseRequest here races with PathSwitch and can cause duplicate PFCP
+						// modifications (URR "file exists") and break data plane continuity on the target.
+						if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok && ranUe != nil {
+							if shared := ranUe.GetSharedCtx(); shared != nil && len(shared.TargetToSourceContainer) > 0 {
+								ikeLog.Warnf("Suppressing UEContextReleaseRequest for RanUeNgapId=%d: handover in progress", ranNgapId)
+								ikeSA.DPDReqRetransTimer = nil
+								timer.Stop()
+								return
+							}
 						}
 
 						s.SendNgapEvt(n3iwf_context.NewSendUEContextReleaseRequestEvt(
