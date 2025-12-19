@@ -62,12 +62,12 @@ func toTransformJSON(t *ike_message.Transform) TransformJSON {
 
 func fromTransformJSON(t TransformJSON) (*ike_message.Transform, error) {
 	out := &ike_message.Transform{
-		TransformType:     t.Type,
-		TransformID:       t.ID,
-		AttributePresent:  t.AttributePresent,
-		AttributeType:     t.AttributeType,
-		AttributeValue:    t.AttributeValue,
-		AttributeFormat:   ike_message.AttributeFormatUseTV,
+		TransformType:                t.Type,
+		TransformID:                  t.ID,
+		AttributePresent:             t.AttributePresent,
+		AttributeType:                t.AttributeType,
+		AttributeValue:               t.AttributeValue,
+		AttributeFormat:              ike_message.AttributeFormatUseTV,
 		VariableLengthAttributeValue: nil,
 	}
 	if t.AttributePresent && t.AttributeVL != "" {
@@ -91,10 +91,10 @@ type IKESAState struct {
 
 	ConcatenatedNonce string `json:"concatenatedNonce,omitempty"` // base64
 
-	Encr TransformJSON `json:"encr"`
+	Encr  TransformJSON `json:"encr"`
 	Integ TransformJSON `json:"integ"`
-	Prf  TransformJSON `json:"prf"`
-	Dh   TransformJSON `json:"dh"`
+	Prf   TransformJSON `json:"prf"`
+	Dh    TransformJSON `json:"dh"`
 
 	SK_d  string `json:"sk_d,omitempty"`
 	SK_ai string `json:"sk_ai,omitempty"`
@@ -127,9 +127,9 @@ type ChildSAState struct {
 
 	XfrmiId uint32 `json:"xfrmiId"`
 
-	Encr TransformJSON `json:"encr"`
+	Encr  TransformJSON `json:"encr"`
 	Integ TransformJSON `json:"integ"`
-	ESN  TransformJSON `json:"esn"`
+	ESN   TransformJSON `json:"esn"`
 
 	InitiatorToResponderEncryptionKey string `json:"i2rEncrKey,omitempty"`
 	ResponderToInitiatorEncryptionKey string `json:"r2iEncrKey,omitempty"`
@@ -251,19 +251,7 @@ func ImportState(n3iwfCtx *n3iwf_context.N3IWFContext, cfg *factory.Config, req 
 		return fmt.Errorf("unsupported version %d", req.Version)
 	}
 
-	// Find target RanUe by AMF UE NGAP ID.
-	var ranUe n3iwf_context.RanUe
-	n3iwfCtx.AMFPool.Range(func(_, v any) bool {
-		amf, ok := v.(*n3iwf_context.N3IWFAMF)
-		if !ok || amf == nil {
-			return true
-		}
-		if ue := amf.FindUeByAmfUeNgapID(req.AMFUeNgapID); ue != nil {
-			ranUe = ue
-			return false
-		}
-		return true
-	})
+	ranUe := findRanUeByAmfUeNgapID(n3iwfCtx, req.AMFUeNgapID)
 	if ranUe == nil {
 		return fmt.Errorf("no target ranUe found for amfUeNgapId=%d", req.AMFUeNgapID)
 	}
@@ -335,6 +323,46 @@ func ImportState(n3iwfCtx *n3iwf_context.N3IWFContext, cfg *factory.Config, req 
 		req.AMFUeNgapID, shared.RanUeNgapId, req.IKESA.LocalSPI, len(req.ChildSAs))
 
 	return nil
+}
+
+func findRanUeByAmfUeNgapID(n3iwfCtx *n3iwf_context.N3IWFContext, amfUeNgapID int64) n3iwf_context.RanUe {
+	if n3iwfCtx == nil {
+		return nil
+	}
+
+	// Preferred lookup: AMFPool -> AMF UE list (authoritative association).
+	var found n3iwf_context.RanUe
+	n3iwfCtx.AMFPool.Range(func(_, v any) bool {
+		amf, ok := v.(*n3iwf_context.N3IWFAMF)
+		if !ok || amf == nil {
+			return true
+		}
+		if ue := amf.FindUeByAmfUeNgapID(amfUeNgapID); ue != nil {
+			found = ue
+			return false
+		}
+		return true
+	})
+	if found != nil {
+		return found
+	}
+
+	// Fallback lookup: RANUePool scan. This avoids a race/ordering dependency between
+	// (1) creating the RanUe entry and (2) registering it in the AMF UE list.
+	n3iwfCtx.RANUePool.Range(func(_, v any) bool {
+		ue, ok := v.(n3iwf_context.RanUe)
+		if !ok || ue == nil {
+			return true
+		}
+		shared := ue.GetSharedCtx()
+		if shared != nil && shared.AmfUeNgapId == amfUeNgapID {
+			found = ue
+			return false
+		}
+		return true
+	})
+
+	return found
 }
 
 func buildIKESA(cfg *factory.Config, in *IKESAState) (*n3iwf_context.IKESecurityAssociation, error) {
@@ -416,26 +444,26 @@ func buildIKESA(cfg *factory.Config, in *IKESAState) (*n3iwf_context.IKESecurity
 	}
 
 	ikeSA := &n3iwf_context.IKESecurityAssociation{
-		IKESAKey:            ikesaKey,
-		RemoteSPI:           in.RemoteSPI,
-		LocalSPI:            in.LocalSPI,
-		InitiatorMessageID:  in.InitiatorMessageID,
-		ResponderMessageID:  in.ResponderMessageID,
-		ConcatenatedNonce:   nonce,
-		State:               in.State,
-		UeBehindNAT:         in.UeBehindNAT,
-		N3iwfBehindNAT:      in.N3iwfBehindNAT,
-		IKESAClosedCh:       make(chan struct{}, 1),
-		IsUseDPD:            false,
-		DPDReqRetransTimer:  nil,
-		CurrentRetryTimes:   0,
-		TemporaryIkeMsg:     nil,
-		InitiatorID:         nil,
-		InitiatorCertificate: nil,
-		IKEAuthResponseSA:   nil,
+		IKESAKey:                 ikesaKey,
+		RemoteSPI:                in.RemoteSPI,
+		LocalSPI:                 in.LocalSPI,
+		InitiatorMessageID:       in.InitiatorMessageID,
+		ResponderMessageID:       in.ResponderMessageID,
+		ConcatenatedNonce:        nonce,
+		State:                    in.State,
+		UeBehindNAT:              in.UeBehindNAT,
+		N3iwfBehindNAT:           in.N3iwfBehindNAT,
+		IKESAClosedCh:            make(chan struct{}, 1),
+		IsUseDPD:                 false,
+		DPDReqRetransTimer:       nil,
+		CurrentRetryTimes:        0,
+		TemporaryIkeMsg:          nil,
+		InitiatorID:              nil,
+		InitiatorCertificate:     nil,
+		IKEAuthResponseSA:        nil,
 		TrafficSelectorInitiator: nil,
 		TrafficSelectorResponder: nil,
-		LastEAPIdentifier:   0,
+		LastEAPIdentifier:        0,
 	}
 	ikeSA.MobikeSupported = in.MobikeEnabled
 	return ikeSA, nil
@@ -529,9 +557,9 @@ func buildChildSA(
 	}
 
 	childKey := &ike_security.ChildSAKey{
-		EncrKInfo: encrK,
+		EncrKInfo:  encrK,
 		IntegKInfo: integK,
-		EsnInfo:   esnInfo,
+		EsnInfo:    esnInfo,
 	}
 	var keyErr error
 	if childKey.InitiatorToResponderEncryptionKey, keyErr = decodeB64(in.InitiatorToResponderEncryptionKey, "i2rEncrKey"); keyErr != nil {
