@@ -1318,6 +1318,26 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	}
 	ikeSA.IkeUE.IKEConnection = ikeSA.IKEConnection
 
+	// Ensure UserLocationInformationN3IWF can be encoded in NGAP messages (e.g., PathSwitchRequest)
+	// during handover when InitialUEMessage is skipped (ReuseNasSecurity=true).
+	if ueAddr.IP != nil {
+		n3iwfCtx := s.Context()
+		if ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSA.LocalSPI); ok {
+			if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
+				if shared := ranUe.GetSharedCtx(); shared != nil {
+					if ip4 := ueAddr.IP.To4(); ip4 != nil {
+						shared.IPAddrv4 = ip4.String()
+						shared.IPAddrv6 = ""
+					} else {
+						shared.IPAddrv4 = ""
+						shared.IPAddrv6 = ueAddr.IP.String()
+					}
+					shared.PortNumber = int32(ueAddr.Port) // #nosec G115
+				}
+			}
+		}
+	}
+
 	// Reinstall XFRM rules for each Child SA with updated outer IP/port tuple.
 	for _, child := range ikeSA.IkeUE.N3IWFChildSecurityAssociation {
 		if child == nil {

@@ -22,11 +22,6 @@ import (
 	"github.com/free5gc/n3iwf/pkg/factory"
 )
 
-const (
-	apiPathStatePush = "/handover/v1/state"
-	apiVersion       = 1
-)
-
 type TransformJSON struct {
 	Type uint8  `json:"type"`
 	ID   uint16 `json:"id"`
@@ -156,9 +151,6 @@ func ImportStateForRanUe(
 	}
 	if ranUe == nil {
 		return errors.New("nil target ranUe")
-	}
-	if req.Version != apiVersion {
-		return fmt.Errorf("unsupported version %d", req.Version)
 	}
 
 	shared := ranUe.GetSharedCtx()
@@ -462,29 +454,29 @@ func buildChildSA(
 		return nil, keyErr
 	}
 
-		child := &n3iwf_context.ChildSecurityAssociation{
-			InboundSPI:  in.InboundSPI,
-			OutboundSPI: in.OutboundSPI,
+	child := &n3iwf_context.ChildSecurityAssociation{
+		InboundSPI:  in.InboundSPI,
+		OutboundSPI: in.OutboundSPI,
 
-			PeerPublicIPAddr:  peerIP,
-			LocalPublicIPAddr: localIP,
+		PeerPublicIPAddr:  peerIP,
+		LocalPublicIPAddr: localIP,
 
-			SelectedIPProtocol:    in.SelectedIPProto,
-			TrafficSelectorLocal:  *tsLocal,
-			TrafficSelectorRemote: *tsRemote,
+		SelectedIPProtocol:    in.SelectedIPProto,
+		TrafficSelectorLocal:  *tsLocal,
+		TrafficSelectorRemote: *tsRemote,
 
-			ChildSAKey:        childKey,
-			EnableEncapsulate: in.EnableEncapsulate,
-			N3IWFPort:         in.N3IWFPort,
-			NATPort:           in.NATPort,
+		ChildSAKey:        childKey,
+		EnableEncapsulate: in.EnableEncapsulate,
+		N3IWFPort:         in.N3IWFPort,
+		NATPort:           in.NATPort,
 
-			PDUSessionIds: append([]int64(nil), in.PDUSessionIds...),
+		PDUSessionIds: append([]int64(nil), in.PDUSessionIds...),
 
-			IkeUE:            ikeUe,
-			LocalIsInitiator: in.LocalIsInitiator,
-		}
-		return child, nil
+		IkeUE:            ikeUe,
+		LocalIsInitiator: in.LocalIsInitiator,
 	}
+	return child, nil
+}
 
 func ensureXfrmi(
 	cfg *factory.Config,

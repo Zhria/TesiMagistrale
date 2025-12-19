@@ -1,13 +1,8 @@
 package statesync
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
-	"time"
 
 	ike_message "github.com/free5gc/ike/message"
 	"github.com/free5gc/ike/security/dh"
@@ -16,8 +11,6 @@ import (
 	"github.com/free5gc/ike/security/integ"
 	"github.com/free5gc/ike/security/prf"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
-	"github.com/free5gc/n3iwf/internal/logger"
-	"github.com/free5gc/n3iwf/pkg/factory"
 	"github.com/pkg/errors"
 )
 
@@ -99,23 +92,23 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 		}
 		esnT := esn.ToTransform(child.EsnInfo)
 
-			childSAs = append(childSAs, ChildSAState{
-				InboundSPI:                        child.InboundSPI,
-				OutboundSPI:                       child.OutboundSPI,
-				LocalIsInitiator:                  child.LocalIsInitiator,
-				SelectedIPProto:                   child.SelectedIPProtocol,
-				PeerPublicIP:                      child.PeerPublicIPAddr.String(),
-				TrafficSelectorLocal:              child.TrafficSelectorLocal.String(),
-				TrafficSelectorRemote:             child.TrafficSelectorRemote.String(),
-				EnableEncapsulate:                 child.EnableEncapsulate,
-				N3IWFPort:                         child.N3IWFPort,
-				NATPort:                           child.NATPort,
-				PDUSessionIds:                     append([]int64(nil), child.PDUSessionIds...),
-				XfrmiId:                           xfrmiId,
-				Encr:                              toTransformJSON(encrChildT),
-				Integ:                             toTransformJSON(integChildT),
-				ESN:                               toTransformJSON(esnT),
-				InitiatorToResponderEncryptionKey: b64(child.InitiatorToResponderEncryptionKey),
+		childSAs = append(childSAs, ChildSAState{
+			InboundSPI:                        child.InboundSPI,
+			OutboundSPI:                       child.OutboundSPI,
+			LocalIsInitiator:                  child.LocalIsInitiator,
+			SelectedIPProto:                   child.SelectedIPProtocol,
+			PeerPublicIP:                      child.PeerPublicIPAddr.String(),
+			TrafficSelectorLocal:              child.TrafficSelectorLocal.String(),
+			TrafficSelectorRemote:             child.TrafficSelectorRemote.String(),
+			EnableEncapsulate:                 child.EnableEncapsulate,
+			N3IWFPort:                         child.N3IWFPort,
+			NATPort:                           child.NATPort,
+			PDUSessionIds:                     append([]int64(nil), child.PDUSessionIds...),
+			XfrmiId:                           xfrmiId,
+			Encr:                              toTransformJSON(encrChildT),
+			Integ:                             toTransformJSON(integChildT),
+			ESN:                               toTransformJSON(esnT),
+			InitiatorToResponderEncryptionKey: b64(child.InitiatorToResponderEncryptionKey),
 			ResponderToInitiatorEncryptionKey: b64(child.ResponderToInitiatorEncryptionKey),
 			InitiatorToResponderIntegrityKey:  b64(child.InitiatorToResponderIntegrityKey),
 			ResponderToInitiatorIntegrityKey:  b64(child.ResponderToInitiatorIntegrityKey),
@@ -123,7 +116,6 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 	}
 
 	transfer := &StateTransfer{
-		Version:     apiVersion,
 		AMFUeNgapID: shared.AmfUeNgapId,
 		GUTI:        shared.Guti,
 		UeInnerIP:   ikeUe.IPSecInnerIP.String(),
@@ -132,47 +124,6 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 	}
 
 	return transfer, nil
-}
-
-func PushToTarget(cfg *factory.Config, targetIP string, transfer *StateTransfer) error {
-	if cfg == nil || transfer == nil {
-		return errors.New("nil cfg/transfer")
-	}
-	if targetIP == "" {
-		return errors.New("target ip is empty")
-	}
-	if !cfg.GetHandoverStateSyncEnabled() {
-		return nil
-	}
-
-	url := fmt.Sprintf("http://%s:%d%s", targetIP, cfg.GetHandoverStateSyncPort(), apiPathStatePush)
-	b, err := json.Marshal(transfer)
-	if err != nil {
-		return errors.Wrap(err, "marshal transfer")
-	}
-
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", "application/json")
-	if token := cfg.GetHandoverStateSyncToken(); token != "" {
-		req.Header.Set("X-Handover-Token", token)
-	}
-
-	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return errors.Wrap(err, "post transfer")
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("state-sync push failed: http %d: %s", resp.StatusCode, string(respBody))
-	}
-	logger.MainLog.Infof("Pushed handover IPSec state to target %s", url)
-	return nil
 }
 
 func b64(b []byte) string {
