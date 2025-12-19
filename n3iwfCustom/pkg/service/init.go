@@ -14,7 +14,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 
-	"github.com/free5gc/n3iwf/internal/handover/statesync"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/ike"
 	"github.com/free5gc/n3iwf/internal/ike/xfrm"
@@ -197,17 +196,6 @@ func (a *N3iwfApp) Run() error {
 		return errors.Wrapf(err, "Start IKE service failed")
 	}
 	mainLog.Infof("IKE service running")
-
-	// Handover state-sync (optional)
-	if a.cfg.GetHandoverStateSyncEnabled() {
-		a.wg.Add(1)
-		go func() {
-			defer a.wg.Done()
-			if err := statesync.RunServer(a.ctx, a.cfg, a.n3iwfCtx); err != nil {
-				logger.MainLog.Errorf("Handover state-sync server error: %v", err)
-			}
-		}()
-	}
 
 	// Metrics server
 	if a.cfg.AreMetricsEnabled() && a.metricsServer != nil {

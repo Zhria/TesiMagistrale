@@ -3727,7 +3727,7 @@ func (s *Server) HandleHandoverRequest(
 			var transfer statesync.StateTransfer
 			if err := json.Unmarshal(raw, &transfer); err != nil {
 				ngapLog.Warnf("Handover state-sync: parse embedded state failed: %v", err)
-			} else if err := statesync.ImportState(n3iwfCtx, s.Config(), &transfer); err != nil {
+			} else if err := statesync.ImportStateForRanUe(n3iwfCtx, s.Config(), n3iwfUe, &transfer); err != nil {
 				ngapLog.Warnf("Handover state-sync: import failed: %v", err)
 			} else {
 				ngapLog.Infof("Handover state-sync: imported IPSec state for AMF UE NGAP ID=%d", transfer.AMFUeNgapID)

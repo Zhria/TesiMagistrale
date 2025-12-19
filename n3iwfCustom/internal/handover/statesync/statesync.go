@@ -1,16 +1,9 @@
 package statesync
 
 import (
-	"context"
-	"crypto/subtle"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net"
-	"net/http"
-	"strconv"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
@@ -149,111 +142,20 @@ type StateTransfer struct {
 	ChildSAs []ChildSAState `json:"childSas"`
 }
 
-type pushResponse struct {
-	OK      bool   `json:"ok"`
-	Message string `json:"message,omitempty"`
-}
-
-func RunServer(
-	ctx context.Context,
-	cfg *factory.Config,
+func ImportStateForRanUe(
 	n3iwfCtx *n3iwf_context.N3IWFContext,
+	cfg *factory.Config,
+	ranUe n3iwf_context.RanUe,
+	req *StateTransfer,
 ) error {
-	if cfg == nil || n3iwfCtx == nil {
-		return errors.New("statesync: nil cfg or context")
-	}
-	if !cfg.GetHandoverStateSyncEnabled() {
-		return nil
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc(apiPathStatePush, func(w http.ResponseWriter, r *http.Request) {
-		handleStatePush(w, r, cfg, n3iwfCtx)
-	})
-
-	addr := net.JoinHostPort(cfg.GetHandoverStateSyncBindAddr(), strconv.Itoa(cfg.GetHandoverStateSyncPort()))
-	srv := &http.Server{
-		Addr:              addr,
-		Handler:           mux,
-		ReadHeaderTimeout: 5 * time.Second,
-	}
-
-	go func() {
-		<-ctx.Done()
-		shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-		defer cancel()
-		_ = srv.Shutdown(shutdownCtx)
-	}()
-
-	logger.MainLog.Infof("Handover state-sync server listening on %s%s", addr, apiPathStatePush)
-	err := srv.ListenAndServe()
-	if err == http.ErrServerClosed {
-		return nil
-	}
-	return err
-}
-
-func handleStatePush(
-	w http.ResponseWriter,
-	r *http.Request,
-	cfg *factory.Config,
-	n3iwfCtx *n3iwf_context.N3IWFContext,
-) {
-	log := logger.MainLog
-	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	if token := cfg.GetHandoverStateSyncToken(); token != "" {
-		got := r.Header.Get("X-Handover-Token")
-		if subtle.ConstantTimeCompare([]byte(got), []byte(token)) != 1 {
-			http.Error(w, "unauthorized", http.StatusUnauthorized)
-			return
-		}
-	}
-
-	body, err := io.ReadAll(io.LimitReader(r.Body, 2<<20))
-	if err != nil {
-		http.Error(w, "read body failed", http.StatusBadRequest)
-		return
-	}
-	defer func() { _ = r.Body.Close() }()
-
-	var req StateTransfer
-	if err := json.Unmarshal(body, &req); err != nil {
-		http.Error(w, "invalid json", http.StatusBadRequest)
-		return
-	}
-
-	if err := ImportState(n3iwfCtx, cfg, &req); err != nil {
-		log.Errorf("Handover state-sync import failed: %v", err)
-		writeJSON(w, http.StatusBadRequest, pushResponse{OK: false, Message: err.Error()})
-		return
-	}
-
-	writeJSON(w, http.StatusOK, pushResponse{OK: true})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-	_ = enc.Encode(v)
-}
-
-func ImportState(n3iwfCtx *n3iwf_context.N3IWFContext, cfg *factory.Config, req *StateTransfer) error {
 	if n3iwfCtx == nil || cfg == nil || req == nil {
 		return errors.New("nil context/config/request")
 	}
+	if ranUe == nil {
+		return errors.New("nil target ranUe")
+	}
 	if req.Version != apiVersion {
 		return fmt.Errorf("unsupported version %d", req.Version)
-	}
-
-	ranUe := findRanUeByAmfUeNgapID(n3iwfCtx, req.AMFUeNgapID)
-	if ranUe == nil {
-		return fmt.Errorf("no target ranUe found for amfUeNgapId=%d", req.AMFUeNgapID)
 	}
 
 	shared := ranUe.GetSharedCtx()
