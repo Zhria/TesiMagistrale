@@ -192,6 +192,41 @@ func (i *UPFInterfaceInfo) IP(pduSessType uint8) (net.IP, error) {
 	return nil, errors.New("not matched ip address")
 }
 
+// SelectIPForAN returns the best matching UPF endpoint IP for a given AN (RAN/N3IWF) IP.
+// When the UPF is multi-homed, a single N3 interface may advertise multiple endpoint IPs.
+// We pick an endpoint in the same /24 of the AN (lab heuristic), falling back to the first valid endpoint.
+func (i *UPFInterfaceInfo) SelectIPForAN(pduSessType uint8, anIP net.IP) (net.IP, error) {
+	anIP4 := net.IP(anIP).To4()
+
+	// Prefer IPv4 endpoints when AN is IPv4 and session allows IPv4.
+	if anIP4 != nil && (pduSessType == nasMessage.PDUSessionTypeIPv4 || pduSessType == nasMessage.PDUSessionTypeIPv4IPv6) {
+		for _, ep := range i.IPv4EndPointAddresses {
+			ep4 := net.IP(ep).To4()
+			if ep4 == nil || len(ep4) != net.IPv4len {
+				continue
+			}
+			// /24 match: X.Y.Z.*
+			if ep4[0] == anIP4[0] && ep4[1] == anIP4[1] && ep4[2] == anIP4[2] {
+				return ep4, nil
+			}
+		}
+		// Fallback: first IPv4 endpoint.
+		if len(i.IPv4EndPointAddresses) != 0 {
+			if ep4 := net.IP(i.IPv4EndPointAddresses[0]).To4(); ep4 != nil {
+				return ep4, nil
+			}
+		}
+	}
+
+	// IPv6 path (not used in current lab, but keep consistent behavior).
+	if (pduSessType == nasMessage.PDUSessionTypeIPv6 || pduSessType == nasMessage.PDUSessionTypeIPv4IPv6) && len(i.IPv6EndPointAddresses) != 0 {
+		return i.IPv6EndPointAddresses[0], nil
+	}
+
+	// Fallback to original resolver behavior (FQDN/first endpoint).
+	return i.IP(pduSessType)
+}
+
 func (upfSelectionParams *UPFSelectionParams) String() string {
 	str := ""
 	Dnn := upfSelectionParams.Dnn

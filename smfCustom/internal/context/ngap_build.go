@@ -6,9 +6,11 @@ import (
 	"net"
 
 	"github.com/free5gc/aper"
+	"github.com/free5gc/nas/nasMessage"
 	"github.com/free5gc/ngap/ngapConvert"
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/free5gc/openapi/models"
+	"github.com/free5gc/smf/internal/logger"
 )
 
 const DefaultNonGBR5QI = 9
@@ -332,26 +334,39 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 		err  error
 	)
 
-	// Pick the UPF N3 interface IP that matches the current AN (N3IWF) address.
-	// This matters when UPF is multi-homed (e.g., 10.100.200.0/24 + 192.168.17.0/24).
+	// Pick the UPF N3 endpoint IP that matches the current AN (N3IWF) address.
+	// In free5GC, a single N3 interface may advertise multiple endpoint IPs (multi-homed UPF).
 	anIP := ctx.Tunnel.ANInformation.IPAddress
-	if anIP4 := net.IP(anIP).To4(); anIP4 != nil && len(UpNode.N3Interfaces) > 1 {
-		for _, iface := range UpNode.N3Interfaces {
-			if iface == nil {
-				continue
+	for _, iface := range UpNode.N3Interfaces {
+		if iface == nil {
+			continue
+		}
+		ip, ipErr := iface.SelectIPForAN(ctx.SelectedPDUSessionType, anIP)
+		if ipErr != nil {
+			continue
+		}
+		switch ctx.SelectedPDUSessionType {
+		case nasMessage.PDUSessionTypeIPv4, nasMessage.PDUSessionTypeIPv4IPv6:
+			if ip4 := net.IP(ip).To4(); ip4 != nil {
+				n3IP = ip4
 			}
-			ip, ipErr := iface.IP(ctx.SelectedPDUSessionType)
-			if ipErr != nil {
-				continue
+		case nasMessage.PDUSessionTypeIPv6:
+			if ip16 := net.IP(ip).To16(); ip16 != nil {
+				n3IP = ip16
 			}
-			ip4 := net.IP(ip).To4()
-			if ip4 == nil || len(ip4) != net.IPv4len {
-				continue
+		default:
+			if ip4 := net.IP(ip).To4(); ip4 != nil {
+				n3IP = ip4
+			} else if ip16 := net.IP(ip).To16(); ip16 != nil {
+				n3IP = ip16
 			}
-			if ip4[0] == anIP4[0] && ip4[1] == anIP4[1] && ip4[2] == anIP4[2] {
-				n3IP = ip
-				break
-			}
+		}
+		if n3IP != nil {
+			logger.PduSessLog.Infof(
+				"BuildPathSwitchRequestAcknowledgeTransfer: selected UPF N3 IP=%s for AN=%s (endpoints=%v)",
+				net.IP(n3IP).String(), net.IP(anIP).String(), iface.IPv4EndPointAddresses,
+			)
+			break
 		}
 	}
 
@@ -364,6 +379,13 @@ func BuildPathSwitchRequestAcknowledgeTransfer(ctx *SMContext) ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		if ip4 := net.IP(n3IP).To4(); ip4 != nil {
+			n3IP = ip4
+		}
+		logger.PduSessLog.Warnf(
+			"BuildPathSwitchRequestAcknowledgeTransfer: fallback UPF N3 IP=%s for AN=%s",
+			net.IP(n3IP).String(), net.IP(anIP).String(),
+		)
 	}
 
 	gtpTunnel := ULNGUUPTNLInformation.GTPTunnel
