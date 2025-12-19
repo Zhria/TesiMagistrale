@@ -1656,6 +1656,13 @@ func (g *Gtp5g) WritePacket(far *gtp5gnl.FAR, qer *gtp5gnl.QER, pkt []byte) erro
 		IP:   hc.PeerAddr,
 		Port: int(hc.Port),
 	}
+
+	if qer != nil {
+		g.log.Debugf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d qfi=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt), qer.QFI)
+	} else {
+		g.log.Debugf("GTP-U DL TPDU: dst=%s:%d teid=%d len=%d", addr.IP.String(), addr.Port, hc.TEID, len(pkt))
+	}
+
 	msg := gtpv1.Message{
 		Flags:   0x34,
 		Type:    gtpv1.MsgTypeTPDU,

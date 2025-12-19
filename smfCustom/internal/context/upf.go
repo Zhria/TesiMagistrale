@@ -33,8 +33,13 @@ type UPTunnel struct {
 }
 
 func (t *UPTunnel) UpdateANInformation(ip net.IP, teid uint32) {
+	oldIP := t.ANInformation.IPAddress
+	oldTEID := t.ANInformation.TEID
+
 	t.ANInformation.IPAddress = ip
 	t.ANInformation.TEID = teid
+
+	logger.PduSessLog.Infof("UpdateANInformation: %s/%d -> %s/%d", oldIP.String(), oldTEID, ip.String(), teid)
 
 	for _, dataPath := range t.DataPathPool {
 		if dataPath.Activated {
@@ -44,6 +49,11 @@ func (t *UPTunnel) UpdateANInformation(ip net.IP, teid uint32) {
 			if DLPDR.FAR.ForwardingParameters.OuterHeaderCreation != nil {
 				// Old AN tunnel exists
 				DLPDR.FAR.ForwardingParameters.SendEndMarker = true
+				ohc := DLPDR.FAR.ForwardingParameters.OuterHeaderCreation
+				logger.PduSessLog.Infof(
+					"UpdateANInformation: old DL OHC=%v teid=%d ip=%v (SendEndMarker=true)",
+					ohc.OuterHeaderCreationDescription, ohc.Teid, net.IP(ohc.Ipv4Address).String(),
+				)
 			}
 
 			DLPDR.FAR.ForwardingParameters.OuterHeaderCreation = new(pfcpType.OuterHeaderCreation)
@@ -51,7 +61,13 @@ func (t *UPTunnel) UpdateANInformation(ip net.IP, teid uint32) {
 			dlOuterHeaderCreation.OuterHeaderCreationDescription = pfcpType.OuterHeaderCreationGtpUUdpIpv4
 			dlOuterHeaderCreation.Teid = t.ANInformation.TEID
 			dlOuterHeaderCreation.Ipv4Address = t.ANInformation.IPAddress.To4()
+			logger.PduSessLog.Infof(
+				"UpdateANInformation: new DL OHC=%v teid=%d ip=%s",
+				dlOuterHeaderCreation.OuterHeaderCreationDescription, dlOuterHeaderCreation.Teid, t.ANInformation.IPAddress.To4().String(),
+			)
 			DLPDR.FAR.State = RULE_UPDATE
+		} else {
+			logger.PduSessLog.Warn("UpdateANInformation: skipping inactive dataPath")
 		}
 	}
 }

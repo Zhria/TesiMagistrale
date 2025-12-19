@@ -94,6 +94,8 @@ func (s *Server) newGtpuConn() error {
 	upConn := gtpv1.NewUPlaneConn(laddr)
 	// Overwrite T-PDU handler for supporting extension header containing QoS parameters
 	upConn.AddHandler(gtpMsg.MsgTypeTPDU, s.handleQoSTPDU)
+	// Avoid noisy logs: handle End Marker explicitly.
+	upConn.AddHandler(gtpMsg.MsgTypeEndMarker, s.handleEndMarker)
 	s.gtpuConn = upConn
 	return nil
 }
@@ -285,6 +287,11 @@ func (s *Server) handleQoSTPDU(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.Mes
 	}
 
 	s.forwardDL(pdu)
+	return nil
+}
+
+func (s *Server) handleEndMarker(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.Message) error {
+	s.log.Tracef("GTP-U End Marker received from %s", senderAddr.String())
 	return nil
 }
 

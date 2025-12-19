@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"net"
 
 	"github.com/free5gc/aper"
 	"github.com/free5gc/ngap/ngapType"
@@ -204,9 +205,11 @@ func HandlePathSwitchRequestTransfer(b []byte, ctx *SMContext) error {
 
 	GTPTunnel := pathSwitchRequestTransfer.DLNGUUPTNLInformation.GTPTunnel
 
-	ctx.Tunnel.UpdateANInformation(
-		GTPTunnel.TransportLayerAddress.Value.Bytes,
-		binary.BigEndian.Uint32(GTPTunnel.GTPTEID.Value))
+	anIP := net.IP(GTPTunnel.TransportLayerAddress.Value.Bytes)
+	anTEID := binary.BigEndian.Uint32(GTPTunnel.GTPTEID.Value)
+	logger.PduSessLog.Infof("PathSwitchRequestTransfer: new AN=%s (len=%d) teid=%d", anIP.String(), len(anIP), anTEID)
+
+	ctx.Tunnel.UpdateANInformation(anIP, anTEID)
 
 	ctx.UpSecurityFromPathSwitchRequestSameAsLocalStored = true
 
