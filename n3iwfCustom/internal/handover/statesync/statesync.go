@@ -7,6 +7,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/vishvananda/netlink"
+	"golang.org/x/sys/unix"
 
 	ike_message "github.com/free5gc/ike/message"
 	ike_security "github.com/free5gc/ike/security"
@@ -118,6 +119,8 @@ type ChildSAState struct {
 	N3IWFPort         int  `json:"n3iwfPort,omitempty"`
 	NATPort           int  `json:"natPort,omitempty"`
 
+	PDUSessionIds []int64 `json:"pduSessionIds,omitempty"`
+
 	XfrmiId uint32 `json:"xfrmiId"`
 
 	Encr  TransformJSON `json:"encr"`
@@ -213,6 +216,23 @@ func ImportStateForRanUe(
 		child, err := buildChildSA(cfg, n3iwfCtx, ikeUe, &c)
 		if err != nil {
 			return fmt.Errorf("childSA inboundSpi=0x%08x: %w", c.InboundSPI, err)
+		}
+
+		// Backward compatibility: old transfers didn't carry PDUSessionIds. For UP GRE Child SAs, try to infer it.
+		if len(child.PDUSessionIds) == 0 && c.SelectedIPProto == unix.IPPROTO_GRE {
+			if len(shared.PduSessionList) == 1 {
+				for pduID := range shared.PduSessionList {
+					child.PDUSessionIds = []int64{pduID}
+					break
+				}
+			} else if len(shared.PduSessionList) > 1 {
+				logger.MainLog.Warnf("Handover state-sync: missing pduSessionIds for childSA inboundSpi=0x%08x (pduSessions=%d)",
+					c.InboundSPI, len(shared.PduSessionList))
+			}
+		}
+		// Keep the invariant "len(PDUSessionIds)>0" used in several N3IWF code paths (CP uses -1).
+		if len(child.PDUSessionIds) == 0 {
+			child.PDUSessionIds = []int64{-1}
 		}
 
 		ikeUe.N3IWFChildSecurityAssociation[child.InboundSPI] = child
@@ -442,27 +462,29 @@ func buildChildSA(
 		return nil, keyErr
 	}
 
-	child := &n3iwf_context.ChildSecurityAssociation{
-		InboundSPI:  in.InboundSPI,
-		OutboundSPI: in.OutboundSPI,
+		child := &n3iwf_context.ChildSecurityAssociation{
+			InboundSPI:  in.InboundSPI,
+			OutboundSPI: in.OutboundSPI,
 
-		PeerPublicIPAddr:  peerIP,
-		LocalPublicIPAddr: localIP,
+			PeerPublicIPAddr:  peerIP,
+			LocalPublicIPAddr: localIP,
 
-		SelectedIPProtocol:    in.SelectedIPProto,
-		TrafficSelectorLocal:  *tsLocal,
-		TrafficSelectorRemote: *tsRemote,
+			SelectedIPProtocol:    in.SelectedIPProto,
+			TrafficSelectorLocal:  *tsLocal,
+			TrafficSelectorRemote: *tsRemote,
 
-		ChildSAKey:        childKey,
-		EnableEncapsulate: in.EnableEncapsulate,
-		N3IWFPort:         in.N3IWFPort,
-		NATPort:           in.NATPort,
+			ChildSAKey:        childKey,
+			EnableEncapsulate: in.EnableEncapsulate,
+			N3IWFPort:         in.N3IWFPort,
+			NATPort:           in.NATPort,
 
-		IkeUE:            ikeUe,
-		LocalIsInitiator: in.LocalIsInitiator,
+			PDUSessionIds: append([]int64(nil), in.PDUSessionIds...),
+
+			IkeUE:            ikeUe,
+			LocalIsInitiator: in.LocalIsInitiator,
+		}
+		return child, nil
 	}
-	return child, nil
-}
 
 func ensureXfrmi(
 	cfg *factory.Config,

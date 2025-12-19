@@ -1228,6 +1228,7 @@ func (s *Server) HandleInformational(
 
 	var deletePayload *ike_message.Delete
 	var updateSaAddrs bool
+	var triggerPathSwitch bool
 	var err error
 	responseIKEPayload := new(ike_message.IKEPayloadContainer)
 
@@ -1259,6 +1260,8 @@ func (s *Server) HandleInformational(
 	if updateSaAddrs && !message.IsResponse() {
 		if err := s.handleMobikeUpdateSaAddresses(udpConn, n3iwfAddr, ueAddr, ikeSecurityAssociation); err != nil {
 			ikeLog.Errorf("HandleInformational(): MOBIKE update failed: %v", err)
+		} else {
+			triggerPathSwitch = true
 		}
 	}
 
@@ -1276,6 +1279,20 @@ func (s *Server) HandleInformational(
 		SendUEInformationExchange(ikeSecurityAssociation, ikeSecurityAssociation.IKESAKey,
 			responseIKEPayload, false, true, message.MessageID,
 			udpConn, ueAddr, n3iwfAddr)
+
+		// After acknowledging MOBIKE UPDATE_SA_ADDRESSES, trigger Path Switch for handover when NAS security is reused.
+		// This updates CN (AMF/SMF/UPF) to route DL packets to this N3IWF.
+		if triggerPathSwitch {
+			n3iwfCtx := s.Context()
+			ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI)
+			if ok {
+				if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
+					if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity && !shared.PathSwitchSent {
+						s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
+					}
+				}
+			}
+		}
 	}
 }
 

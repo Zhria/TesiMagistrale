@@ -8,9 +8,11 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/free5gc/ngap/ngapType"
 	"github.com/wmnsk/go-gtp/gtpv1"
 	gtpMsg "github.com/wmnsk/go-gtp/gtpv1/message"
 	"golang.org/x/net/ipv4"
+	"golang.org/x/sys/unix"
 
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/gre"
@@ -184,15 +186,29 @@ func (s *Server) forwardUL(ueInnerIP string, ifIndex int, rawData []byte, wg *sy
 	for _, childSA := range ikeUe.N3IWFChildSecurityAssociation {
 		// Check which child SA the packet come from with interface index,
 		// and find the corresponding PDU session
-		if childSA.XfrmIface != nil && childSA.XfrmIface.Attrs().Index == ifIndex {
-			pduSession = ranUe.GetSharedCtx().PduSessionList[childSA.PDUSessionIds[0]]
+		if childSA == nil || childSA.XfrmIface == nil || childSA.XfrmIface.Attrs().Index != ifIndex {
+			continue
+		}
+		// UL user plane is always GRE; CP ChildSAs may share the same XFRM interface.
+		if childSA.SelectedIPProtocol != unix.IPPROTO_GRE {
+			continue
+		}
+		for _, pduID := range childSA.PDUSessionIds {
+			if pduID <= 0 {
+				continue
+			}
+			pduSession = ranUe.GetSharedCtx().PduSessionList[pduID]
+			if pduSession != nil {
+				break
+			}
+		}
+		if pduSession != nil {
 			break
 		}
 	}
 
 	if pduSession == nil {
-		nwuupLog.Error("This UE doesn't have any available PDU session")
-
+		nwuupLog.Errorf("No matching UL PDU session for UE=%s ifindex=%d", ueInnerIP, ifIndex)
 		return
 	}
 
@@ -309,18 +325,33 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	var pdusession *n3iwf_context.PDUSession
 
 	for _, childSA := range ikeUe.N3IWFChildSecurityAssociation {
-		pdusession = ranUe.FindPDUSession(childSA.PDUSessionIds[0])
-		if pdusession != nil && pdusession.GTPConnInfo.IncomingTEID == pktTEID {
-			nwuupLog.Tracef("forwarding IPSec xfrm interfaceid : %d", childSA.XfrmIface.Attrs().Index)
-			cm = &ipv4.ControlMessage{
-				IfIndex: childSA.XfrmIface.Attrs().Index,
+		if childSA == nil || childSA.XfrmIface == nil {
+			continue
+		}
+		for _, pduID := range childSA.PDUSessionIds {
+			if pduID <= 0 {
+				continue
 			}
+			pdusession = ranUe.FindPDUSession(pduID)
+			if pdusession != nil && pdusession.GTPConnInfo.IncomingTEID == pktTEID {
+				nwuupLog.Tracef("forwarding IPSec xfrm interfaceid : %d", childSA.XfrmIface.Attrs().Index)
+				cm = &ipv4.ControlMessage{
+					IfIndex: childSA.XfrmIface.Attrs().Index,
+				}
+				break
+			}
+		}
+		if cm != nil {
 			break
 		}
 	}
 	if cm == nil {
 		nwuupLog.Warnf("forwardDL(): Cannot match TEID(%d) to ChildSA", pktTEID)
-		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(0), ueInnerIPAddr.IP.String(), 0, false, pktTEID, nil, pdusession.Snssai)
+		snssai := ngapType.SNSSAI{}
+		if pdusession != nil {
+			snssai = pdusession.Snssai
+		}
+		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(0), ueInnerIPAddr.IP.String(), 0, false, pktTEID, nil, snssai)
 
 		return
 	}
