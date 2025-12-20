@@ -1,3 +1,0 @@
-/home/zakaria/TesiMagistrale/build/CMakeFiles/kpm_callbacks.dir
-/home/zakaria/TesiMagistrale/build/CMakeFiles/edit_cache.dir
-/home/zakaria/TesiMagistrale/build/CMakeFiles/rebuild_cache.dir
