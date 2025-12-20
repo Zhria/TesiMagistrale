@@ -9,9 +9,7 @@ import (
 
 var (
 	fileWrite  *os.File
-	fileAppend *os.File
 	fileKPM    *os.File
-	limitSizeAppendMB int64 = 10 // 10 MB
 )
 
 type KPMLogEntry struct {
@@ -23,17 +21,8 @@ type KPMLogEntry struct {
 func InitCustomLogger(logPath string, limitSizeAppend int64) error {
 	var err error
 
-	if(limitSizeAppend > 0) {
-		limitSizeAppendMB = limitSizeAppend
-	}
 	// File per scrittura (sovrascrive a ogni avvio)
 	fileWrite, err = os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		return err
-	}
-
-	// File per append
-	fileAppend, err = os.OpenFile(logPath+".log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
@@ -77,32 +66,6 @@ func LogKPM_N3IWF_CONTEXT(data map[string]any) {
 		}
 		fileWrite.Write(jsonBytes)
 		fileWrite.Write([]byte("\n"))
-	}
-
-	// Scrittura su file append
-	if fileAppend != nil {
-		// Controllo dimensione file e lo resetto se supera il limite
-		info, err := fileAppend.Stat()
-		if err != nil {
-			fileAppend.Close()
-			fileAppend = nil
-			return
-		}
-		if info.Size() >= limitSizeAppendMB*1024*1024 {
-			if err := fileAppend.Truncate(0); err != nil {
-				fileAppend.Close()
-				fileAppend = nil
-				return
-			}
-			if _, err := fileAppend.Seek(0, 0); err != nil {
-				fileAppend.Close()
-				fileAppend = nil
-				return
-			}
-		}
-
-		fileAppend.Write(jsonBytes)
-		fileAppend.Write([]byte("\n"))
 	}
 }
 
