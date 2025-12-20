@@ -7,8 +7,8 @@ services:
         DEBUG_TOOLS: "false"
     command: bash -c "./upf-iptables.sh && ./upf -c ./config/upfcfg.yaml"
     ports:
-      - "2152:2152/udp"  # GTP-U
-      - "8805:8805/udp"  # PFCP
+      - "2152:2152/udp"
+      - "8805:8805/udp"
     volumes:
       - ./config/upfcfg.yaml:/free5gc/config/upfcfg.yaml
       - ./config/upf-iptables.sh:/free5gc/upf-iptables.sh
@@ -60,10 +60,7 @@ services:
 
   free5gc-amf:
     container_name: amf
-    build:
-      context: ./nf_amf
-      args:
-        DEBUG_TOOLS: "false"
+    image: zhria/amfcustom:latest
     command: ./amf -c ./config/amfcfg.yaml
     ports:
         - "8000:8000" 
@@ -149,10 +146,7 @@ services:
 
   free5gc-smf:
     container_name: smf
-    build:
-      context: ./nf_smf
-      args:
-        DEBUG_TOOLS: "false"
+    image: zhria/smfcustom:latest
     command: ./smf -c ./config/smfcfg.yaml -u ./config/uerouting.yaml
     expose:
       - "8000"
@@ -246,10 +240,7 @@ services:
 
   free5gc-n3iwf:
     container_name: n3iwf
-    build:
-      context: ./nf_n3iwf
-      args:
-        DEBUG_TOOLS: "true"
+    image: zhria/n3iwfcustom:latest
     command: ./n3iwf -c ./config/n3iwfcfg.yaml
     volumes:
       - ./config/n3iwfcfg.yaml:/free5gc/config/n3iwfcfg.yaml
@@ -345,8 +336,7 @@ services:
 
   free5gc-e2node:
     container_name: e2node
-    build:
-      context: ./e2sim
+    image: zhria/e2node:latest
     command: ./build/kpm_callbacks -c ./config/e2node.yaml 
     network_mode: "host"
     volumes:
