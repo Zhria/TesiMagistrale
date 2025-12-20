@@ -34,7 +34,7 @@ RUN apt-get update \
 COPY . ${E2SIM_DIR}
 
 WORKDIR ${E2SIM_DIR}
-RUN mkdir config
+RUN mkdir -p config
 
 # Build
 RUN ./build_e2sim --clean && ./build_e2sim

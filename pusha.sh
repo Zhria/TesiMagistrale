@@ -21,11 +21,19 @@ if $BUILD_IMAGES; then
     "zhria/n3iwfcustom:latest"
     "zhria/amfcustom:latest"
     "zhria/smfcustom:latest"
+    "zhria/e2node:latest"
   )
   declare -a DOCKERFILES=(
     "./n3iwfCustom/Dockerfile"
     "./amfCustom/Dockerfile"
     "./smfCustom/Dockerfile"
+    "./e2sim/Dockerfile"
+  )
+  declare -a CONTEXTS=(
+    "."         # n3iwfCustom Dockerfile expects repo-root context
+    "."         # amfCustom Dockerfile expects repo-root context (cert/, config/)
+    "."         # smfCustom Dockerfile expects repo-root context (cert/, config/)
+    "./e2sim"   # e2sim Dockerfile expects e2sim/ as build context
   )
 
   # Build all images in parallel and stop if one fails
@@ -34,7 +42,8 @@ if $BUILD_IMAGES; then
   for idx in "${!TAGS[@]}"; do
     tag="${TAGS[$idx]}"
     dockerfile="${DOCKERFILES[$idx]}"
-    docker build -t "$tag" -f "$dockerfile" . &
+    context="${CONTEXTS[$idx]}"
+    docker build -t "$tag" -f "$dockerfile" "$context" &
     build_pids+=("$!")
     build_names+=("build $tag")
   done
