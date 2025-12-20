@@ -43,6 +43,10 @@ if [ -z "$PARAM_AVVIO" ]; then
     PARAM_AVVIO=""
 fi
 
+sudo docker pull zhria/n3iwfcustom:latest
+sudo docker pull zhria/amfcustom:latest
+sudo docker pull zhria/smfcustom:latest
+sudo docker pull zhria/e2node:latest
 # Run con docker compose
 sudo docker compose -f dcb.yaml up $PARAM_AVVIO
 
