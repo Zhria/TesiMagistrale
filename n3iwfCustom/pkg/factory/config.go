@@ -23,7 +23,7 @@ const (
 	N3iwfDefaultConfigPath    string = "./config/n3iwfcfg.yaml"
 	N3iwfDefaultXfrmIfaceName string = "ipsec"
 	N3iwfDefaultXfrmIfaceId   uint32 = 7
-	N3iwfE2DefaultLogPath     string = "./log/n3iwf_e2.json"
+	N3iwfE2DefaultLogPath     string = "./log/n3iwfConfig.json"
 
 	N3iwfMetricsDefaultEnabled   = false
 	N3iwfMetricsDefaultPort      = 9091

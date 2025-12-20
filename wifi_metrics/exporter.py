@@ -94,27 +94,6 @@ def write_atomic(path, content_bytes):
     with open(tmp,"wb") as f: f.write(content_bytes)
     os.replace(tmp, path)
 
-def to_prom(metrics):
-    lines=[]
-    def esc(lbl): return lbl.replace("\\","\\\\").replace("\"","\\\"")
-    ts=int(time.time())
-    # Esempi chiave
-    for iface, m in metrics.items():
-        if "hostapd" in m and "status" in m["hostapd"]:
-            st=m["hostapd"]["status"]
-            if "num_sta" in st:
-                lines.append(f'hostapd_stations{{iface="{esc(iface)}"}} {st.get("num_sta",0)} {ts}000')
-        if "survey" in m:
-            for s in m["survey"]:
-                if "frequency" in s and "channel_time_busy" in s:
-                    lines.append(f'wifi_survey_channel_time_busy_ms{{iface="{esc(iface)}",freq="{esc(str(s.get("frequency","")))}"}} {s.get("channel_time_busy","0").split()[0]} {ts}000')
-        if "ethtool" in m:
-            et=m["ethtool"]
-            for k,v in et.items():
-                if isinstance(v, int):
-                    lines.append(f'ethtool_{k}{{iface="{esc(iface)}"}} {v} {ts}000')
-    return ("\n".join(lines)+"\n").encode()
-
 def main():
     while True:
         payload={}
@@ -130,7 +109,6 @@ def main():
             payload[iface]=entry
         # Scrive JSON e Prometheus textfile nel volume condiviso
         write_atomic(os.path.join(OUTDIR,"metrics.json"), json.dumps(payload, indent=2).encode())
-        write_atomic(os.path.join(OUTDIR,"metrics.prom"), to_prom(payload))
         time.sleep(SCRAPE_INTERVAL)
 
 if __name__=="__main__":

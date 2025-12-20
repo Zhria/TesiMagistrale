@@ -3,6 +3,7 @@ package logger
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -38,7 +39,8 @@ func InitCustomLogger(logPath string, limitSizeAppend int64) error {
 	}
 
 	// File per KPM
-	fileKPM, err = os.OpenFile(logPath+".kpm.log", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	kpmPath := filepath.Join(filepath.Dir(logPath), "kpm_data.json")
+	fileKPM, err = os.OpenFile(kpmPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}

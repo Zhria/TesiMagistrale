@@ -43,8 +43,8 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 // Configurazione (safe)
-static std::string g_fileName = "n3iwf_e2.json";
-static std::string g_rcFileName = "n3iwf_e2_rc.json";
+static std::string g_fileName = "n3iwfConfig.json";
+static std::string g_rcFileName = "rc_metrics.json";
 static std::string g_basePath = []{
   if (const char* p = std::getenv("E2_LOG_BASE")) return std::string(p);
   return std::string("/home/e2sim/log/");  // default nel tuo container
