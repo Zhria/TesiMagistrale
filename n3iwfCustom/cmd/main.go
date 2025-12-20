@@ -104,7 +104,8 @@ func action(cliCtx *cli.Context) error {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		<-sigCh  // Wait for interrupt signal to gracefully shutdown
+		sig := <-sigCh // Wait for interrupt signal to gracefully shutdown
+		logger.MainLog.Infof("Received signal %v, starting graceful shutdown", sig)
 		cancel() // Notify each goroutine and wait them stopped
 	}()
 

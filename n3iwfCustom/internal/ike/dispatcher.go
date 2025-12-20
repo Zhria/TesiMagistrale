@@ -23,6 +23,31 @@ func (s *Server) Dispatch(
 		}
 	}()
 
+	// Ensure we always keep a usable UE UDP endpoint in the in-memory SA.
+	// This is required for out-of-band INFORMATIONAL sends (e.g., target-to-source notify)
+	// after handover state-sync, where the IKESA is imported without a live IKEConnection.
+	if ikeSA != nil && ikeSA.IkeUE != nil && udpConn != nil && localAddr != nil && remoteAddr != nil {
+		if ikeSA.IKEConnection == nil {
+			ikeSA.IKEConnection = &n3iwf_context.UDPSocketInfo{
+				Conn:      udpConn,
+				N3IWFAddr: localAddr,
+				UEAddr:    remoteAddr,
+			}
+		} else if ikeSA.MobikeSupported &&
+			(ikeSA.IKEConnection.UEAddr == nil || ikeSA.IKEConnection.N3IWFAddr == nil ||
+				!ikeSA.IKEConnection.UEAddr.IP.Equal(remoteAddr.IP) ||
+				ikeSA.IKEConnection.UEAddr.Port != remoteAddr.Port ||
+				!ikeSA.IKEConnection.N3IWFAddr.IP.Equal(localAddr.IP) ||
+				ikeSA.IKEConnection.N3IWFAddr.Port != localAddr.Port) {
+			ikeSA.IKEConnection.Conn = udpConn
+			ikeSA.IKEConnection.UEAddr = remoteAddr
+			ikeSA.IKEConnection.N3IWFAddr = localAddr
+		}
+		if ikeSA.IkeUE.IKEConnection == nil {
+			ikeSA.IkeUE.IKEConnection = ikeSA.IKEConnection
+		}
+	}
+
 	switch ikeMessage.ExchangeType {
 	case ike_message.IKE_SA_INIT:
 		s.HandleIKESAINIT(udpConn, localAddr, remoteAddr, ikeMessage, msg)
