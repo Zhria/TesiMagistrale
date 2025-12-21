@@ -1321,9 +1321,7 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	// This is especially important after handover when state is imported (EnableEncapsulate may be false)
 	// but the new access requires NAT-T to carry ESP.
 	useNatt := n3iwfAddr.Port == DEFAULT_NATT_PORT || ueAddr.Port == DEFAULT_NATT_PORT
-	if useNatt && ikeSA != nil {
-		ikeSA.UeBehindNAT = true
-	}
+	ikeSA.UeBehindNAT = useNatt
 
 	// Update stored connection endpoints (used by later exchanges/timers).
 	ikeSA.IKEConnection = &n3iwf_context.UDPSocketInfo{

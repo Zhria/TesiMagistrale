@@ -153,9 +153,10 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 
 	if childSecurityAssociation.EnableEncapsulate {
 		xfrmState.Encap = &netlink.XfrmStateEncap{
-			Type:    netlink.XFRM_ENCAP_ESPINUDP,
-			SrcPort: childSecurityAssociation.NATPort,
-			DstPort: childSecurityAssociation.N3IWFPort,
+			Type:            netlink.XFRM_ENCAP_ESPINUDP,
+			SrcPort:         childSecurityAssociation.NATPort,
+			DstPort:         childSecurityAssociation.N3IWFPort,
+			OriginalAddress: childSecurityAssociation.PeerPublicIPAddr,
 		}
 	}
 
