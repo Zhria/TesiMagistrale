@@ -1307,6 +1307,7 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	n3iwfAddr, ueAddr *net.UDPAddr,
 	ikeSA *n3iwf_context.IKESecurityAssociation,
 ) error {
+	ikeLog := logger.IKELog
 	if ikeSA == nil || ikeSA.IkeUE == nil {
 		return errors.New("nil IKE SA/UE context")
 	}
@@ -1315,6 +1316,14 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	}
 
 	cfg := s.Config()
+
+	// If the peer is using UDP/4500, ESP-in-UDP encapsulation is needed for the Child SAs as well.
+	// This is especially important after handover when state is imported (EnableEncapsulate may be false)
+	// but the new access requires NAT-T to carry ESP.
+	useNatt := n3iwfAddr.Port == DEFAULT_NATT_PORT || ueAddr.Port == DEFAULT_NATT_PORT
+	if useNatt && ikeSA != nil {
+		ikeSA.UeBehindNAT = true
+	}
 
 	// Update stored connection endpoints (used by later exchanges/timers).
 	ikeSA.IKEConnection = &n3iwf_context.UDPSocketInfo{
@@ -1351,6 +1360,10 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 		}
 		child.PeerPublicIPAddr = ueAddr.IP
 		child.LocalPublicIPAddr = n3iwfAddr.IP
+		if useNatt && !child.EnableEncapsulate {
+			ikeLog.Infof("MOBIKE: enabling ESP-in-UDP encapsulation (NAT-T) for inboundSPI=0x%08x", child.InboundSPI)
+			child.EnableEncapsulate = true
+		}
 		if child.EnableEncapsulate {
 			child.N3IWFPort = n3iwfAddr.Port
 			child.NATPort = ueAddr.Port
