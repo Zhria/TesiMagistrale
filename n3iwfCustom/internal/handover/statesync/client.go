@@ -11,7 +11,9 @@ import (
 	"github.com/free5gc/ike/security/integ"
 	"github.com/free5gc/ike/security/prf"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransfer, error) {
@@ -92,6 +94,37 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 		}
 		esnT := esn.ToTransform(child.EsnInfo)
 
+		logger.MainLog.WithFields(logrus.Fields{
+			"amfUeNgapId":     shared.AmfUeNgapId,
+			"ranUeNgapId":     shared.RanUeNgapId,
+			"localSpi":        fmt.Sprintf("%016x", ikeSA.LocalSPI),
+			"remoteSpi":       fmt.Sprintf("%016x", ikeSA.RemoteSPI),
+			"ueInnerIp":       ikeUe.IPSecInnerIP.String(),
+			"inboundSpi":      fmt.Sprintf("0x%08x", child.InboundSPI),
+			"outboundSpi":     fmt.Sprintf("0x%08x", child.OutboundSPI),
+			"xfrmiId":         xfrmiId,
+			"localIsInit":     child.LocalIsInitiator,
+			"proto":           int(child.SelectedIPProtocol),
+			"tsLocal":         child.TrafficSelectorLocal.String(),
+			"tsRemote":        child.TrafficSelectorRemote.String(),
+			"peerPublicIp":    child.PeerPublicIPAddr.String(),
+			"encapEnabled":    child.EnableEncapsulate,
+			"n3iwfPort":       child.N3IWFPort,
+			"natPort":         child.NATPort,
+			"encrTransformId": child.EncrKInfo.TransformID(),
+			"integTransformId": func() uint16 {
+				if child.IntegKInfo == nil {
+					return 0
+				}
+				return child.IntegKInfo.TransformID()
+			}(),
+			"esnEnabled": child.EsnInfo.GetNeedESN(),
+			"i2rEncrFp":  keyFingerprint(child.InitiatorToResponderEncryptionKey),
+			"r2iEncrFp":  keyFingerprint(child.ResponderToInitiatorEncryptionKey),
+			"i2rIntegFp": keyFingerprint(child.InitiatorToResponderIntegrityKey),
+			"r2iIntegFp": keyFingerprint(child.ResponderToInitiatorIntegrityKey),
+		}).Debug("Handover state-sync: export child SA")
+
 		childSAs = append(childSAs, ChildSAState{
 			InboundSPI:                        child.InboundSPI,
 			OutboundSPI:                       child.OutboundSPI,
@@ -122,6 +155,18 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 		IKESA:       ikesa,
 		ChildSAs:    childSAs,
 	}
+
+	logger.MainLog.WithFields(logrus.Fields{
+		"amfUeNgapId":    shared.AmfUeNgapId,
+		"ranUeNgapId":    shared.RanUeNgapId,
+		"localSpi":       fmt.Sprintf("%016x", ikeSA.LocalSPI),
+		"remoteSpi":      fmt.Sprintf("%016x", ikeSA.RemoteSPI),
+		"ueInnerIp":      ikeUe.IPSecInnerIP.String(),
+		"childSAs":       len(childSAs),
+		"ueBehindNat":    ikeSA.UeBehindNAT,
+		"n3iwfBehindNat": ikeSA.N3iwfBehindNAT,
+		"mobike":         ikeSA.MobikeSupported,
+	}).Info("Handover state-sync: built transfer")
 
 	return transfer, nil
 }
