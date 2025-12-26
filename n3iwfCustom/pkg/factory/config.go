@@ -81,7 +81,7 @@ type Wifi struct {
 }
 
 type HandoverStateSync struct {
-	Enable   bool   `yaml:"enable" valid:"optional"`
+	Enable   *bool  `yaml:"enable,omitempty" valid:"optional"`
 	BindAddr string `yaml:"bindAddr,omitempty" valid:"optional,host"`
 	Port     int    `yaml:"port,omitempty" valid:"optional,port"`
 	Token    string `yaml:"token,omitempty" valid:"optional"`
@@ -150,19 +150,19 @@ type Configuration struct {
 
 	Metrics *Metrics `yaml:"metrics,omitempty" valid:"optional"`
 
-	TCPPort              int         `yaml:"nasTcpPort"           valid:"required,port"`
-	IKEBindAddr          string      `yaml:"ikeBindAddress"       valid:"required,host"`
-	UEIPAddressRange     string      `yaml:"ueIpAddressRange"     valid:"required,cidr"` // e.g. 10.0.1.0/24
-	IPSecGatewayAddr     string      `yaml:"ipSecTunnelAddress"   valid:"required,host"`
-	XfrmIfaceName        string      `yaml:"xfrmInterfaceName"    valid:"optional,stringlength(1|10)"` // must != 0
-	XfrmIfaceId          uint32      `yaml:"xfrmInterfaceID"      valid:"optional"`                    // must != 0
-	N3IWFGTPBindAddress  string      `yaml:"n3iwfGtpBindAddress"  valid:"required,host"`
-	FQDN                 string      `yaml:"fqdn"                 valid:"required,host"` // e.g. n3iwf.Saviah.com
-	PrivateKey           string      `yaml:"privateKey"           valid:"optional"`
-	CertificateAuthority string      `yaml:"certificateAuthority" valid:"optional"`
-	Certificate          string      `yaml:"certificate"          valid:"optional"`
-	LivenessCheck        *TimerValue `yaml:"livenessCheck"        valid:"required"`
-	Wifi                 *Wifi       `yaml:"wifi,omitempty"       valid:"optional"`
+	TCPPort              int                `yaml:"nasTcpPort"           valid:"required,port"`
+	IKEBindAddr          string             `yaml:"ikeBindAddress"       valid:"required,host"`
+	UEIPAddressRange     string             `yaml:"ueIpAddressRange"     valid:"required,cidr"` // e.g. 10.0.1.0/24
+	IPSecGatewayAddr     string             `yaml:"ipSecTunnelAddress"   valid:"required,host"`
+	XfrmIfaceName        string             `yaml:"xfrmInterfaceName"    valid:"optional,stringlength(1|10)"` // must != 0
+	XfrmIfaceId          uint32             `yaml:"xfrmInterfaceID"      valid:"optional"`                    // must != 0
+	N3IWFGTPBindAddress  string             `yaml:"n3iwfGtpBindAddress"  valid:"required,host"`
+	FQDN                 string             `yaml:"fqdn"                 valid:"required,host"` // e.g. n3iwf.Saviah.com
+	PrivateKey           string             `yaml:"privateKey"           valid:"optional"`
+	CertificateAuthority string             `yaml:"certificateAuthority" valid:"optional"`
+	Certificate          string             `yaml:"certificate"          valid:"optional"`
+	LivenessCheck        *TimerValue        `yaml:"livenessCheck"        valid:"required"`
+	Wifi                 *Wifi              `yaml:"wifi,omitempty"       valid:"optional"`
 	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
 }
 
@@ -457,9 +457,12 @@ func (c *Config) GetHandoverStateSyncEnabled() bool {
 	c.RLock()
 	defer c.RUnlock()
 	if c.Configuration == nil || c.Configuration.HandoverStateSync == nil {
-		return false
+		return true
 	}
-	return c.Configuration.HandoverStateSync.Enable
+	if c.Configuration.HandoverStateSync.Enable == nil {
+		return true
+	}
+	return *c.Configuration.HandoverStateSync.Enable
 }
 
 func (c *Config) GetHandoverStateSyncBindAddr() string {

@@ -64,7 +64,7 @@ configuration:
   # inside the NGAP Source->Target transparent container. If enabled, handover fails if the
   # state cannot be exported/embedded.
   handoverStateSync:
-    enable: false
+    enable: true
 
 logger: # log output setting
   enable: true # true or false
