@@ -58,6 +58,27 @@ func (xfrmIntegrityAlgorithmType XFRMIntegrityAlgorithmType) String() string {
 func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	childSecurityAssociation *context.ChildSecurityAssociation,
 ) error {
+	return applyXFRMRule(n3iwf_is_initiator, xfrmiId, childSecurityAssociation, nil, nil)
+}
+
+// ApplyXFRMRuleWithReplay installs XFRM state/policy rules while preserving ESP
+// sequence/anti-replay state. This is required for "no rekey" handover where
+// SAs are migrated to a different N3IWF (or reinstated after MOBIKE address update).
+func ApplyXFRMRuleWithReplay(
+	n3iwf_is_initiator bool,
+	xfrmiId uint32,
+	childSecurityAssociation *context.ChildSecurityAssociation,
+	inboundReplay, outboundReplay *ReplayState,
+) error {
+	return applyXFRMRule(n3iwf_is_initiator, xfrmiId, childSecurityAssociation, inboundReplay, outboundReplay)
+}
+
+func applyXFRMRule(
+	n3iwf_is_initiator bool,
+	xfrmiId uint32,
+	childSecurityAssociation *context.ChildSecurityAssociation,
+	inboundReplay, outboundReplay *ReplayState,
+) error {
 	ikeLog := logger.IKELog
 	if childSecurityAssociation == nil {
 		return errors.New("nil child security association")
@@ -105,6 +126,9 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	xfrmState.Auth = xfrmIntegrityAlgorithm
 	xfrmState.Crypt = xfrmEncryptionAlgorithm
 	xfrmState.ESN = childSecurityAssociation.EsnInfo.GetNeedESN()
+	if inboundReplay != nil && inboundReplay.ReplayWindow != 0 {
+		xfrmState.ReplayWindow = int(inboundReplay.ReplayWindow) // #nosec G115
+	}
 
 	ikeLog.WithFields(logrus.Fields{
 		"ifid":          xfrmiId,
@@ -131,7 +155,12 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 
 	// Commit xfrm state to netlink
 	var err error
-	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
+	if inboundReplay != nil {
+		err = xfrmStateAddOrUpdateWithReplay(xfrmState, inboundReplay)
+	} else {
+		err = xfrmStateAddOrUpdate(xfrmState)
+	}
+	if err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 
@@ -193,6 +222,9 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	if xfrmState.Encap != nil {
 		xfrmState.Encap.SrcPort, xfrmState.Encap.DstPort = xfrmState.Encap.DstPort, xfrmState.Encap.SrcPort
 	}
+	if outboundReplay != nil && outboundReplay.ReplayWindow != 0 {
+		xfrmState.ReplayWindow = int(outboundReplay.ReplayWindow) // #nosec G115
+	}
 
 	ikeLog.WithFields(logrus.Fields{
 		"ifid":          xfrmiId,
@@ -220,7 +252,12 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	}).Trace("XFRM: applying outbound state/policy")
 
 	// Commit xfrm state to netlink
-	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
+	if outboundReplay != nil {
+		err = xfrmStateAddOrUpdateWithReplay(xfrmState, outboundReplay)
+	} else {
+		err = xfrmStateAddOrUpdate(xfrmState)
+	}
+	if err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 

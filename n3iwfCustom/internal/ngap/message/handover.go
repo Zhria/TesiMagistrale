@@ -419,17 +419,33 @@ func buildSourceToTargetTransparentContainer(sharedCtx *n3iwf_context.RanUeShare
 		return nil, errors.New("nil target ID")
 	}
 
+	requireStateSync := false
+	if sharedCtx.N3iwfCtx != nil {
+		if cfg := sharedCtx.N3iwfCtx.Config(); cfg != nil {
+			requireStateSync = cfg.GetHandoverStateSyncEnabled()
+		}
+	}
+
 	rrcContainer := []byte{0x00}
 	if transfer, err := statesync.BuildTransferFromShared(sharedCtx); err == nil {
 		raw, err := json.Marshal(transfer)
 		if err != nil {
+			if requireStateSync {
+				return nil, fmt.Errorf("handover state-sync marshal failed: %w", err)
+			}
 			logger.NgapLog.Warnf("Handover state-sync: marshal transfer failed: %v", err)
 		} else if len(raw) > 48<<10 {
+			if requireStateSync {
+				return nil, fmt.Errorf("handover state-sync transfer too large (%d bytes)", len(raw))
+			}
 			logger.NgapLog.Warnf("Handover state-sync: transfer too large (%d bytes), skipping embed", len(raw))
 		} else if len(raw) > 0 {
 			rrcContainer = raw
 		}
 	} else {
+		if requireStateSync {
+			return nil, fmt.Errorf("handover state-sync required but build failed: %w", err)
+		}
 		logger.NgapLog.Debugf("Handover state-sync: build transfer skipped: %v", err)
 	}
 

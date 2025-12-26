@@ -1324,8 +1324,8 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	ikeSA.UeBehindNAT = useNatt
 	ikeLog.WithFields(map[string]any{
 		"n3iwfAddr": n3iwfAddr.String(),
-		"ueAddr":   ueAddr.String(),
-		"useNatt":  useNatt,
+		"ueAddr":    ueAddr.String(),
+		"useNatt":   useNatt,
 	}).Debug("MOBIKE: UPDATE_SA_ADDRESSES received; reinstalling XFRM")
 
 	// Update stored connection endpoints (used by later exchanges/timers).
@@ -1373,6 +1373,36 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 			"policies":      len(child.XfrmPolicyList),
 		}).Debug("MOBIKE: preparing Child SA for XFRM reinstall")
 
+		// Preserve ESP sequence/replay state across XFRM reinstall; without this the peer will
+		// treat outbound packets as replays (sequence number reset) and drop them.
+		var ifid uint32 = cfg.GetXfrmIfaceId()
+		if len(child.XfrmStateList) > 0 {
+			if child.XfrmStateList[0].Ifid > 0 {
+				ifid = uint32(child.XfrmStateList[0].Ifid) // #nosec G115
+			}
+		}
+
+		oldPeerIP := child.PeerPublicIPAddr
+		if ip4 := oldPeerIP.To4(); ip4 != nil {
+			oldPeerIP = ip4
+		}
+		oldLocalIP := child.LocalPublicIPAddr
+		if ip4 := oldLocalIP.To4(); ip4 != nil {
+			oldLocalIP = ip4
+		}
+
+		var inboundReplay, outboundReplay *xfrm.ReplayState
+		if rs, rerr := xfrm.GetXfrmReplayState(oldLocalIP, oldPeerIP, child.InboundSPI, ifid); rerr != nil {
+			ikeLog.WithError(rerr).Warnf("MOBIKE: failed to read inbound replay state (spi=0x%08x ifid=%d)", child.InboundSPI, ifid)
+		} else {
+			inboundReplay = rs
+		}
+		if rs, rerr := xfrm.GetXfrmReplayState(oldPeerIP, oldLocalIP, child.OutboundSPI, ifid); rerr != nil {
+			ikeLog.WithError(rerr).Warnf("MOBIKE: failed to read outbound replay state (spi=0x%08x ifid=%d)", child.OutboundSPI, ifid)
+		} else {
+			outboundReplay = rs
+		}
+
 		// Normalize IP address representation to avoid IPv4-in-IPv6 forms (16-byte slices) that can
 		// trip kernel XFRM validation when (re)installing states, especially with ESP-in-UDP (NAT-T).
 		peerIP := ueAddr.IP
@@ -1393,13 +1423,6 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 		if child.EnableEncapsulate {
 			child.N3IWFPort = n3iwfAddr.Port
 			child.NATPort = ueAddr.Port
-		}
-
-		var ifid uint32 = cfg.GetXfrmIfaceId()
-		if len(child.XfrmStateList) > 0 {
-			if child.XfrmStateList[0].Ifid > 0 {
-				ifid = uint32(child.XfrmStateList[0].Ifid) // #nosec G115
-			}
 		}
 
 		// Delete existing XFRM state/policy rules but keep the XFRM interface.
@@ -1433,7 +1456,7 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 			"ikeUeBehindNat": ikeSA.UeBehindNAT,
 		}).Debug("MOBIKE: applying XFRM for Child SA")
 
-		if err := xfrm.ApplyXFRMRule(child.LocalIsInitiator, ifid, child); err != nil {
+		if err := xfrm.ApplyXFRMRuleWithReplay(child.LocalIsInitiator, ifid, child, inboundReplay, outboundReplay); err != nil {
 			return fmt.Errorf("apply xfrm ifid=%d inboundSpi=0x%08x: %w", ifid, child.InboundSPI, err)
 		}
 	}

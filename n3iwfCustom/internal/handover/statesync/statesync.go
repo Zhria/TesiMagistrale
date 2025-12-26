@@ -123,6 +123,9 @@ type ChildSAState struct {
 	Integ TransformJSON `json:"integ"`
 	ESN   TransformJSON `json:"esn"`
 
+	InboundReplay  *xfrm.ReplayState `json:"inboundReplay,omitempty"`
+	OutboundReplay *xfrm.ReplayState `json:"outboundReplay,omitempty"`
+
 	InitiatorToResponderEncryptionKey string `json:"i2rEncrKey,omitempty"`
 	ResponderToInitiatorEncryptionKey string `json:"r2iEncrKey,omitempty"`
 	InitiatorToResponderIntegrityKey  string `json:"i2rIntegKey,omitempty"`
@@ -256,28 +259,33 @@ func ImportStateForRanUe(
 		}
 
 		logger.MainLog.WithFields(logrus.Fields{
-			"amfUeNgapId":      req.AMFUeNgapID,
-			"ranUeNgapId":      shared.RanUeNgapId,
-			"localSpi":         fmt.Sprintf("%016x", req.IKESA.LocalSPI),
-			"inboundSpi":       fmt.Sprintf("0x%08x", child.InboundSPI),
-			"outboundSpi":      fmt.Sprintf("0x%08x", child.OutboundSPI),
-			"xfrmiId":          c.XfrmiId,
-			"localIsInit":      child.LocalIsInitiator,
-			"proto":            int(child.SelectedIPProtocol),
-			"tsLocal":          child.TrafficSelectorLocal.String(),
-			"tsRemote":         child.TrafficSelectorRemote.String(),
-			"peerPublicIp":     child.PeerPublicIPAddr.String(),
-			"localPublicIp":    child.LocalPublicIPAddr.String(),
-			"encapEnabled":     child.EnableEncapsulate,
-			"n3iwfPort":        child.N3IWFPort,
-			"natPort":          child.NATPort,
-			"encrTransformId":  child.EncrKInfo.TransformID(),
-			"integTransformId": func() uint16 { if child.IntegKInfo == nil { return 0 }; return child.IntegKInfo.TransformID() }(),
-			"esnEnabled":       child.EsnInfo.GetNeedESN(),
-			"i2rEncrFp":        keyFingerprint(child.InitiatorToResponderEncryptionKey),
-			"r2iEncrFp":        keyFingerprint(child.ResponderToInitiatorEncryptionKey),
-			"i2rIntegFp":       keyFingerprint(child.InitiatorToResponderIntegrityKey),
-			"r2iIntegFp":       keyFingerprint(child.ResponderToInitiatorIntegrityKey),
+			"amfUeNgapId":     req.AMFUeNgapID,
+			"ranUeNgapId":     shared.RanUeNgapId,
+			"localSpi":        fmt.Sprintf("%016x", req.IKESA.LocalSPI),
+			"inboundSpi":      fmt.Sprintf("0x%08x", child.InboundSPI),
+			"outboundSpi":     fmt.Sprintf("0x%08x", child.OutboundSPI),
+			"xfrmiId":         c.XfrmiId,
+			"localIsInit":     child.LocalIsInitiator,
+			"proto":           int(child.SelectedIPProtocol),
+			"tsLocal":         child.TrafficSelectorLocal.String(),
+			"tsRemote":        child.TrafficSelectorRemote.String(),
+			"peerPublicIp":    child.PeerPublicIPAddr.String(),
+			"localPublicIp":   child.LocalPublicIPAddr.String(),
+			"encapEnabled":    child.EnableEncapsulate,
+			"n3iwfPort":       child.N3IWFPort,
+			"natPort":         child.NATPort,
+			"encrTransformId": child.EncrKInfo.TransformID(),
+			"integTransformId": func() uint16 {
+				if child.IntegKInfo == nil {
+					return 0
+				}
+				return child.IntegKInfo.TransformID()
+			}(),
+			"esnEnabled": child.EsnInfo.GetNeedESN(),
+			"i2rEncrFp":  keyFingerprint(child.InitiatorToResponderEncryptionKey),
+			"r2iEncrFp":  keyFingerprint(child.ResponderToInitiatorEncryptionKey),
+			"i2rIntegFp": keyFingerprint(child.InitiatorToResponderIntegrityKey),
+			"r2iIntegFp": keyFingerprint(child.ResponderToInitiatorIntegrityKey),
 		}).Debug("Handover state-sync: built child SA from transfer")
 
 		// Backward compatibility: old transfers didn't carry PDUSessionIds. For UP GRE Child SAs, try to infer it.
@@ -303,7 +311,7 @@ func ImportStateForRanUe(
 		if err := ensureXfrmi(cfg, n3iwfCtx, child, c.XfrmiId); err != nil {
 			return fmt.Errorf("ensure xfrmi ifid=%d: %w", c.XfrmiId, err)
 		}
-		if err := xfrm.ApplyXFRMRule(child.LocalIsInitiator, c.XfrmiId, child); err != nil {
+		if err := xfrm.ApplyXFRMRuleWithReplay(child.LocalIsInitiator, c.XfrmiId, child, c.InboundReplay, c.OutboundReplay); err != nil {
 			return fmt.Errorf("apply xfrm ifid=%d: %w", c.XfrmiId, err)
 		}
 	}

@@ -11,6 +11,7 @@ import (
 	"github.com/free5gc/ike/security/integ"
 	"github.com/free5gc/ike/security/prf"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
+	"github.com/free5gc/n3iwf/internal/ike/xfrm"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -94,6 +95,29 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 		}
 		esnT := esn.ToTransform(child.EsnInfo)
 
+		peerIP := child.PeerPublicIPAddr
+		if ip4 := peerIP.To4(); ip4 != nil {
+			peerIP = ip4
+		}
+		localIP := child.LocalPublicIPAddr
+		if ip4 := localIP.To4(); ip4 != nil {
+			localIP = ip4
+		}
+
+		inReplay, err := xfrm.GetXfrmReplayState(localIP, peerIP, child.InboundSPI, xfrmiId)
+		if err != nil {
+			logger.MainLog.WithFields(logrus.Fields{
+				"ranUeNgapId": shared.RanUeNgapId,
+				"inboundSpi":  fmt.Sprintf("0x%08x", child.InboundSPI),
+				"xfrmiId":     xfrmiId,
+			}).Warnf("Handover state-sync: failed to export inbound replay state: %v", err)
+			inReplay = nil
+		}
+		outReplay, err := xfrm.GetXfrmReplayState(peerIP, localIP, child.OutboundSPI, xfrmiId)
+		if err != nil {
+			return nil, errors.Wrapf(err, "export outbound replay state (spi=0x%08x ifid=%d)", child.OutboundSPI, xfrmiId)
+		}
+
 		logger.MainLog.WithFields(logrus.Fields{
 			"amfUeNgapId":     shared.AmfUeNgapId,
 			"ranUeNgapId":     shared.RanUeNgapId,
@@ -119,6 +143,18 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 				return child.IntegKInfo.TransformID()
 			}(),
 			"esnEnabled": child.EsnInfo.GetNeedESN(),
+			"outOSeq": func() uint32 {
+				if outReplay == nil {
+					return 0
+				}
+				return outReplay.OSeq
+			}(),
+			"outOSeqHi": func() uint32 {
+				if outReplay == nil {
+					return 0
+				}
+				return outReplay.OSeqHi
+			}(),
 			"i2rEncrFp":  keyFingerprint(child.InitiatorToResponderEncryptionKey),
 			"r2iEncrFp":  keyFingerprint(child.ResponderToInitiatorEncryptionKey),
 			"i2rIntegFp": keyFingerprint(child.InitiatorToResponderIntegrityKey),
@@ -141,6 +177,8 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 			Encr:                              toTransformJSON(encrChildT),
 			Integ:                             toTransformJSON(integChildT),
 			ESN:                               toTransformJSON(esnT),
+			InboundReplay:                     inReplay,
+			OutboundReplay:                    outReplay,
 			InitiatorToResponderEncryptionKey: b64(child.InitiatorToResponderEncryptionKey),
 			ResponderToInitiatorEncryptionKey: b64(child.ResponderToInitiatorEncryptionKey),
 			InitiatorToResponderIntegrityKey:  b64(child.InitiatorToResponderIntegrityKey),
@@ -149,6 +187,7 @@ func BuildTransferFromShared(shared *n3iwf_context.RanUeSharedCtx) (*StateTransf
 	}
 
 	transfer := &StateTransfer{
+		Version:     1,
 		AMFUeNgapID: shared.AmfUeNgapId,
 		GUTI:        shared.Guti,
 		UeInnerIP:   ikeUe.IPSecInnerIP.String(),
