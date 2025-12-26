@@ -4287,13 +4287,32 @@ func buildTargetToSourceContainer(
 		return nil, errors.New("nil config")
 	}
 
+	// The target N3IWF has not established a new IKE_SA with the UE yet (no NAT_DETECTION_* on the target path).
+	// For stateful HO (state-sync + MOBIKE), derive the NAT-T preference from the imported (source) IPSec state.
+	natTraversal := false
+	if n3iwfCtx := sharedCtx.N3iwfCtx; n3iwfCtx != nil {
+		if ikeUe, err := n3iwfCtx.IkeUeLoadFromNgapId(sharedCtx.RanUeNgapId); err == nil && ikeUe != nil {
+			if ikeUe.N3IWFIKESecurityAssociation != nil {
+				natTraversal = ikeUe.N3IWFIKESecurityAssociation.UeBehindNAT ||
+					ikeUe.N3IWFIKESecurityAssociation.N3iwfBehindNAT
+			}
+			// If any imported Child SA requested ESP-in-UDP encapsulation, prefer NAT-T.
+			for _, child := range ikeUe.N3IWFChildSecurityAssociation {
+				if child != nil && child.EnableEncapsulate {
+					natTraversal = true
+					break
+				}
+			}
+		}
+	}
+
 	access := targetAccessInfo{
 		N3IwfIP:      cfg.GetIPSecGatewayAddr(),
 		N3IwfBindIP:  cfg.GetIKEBindAddr(),
 		FQDN:         cfg.GetFQDN(),
 		IKEPort:      500,
 		NATTPort:     4500,
-		NATTraversal: true,
+		NATTraversal: natTraversal,
 	}
 
 	nas := targetNASInfo{}
