@@ -1356,8 +1356,20 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 		if child == nil {
 			continue
 		}
-		child.PeerPublicIPAddr = ueAddr.IP
-		child.LocalPublicIPAddr = n3iwfAddr.IP
+
+		// Normalize IP address representation to avoid IPv4-in-IPv6 forms (16-byte slices) that can
+		// trip kernel XFRM validation when (re)installing states, especially with ESP-in-UDP (NAT-T).
+		peerIP := ueAddr.IP
+		if ip4 := peerIP.To4(); ip4 != nil {
+			peerIP = ip4
+		}
+		localIP := n3iwfAddr.IP
+		if ip4 := localIP.To4(); ip4 != nil {
+			localIP = ip4
+		}
+		child.PeerPublicIPAddr = append(net.IP(nil), peerIP...)
+		child.LocalPublicIPAddr = append(net.IP(nil), localIP...)
+
 		if useNatt && !child.EnableEncapsulate {
 			ikeLog.Infof("MOBIKE: enabling ESP-in-UDP encapsulation (NAT-T) for inboundSPI=0x%08x", child.InboundSPI)
 			child.EnableEncapsulate = true
