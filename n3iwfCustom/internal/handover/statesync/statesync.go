@@ -219,6 +219,15 @@ func ImportStateForRanUe(
 	if err != nil {
 		return err
 	}
+	// IMPORTANT: The state transfer is snapshotted by the source N3IWF *before* the source sends the
+	// out-of-band INFORMATIONAL request (TargetToSource notify) that triggers the UE Wi-Fi switch /
+	// MOBIKE. That request consumes the current responder-side message ID on the UE.
+	//
+	// After handover, the imported IKESA will be used by the target N3IWF as the responder for any
+	// further responder-initiated INFORMATIONAL requests (e.g., the next handover's TargetToSource
+	// notify). If we keep the exported ResponderMessageID as-is, the target would reuse a message ID
+	// already seen by the UE, and the UE will drop it as a "not retransmit" packet.
+	ikeSA.ResponderMessageID++
 	ikeSA.IkeUE = ikeUe
 	ikeUe.N3IWFIKESecurityAssociation = ikeSA
 
