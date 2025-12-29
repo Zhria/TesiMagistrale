@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 	"golang.org/x/sys/unix"
 
@@ -122,6 +123,9 @@ type ChildSAState struct {
 	Integ TransformJSON `json:"integ"`
 	ESN   TransformJSON `json:"esn"`
 
+	InboundReplay  *xfrm.ReplayState `json:"inboundReplay,omitempty"`
+	OutboundReplay *xfrm.ReplayState `json:"outboundReplay,omitempty"`
+
 	InitiatorToResponderEncryptionKey string `json:"i2rEncrKey,omitempty"`
 	ResponderToInitiatorEncryptionKey string `json:"r2iEncrKey,omitempty"`
 	InitiatorToResponderIntegrityKey  string `json:"i2rIntegKey,omitempty"`
@@ -157,6 +161,24 @@ func ImportStateForRanUe(
 	if shared == nil {
 		return errors.New("target ranUe shared ctx is nil")
 	}
+
+	logger.MainLog.WithFields(logrus.Fields{
+		"amfUeNgapId":        req.AMFUeNgapID,
+		"ranUeNgapId":        shared.RanUeNgapId,
+		"localSpi":           fmt.Sprintf("%016x", req.IKESA.LocalSPI),
+		"remoteSpi":          fmt.Sprintf("%016x", req.IKESA.RemoteSPI),
+		"initiatorMsgId":     req.IKESA.InitiatorMessageID,
+		"responderMsgId":     req.IKESA.ResponderMessageID,
+		"ikesaState":         req.IKESA.State,
+		"ueInnerIp":          req.UeInnerIP,
+		"childSAs":           len(req.ChildSAs),
+		"ueBehindNat":        req.IKESA.UeBehindNAT,
+		"n3iwfBehindNat":     req.IKESA.N3iwfBehindNAT,
+		"mobikeEnabled":      req.IKESA.MobikeEnabled,
+		"targetIkeBindAddr":  cfg.GetIKEBindAddr(),
+		"targetIpSecGateway": cfg.GetIPSecGatewayAddr(),
+		"targetXfrmiId":      cfg.GetXfrmIfaceId(),
+	}).Info("Handover state-sync: import requested")
 
 	if req.AMFUeNgapID != 0 && req.AMFUeNgapID != shared.AmfUeNgapId {
 		logger.MainLog.Warnf("Handover state-sync: AMF UE NGAP ID mismatch: transfer=%d target=%d (continuing import)",
@@ -205,10 +227,66 @@ func ImportStateForRanUe(
 
 	// Import Child SAs and install XFRM rules.
 	for _, c := range req.ChildSAs {
+		logger.MainLog.WithFields(logrus.Fields{
+			"amfUeNgapId":     req.AMFUeNgapID,
+			"ranUeNgapId":     shared.RanUeNgapId,
+			"localSpi":        fmt.Sprintf("%016x", req.IKESA.LocalSPI),
+			"inboundSpi":      fmt.Sprintf("0x%08x", c.InboundSPI),
+			"outboundSpi":     fmt.Sprintf("0x%08x", c.OutboundSPI),
+			"xfrmiId":         c.XfrmiId,
+			"localIsInit":     c.LocalIsInitiator,
+			"proto":           int(c.SelectedIPProto),
+			"tsLocal":         c.TrafficSelectorLocal,
+			"tsRemote":        c.TrafficSelectorRemote,
+			"peerPublicIp":    c.PeerPublicIP,
+			"encapEnabled":    c.EnableEncapsulate,
+			"n3iwfPort":       c.N3IWFPort,
+			"natPort":         c.NATPort,
+			"pduSessionIds":   len(c.PDUSessionIds),
+			"encrTransformId": c.Encr.ID,
+			"integTransformId": func() uint16 {
+				if c.Integ.ID == 0 {
+					return 0
+				}
+				return c.Integ.ID
+			}(),
+			"esnTransformId": c.ESN.ID,
+		}).Debug("Handover state-sync: received child SA")
+
 		child, err := buildChildSA(cfg, n3iwfCtx, ikeUe, &c)
 		if err != nil {
 			return fmt.Errorf("childSA inboundSpi=0x%08x: %w", c.InboundSPI, err)
 		}
+
+		logger.MainLog.WithFields(logrus.Fields{
+			"amfUeNgapId":     req.AMFUeNgapID,
+			"ranUeNgapId":     shared.RanUeNgapId,
+			"localSpi":        fmt.Sprintf("%016x", req.IKESA.LocalSPI),
+			"inboundSpi":      fmt.Sprintf("0x%08x", child.InboundSPI),
+			"outboundSpi":     fmt.Sprintf("0x%08x", child.OutboundSPI),
+			"xfrmiId":         c.XfrmiId,
+			"localIsInit":     child.LocalIsInitiator,
+			"proto":           int(child.SelectedIPProtocol),
+			"tsLocal":         child.TrafficSelectorLocal.String(),
+			"tsRemote":        child.TrafficSelectorRemote.String(),
+			"peerPublicIp":    child.PeerPublicIPAddr.String(),
+			"localPublicIp":   child.LocalPublicIPAddr.String(),
+			"encapEnabled":    child.EnableEncapsulate,
+			"n3iwfPort":       child.N3IWFPort,
+			"natPort":         child.NATPort,
+			"encrTransformId": child.EncrKInfo.TransformID(),
+			"integTransformId": func() uint16 {
+				if child.IntegKInfo == nil {
+					return 0
+				}
+				return child.IntegKInfo.TransformID()
+			}(),
+			"esnEnabled": child.EsnInfo.GetNeedESN(),
+			"i2rEncrFp":  keyFingerprint(child.InitiatorToResponderEncryptionKey),
+			"r2iEncrFp":  keyFingerprint(child.ResponderToInitiatorEncryptionKey),
+			"i2rIntegFp": keyFingerprint(child.InitiatorToResponderIntegrityKey),
+			"r2iIntegFp": keyFingerprint(child.ResponderToInitiatorIntegrityKey),
+		}).Debug("Handover state-sync: built child SA from transfer")
 
 		// Backward compatibility: old transfers didn't carry PDUSessionIds. For UP GRE Child SAs, try to infer it.
 		if len(child.PDUSessionIds) == 0 && c.SelectedIPProto == unix.IPPROTO_GRE {
@@ -233,7 +311,7 @@ func ImportStateForRanUe(
 		if err := ensureXfrmi(cfg, n3iwfCtx, child, c.XfrmiId); err != nil {
 			return fmt.Errorf("ensure xfrmi ifid=%d: %w", c.XfrmiId, err)
 		}
-		if err := xfrm.ApplyXFRMRule(child.LocalIsInitiator, c.XfrmiId, child); err != nil {
+		if err := xfrm.ApplyXFRMRuleWithReplay(child.LocalIsInitiator, c.XfrmiId, child, c.InboundReplay, c.OutboundReplay); err != nil {
 			return fmt.Errorf("apply xfrm ifid=%d: %w", c.XfrmiId, err)
 		}
 	}

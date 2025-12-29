@@ -1,11 +1,13 @@
 package xfrm
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/vishvananda/netlink"
 
 	"github.com/free5gc/ike/message"
@@ -56,6 +58,32 @@ func (xfrmIntegrityAlgorithmType XFRMIntegrityAlgorithmType) String() string {
 func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	childSecurityAssociation *context.ChildSecurityAssociation,
 ) error {
+	return applyXFRMRule(n3iwf_is_initiator, xfrmiId, childSecurityAssociation, nil, nil)
+}
+
+// ApplyXFRMRuleWithReplay installs XFRM state/policy rules while preserving ESP
+// sequence/anti-replay state. This is required for "no rekey" handover where
+// SAs are migrated to a different N3IWF (or reinstated after MOBIKE address update).
+func ApplyXFRMRuleWithReplay(
+	n3iwf_is_initiator bool,
+	xfrmiId uint32,
+	childSecurityAssociation *context.ChildSecurityAssociation,
+	inboundReplay, outboundReplay *ReplayState,
+) error {
+	return applyXFRMRule(n3iwf_is_initiator, xfrmiId, childSecurityAssociation, inboundReplay, outboundReplay)
+}
+
+func applyXFRMRule(
+	n3iwf_is_initiator bool,
+	xfrmiId uint32,
+	childSecurityAssociation *context.ChildSecurityAssociation,
+	inboundReplay, outboundReplay *ReplayState,
+) error {
+	ikeLog := logger.IKELog
+	if childSecurityAssociation == nil {
+		return errors.New("nil child security association")
+	}
+
 	// Build XFRM information data structure for incoming traffic.
 
 	// Direction: {private_network} -> this_server
@@ -98,10 +126,41 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	xfrmState.Auth = xfrmIntegrityAlgorithm
 	xfrmState.Crypt = xfrmEncryptionAlgorithm
 	xfrmState.ESN = childSecurityAssociation.EsnInfo.GetNeedESN()
+	if inboundReplay != nil && inboundReplay.ReplayWindow != 0 {
+		xfrmState.ReplayWindow = int(inboundReplay.ReplayWindow) // #nosec G115
+	}
+
+	ikeLog.WithFields(logrus.Fields{
+		"ifid":          xfrmiId,
+		"dir":           "in",
+		"inboundSpi":    fmt.Sprintf("0x%08x", childSecurityAssociation.InboundSPI),
+		"outboundSpi":   fmt.Sprintf("0x%08x", childSecurityAssociation.OutboundSPI),
+		"outerSrc":      ipString(xfrmState.Src),
+		"outerDst":      ipString(xfrmState.Dst),
+		"tsLocal":       childSecurityAssociation.TrafficSelectorLocal.String(),
+		"tsRemote":      childSecurityAssociation.TrafficSelectorRemote.String(),
+		"proto":         int(childSecurityAssociation.SelectedIPProtocol),
+		"encapEnabled":  childSecurityAssociation.EnableEncapsulate,
+		"n3iwfPort":     childSecurityAssociation.N3IWFPort,
+		"natPort":       childSecurityAssociation.NATPort,
+		"esn":           childSecurityAssociation.EsnInfo.GetNeedESN(),
+		"encrAlgo":      xfrmEncryptionAlgorithm.Name,
+		"encrKeyFp":     keyFingerprint(xfrmEncryptionAlgorithm.Key),
+		"encrKeyLen":    len(xfrmEncryptionAlgorithm.Key),
+		"integAlgo":     algoNameOrEmpty(xfrmIntegrityAlgorithm),
+		"integKeyFp":    keyFingerprint(keyOrNil(xfrmIntegrityAlgorithm)),
+		"integKeyLen":   keyLenOrZero(xfrmIntegrityAlgorithm),
+		"integTruncLen": truncLenOrZero(xfrmIntegrityAlgorithm),
+	}).Trace("XFRM: applying inbound state/policy")
 
 	// Commit xfrm state to netlink
 	var err error
-	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
+	if inboundReplay != nil {
+		err = xfrmStateAddOrUpdateWithReplay(xfrmState, inboundReplay)
+	} else {
+		err = xfrmStateAddOrUpdate(xfrmState)
+	}
+	if err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 
@@ -163,9 +222,42 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	if xfrmState.Encap != nil {
 		xfrmState.Encap.SrcPort, xfrmState.Encap.DstPort = xfrmState.Encap.DstPort, xfrmState.Encap.SrcPort
 	}
+	if outboundReplay != nil && outboundReplay.ReplayWindow != 0 {
+		xfrmState.ReplayWindow = int(outboundReplay.ReplayWindow) // #nosec G115
+	}
+
+	ikeLog.WithFields(logrus.Fields{
+		"ifid":          xfrmiId,
+		"dir":           "out",
+		"inboundSpi":    fmt.Sprintf("0x%08x", childSecurityAssociation.InboundSPI),
+		"outboundSpi":   fmt.Sprintf("0x%08x", childSecurityAssociation.OutboundSPI),
+		"outerSrc":      ipString(xfrmState.Src),
+		"outerDst":      ipString(xfrmState.Dst),
+		"tsLocal":       childSecurityAssociation.TrafficSelectorLocal.String(),
+		"tsRemote":      childSecurityAssociation.TrafficSelectorRemote.String(),
+		"proto":         int(childSecurityAssociation.SelectedIPProtocol),
+		"encapEnabled":  childSecurityAssociation.EnableEncapsulate,
+		"encapType":     encapTypeString(xfrmState.Encap),
+		"encapSrcPort":  encapPortSrc(xfrmState.Encap),
+		"encapDstPort":  encapPortDst(xfrmState.Encap),
+		"encapOrigAddr": encapOrigAddr(xfrmState.Encap),
+		"esn":           childSecurityAssociation.EsnInfo.GetNeedESN(),
+		"encrAlgo":      xfrmEncryptionAlgorithm.Name,
+		"encrKeyFp":     keyFingerprint(xfrmEncryptionAlgorithm.Key),
+		"encrKeyLen":    len(xfrmEncryptionAlgorithm.Key),
+		"integAlgo":     algoNameOrEmpty(xfrmIntegrityAlgorithm),
+		"integKeyFp":    keyFingerprint(keyOrNil(xfrmIntegrityAlgorithm)),
+		"integKeyLen":   keyLenOrZero(xfrmIntegrityAlgorithm),
+		"integTruncLen": truncLenOrZero(xfrmIntegrityAlgorithm),
+	}).Trace("XFRM: applying outbound state/policy")
 
 	// Commit xfrm state to netlink
-	if err = xfrmStateAddOrUpdate(xfrmState); err != nil {
+	if outboundReplay != nil {
+		err = xfrmStateAddOrUpdateWithReplay(xfrmState, outboundReplay)
+	} else {
+		err = xfrmStateAddOrUpdate(xfrmState)
+	}
+	if err != nil {
 		return errors.Wrapf(err, "Add XFRM state")
 	}
 
@@ -188,6 +280,86 @@ func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 
 	childSecurityAssociation.XfrmPolicyList = append(childSecurityAssociation.XfrmPolicyList, *xfrmPolicy)
 	return nil
+}
+
+func ipString(ip net.IP) string {
+	if ip == nil {
+		return ""
+	}
+	if ip4 := ip.To4(); ip4 != nil {
+		return ip4.String()
+	}
+	return ip.String()
+}
+
+func keyFingerprint(key []byte) string {
+	if len(key) == 0 {
+		return ""
+	}
+	sum := sha256.Sum256(key)
+	// Short fingerprint (12 hex chars) is enough for correlation across logs without exposing secrets.
+	return fmt.Sprintf("%x", sum[:6])
+}
+
+func algoNameOrEmpty(algo *netlink.XfrmStateAlgo) string {
+	if algo == nil {
+		return ""
+	}
+	return algo.Name
+}
+
+func keyOrNil(algo *netlink.XfrmStateAlgo) []byte {
+	if algo == nil {
+		return nil
+	}
+	return algo.Key
+}
+
+func keyLenOrZero(algo *netlink.XfrmStateAlgo) int {
+	if algo == nil {
+		return 0
+	}
+	return len(algo.Key)
+}
+
+func truncLenOrZero(algo *netlink.XfrmStateAlgo) int {
+	if algo == nil {
+		return 0
+	}
+	return algo.TruncateLen
+}
+
+func encapTypeString(encap *netlink.XfrmStateEncap) string {
+	if encap == nil {
+		return ""
+	}
+	switch encap.Type {
+	case netlink.XFRM_ENCAP_ESPINUDP:
+		return "espinudp"
+	default:
+		return fmt.Sprintf("%d", encap.Type)
+	}
+}
+
+func encapPortSrc(encap *netlink.XfrmStateEncap) int {
+	if encap == nil {
+		return 0
+	}
+	return int(encap.SrcPort) // #nosec G115
+}
+
+func encapPortDst(encap *netlink.XfrmStateEncap) int {
+	if encap == nil {
+		return 0
+	}
+	return int(encap.DstPort) // #nosec G115
+}
+
+func encapOrigAddr(encap *netlink.XfrmStateEncap) string {
+	if encap == nil {
+		return ""
+	}
+	return ipString(encap.OriginalAddress)
 }
 
 func xfrmStateAddOrUpdate(state *netlink.XfrmState) error {
