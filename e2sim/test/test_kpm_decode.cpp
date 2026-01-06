@@ -27,11 +27,13 @@ int main() {
     kpi[name] = value;
     value += 1.0;
   }
+  std::map<int64_t, std::map<std::string, double>> kpi_by_ue;
+  kpi_by_ue[assoc.ue.ran_ue_ngap_id] = kpi;
 
   E2SM_KPM_IndicationMessage_t msg;
   memset(&msg, 0, sizeof(msg));
 
-  kpm_fill_ind_msg_format3(&msg, assocs, kpi);
+  kpm_fill_ind_msg_format3(&msg, assocs, kpi_by_ue);
   if (!msg.indicationMessage_formats.choice.indicationMessage_Format3) {
     std::cerr << "kpm_fill_ind_msg_format3 did not populate Format3\n";
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, &msg);
@@ -124,4 +126,3 @@ int main() {
   ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, &msg);
   return 0;
 }
-

@@ -35,6 +35,11 @@ int init_n3iwf_data();
 GlobalgNB_ID_t* getGNBStore();
 
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod);
+std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(
+    GranularityPeriod_t granularityPeriod);
+struct RcAssociationSnapshot;
+std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(
+    const std::vector<RcAssociationSnapshot> &assocs, GranularityPeriod_t granularityPeriod);
 
 struct RcCountersSnapshot {
     uint64_t incoming_octets{0};

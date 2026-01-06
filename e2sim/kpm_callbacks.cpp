@@ -2,6 +2,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <algorithm>
 #include <thread>
 #include <chrono>
 #include <map>
@@ -364,10 +365,18 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
 
-    std::map<std::string, double> kpi = getMetricsKPM(granularityPeriod);
-    if (kpi.empty())
+    std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
+    if (assocs.empty())
     {
-      logln("KPM report loop: no KPI metrics available, skipping seqNum %ld", seqNum);
+      logln("KPM report loop: no RC associations available, skipping seqNum %ld", seqNum);
+      continue;
+    }
+
+    std::map<int64_t, std::map<std::string, double>> kpi_by_ue =
+        getMetricsKPMByRanUeId(assocs, granularityPeriod);
+    if (kpi_by_ue.empty())
+    {
+      logln("KPM report loop: no per-UE KPI metrics available, skipping seqNum %ld", seqNum);
       continue;
     }
     E2SM_KPM_IndicationHeader_t hdr;
@@ -387,8 +396,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     E2SM_KPM_IndicationMessage_t *ind_msg =
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
 
-    std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
-    kpm_fill_ind_msg_format3(ind_msg, assocs, kpi);
+    kpm_fill_ind_msg_format3(ind_msg, assocs, kpi_by_ue);
     if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format3)
     {
       logln("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
@@ -584,6 +592,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   bool any_metric_not_allowed = false;
   GranularityPeriod_t granularityPeriod = 0;
   long reportingPeriod = 0;
+  const std::vector<std::string> allowed_kpi = getAllowedKPI();
 
   for (int i = 0; i < count; i++)
   {
@@ -672,7 +681,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
         for (auto &m : meas_names)
         {
-          if (std::find(getAllowedKPI().begin(), getAllowedKPI().end(), m) == getAllowedKPI().end())
+          if (std::find(allowed_kpi.begin(), allowed_kpi.end(), m) == allowed_kpi.end())
           {
             logln("[KPM SUB] Measurement '%s' not allowed by simulator, action %ld will be rejected", m.c_str(), (long)actionId);
             any_metric_not_allowed = true;
