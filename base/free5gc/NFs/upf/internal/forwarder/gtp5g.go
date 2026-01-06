@@ -1596,9 +1596,6 @@ func (g *Gtp5g) applyAction(lSeid uint64, farid int, action report.ApplyAction) 
 		g.log.Errorf("applyAction err: %+v", err)
 		return
 	}
-	if far.Action&report.APPLY_ACT_BUFF == 0 {
-		return
-	}
 	switch {
 	case action.DROP():
 		// BUFF -> DROP

@@ -3,7 +3,7 @@ import os, time, json, subprocess, re, socket, tempfile
 
 HOSTAPD_CTRL = os.environ.get("HOSTAPD_CTRL_PATH", "/var/run/hostapd")
 IFACES = [x.strip() for x in os.environ.get("HOSTAPD_IFACES", "wlp6s0").replace(",", " ").split() if x.strip()]
-SCRAPE_INTERVAL = float(os.environ.get("SCRAPE_INTERVAL", "5"))
+SCRAPE_INTERVAL = float(os.environ.get("SCRAPE_INTERVAL", "1"))
 OUTDIR = os.environ.get("OUTPUT_DIR", "/var/run/wifi-metrics")
 
 os.makedirs(OUTDIR, exist_ok=True)
@@ -100,12 +100,13 @@ def main():
         for iface in IFACES:
             entry={"ts":int(time.time())}
             entry["hostapd"]={
-                "status": hostapd_status(iface),
+                #"status": hostapd_status(iface),
                 "stations": hostapd_all_sta(iface)
             }
             entry["station_dump"]=iw_station_dump(iface)
-            entry["survey"]=iw_survey_dump(iface)
-            entry["ethtool"]=ethtool_stats(iface)
+            # Inutilizzato al momento
+            # entry["survey"]=iw_survey_dump(iface)
+            #entry["ethtool"]=ethtool_stats(iface)
             payload[iface]=entry
         # Scrive JSON e Prometheus textfile nel volume condiviso
         write_atomic(os.path.join(OUTDIR,"metrics.json"), json.dumps(payload, indent=2).encode())

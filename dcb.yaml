@@ -365,7 +365,7 @@ services:
     environment:
       HOSTAPD_CTRL_PATH: /var/run/hostapd
       HOSTAPD_IFACES: "wlp6s0"
-      SCRAPE_INTERVAL: "5"
+      SCRAPE_INTERVAL: "0.5"
       OUTPUT_DIR: "/wifi-metrics"
 
 

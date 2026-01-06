@@ -877,10 +877,28 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				ANUPF := dataPath.FirstDPNode
 				DLPDR := ANUPF.DownLinkTunnel.PDR
 
+				// If DL buffering was enabled (e.g., during HO execution), resume forwarding to the new AN
+				// and trigger buffered DL flush at the UPF after the N3 tunnel endpoint has been updated.
+				if DLPDR == nil || DLPDR.FAR == nil {
+					continue
+				}
+
+				DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+					Buff: false,
+					Drop: false,
+					Dupl: false,
+					Forw: true,
+					Nocp: false,
+				}
+				DLPDR.FAR.State = smf_context.RULE_UPDATE
+
 				pdrList = append(pdrList, DLPDR)
 				farList = append(farList, DLPDR.FAR)
 			}
 		}
+
+		// The user plane is now switched to the new AN tunnel endpoint.
+		smContext.UpCnxState = models.UpCnxState_ACTIVATED
 
 		sendPFCPModification = true
 		smContext.SetState(smf_context.PFCPModification)
@@ -1000,6 +1018,44 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		smContext.SetState(smf_context.PFCPModification)
 		smContext.HoState = models.HoState_COMPLETED
 		response.JsonData.HoState = models.HoState_COMPLETED
+	case models.HoState_CANCELLED:
+		smContext.Log.Traceln("In HoState_CANCELLED")
+		smContext.CheckState(smf_context.Active)
+		// Wait till the state becomes Active again
+		// TODO: implement sleep wait in concurrent architecture
+
+		smContext.SetState(smf_context.ModificationPending)
+		smContext.HoState = models.HoState_CANCELLED
+		response.JsonData.HoState = models.HoState_CANCELLED
+
+		// Restore DL forwarding to the (current) AN and flush any buffered DL towards it.
+		farList = []*smf_context.FAR{}
+		for _, dataPath := range tunnel.DataPathPool {
+			if dataPath.Activated {
+				ANUPF := dataPath.FirstDPNode
+				DLPDR := ANUPF.DownLinkTunnel.PDR
+				if DLPDR == nil || DLPDR.FAR == nil {
+					continue
+				}
+				DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{
+					Buff: false,
+					Drop: false,
+					Dupl: false,
+					Forw: true,
+					Nocp: false,
+				}
+				DLPDR.FAR.State = smf_context.RULE_UPDATE
+				farList = append(farList, DLPDR.FAR)
+			}
+		}
+
+		sendPFCPModification = len(farList) > 0
+		if sendPFCPModification {
+			smContext.SetState(smf_context.PFCPModification)
+		}
+
+		// Handover was cancelled and UE stays on the current AN.
+		smContext.UpCnxState = models.UpCnxState_ACTIVATED
 	}
 
 	if smContextUpdateData.Cause == models.SmfPduSessionCause_REL_DUE_TO_DUPLICATE_SESSION_ID {

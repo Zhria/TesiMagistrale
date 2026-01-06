@@ -1076,6 +1076,98 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   return result;
 }
 
+std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(GranularityPeriod_t granularityPeriod) {
+  std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
+  if (assocs.empty()) {
+    logln("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
+    return {};
+  }
+  return getMetricsKPMByRanUeId(assocs, granularityPeriod);
+}
+
+std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(const std::vector<RcAssociationSnapshot> &assocs, GranularityPeriod_t granularityPeriod) {
+  if (assocs.empty()) {
+    logln("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
+    return {};
+  }
+
+  std::map<int64_t, RcThroughputTotals> curr_by_ue;
+  for (const auto &assoc : assocs) {
+    if (assoc.ue.ran_ue_ngap_id < 0) {
+      continue;
+    }
+    accumulate_rc_throughput(assoc, curr_by_ue[assoc.ue.ran_ue_ngap_id]);
+  }
+
+  if (curr_by_ue.empty()) {
+    logln("[n3iwf] RC snapshot has no ranUeNgapId entries, skipping per-UE metrics collection");
+    return {};
+  }
+
+  thread_local std::map<int64_t, RcThroughputTotals> prev_by_ue;
+  if (prev_by_ue.empty()) {
+    prev_by_ue = curr_by_ue;
+    logln("[n3iwf] Initialized per-UE throughput baselines from RC snapshot; waiting next interval");
+    return {};
+  }
+
+  double granularityPeriodSec = granularityPeriod / 1000.0;
+  if (granularityPeriodSec <= 0.0) {
+    granularityPeriodSec = 1.0;
+  }
+
+  const std::vector<std::string> kpi_names = getAllowedKPI();
+  std::map<int64_t, std::map<std::string, double>> result_by_ue;
+
+  for (const auto &[ran_ue_id, curr_totals] : curr_by_ue) {
+    auto prev_it = prev_by_ue.find(ran_ue_id);
+    if (prev_it == prev_by_ue.end()) {
+      prev_by_ue[ran_ue_id] = curr_totals;
+      continue;
+    }
+
+    RcThroughputTotals delta = subtract_totals(curr_totals, prev_it->second);
+    prev_it->second = curr_totals;
+
+    std::map<std::string, double> result;
+    for (const auto &metric : kpi_names) {
+      if (metric == "DRB.UEThpDl") {
+        result[metric] = safe_div(static_cast<double>(delta.dl_bytes) * 8.0, granularityPeriodSec);
+      } else if (metric == "DRB.UEThpUl") {
+        result[metric] = safe_div(static_cast<double>(delta.ul_bytes) * 8.0, granularityPeriodSec);
+      } else if (metric == "DRB.RlcSduTransmittedVolumeDL") {
+        result[metric] = static_cast<double>(delta.dl_bytes) * 8.0 / 1000.0;
+      } else if (metric == "DRB.RlcSduTransmittedVolumeUL") {
+        result[metric] = static_cast<double>(delta.ul_bytes) * 8.0 / 1000.0;
+      } else if (metric == "DRB.RlcPacketDropRateDLDist") {
+        uint64_t denom = delta.dl_packets + delta.dl_drop_packets;
+        result[metric] = percent_or_zero(static_cast<int64_t>(delta.dl_drop_packets),
+                                         static_cast<int64_t>(denom));
+      } else if (metric == "DRB.RlcPacketLossRateULDist") {
+        uint64_t denom = delta.ul_packets + delta.ul_drop_packets;
+        result[metric] = percent_or_zero(static_cast<int64_t>(delta.ul_drop_packets),
+                                         static_cast<int64_t>(denom));
+      } else {
+        continue;
+      }
+    }
+
+    if (!result.empty()) {
+      result_by_ue.emplace(ran_ue_id, std::move(result));
+    }
+  }
+
+  for (auto it = prev_by_ue.begin(); it != prev_by_ue.end();) {
+    if (curr_by_ue.find(it->first) == curr_by_ue.end()) {
+      it = prev_by_ue.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  return result_by_ue;
+}
+
 bool loadRcSnapshot(RcSnapshot &out) {
   const std::string full = joinPathFile(g_basePath, g_rcFileName);
   if (!fs::exists(full)) {

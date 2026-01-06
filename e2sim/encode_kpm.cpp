@@ -283,7 +283,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
 
 void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
                               const std::vector<RcAssociationSnapshot> &assocs,
-                              const std::map<std::string, double> &kpi)
+                              const std::map<int64_t, std::map<std::string, double>> &kpi_by_ue)
 {
   memset(indMsg, 0, sizeof(*indMsg));
   indMsg->indicationMessage_formats.present =
@@ -305,6 +305,12 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
       continue;
     }
 
+    auto kpi_it = kpi_by_ue.find(assoc.ue.ran_ue_ngap_id);
+    if (kpi_it == kpi_by_ue.end() || kpi_it->second.empty())
+    {
+      continue;
+    }
+
     UEMeasurementReportItem_t *item =
         (UEMeasurementReportItem_t *)calloc(1, sizeof(UEMeasurementReportItem_t));
     if (!item)
@@ -320,7 +326,7 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
       continue;
     }
 
-    if (!fill_ind_msg_format1_struct(item->measReport, kpi))
+    if (!fill_ind_msg_format1_struct(item->measReport, kpi_it->second))
     {
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format3, &item->measReport);
