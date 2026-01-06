@@ -535,11 +535,11 @@ func SendUEContextModificationRequest(
 // criticalityDiagnostics = criticalityDiagonstics IE in receiver node's error indication
 // when received node can't comprehend the IE or missing IE
 func SendHandoverCommand(
-    sourceUe *context.RanUe,
-    pduSessionResourceHandoverList ngapType.PDUSessionResourceHandoverList,
-    pduSessionResourceToReleaseList ngapType.PDUSessionResourceToReleaseListHOCmd,
-    container ngapType.TargetToSourceTransparentContainer,
-    criticalityDiagnostics *ngapType.CriticalityDiagnostics,
+	sourceUe *context.RanUe,
+	pduSessionResourceHandoverList ngapType.PDUSessionResourceHandoverList,
+	pduSessionResourceToReleaseList ngapType.PDUSessionResourceToReleaseListHOCmd,
+	container ngapType.TargetToSourceTransparentContainer,
+	criticalityDiagnostics *ngapType.CriticalityDiagnostics,
 ) {
 	isHoCmdSent := false
 	additionalCause := ""
@@ -565,8 +565,8 @@ func SendHandoverCommand(
 		return
 	}
 
-    pkt, err := BuildHandoverCommand(sourceUe, pduSessionResourceHandoverList, pduSessionResourceToReleaseList,
-        container, criticalityDiagnostics)
+	pkt, err := BuildHandoverCommand(sourceUe, pduSessionResourceHandoverList, pduSessionResourceToReleaseList,
+		container, criticalityDiagnostics)
 	if err != nil {
 		additionalCause = ngap_metrics.NGAP_MSG_BUILD_ERR
 		sourceUe.Log.Errorf("Build HandoverCommand failed : %s", err.Error())

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/free5gc/aper"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
@@ -46,6 +47,8 @@ type hoResult struct {
 	status string
 	err    error
 }
+
+const defaultHandoverHTTPWaitTimeout = 30 * time.Second
 
 func NewHandoverAlertHandler(
 	ctx *n3iwf_context.N3IWFContext,
@@ -189,15 +192,50 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		SourceToTargetContainer: container,
 		Metadata:                payload.Metadata,
 	}
+
+	waitCh := make(chan hoResult, 1)
+	hoWaitersMu.Lock()
+	hoWaiters[payload.RanUeNgapId] = append(hoWaiters[payload.RanUeNgapId], waitCh)
+	hoWaitersMu.Unlock()
+
 	if err := HandleHandoverAlert(alert); err != nil {
+		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
 		writeHTTPError(w, http.StatusBadGateway, err)
 		return
 	}
-	// Risposta immediata: il trigger è stato accettato, l'esito arriverà sui log/telemetria
-	writeHTTPSuccess(w, map[string]interface{}{
-		"status":  "triggered",
-		"ranUeId": payload.RanUeNgapId,
-	})
+
+	timer := time.NewTimer(defaultHandoverHTTPWaitTimeout)
+	defer timer.Stop()
+
+	select {
+	case <-r.Context().Done():
+		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
+		return
+	case <-timer.C:
+		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
+		writeHTTPSuccess(w, map[string]interface{}{
+			"status":       "triggered",
+			"ranUeId":      payload.RanUeNgapId,
+			"pending":      true,
+			"timeoutSec":   defaultHandoverHTTPWaitTimeout.Seconds(),
+			"description":  "handover result not yet available",
+		})
+		return
+	case res := <-waitCh:
+		if res.err != nil || strings.Contains(res.status, "failed") {
+			writeHTTPJSON(w, http.StatusInternalServerError, map[string]interface{}{
+				"status":  res.status,
+				"ranUeId": payload.RanUeNgapId,
+				"error":   errString(res.err),
+			})
+			return
+		}
+		writeHTTPJSON(w, http.StatusOK, map[string]interface{}{
+			"status":  res.status,
+			"ranUeId": payload.RanUeNgapId,
+		})
+		return
+	}
 }
 
 func decodeTargetID(ctx *n3iwf_context.N3IWFContext, encoded string) (*ngapType.TargetID, error) {
@@ -228,6 +266,31 @@ func writeHTTPSuccess(w http.ResponseWriter, payload interface{}) {
 	writeHTTPJSON(w, http.StatusAccepted, payload)
 }
 
+func unregisterHoWaiter(ranUeNgapId int64, ch chan hoResult) {
+	hoWaitersMu.Lock()
+	waiters := hoWaiters[ranUeNgapId]
+	if len(waiters) == 0 {
+		hoWaitersMu.Unlock()
+		return
+	}
+	remaining := waiters[:0]
+	for _, w := range waiters {
+		if w != ch {
+			remaining = append(remaining, w)
+		}
+	}
+	// Avoid retaining references to removed waiters.
+	for i := len(remaining); i < len(waiters); i++ {
+		waiters[i] = nil
+	}
+	if len(remaining) == 0 {
+		delete(hoWaiters, ranUeNgapId)
+	} else {
+		hoWaiters[ranUeNgapId] = remaining
+	}
+	hoWaitersMu.Unlock()
+}
+
 // NotifyHandoverResult signals completion (success or failure) of a handover for a UE.
 // Returns true if at least one waiter was notified.
 func NotifyHandoverResult(ranUeNgapId int64, status string, err error) bool {
@@ -248,6 +311,13 @@ func NotifyHandoverResult(ranUeNgapId int64, status string, err error) bool {
 func writeHTTPError(w http.ResponseWriter, status int, err error) {
 	logger.MainLog.Errorf("RC handover HTTP error: %v", err)
 	writeHTTPJSON(w, status, map[string]interface{}{"error": err.Error()})
+}
+
+func errString(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
 }
 
 // currentN3iwfContext returns the context currently registered in the handler.

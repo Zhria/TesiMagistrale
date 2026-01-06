@@ -4215,17 +4215,21 @@ func (s *Server) HandleHandoverCommand(
 		}
 	}
 
-	if targetToSourceContainer != nil && ranUe != nil {
-		shared := ranUe.GetSharedCtx()
-		shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
+		if targetToSourceContainer != nil && ranUe != nil {
+			shared := ranUe.GetSharedCtx()
+			shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
 
-		sendTargetToSourceToUE(shared)
-	}
+			sendTargetToSourceToUE(shared)
+		}
 
-	if ranUeNgapID != nil {
-		amfID := int64(0)
-		if amfUeNgapID != nil {
-			amfID = amfUeNgapID.Value
+		if ranUe != nil {
+			rc.NotifyHandoverResult(ranUe.GetSharedCtx().RanUeNgapId, "handover_command_sent", nil)
+		}
+
+		if ranUeNgapID != nil {
+			amfID := int64(0)
+			if amfUeNgapID != nil {
+				amfID = amfUeNgapID.Value
 		}
 		ngapLog.Infof("Handled HandoverCommand for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapID.Value, amfID)
 	} else {

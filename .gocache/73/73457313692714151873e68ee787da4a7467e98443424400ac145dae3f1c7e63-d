@@ -1,0 +1,15 @@
+./AllowedNssai.go
+./AmfId.go
+./BitString.go
+./IpAddress.go
+./PlmnId.go
+./PortNumber.go
+./RATRestrictionInformation.go
+./RanId.go
+./SNssai.go
+./TAI.go
+./TNAPID.go
+./TWAPID.go
+./TimeStamp.go
+./TraceData.go
+./UEAmbr.go

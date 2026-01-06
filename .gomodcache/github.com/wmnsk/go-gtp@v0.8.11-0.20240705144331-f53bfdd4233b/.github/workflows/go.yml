@@ -1,0 +1,82 @@
+on: [push, pull_request]
+name: Test
+jobs:
+  test-linux:
+    strategy:
+      matrix:
+        go-version: [1.21.x, 1.22.x]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Run unit tests
+        run: go test ./...
+      - name: Run benchmark
+        run: go test -benchmem -bench . ./...
+      - name: Build GW Tester
+        run: |
+          go build -o sgw examples/gw-tester/sgw/*.go
+          go build -o pgw examples/gw-tester/pgw/*.go
+          go build -o mme examples/gw-tester/mme/*.go
+          go build -o enb examples/gw-tester/enb/*.go
+      - name: Run GW Tester
+        run: |
+          sudo ./sgw -config examples/gw-tester/sgw/sgw.yml &
+          sleep 1
+          sudo ./pgw -config examples/gw-tester/pgw/pgw.yml &
+          sleep 1
+          sudo ./mme -config examples/gw-tester/mme/mme.yml &
+          sleep 1
+          sudo ./enb -config examples/gw-tester/enb/enb.yml &
+          sleep 1
+      - name: Verify GW Tester is working
+        run: |
+          ENB=$(curl -sS http://127.0.10.1:58080/metrics)
+          [ "$(echo "$ENB" | grep "enb_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          MME=$(curl -sS http://127.0.10.2:58080/metrics)
+          [ "$(echo "$MME" | grep "mme_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          SGW=$(curl -sS http://127.0.10.3:58080/metrics)
+          [ "$(echo "$SGW" | grep "sgw_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+          PGW=$(curl -sS http://127.0.10.4:58080/metrics)
+          [ "$(echo "$PGW" | grep "pgw_active_sessions [0-9]" | awk '{print $NF}' )" == 5 ] || exit 101
+  test-macos:
+    strategy:
+      matrix:
+        go-version: [1.21.x, 1.22.x]
+    runs-on: macos-latest
+    steps:
+      - name: Install Go
+        uses: actions/setup-go@v1
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Checkout code
+        uses: actions/checkout@v1
+      - name: Setup loopback interface for tests
+        run: |
+          sudo ifconfig lo0 alias 127.0.0.2
+          sudo ifconfig lo0 alias 127.0.0.11
+          sudo ifconfig lo0 alias 127.0.0.12
+      - name: Test
+        run: go test $(go list ./... | grep -v '/examples')
+      - name: Bench
+        run: go test -benchmem -bench . $(go list ./... | grep -v '/examples')
+  # test-windows:
+  #   strategy:
+  #     matrix:
+  #       go-version: [1.21.x, 1.22.x]
+  #   runs-on: windows-latest
+  #   steps:
+  #   - name: Install Go
+  #     uses: actions/setup-go@v1
+  #     with:
+  #       go-version: ${{ matrix.go-version }}
+  #   - name: Checkout code
+  #     uses: actions/checkout@v1
+  #   - name: Test
+  #     run: go test ./...
+  #   - name: Bench
+  #     run: go test -benchmem -bench . ./...
