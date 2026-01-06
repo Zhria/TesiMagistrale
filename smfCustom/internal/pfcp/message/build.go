@@ -571,7 +571,7 @@ func BuildPfcpSessionModificationRequest(
 		switch urr.State {
 		case context.RULE_CREATE:
 			smContext.Log.Warn("Duplicate URR creation")
-			fallthrough
+			//fallthrough
 		case context.RULE_INITIAL:
 			msg.CreateURR = append(msg.CreateURR, urrToCreateURR(urr))
 		case context.RULE_UPDATE:
