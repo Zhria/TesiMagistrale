@@ -1202,18 +1202,7 @@ func (s *Server) HandleUEContextReleaseCommand(
 
 	message.SendUEContextReleaseComplete(ranUe, nil)
 
-	sendIkeDelete := true
-	if cause != nil &&
-		cause.Present == ngapType.CausePresentRadioNetwork &&
-		cause.RadioNetwork != nil &&
-		cause.RadioNetwork.Value == ngapType.CauseRadioNetworkPresentSuccessfulHandover {
-		// Stateful IPSec handover (MOBIKE/state-sync): the UE may continue to use the same IKE/ESP SAs with the
-		// target N3IWF. Do not instruct the UE to delete the SA when releasing the source context.
-		sendIkeDelete = false
-		ngapLog.Infoln("UE Context Release due to successful handover: skip sending IKE delete to UE")
-	}
-
-	err := s.releaseIkeUeAndRanUe(ranUe, sendIkeDelete)
+	err := s.releaseIkeUeAndRanUe(ranUe)
 	if err != nil {
 		ngapLog.Warnf("HandleUEContextReleaseCommand(): %v", err)
 	}
@@ -1221,15 +1210,13 @@ func (s *Server) HandleUEContextReleaseCommand(
 	metricStatusOk = true
 }
 
-func (s *Server) releaseIkeUeAndRanUe(ranUe n3iwf_context.RanUe, sendIkeDelete bool) error {
+func (s *Server) releaseIkeUeAndRanUe(ranUe n3iwf_context.RanUe) error {
 	n3iwfCtx := s.Context()
 	ranUeNgapID := ranUe.GetSharedCtx().RanUeNgapId
 
-	if sendIkeDelete {
-		localSPI, ok := n3iwfCtx.IkeSpiLoad(ranUeNgapID)
-		if ok {
-			s.SendIkeEvt(n3iwf_context.NewIKEDeleteRequestEvt(localSPI))
-		}
+	localSPI, ok := n3iwfCtx.IkeSpiLoad(ranUeNgapID)
+	if ok {
+		s.SendIkeEvt(n3iwf_context.NewIKEDeleteRequestEvt(localSPI))
 	}
 
 	if err := ranUe.Remove(); err != nil {
@@ -2468,7 +2455,7 @@ func (s *Server) HandleErrorIndication(
 	n3iwfCtx := s.Context()
 	ranUe, ok := n3iwfCtx.RanUePoolLoad(rANUENGAPID.Value)
 	if ok {
-		err := s.releaseIkeUeAndRanUe(ranUe, true)
+		err := s.releaseIkeUeAndRanUe(ranUe)
 		if err != nil {
 			ngapLog.Warnf("HandleErrorIndication(): %v", err)
 		}
@@ -2476,7 +2463,7 @@ func (s *Server) HandleErrorIndication(
 
 	ranUe = amf.FindUeByAmfUeNgapID(aMFUENGAPID.Value)
 	if ranUe != nil {
-		err := s.releaseIkeUeAndRanUe(ranUe, true)
+		err := s.releaseIkeUeAndRanUe(ranUe)
 		if err != nil {
 			ngapLog.Warnf("HandleErrorIndication(): %v", err)
 		}
@@ -4228,21 +4215,21 @@ func (s *Server) HandleHandoverCommand(
 		}
 	}
 
-		if targetToSourceContainer != nil && ranUe != nil {
-			shared := ranUe.GetSharedCtx()
-			shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
+	if targetToSourceContainer != nil && ranUe != nil {
+		shared := ranUe.GetSharedCtx()
+		shared.TargetToSourceContainer = append([]byte(nil), targetToSourceContainer.Value...)
 
-			sendTargetToSourceToUE(shared)
-		}
+		sendTargetToSourceToUE(shared)
+	}
 
-		if ranUe != nil {
-			rc.NotifyHandoverResult(ranUe.GetSharedCtx().RanUeNgapId, "handover_command_sent", nil)
-		}
+	if ranUe != nil {
+		rc.NotifyHandoverResult(ranUe.GetSharedCtx().RanUeNgapId, "handover_command_sent", nil)
+	}
 
-		if ranUeNgapID != nil {
-			amfID := int64(0)
-			if amfUeNgapID != nil {
-				amfID = amfUeNgapID.Value
+	if ranUeNgapID != nil {
+		amfID := int64(0)
+		if amfUeNgapID != nil {
+			amfID = amfUeNgapID.Value
 		}
 		ngapLog.Infof("Handled HandoverCommand for RanUeNgapId=%d (AMF UE NGAP ID=%d)", ranUeNgapID.Value, amfID)
 	} else {
