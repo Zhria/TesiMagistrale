@@ -1202,7 +1202,18 @@ func (s *Server) HandleUEContextReleaseCommand(
 
 	message.SendUEContextReleaseComplete(ranUe, nil)
 
-	err := s.releaseIkeUeAndRanUe(ranUe)
+	sendIkeDelete := true
+	if cause != nil &&
+		cause.Present == ngapType.CausePresentRadioNetwork &&
+		cause.RadioNetwork != nil &&
+		cause.RadioNetwork.Value == ngapType.CauseRadioNetworkPresentSuccessfulHandover {
+		// Stateful IPSec handover (MOBIKE/state-sync): the UE may continue to use the same IKE/ESP SAs with the
+		// target N3IWF. Do not instruct the UE to delete the SA when releasing the source context.
+		sendIkeDelete = false
+		ngapLog.Infoln("UE Context Release due to successful handover: skip sending IKE delete to UE")
+	}
+
+	err := s.releaseIkeUeAndRanUe(ranUe, sendIkeDelete)
 	if err != nil {
 		ngapLog.Warnf("HandleUEContextReleaseCommand(): %v", err)
 	}
@@ -1210,13 +1221,15 @@ func (s *Server) HandleUEContextReleaseCommand(
 	metricStatusOk = true
 }
 
-func (s *Server) releaseIkeUeAndRanUe(ranUe n3iwf_context.RanUe) error {
+func (s *Server) releaseIkeUeAndRanUe(ranUe n3iwf_context.RanUe, sendIkeDelete bool) error {
 	n3iwfCtx := s.Context()
 	ranUeNgapID := ranUe.GetSharedCtx().RanUeNgapId
 
-	localSPI, ok := n3iwfCtx.IkeSpiLoad(ranUeNgapID)
-	if ok {
-		s.SendIkeEvt(n3iwf_context.NewIKEDeleteRequestEvt(localSPI))
+	if sendIkeDelete {
+		localSPI, ok := n3iwfCtx.IkeSpiLoad(ranUeNgapID)
+		if ok {
+			s.SendIkeEvt(n3iwf_context.NewIKEDeleteRequestEvt(localSPI))
+		}
 	}
 
 	if err := ranUe.Remove(); err != nil {
@@ -2455,7 +2468,7 @@ func (s *Server) HandleErrorIndication(
 	n3iwfCtx := s.Context()
 	ranUe, ok := n3iwfCtx.RanUePoolLoad(rANUENGAPID.Value)
 	if ok {
-		err := s.releaseIkeUeAndRanUe(ranUe)
+		err := s.releaseIkeUeAndRanUe(ranUe, true)
 		if err != nil {
 			ngapLog.Warnf("HandleErrorIndication(): %v", err)
 		}
@@ -2463,7 +2476,7 @@ func (s *Server) HandleErrorIndication(
 
 	ranUe = amf.FindUeByAmfUeNgapID(aMFUENGAPID.Value)
 	if ranUe != nil {
-		err := s.releaseIkeUeAndRanUe(ranUe)
+		err := s.releaseIkeUeAndRanUe(ranUe, true)
 		if err != nil {
 			ngapLog.Warnf("HandleErrorIndication(): %v", err)
 		}
