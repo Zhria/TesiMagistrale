@@ -1002,9 +1002,16 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		smContext.TargetAccessType = ""
 		smContext.TargetRanNodeID = nil
 
+		anIP := "<nil>"
+		if tunnel.ANInformation.IPAddress != nil {
+			anIP = tunnel.ANInformation.IPAddress.String()
+		}
+		smContext.Log.Infof("HoState_COMPLETED: resume DL forwarding towards AN=%s teid=%d", anIP, tunnel.ANInformation.TEID)
+
 		// Resume DL forwarding towards the (new) AN and flush any buffered DL packets.
 		// AMF may have requested DL buffering right after HandoverCommand to minimize packet loss during
 		// the break-before-make phase; after HO completion we should forward again.
+		updatedDLFAR := 0
 		for _, dataPath := range tunnel.DataPathPool {
 			if dataPath.Activated {
 				ANUPF := dataPath.FirstDPNode
@@ -1023,8 +1030,10 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				DLPDR.FAR.State = smf_context.RULE_UPDATE
 				pdrList = append(pdrList, DLPDR)
 				farList = append(farList, DLPDR.FAR)
+				updatedDLFAR++
 			}
 		}
+		smContext.Log.Infof("HoState_COMPLETED: updated %d DL FAR(s)", updatedDLFAR)
 
 		// User plane is now switched and should be active.
 		smContext.UpCnxState = models.UpCnxState_ACTIVATED
