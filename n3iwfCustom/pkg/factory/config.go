@@ -164,6 +164,7 @@ type Configuration struct {
 	LivenessCheck        *TimerValue        `yaml:"livenessCheck"        valid:"required"`
 	Wifi                 *Wifi              `yaml:"wifi,omitempty"       valid:"optional"`
 	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
+	XfrmMTU              int                `yaml:"xfrmMTU"    valid:"optional,stringlength(1|10)"`
 }
 
 type Logger struct {

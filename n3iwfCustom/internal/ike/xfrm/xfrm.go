@@ -402,6 +402,11 @@ func SetupIPsecXfrmi(xfrmIfaceName, parentIfaceName string, xfrmIfaceId uint32,
 		return nil, fmt.Errorf("Cannot find parent interface %s by name: %+v", parentIfaceName, err)
 	}
 
+	//Aggiungo di test MTU hardcoded 1380
+	if err = netlink.LinkSetMTU(parent, 1380); err != nil {
+		return nil, fmt.Errorf("Cannot set MTU %d to parent interface %s: %+v", 1380, parentIfaceName, err)
+	}
+
 	// ip link add <xfrmIfaceName> type xfrm dev <parent.Attrs().Name> if_id <xfrmIfaceId>
 	link := &netlink.Xfrmi{
 		LinkAttrs: netlink.LinkAttrs{
