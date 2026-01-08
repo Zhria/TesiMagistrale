@@ -164,7 +164,7 @@ type Configuration struct {
 	LivenessCheck        *TimerValue        `yaml:"livenessCheck"        valid:"required"`
 	Wifi                 *Wifi              `yaml:"wifi,omitempty"       valid:"optional"`
 	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
-	XfrmMTU              int                `yaml:"xfrmMTU"    valid:"optional,stringlength(1|10)"`
+	XfrmMTU              int                `yaml:"xfrmMTU,omitempty"    valid:"optional"`
 }
 
 type Logger struct {
@@ -425,6 +425,18 @@ func (c *Config) GetXfrmIfaceId() uint32 {
 		return c.Configuration.XfrmIfaceId
 	}
 	return N3iwfDefaultXfrmIfaceId
+}
+
+func (c *Config) GetXfrmMTU() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil {
+		return 0
+	}
+	if c.Configuration.XfrmMTU > 0 {
+		return c.Configuration.XfrmMTU
+	}
+	return 0
 }
 
 func (c *Config) GetLivenessCheck() TimerValue {

@@ -590,7 +590,7 @@ func ensureXfrmi(
 	ipsecAddrAndSubnet := net.IPNet{IP: ipsecGw, Mask: n3iwfCtx.IPSecInnerIPPool.IPSubnet.Mask}
 	name := fmt.Sprintf("%s-%d", cfg.GetXfrmIfaceName(), ifid)
 
-	link, err := xfrm.SetupIPsecXfrmi(name, n3iwfCtx.XfrmParentIfaceName, ifid, ipsecAddrAndSubnet)
+	link, err := xfrm.SetupIPsecXfrmi(name, n3iwfCtx.XfrmParentIfaceName, ifid, ipsecAddrAndSubnet, cfg.GetXfrmMTU())
 	if err != nil {
 		return err
 	}

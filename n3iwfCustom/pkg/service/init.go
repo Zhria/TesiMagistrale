@@ -248,7 +248,7 @@ func (a *N3iwfApp) initDefaultXfrmInterface() error {
 	newXfrmiName := fmt.Sprintf("%s-default", cfg.GetXfrmIfaceName())
 
 	if linkIPSec, err = xfrm.SetupIPsecXfrmi(newXfrmiName, n3iwfCtx.XfrmParentIfaceName,
-		cfg.GetXfrmIfaceId(), n3iwfIPAddrAndSubnet); err != nil {
+		cfg.GetXfrmIfaceId(), n3iwfIPAddrAndSubnet, cfg.GetXfrmMTU()); err != nil {
 		mainLog.Errorf("Setup XFRM interface %s fail: %+v", newXfrmiName, err)
 		return err
 	}
