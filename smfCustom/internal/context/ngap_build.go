@@ -25,6 +25,61 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 
 	resourceSetupRequestTransfer := ngapType.PDUSessionResourceSetupRequestTransfer{}
 
+	var (
+		n3IP []byte
+		err  error
+	)
+
+	// Prefer selecting an UPF N3 endpoint that is reachable from the (target) AN,
+	// falling back to the legacy behavior (first configured endpoint).
+	anIP := ctx.TargetANIP
+	if anIP == nil {
+		anIP = ctx.Tunnel.ANInformation.IPAddress
+	}
+	if anIP != nil {
+		for _, iface := range UpNode.N3Interfaces {
+			if iface == nil {
+				continue
+			}
+			ip, ipErr := iface.SelectIPForAN(ctx.SelectedPDUSessionType, anIP)
+			if ipErr != nil {
+				continue
+			}
+			switch ctx.SelectedPDUSessionType {
+			case nasMessage.PDUSessionTypeIPv4, nasMessage.PDUSessionTypeIPv4IPv6:
+				if ip4 := net.IP(ip).To4(); ip4 != nil {
+					n3IP = ip4
+				}
+			case nasMessage.PDUSessionTypeIPv6:
+				if ip16 := net.IP(ip).To16(); ip16 != nil {
+					n3IP = ip16
+				}
+			default:
+				if ip4 := net.IP(ip).To4(); ip4 != nil {
+					n3IP = ip4
+				} else if ip16 := net.IP(ip).To16(); ip16 != nil {
+					n3IP = ip16
+				}
+			}
+			if n3IP != nil {
+				logger.PduSessLog.Infof(
+					"BuildPDUSessionResourceSetupRequestTransfer: selected UPF N3 IP=%s for AN=%s (endpoints=%v)",
+					net.IP(n3IP).String(), net.IP(anIP).String(), iface.IPv4EndPointAddresses,
+				)
+				break
+			}
+		}
+	}
+	if n3IP == nil {
+		if len(UpNode.N3Interfaces) == 0 || UpNode.N3Interfaces[0] == nil {
+			return nil, fmt.Errorf("no UPF N3 interface available")
+		}
+		n3IP, err = UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// PDU Session Aggregate Maximum Bit Rate
 	// This IE is Conditional and shall be present when at least one NonGBR QoS flow is being setup.
 	// TODO: should check if there is at least one NonGBR QoS flow
@@ -52,24 +107,20 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 	ie = ngapType.PDUSessionResourceSetupRequestTransferIEs{}
 	ie.Id.Value = ngapType.ProtocolIEIDULNGUUPTNLInformation
 	ie.Criticality.Value = ngapType.CriticalityPresentReject
-	if n3IP, err := UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType); err != nil {
-		return nil, err
-	} else {
-		ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
-			Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentULNGUUPTNLInformation,
-			ULNGUUPTNLInformation: &ngapType.UPTransportLayerInformation{
-				Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
-				GTPTunnel: &ngapType.GTPTunnel{
-					TransportLayerAddress: ngapType.TransportLayerAddress{
-						Value: aper.BitString{
-							Bytes:     n3IP,
-							BitLength: uint64(len(n3IP) * 8),
-						},
+	ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
+		Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentULNGUUPTNLInformation,
+		ULNGUUPTNLInformation: &ngapType.UPTransportLayerInformation{
+			Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+			GTPTunnel: &ngapType.GTPTunnel{
+				TransportLayerAddress: ngapType.TransportLayerAddress{
+					Value: aper.BitString{
+						Bytes:     n3IP,
+						BitLength: uint64(len(n3IP) * 8),
 					},
-					GTPTEID: ngapType.GTPTEID{Value: teidOct},
 				},
+				GTPTEID: ngapType.GTPTEID{Value: teidOct},
 			},
-		}
+		},
 	}
 
 	resourceSetupRequestTransfer.ProtocolIEs.List = append(resourceSetupRequestTransfer.ProtocolIEs.List, ie)
@@ -78,30 +129,26 @@ func BuildPDUSessionResourceSetupRequestTransfer(ctx *SMContext) ([]byte, error)
 	ie = ngapType.PDUSessionResourceSetupRequestTransferIEs{}
 	ie.Id.Value = ngapType.ProtocolIEIDAdditionalULNGUUPTNLInformation
 	ie.Criticality.Value = ngapType.CriticalityPresentIgnore
-	if n3IP, err := UpNode.N3Interfaces[0].IP(ctx.SelectedPDUSessionType); err != nil {
-		return nil, err
-	} else {
-		ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
-			Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentAdditionalULNGUUPTNLInformation,
-			AdditionalULNGUUPTNLInformation: &ngapType.UPTransportLayerInformationList{
-				List: []ngapType.UPTransportLayerInformationItem{
-					{
-						NGUUPTNLInformation: ngapType.UPTransportLayerInformation{
-							Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
-							GTPTunnel: &ngapType.GTPTunnel{
-								TransportLayerAddress: ngapType.TransportLayerAddress{
-									Value: aper.BitString{
-										Bytes:     n3IP,
-										BitLength: uint64(len(n3IP) * 8),
-									},
+	ie.Value = ngapType.PDUSessionResourceSetupRequestTransferIEsValue{
+		Present: ngapType.PDUSessionResourceSetupRequestTransferIEsPresentAdditionalULNGUUPTNLInformation,
+		AdditionalULNGUUPTNLInformation: &ngapType.UPTransportLayerInformationList{
+			List: []ngapType.UPTransportLayerInformationItem{
+				{
+					NGUUPTNLInformation: ngapType.UPTransportLayerInformation{
+						Present: ngapType.UPTransportLayerInformationPresentGTPTunnel,
+						GTPTunnel: &ngapType.GTPTunnel{
+							TransportLayerAddress: ngapType.TransportLayerAddress{
+								Value: aper.BitString{
+									Bytes:     n3IP,
+									BitLength: uint64(len(n3IP) * 8),
 								},
-								GTPTEID: ngapType.GTPTEID{Value: teidOctForSplitPDUSession},
 							},
+							GTPTEID: ngapType.GTPTEID{Value: teidOctForSplitPDUSession},
 						},
 					},
 				},
 			},
-		}
+		},
 	}
 	resourceSetupRequestTransfer.ProtocolIEs.List = append(resourceSetupRequestTransfer.ProtocolIEs.List, ie)
 

@@ -1001,6 +1001,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		}
 		smContext.TargetAccessType = ""
 		smContext.TargetRanNodeID = nil
+		smContext.TargetANIP = nil
 
 		anIP := "<nil>"
 		if tunnel.ANInformation.IPAddress != nil {
