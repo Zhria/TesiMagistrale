@@ -55,6 +55,11 @@ func (xfrmIntegrityAlgorithmType XFRMIntegrityAlgorithmType) String() string {
 	}
 }
 
+const (
+	// IPv4 ESP tunnel overhead without UDP encapsulation (NAT-T disabled).
+	ipsecOverheadNoNATT = 56
+)
+
 func ApplyXFRMRule(n3iwf_is_initiator bool, xfrmiId uint32,
 	childSecurityAssociation *context.ChildSecurityAssociation,
 ) error {
@@ -390,7 +395,7 @@ func xfrmPolicyAddOrUpdate(policy *netlink.XfrmPolicy) error {
 }
 
 func SetupIPsecXfrmi(xfrmIfaceName, parentIfaceName string, xfrmIfaceId uint32,
-	xfrmIfaceAddr net.IPNet,
+	xfrmIfaceAddr net.IPNet, xfrmIfaceMTU int,
 ) (netlink.Link, error) {
 	ikeLog := logger.IKELog
 	var (
@@ -421,6 +426,15 @@ func SetupIPsecXfrmi(xfrmIfaceName, parentIfaceName string, xfrmIfaceId uint32,
 
 	ikeLog.Debugf("XFRM interface %s index is %d", xfrmIfaceName, xfrmi.Attrs().Index)
 
+	if mtu, mtuErr := calcXfrmiMTU(parent.Attrs().MTU, xfrmIfaceMTU); mtuErr != nil {
+		ikeLog.Warnf("Skip MTU set on %s: %v", xfrmIfaceName, mtuErr)
+	} else if mtu > 0 {
+		if err := netlink.LinkSetMTU(xfrmi, mtu); err != nil {
+			return nil, fmt.Errorf("Cannot set MTU %d to XFRM interface %s: %+v", mtu, xfrmIfaceName, err)
+		}
+		ikeLog.Debugf("XFRM interface %s MTU set to %d (parent %s MTU %d)", xfrmIfaceName, mtu, parentIfaceName, parent.Attrs().MTU)
+	}
+
 	// ip addr add xfrmIfaceAddr dev <xfrmIfaceName>
 	linkIPSecAddr := &netlink.Addr{
 		IPNet: &xfrmIfaceAddr,
@@ -436,6 +450,16 @@ func SetupIPsecXfrmi(xfrmIfaceName, parentIfaceName string, xfrmIfaceId uint32,
 	}
 
 	return xfrmi, nil
+}
+
+func calcXfrmiMTU(parentMTU, configuredMTU int) (int, error) {
+	if configuredMTU > 0 {
+		return configuredMTU, nil
+	}
+	if parentMTU <= ipsecOverheadNoNATT {
+		return 0, fmt.Errorf("parent MTU %d too small for IPsec overhead %d", parentMTU, ipsecOverheadNoNATT)
+	}
+	return parentMTU - ipsecOverheadNoNATT, nil
 }
 
 func getTruncateLength(transformID uint16) int {

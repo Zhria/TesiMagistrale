@@ -1160,7 +1160,7 @@ func (s *Server) continueCreateChildSA(
 
 		linkIPSec, err = xfrm.SetupIPsecXfrmi(
 			newXfrmiName, n3iwfCtx.XfrmParentIfaceName,
-			newXfrmiId, n3iwfIPAddrAndSubnet)
+			newXfrmiId, n3iwfIPAddrAndSubnet, cfg.GetXfrmMTU())
 		if err != nil {
 			ikeLog.Errorf("Setup XFRM interface %s fail: %v", newXfrmiName, err)
 			return
