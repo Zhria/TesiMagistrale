@@ -2,6 +2,7 @@ package consumer
 
 import (
 	"fmt"
+	"net"
 	"net/url"
 	"strconv"
 	"strings"
@@ -20,6 +21,40 @@ import (
 )
 
 var n2sminfocon = "N2SmInfo"
+
+const hoPreparingN2SmInfoMagic = "SMFHO1"
+
+func wrapHoPreparingN2SmInfo(n2SmInfo []byte, targetAnIpHint string) []byte {
+	targetAnIpHint = strings.TrimSpace(targetAnIpHint)
+	if targetAnIpHint == "" || len(n2SmInfo) == 0 {
+		return n2SmInfo
+	}
+
+	ip := net.ParseIP(targetAnIpHint)
+	if ip == nil {
+		return n2SmInfo
+	}
+
+	var ipBytes []byte
+	if ip4 := ip.To4(); ip4 != nil {
+		ipBytes = ip4
+	} else if ip16 := ip.To16(); ip16 != nil {
+		ipBytes = ip16
+	} else {
+		return n2SmInfo
+	}
+
+	if len(ipBytes) != net.IPv4len && len(ipBytes) != net.IPv6len {
+		return n2SmInfo
+	}
+
+	wrapped := make([]byte, 0, len(hoPreparingN2SmInfoMagic)+1+len(ipBytes)+len(n2SmInfo))
+	wrapped = append(wrapped, hoPreparingN2SmInfoMagic...)
+	wrapped = append(wrapped, byte(len(ipBytes)))
+	wrapped = append(wrapped, ipBytes...)
+	wrapped = append(wrapped, n2SmInfo...)
+	return wrapped
+}
 
 type nsmfService struct {
 	consumer *Consumer
@@ -357,9 +392,15 @@ func (s *nsmfService) SendUpdateSmContextN2HandoverPreparing(
 	ue *amf_context.AmfUe,
 	smContext *amf_context.SmContext,
 	n2SmType models.N2SmInfoType,
-	n2SmInfo []byte, amfid string, targetId *models.NgRanTargetId) (
+	n2SmInfo []byte,
+	amfid string,
+	targetId *models.NgRanTargetId,
+	targetAnIpHint string,
+) (
 	*models.UpdateSmContextResponse200, *models.UpdateSmContextResponse400, *models.ProblemDetails, error,
 ) {
+	n2SmInfo = wrapHoPreparingN2SmInfo(n2SmInfo, targetAnIpHint)
+
 	updateData := models.SmfPduSessionSmContextUpdateData{}
 	if n2SmType != "" {
 		updateData.N2SmInfoType = n2SmType

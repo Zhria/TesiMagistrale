@@ -13,6 +13,38 @@ import (
 	"github.com/free5gc/smf/internal/logger"
 )
 
+const hoPreparingN2SmInfoMagic = "SMFHO1"
+
+func unwrapHoPreparingN2SmInfo(b []byte) (inner []byte, targetAnIP net.IP, wrapped bool, err error) {
+	magicLen := len(hoPreparingN2SmInfoMagic)
+	if len(b) < magicLen+1 {
+		return b, nil, false, nil
+	}
+	if string(b[:magicLen]) != hoPreparingN2SmInfoMagic {
+		return b, nil, false, nil
+	}
+	ipLen := int(b[magicLen])
+	if ipLen != 0 && ipLen != net.IPv4len && ipLen != net.IPv6len {
+		return nil, nil, true, fmt.Errorf("invalid HoState_PREPARING hint ipLen=%d", ipLen)
+	}
+	if len(b) < magicLen+1+ipLen {
+		return nil, nil, true, fmt.Errorf("invalid HoState_PREPARING hint length (need %d bytes, got %d)",
+			magicLen+1+ipLen, len(b))
+	}
+
+	ipBytes := b[magicLen+1 : magicLen+1+ipLen]
+	inner = b[magicLen+1+ipLen:]
+	if len(inner) == 0 {
+		return nil, nil, true, fmt.Errorf("invalid HoState_PREPARING hint: missing inner n2SmInfo")
+	}
+
+	if ipLen != 0 {
+		targetAnIP = make(net.IP, ipLen)
+		copy(targetAnIP, ipBytes)
+	}
+	return inner, targetAnIP, true, nil
+}
+
 func strNgapCause(cause *ngapType.Cause) string {
 	ret := ""
 	switch cause.Present {
@@ -299,6 +331,17 @@ func targetAccessType(target *models.NgRanTargetId) models.AccessType {
 
 func HandleHandoverRequiredTransfer(b []byte, ctx *SMContext, updateData *models.SmfPduSessionSmContextUpdateData) error {
 	handoverRequiredTransfer := ngapType.HandoverRequiredTransfer{}
+
+	ctx.TargetANIP = nil
+	if inner, hintIP, wrapped, unwrapErr := unwrapHoPreparingN2SmInfo(b); unwrapErr != nil {
+		return unwrapErr
+	} else if wrapped {
+		b = inner
+		if hintIP != nil {
+			ctx.TargetANIP = hintIP
+			logger.PduSessLog.Infof("HandleHandoverRequiredTransfer: target AN IP hint=%s", hintIP.String())
+		}
+	}
 
 	err := aper.UnmarshalWithParams(b, &handoverRequiredTransfer, "valueExt")
 

@@ -4222,6 +4222,10 @@ func (s *Server) HandleHandoverCommand(
 		sendTargetToSourceToUE(shared)
 	}
 
+	if ranUe != nil {
+		rc.NotifyHandoverResult(ranUe.GetSharedCtx().RanUeNgapId, "handover_command_sent", nil)
+	}
+
 	if ranUeNgapID != nil {
 		amfID := int64(0)
 		if amfUeNgapID != nil {

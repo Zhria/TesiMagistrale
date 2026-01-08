@@ -14,3 +14,6 @@ n3iwf_e2logger/n3iwf_e2.json.kpm.log
 build/*
 e2sim/build/*
 .build/*
+.cache
+.gocache
+.gomodcache

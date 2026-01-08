@@ -3,7 +3,9 @@ package ngap
 import (
 	"encoding/hex"
 	"fmt"
+	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/free5gc/amf/internal/context"
@@ -25,6 +27,25 @@ import (
 	"github.com/free5gc/util/metrics/ngap"
 	"github.com/free5gc/util/metrics/utils"
 )
+
+func extractIPv4FromRanAddr(addr string) string {
+	for _, part := range strings.Split(addr, "/") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		host := part
+		if h, _, err := net.SplitHostPort(part); err == nil {
+			host = h
+		}
+		if ip := net.ParseIP(host); ip != nil {
+			if ip4 := ip.To4(); ip4 != nil {
+				return ip4.String()
+			}
+		}
+	}
+	return ""
+}
 
 func handleNGSetupRequestMain(ran *context.AmfRan,
 	globalRANNodeID *ngapType.GlobalRANNodeID,
@@ -1680,6 +1701,13 @@ func handleHandoverRequiredMain(ran *context.AmfRan,
 			Tai:       targetTai,
 		}
 
+		targetAnIpHint := ""
+		if targetRan != nil && targetRan.Conn != nil {
+			if addr := targetRan.Conn.RemoteAddr(); addr != nil {
+				targetAnIpHint = extractIPv4FromRanAddr(addr.String())
+			}
+		}
+
 		var pduSessionReqList ngapType.PDUSessionResourceSetupListHOReq
 
 		if pDUSessionResourceListHORqd != nil {
@@ -1693,8 +1721,15 @@ func handleHandoverRequiredMain(ran *context.AmfRan,
 					continue
 				}
 
-				response, _, _, err := consumer.GetConsumer().SendUpdateSmContextN2HandoverPreparing(amfUe, smContext,
-					models.N2SmInfoType_HANDOVER_REQUIRED, pDUSessionResourceHoItem.HandoverRequiredTransfer, "", &targetId)
+				response, _, _, err := consumer.GetConsumer().SendUpdateSmContextN2HandoverPreparing(
+					amfUe,
+					smContext,
+					models.N2SmInfoType_HANDOVER_REQUIRED,
+					pDUSessionResourceHoItem.HandoverRequiredTransfer,
+					"",
+					&targetId,
+					targetAnIpHint,
+				)
 				if err != nil {
 					sourceUe.Log.Errorf("consumer.GetConsumer().SendUpdateSmContextN2HandoverPreparing Error: %+v", err)
 				}

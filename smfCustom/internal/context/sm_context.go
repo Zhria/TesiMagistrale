@@ -135,6 +135,7 @@ type SMContext struct {
 	// Target handover info
 	TargetAccessType models.AccessType
 	TargetRanNodeID  *models.GlobalRanNodeId
+	TargetANIP       net.IP
 
 	SelectionParam         *UPFSelectionParams
 	PDUAddress             net.IP
