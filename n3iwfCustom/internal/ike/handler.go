@@ -1292,9 +1292,9 @@ func (s *Server) HandleInformational(
 						if !shared.HandoverNotifySent {
 							s.SendNgapEvt(n3iwf_context.NewSendHandoverNotifyEvt(ranNgapId))
 						}
-						if !shared.PathSwitchSent {
-							s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
-						}
+						//if !shared.PathSwitchSent {
+						//	s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
+						//}
 					}
 				}
 			}
