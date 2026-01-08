@@ -238,7 +238,7 @@ func (s *Server) forwardUL(ueInnerIP string, ifIndex int, rawData []byte, wg *sy
 			nwuupLog.Errorf("forwardUL err: %+v", err)
 			return
 		}
-		gtpPacket, err := gtpQoSMsg.BuildQoSGTPPacket(gtpConnection.OutgoingTEID, qfi, payload)
+		gtpPacket, err := gtpQoSMsg.BuildQoSGTPPacket(gtpConnection.OutgoingTEID, qfi, grePacket.GetRQI(), payload)
 		if err != nil {
 			nwuupLog.Errorf("buildQoSGTPPacket err: %+v", err)
 			return
