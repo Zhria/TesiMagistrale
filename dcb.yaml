@@ -9,8 +9,8 @@ services:
     ports:
       - "2152:2152/udp"
       - "8805:8805/udp"
-      - "5201:5201"
-      - "5201:5201/udp"
+      - "5202:5201"
+      - "5202:5201/udp"
     volumes:
       - ./config/upfcfg.yaml:/free5gc/config/upfcfg.yaml
       - ./config/upf-iptables.sh:/free5gc/upf-iptables.sh
