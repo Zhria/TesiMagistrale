@@ -16,5 +16,11 @@ RUN chmod +x n3iwf
 
 FROM alpine:3.19
 
+RUN apk add --no-cache ethtool
+
+COPY n3iwfCustom/entrypoint-disable-offloads.sh /usr/local/bin/n3iwf-entrypoint
+RUN chmod +x /usr/local/bin/n3iwf-entrypoint
+
 COPY --from=builder /app/ ./free5gc/n3iwf
 
+ENTRYPOINT ["/usr/local/bin/n3iwf-entrypoint"]

@@ -9,7 +9,7 @@ ENV F5GC_MODULE=n3iwf
 #ARG DEBUG_TOOLS
 RUN apk update
 # Install debug tools ~ 100MB
-RUN apk add --no-cache vim strace net-tools curl netcat-openbsd
+RUN apk add --no-cache vim strace net-tools curl netcat-openbsd iptables ethtool
 
 # Install N3IWF dependencies
 RUN apk add --no-cache iproute2 util-linux
