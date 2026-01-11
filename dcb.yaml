@@ -255,11 +255,9 @@ services:
 
     environment:
       GIN_MODE: release
+      GOMAXPROCS: 1
     cap_add:
       - NET_ADMIN
-    ports:
-      - "5202:5201"
-      - "5202:5201/udp"
 
     networks:
       privnet:
