@@ -428,7 +428,14 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	grePacket := gre.GREPacket{}
 
 	// TODO:[24.502(v15.7) 9.3.3 ] The Protocol Type field should be set to zero
-	grePacket.SetPayload(packet.GetPayload(), gre.IPv4)
+	payload := packet.GetPayload()
+	if maxMSS, ok := s.maxSafeTCPMSS(); ok {
+		if changed, oldMSS := clampIPv4TCPSYNMSS(payload, maxMSS); changed {
+			nwuupLog.Warnf("Clamped DL TCP MSS %d -> %d (TEID=%d)", oldMSS, maxMSS, pktTEID)
+		}
+	}
+
+	grePacket.SetPayload(payload, gre.IPv4)
 	grePacket.SetQoS(qfi, rqi)
 	forwardData := grePacket.Marshal()
 	qoSFlow := pdusession.QosFlows[int64(qfi)]
