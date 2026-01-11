@@ -34,6 +34,7 @@ type Server struct {
 	greConn  *ipv4.PacketConn
 	gtpuConn *gtpv1.UPlaneConn
 	dlCh     chan dlReorderItem
+	ulCh     chan ulForwardItem
 	log      *logrus.Entry
 }
 
@@ -64,6 +65,10 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	if err != nil {
 		return err
 	}
+
+	s.ulCh = make(chan ulForwardItem, ulForwardQueueLen)
+	wg.Add(1)
+	go s.ulListenAndServe(wg)
 
 	s.dlCh = make(chan dlReorderItem, dlReorderQueueLen)
 	wg.Add(1)
@@ -158,8 +163,11 @@ func (s *Server) greListenAndServe(wg *sync.WaitGroup) {
 		forwardData := make([]byte, n)
 		copy(forwardData, buf)
 
-		wg.Add(1)
-		go s.forwardUL(src.String(), cm.IfIndex, forwardData, wg)
+		select {
+		case s.ulCh <- ulForwardItem{ueInnerIP: src.String(), ifIndex: cm.IfIndex, rawData: forwardData}:
+		default:
+			s.dropUL(nwuupLog, src.String(), cm.IfIndex, n)
+		}
 	}
 }
 
@@ -181,14 +189,13 @@ func (s *Server) gtpuListenAndServe(wg *sync.WaitGroup) {
 
 // forward forwards user plane packets from NWu to UPF
 // with GTP header encapsulated
-func (s *Server) forwardUL(ueInnerIP string, ifIndex int, rawData []byte, wg *sync.WaitGroup) {
+func (s *Server) forwardUL(ueInnerIP string, ifIndex int, rawData []byte) {
 	nwuupLog := s.log
 	defer func() {
 		if p := recover(); p != nil {
 			// Print stack for panic to log. Fatalf() will let program exit.
 			nwuupLog.Fatalf("panic: %v\n%s", p, string(debug.Stack()))
 		}
-		wg.Done()
 	}()
 
 	// Find UE information
