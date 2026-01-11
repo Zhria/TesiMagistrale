@@ -36,6 +36,12 @@ type Server struct {
 	log      *logrus.Entry
 }
 
+const (
+	// Default socket buffer used for the raw GRE socket. This helps avoid ENOBUFS
+	// ("no buffer space available") when forwarding high-rate downlink traffic to UE.
+	greSocketBufferBytes = 4 * 1024 * 1024
+)
+
 func NewServer(n3iwf n3iwf) (*Server, error) {
 	s := &Server{
 		n3iwf: n3iwf,
@@ -75,6 +81,17 @@ func (s *Server) newGreConn() error {
 	connection, err := net.ListenPacket("ip4:gre", listenAddr)
 	if err != nil {
 		return errors.Wrapf(err, "Error setting GRE listen socket on %s", listenAddr)
+	}
+	if bufConn, ok := connection.(interface {
+		SetReadBuffer(bytes int) error
+		SetWriteBuffer(bytes int) error
+	}); ok {
+		if err := bufConn.SetReadBuffer(greSocketBufferBytes); err != nil {
+			s.log.Warnf("Unable to set GRE socket read buffer: %v", err)
+		}
+		if err := bufConn.SetWriteBuffer(greSocketBufferBytes); err != nil {
+			s.log.Warnf("Unable to set GRE socket write buffer: %v", err)
+		}
 	}
 	s.greConn = ipv4.NewPacketConn(connection)
 	if s.greConn == nil {
