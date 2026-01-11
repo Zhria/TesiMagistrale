@@ -6,9 +6,9 @@ import (
 	"runtime/debug"
 	"sync"
 
+	"github.com/free5gc/ngap/ngapType"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/free5gc/ngap/ngapType"
 	"github.com/wmnsk/go-gtp/gtpv1"
 	gtpMsg "github.com/wmnsk/go-gtp/gtpv1/message"
 	"golang.org/x/net/ipv4"
@@ -33,6 +33,7 @@ type Server struct {
 
 	greConn  *ipv4.PacketConn
 	gtpuConn *gtpv1.UPlaneConn
+	dlCh     chan dlReorderItem
 	log      *logrus.Entry
 }
 
@@ -63,6 +64,10 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	if err != nil {
 		return err
 	}
+
+	s.dlCh = make(chan dlReorderItem, dlReorderQueueLen)
+	wg.Add(1)
+	go s.dlListenAndServe(wg)
 
 	wg.Add(1)
 	go s.greListenAndServe(wg)
@@ -297,13 +302,34 @@ func (s *Server) Stop() {
 
 // Parse the fields not supported by go-gtp and forward data to UE.
 func (s *Server) handleQoSTPDU(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.Message) error {
+	tpdu, ok := msg.(*gtpMsg.TPDU)
+	if !ok {
+		return errors.Errorf("unexpected message type %T (want *gtpv1/message.TPDU)", msg)
+	}
+
 	pdu := gtpQoSMsg.QoSTPDUPacket{}
-	err := pdu.Unmarshal(msg.(*gtpMsg.TPDU))
+	err := pdu.Unmarshal(tpdu)
 	if err != nil {
 		return err
 	}
 
-	s.forwardDL(pdu)
+	if s.dlCh == nil {
+		s.forwardDL(pdu)
+		return nil
+	}
+
+	item := dlReorderItem{
+		teid:   pdu.GetTEID(),
+		seq:    tpdu.Sequence(),
+		hasSeq: tpdu.HasSequence(),
+		packet: pdu,
+	}
+
+	select {
+	case s.dlCh <- item:
+	default:
+		s.log.Warnf("Downlink reorder queue full; dropping TEID=%d seq=%d", item.teid, item.seq)
+	}
 	return nil
 }
 

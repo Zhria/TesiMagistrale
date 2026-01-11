@@ -18,4 +18,3 @@ FROM alpine:3.19
 
 COPY --from=builder /app/ ./free5gc/n3iwf
 
-

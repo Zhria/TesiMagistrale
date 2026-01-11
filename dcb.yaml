@@ -255,7 +255,6 @@ services:
 
     environment:
       GIN_MODE: release
-      GOMAXPROCS: 1
     cap_add:
       - NET_ADMIN
 
