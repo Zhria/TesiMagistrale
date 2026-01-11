@@ -80,11 +80,18 @@ func (p *QoSTPDUPacket) unmarshalExtensionHeader() error {
 	return nil
 }
 
-func BuildQoSGTPPacket(teid uint32, qfi uint8, payload []byte) ([]byte, error) {
+func BuildQoSGTPPacket(teid uint32, qfi uint8, rqi bool, payload []byte) ([]byte, error) {
+	qfi &= 0x3F
+	secondOctet := qfi
+	if rqi {
+		secondOctet |= 0x40
+	}
+	// PDU Session Container is 4 bytes: type, QFI/RQI, and two spare bytes.
+	extContent := []byte{UL_PDU_SESSION_INFORMATION_TYPE, secondOctet, 0x00, 0x00}
 	header := gtpMsg.NewHeader(0x34, gtpMsg.MsgTypeTPDU, teid, 0x00, payload).WithExtensionHeaders(
 		gtpMsg.NewExtensionHeader(
 			gtpMsg.ExtHeaderTypePDUSessionContainer,
-			[]byte{UL_PDU_SESSION_INFORMATION_TYPE, qfi},
+			extContent,
 			gtpMsg.ExtHeaderTypeNoMoreExtensionHeaders,
 		),
 	)
