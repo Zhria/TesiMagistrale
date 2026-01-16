@@ -116,8 +116,8 @@ void generate_e2apv2_service_update(E2AP_PDU_t *e2ap_pdu)
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
-  logln("er encoded is %ld\n", er.encoded);
-  logln("after encoding message\n");
+  LOG_D("er encoded is %ld\n", er.encoded);
+  LOG_D("after encoding message\n");
 
   OCTET_STRING_t *ranfuncdesc_str = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   ranfuncdesc_str->buf = (uint8_t *)calloc(1, er.encoded);
@@ -163,7 +163,7 @@ long get_function_id_from_subscription(E2AP_PDU_t *e2ap_pdu)
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
-  logln("[GetFunctionIDFromSubscription] count %d\n", count);
+  LOG_D("[GetFunctionIDFromSubscription] count %d\n", count);
 
   RICsubscriptionRequest_IEs__value_PR pres;
   long func_id = -1;
@@ -221,13 +221,13 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
   e2gnb->gNB_CU_UP_ID = (GNB_CU_UP_ID_t *)calloc(1, sizeof(*e2gnb->gNB_CU_UP_ID));
   if (asn_long2INTEGER(e2gnb->gNB_CU_UP_ID, CU_UP_ID) != 0)
   {
-    logln("asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
+    LOG_D("asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
 
   e2gnb->gNB_DU_ID = (GNB_DU_ID_t *)calloc(1, sizeof(*e2gnb->gNB_DU_ID));
   if (asn_long2INTEGER(e2gnb->gNB_DU_ID, DU_ID) != 0)
   {
-    logln("asn_long2INTEGER(gNB_DU_ID) failed\n");
+    LOG_D("asn_long2INTEGER(gNB_DU_ID) failed\n");
   }
 
   GlobalE2node_ID_t *globale2nodeid = (GlobalE2node_ID_t *)calloc(1, sizeof(*globale2nodeid));
@@ -306,7 +306,7 @@ void generate_e2apv2_setup_request_parameterized(E2AP_PDU_t *e2ap_pdu,
       (E2nodeComponentInterfaceE1_t *)calloc(1, sizeof(*e1));
   if (asn_long2INTEGER(&e1->gNB_CU_UP_ID, 1) != 0)
   {
-    logln("asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
+    LOG_D("asn_long2INTEGER(gNB_CU_UP_ID) failed\n");
   }
   compId->choice.e2nodeComponentInterfaceTypeE1 = e1;
 
@@ -407,8 +407,8 @@ void generate_e2apv2_setup_request(E2AP_PDU_t *e2ap_pdu)
                            &asn_DEF_E2SM_KPM_RANfunction_Description,
                            ranfunc_desc, e2smbuffer, e2smbuffer_size);
 
-  logln("er encoded is %ld\n", er.encoded);
-  logln("after encoding message\n");
+  LOG_D("er encoded is %ld\n", er.encoded);
+  LOG_D("after encoding message\n");
 
   OCTET_STRING_t *ranfuncdesc_str = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   ranfuncdesc_str->buf = (uint8_t *)calloc(1, er.encoded);
@@ -748,8 +748,8 @@ void generate_e2apv2_indication_request_parameterized(E2AP_PDU *e2ap_pdu,
   size_t errlen;
   if (asn_check_constraints(&asn_DEF_E2AP_PDU, e2ap_pdu, errbuf, &errlen)==-1)
   {
-    logln("constraints: %s\n", errbuf);
-    logln("constraints errlen=%zu\n", errlen);
+    LOG_D("constraints: %s\n", errbuf);
+    LOG_D("constraints errlen=%zu\n", errlen);
   }
 }
 

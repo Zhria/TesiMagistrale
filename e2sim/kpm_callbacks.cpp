@@ -94,7 +94,7 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
 
   if (dr.code != RC_OK || !decoded)
   {
-    logln("KPM self-decode failed (code=%d, consumed=%zu)", dr.code, dr.consumed);
+    LOG_D("KPM self-decode failed (code=%d, consumed=%zu)", dr.code, dr.consumed);
     if (decoded)
     {
       ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, decoded);
@@ -110,7 +110,7 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
     auto *fmt3 = decoded->indicationMessage_formats.choice.indicationMessage_Format3;
     if (!fmt3 || fmt3->ueMeasReportList.list.count == 0)
     {
-      logln("KPM self-decode: Format3 with empty ueMeasReportList");
+      LOG_D("KPM self-decode: Format3 with empty ueMeasReportList");
       ok = false;
     }
     else
@@ -126,14 +126,14 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
         E2SM_KPM_IndicationMessage_Format1_t &f1 = item->measReport;
         if (f1.measData.list.count == 0)
         {
-          logln("KPM self-decode: UE[%d] has empty measData", i);
+          LOG_D("KPM self-decode: UE[%d] has empty measData", i);
           ok = false;
           break;
         }
         MeasurementDataItem_t *mdi = f1.measData.list.array[0];
         if (!mdi || mdi->measRecord.list.count == 0)
         {
-          logln("KPM self-decode: UE[%d] has empty measRecord", i);
+          LOG_D("KPM self-decode: UE[%d] has empty measRecord", i);
           ok = false;
           break;
         }
@@ -141,7 +141,7 @@ static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
     }
   }
 
-  logln("KPM IndicationMessage XER dump");
+  LOG_D("KPM IndicationMessage XER dump");
   xer_fprint(stdout, &asn_DEF_E2SM_KPM_IndicationMessage, decoded);
 
   ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, decoded);
@@ -245,14 +245,14 @@ void stop_kpm_subscription(long requestorId, long instanceId, long ranFunctionId
 
   if (keys_to_stop.empty())
   {
-    logln("KPM subscription delete: no active worker for req=%ld inst=%ld ranFunc=%ld",
+    LOG_D("KPM subscription delete: no active worker for req=%ld inst=%ld ranFunc=%ld",
           requestorId, instanceId, ranFunctionId);
     return;
   }
 
   for (const auto &key : keys_to_stop)
   {
-    logln("KPM subscription delete: stopping worker req=%ld inst=%ld ranFunc=%ld action=%ld",
+    LOG_D("KPM subscription delete: stopping worker req=%ld inst=%ld ranFunc=%ld action=%ld",
           key.requestorId, key.instanceId, key.ranFunctionId, key.actionId);
     stop_kpm_worker(key);
   }
@@ -291,7 +291,7 @@ static void on_term(int)
   // libera risorse (ASN.1, heap, thread join, ecc.)
   // cleanup_asn1();
   // join_threads();
-  logln("E2 Simulator exiting cleanly\n");
+  LOG_D("E2 Simulator exiting cleanly\n");
   _exit(0); // uscita rapida dopo cleanup
 }
 /* ============================================================
@@ -301,8 +301,20 @@ int main(int argc, char *argv[])
 {
   // pausa per permettere al n3iwf di avviarsi e iniziare a loggare
   std::this_thread::sleep_for(std::chrono::seconds(5));
-  logln("Starting E2 Simulator with KPM Callbacks (KPM v3)\n");
-  clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio
+  clock_gettime(CLOCK_REALTIME, &ts); // Inizializza ts all'avvio (prima di qualsiasi logln)
+
+  const char *config_path = nullptr;
+  for (int i = 1; i < argc; ++i)
+  {
+    if (std::strcmp(argv[i], "-c") == 0 && i + 1 < argc)
+    {
+      config_path = argv[i + 1];
+      break;
+    }
+  }
+  logln_init_from_yaml(config_path);
+
+  LOG_D("Starting E2 Simulator with KPM Callbacks (KPM v3)\n");
 
   struct sigaction sa{};
   sa.sa_handler = on_term;
@@ -341,7 +353,7 @@ static void log_kpm_parameters(const std::map<std::string, double> &kpi)
     line.push_back('=');
     line.append(std::to_string(entry.second));
   }
-  logln("KPM report parameters: %s", line.c_str());
+  LOG_D("KPM report parameters: %s", line.c_str());
 }
 
 /* ============================================================
@@ -368,7 +380,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
     if (assocs.empty())
     {
-      logln("KPM report loop: no RC associations available, skipping seqNum %ld", seqNum);
+      LOG_D("KPM report loop: no RC associations available, skipping seqNum %ld", seqNum);
       continue;
     }
 
@@ -376,7 +388,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
         getMetricsKPMByRanUeId(assocs, granularityPeriod);
     if (kpi_by_ue.empty())
     {
-      logln("KPM report loop: no per-UE KPI metrics available, skipping seqNum %ld", seqNum);
+      LOG_D("KPM report loop: no per-UE KPI metrics available, skipping seqNum %ld", seqNum);
       continue;
     }
     E2SM_KPM_IndicationHeader_t hdr;
@@ -388,8 +400,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
         &hdr, hdr_buf, sizeof(hdr_buf));
     if (ehr.encoded < 0)
     {
-      logln("hdr enc failed\n"); /* handle */
-      logln("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
+      LOG_D("hdr enc failed\n"); /* handle */
+      LOG_D("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
       continue;
     }
 
@@ -399,7 +411,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     kpm_fill_ind_msg_format3(ind_msg, assocs, kpi_by_ue);
     if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format3)
     {
-      logln("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
+      LOG_D("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
       continue;
     }
 
@@ -409,14 +421,14 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
                                               ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
-      logln("msg enc failed\n"); /* handle */
-      logln("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
+      LOG_D("msg enc failed\n"); /* handle */
+      LOG_D("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
       continue;
     }
 
     if (!kpm_self_decode_check(msg_buf, (size_t)emr.encoded))
     {
-      logln("KPM self-decode check failed, skipping seqNum %ld", seqNum);
+      LOG_D("KPM self-decode check failed, skipping seqNum %ld", seqNum);
       ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
       continue;
@@ -425,7 +437,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     E2AP_PDU *pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
     if (pdu == NULL)
     {
-      logln("calloc failed for pdu\n");
+      LOG_D("calloc failed for pdu\n");
       continue;
     }
 
@@ -438,7 +450,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
-    logln("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld", requestorId, instanceId, ranFunctionId, actionId, seqNum);
+    LOG_D("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld", requestorId, instanceId, ranFunctionId, actionId, seqNum);
 
     seqNum++;
   }
@@ -468,11 +480,11 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 {
   if (!act_def || !act_def->buf || act_def->size == 0)
   {
-    logln("[KPM SUB] ActionDefinition missing or empty");
+    LOG_D("[KPM SUB] ActionDefinition missing or empty");
     return false;
   }
 
-  logln("[KPM SUB] Decoding ActionDefinition, size=%ld bytes", (long)act_def->size);
+  LOG_D("[KPM SUB] Decoding ActionDefinition, size=%ld bytes", (long)act_def->size);
 
   E2SM_KPM_ActionDefinition_t *ad = nullptr;
   asn_dec_rval_t dr = aper_decode(
@@ -484,11 +496,11 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 
   if (dr.code != RC_OK || !ad)
   {
-    logln("[KPM SUB] ActionDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
+    LOG_D("[KPM SUB] ActionDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
     return false;
   }
 
-  logln("[KPM SUB] ActionDefinition decoded: present=%d", ad->actionDefinition_formats.present);
+  LOG_D("[KPM SUB] ActionDefinition decoded: present=%d", ad->actionDefinition_formats.present);
 
   E2SM_KPM_ActionDefinition_Format1_t *f1 = nullptr;
   GranularityPeriod_t gp = 0;
@@ -502,7 +514,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     {
       matchingConditions = f4->matchingUeCondList;
       f1 = &f4->subscriptionInfo;
-      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
+      LOG_D("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format4");
       gp = f1->granulPeriod;
     }
   }
@@ -511,11 +523,11 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     E2SM_KPM_ActionDefinition_Format2_t *f2 = ad->actionDefinition_formats.choice.actionDefinition_Format2;
     if(f2){
       f1 = &f2->subscriptInfo;
-      logln("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format2");
+      LOG_D("[KPM SUB] Using subscriptionInfo (Format1) from ActionDefinition Format2");
       gp = f1->granulPeriod;
     }
 
-    // logln("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
+    // LOG_D("[KPM SUB] Unsupported ActionDefinition format: %d", ad->actionDefinition_formats.present);
     // ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_ActionDefinition, ad);
     // return false;
   }
@@ -529,7 +541,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
 
   //   if (item->testCondInfo.testType.present == TestCond_Type_PR_sNSSAI)
   //   {
-  //     logln("[KPM SUB] Found matching condition on sNSSAI");
+  //     LOG_D("[KPM SUB] Found matching condition on sNSSAI");
   //   }
   // }
 
@@ -558,7 +570,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
     }
   }
 
-  logln("[KPM SUB] Extracted %d measurement names, granularityPeriod=%ld",
+  LOG_D("[KPM SUB] Extracted %d measurement names, granularityPeriod=%ld",
         (int)out_meas.size(), (long)*granularityPeriod);
   return true;
 }
@@ -568,7 +580,7 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
  * ============================================================ */
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
-  logln("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
+  LOG_D("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
@@ -577,7 +589,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   RICsubscriptionRequest_IEs_t **ies =
       (RICsubscriptionRequest_IEs_t **)orig_req.protocolIEs.list.array;
 
-  logln("Processing Subscription Request...count %d\n", count);
+  LOG_D("Processing Subscription Request...count %d\n", count);
 
   RICsubscriptionRequest_IEs__value_PR pres;
 
@@ -615,7 +627,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       long ranFuncId = next_ie->value.choice.RANfunctionID;
       if (ranFuncId != 2) // KPM
       {
-        logln("Received Subscription Request for unsupported RANfunctionID %ld, ignoring\n", ranFuncId);
+        LOG_D("Received Subscription Request for unsupported RANfunctionID %ld, ignoring\n", ranFuncId);
         return;
       }
       break;
@@ -632,7 +644,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 
       if (dr.code != RC_OK || !ad)
       {
-        logln("[KPM SUB] TriggerDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
+        LOG_D("[KPM SUB] TriggerDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
         return;
       }
       if (ad->eventDefinition_formats.present == E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
@@ -641,7 +653,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         if (f1)
         {
           reportingPeriod = f1->reportingPeriod;
-          logln("[KPM SUB] Extracted reportingPeriod=%ld from EventTriggerDefinition Format1", (long)reportingPeriod);
+          LOG_D("[KPM SUB] Extracted reportingPeriod=%ld from EventTriggerDefinition Format1", (long)reportingPeriod);
         }
       }
 
@@ -657,12 +669,12 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         RICactionType_t actionType =
             next_item->value.choice.RICaction_ToBeSetup_Item.ricActionType;
 
-        logln("[KPM SUB] Found RICaction: id=%ld type=%ld (0=report)", (long)actionId, (long)actionType);
+        LOG_D("[KPM SUB] Found RICaction: id=%ld type=%ld (0=report)", (long)actionId, (long)actionType);
 
         // Consideriamo solo REPORT (coerente con KPM)
         if (actionType != RICactionType_report)
         {
-          logln("[KPM SUB] Action %ld rejected: type %ld is not REPORT", (long)actionId, (long)actionType);
+          LOG_D("[KPM SUB] Action %ld rejected: type %ld is not REPORT", (long)actionId, (long)actionType);
           any_metric_not_allowed = true;
           rejectedActions.push_back(actionId);
           continue;
@@ -671,32 +683,32 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
         std::vector<std::string> meas_names;
         if (!extract_meas_names_from_kpm_actiondef(act_def, meas_names, &granularityPeriod))
         {
-          logln("[KPM SUB] Action %ld rejected: unable to extract measurement names from ActionDefinition", (long)actionId);
+          LOG_D("[KPM SUB] Action %ld rejected: unable to extract measurement names from ActionDefinition", (long)actionId);
           any_metric_not_allowed = true;
           rejectedActions.push_back(actionId);
           continue;
         }
 
-        logln("[KPM SUB] Action %ld has %d requested measurements", (long)actionId, (int)meas_names.size());
+        LOG_D("[KPM SUB] Action %ld has %d requested measurements", (long)actionId, (int)meas_names.size());
 
         for (auto &m : meas_names)
         {
           if (std::find(allowed_kpi.begin(), allowed_kpi.end(), m) == allowed_kpi.end())
           {
-            logln("[KPM SUB] Measurement '%s' not allowed by simulator, action %ld will be rejected", m.c_str(), (long)actionId);
+            LOG_D("[KPM SUB] Measurement '%s' not allowed by simulator, action %ld will be rejected", m.c_str(), (long)actionId);
             any_metric_not_allowed = true;
             rejectedActions.push_back(actionId);
           }
         }
         if (!any_metric_not_allowed)
         {
-          logln("[KPM SUB] Action %ld accepted", (long)actionId);
+          LOG_D("[KPM SUB] Action %ld accepted", (long)actionId);
           acceptedActions.push_back(actionId);
           reqActionId = actionId; // salva l'ultimo actionId accettato
         }
         else
         {
-          logln("[KPM SUB] any_metric_not_allowed already true, action %ld considered rejected", (long)actionId);
+          LOG_D("[KPM SUB] any_metric_not_allowed already true, action %ld considered rejected", (long)actionId);
         }
       }
       break;
@@ -706,15 +718,15 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     }
   }
 
-  logln("After Processing Subscription Request\n");
-  logln("requestorId %ld\n", reqRequestorId);
-  logln("instanceId %ld\n", reqInstanceId);
+  LOG_D("After Processing Subscription Request\n");
+  LOG_D("requestorId %ld\n", reqRequestorId);
+  LOG_D("instanceId %ld\n", reqInstanceId);
 
   // Costruisci e invia la Subscription Response (success)
   E2AP_PDU *e2ap_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
   if (e2ap_pdu == NULL)
   {
-    logln("calloc failed for e2ap_pdu\n");
+    LOG_D("calloc failed for e2ap_pdu\n");
     return;
   }
 
@@ -726,13 +738,13 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   // Se c'è almeno un azione rifiutata, rifiuto tutto
   if (any_metric_not_allowed)
   {
-    logln("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n", accept_size, reject_size);
+    LOG_D("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n", accept_size, reject_size);
     generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
     return;
   }
 
-  logln("All actions allowed, accepting subscription\n");
+  LOG_D("All actions allowed, accepting subscription\n");
   generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, 2);
   e2.encode_and_send_sctp_data(e2ap_pdu);
 
@@ -744,7 +756,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   }
   else
   {
-    logln("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
+    LOG_D("No valid action to start KPM worker (accepted=%d, actionId=%ld)\n", accept_size, reqActionId);
   }
 }
 
@@ -755,20 +767,20 @@ void registerKPMfunctionDefinition()
       (E2SM_KPM_RANfunction_Description_t *)calloc(1, sizeof(E2SM_KPM_RANfunction_Description_t));
   if (ranfunc_desc == NULL)
   {
-    logln("calloc failed for ranfunc_desc\n");
+    LOG_D("calloc failed for ranfunc_desc\n");
     return;
   }
 
   // Deve riempire i campi secondo KPM v3
   encode_kpm_function_description(ranfunc_desc);
-  logln("KPM RANfunction-Description XER dump:");
+  LOG_D("KPM RANfunction-Description XER dump:");
   xer_fprint(stdout, &asn_DEF_E2SM_KPM_RANfunction_Description, ranfunc_desc);
   // Codifica della RANfunction-Description
   const size_t e2smbuffer_size = 16384;
   uint8_t *e2smbuffer = (uint8_t *)calloc(1, e2smbuffer_size);
   if (e2smbuffer == NULL)
   {
-    logln("calloc failed for e2smbuffer\n");
+    LOG_D("calloc failed for e2smbuffer\n");
     return;
   }
 
@@ -779,7 +791,7 @@ void registerKPMfunctionDefinition()
 
   if (er.encoded < 0)
   {
-    logln("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
+    LOG_D("Encoding failed: %s\n", er.failed_type ? er.failed_type->name : "unknown");
     free(e2smbuffer);
     return;
   }
@@ -788,7 +800,7 @@ void registerKPMfunctionDefinition()
   OCTET_STRING_t *ranfunc_ostr = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
   if (ranfunc_ostr == NULL)
   {
-    logln("calloc failed for ranfunc_ostr\n");
+    LOG_D("calloc failed for ranfunc_ostr\n");
     free(e2smbuffer);
     return;
   }
@@ -796,7 +808,7 @@ void registerKPMfunctionDefinition()
   ranfunc_ostr->size = (er.encoded > 0) ? (size_t)er.encoded : 0;
   if (ranfunc_ostr->buf == NULL)
   {
-    logln("calloc failed for ranfunc_ostr->buf\n");
+    LOG_D("calloc failed for ranfunc_ostr->buf\n");
     free(ranfunc_ostr);
     free(e2smbuffer);
     return;
@@ -816,11 +828,11 @@ void registerKPMfunctionDefinition()
   asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_RANfunction_Description, (void **)&check, ranfunc_ostr->buf, ranfunc_ostr->size);
   if (dr.code != RC_OK)
   {
-    logln("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+    LOG_D("Self-test decode KPM FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
   }
   else
   {
-    logln("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
+    LOG_D("Self-test decode KPM OK (consumed=%zu)\n", dr.consumed);
   }
 
   // Non servono più questi buffer locali

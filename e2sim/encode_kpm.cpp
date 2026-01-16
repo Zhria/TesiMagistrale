@@ -61,7 +61,7 @@ static bool fill_ind_msg_format1_struct(E2SM_KPM_IndicationMessage_Format1_t &fm
   if (fmt1.measInfoList->list.count == 0 ||
       mdi->measRecord.list.count != fmt1.measInfoList->list.count)
   {
-    logln("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
+    LOG_D("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
     free(mdi);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1.measInfoList);

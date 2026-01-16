@@ -114,7 +114,7 @@ void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu, buffer, buffer_size);
   if(er.encoded < 0) {
-    logln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
+    LOG_D("E2AP PDU encoding failed: %s\n", er.failed_type->name);
     return;
   }
 
@@ -129,10 +129,10 @@ void E2Sim::encode_and_send_sctp_data(E2AP_PDU_t* pdu)
 
 int E2Sim::run_loop(int argc, char* argv[]){
 
-  logln("Start E2 Agent (E2 Simulator)");
+  LOG_D("Start E2 Agent (E2 Simulator)");
   GlobalgNB_ID_t *gnb = getGNBStore();
   if (gnb == NULL) {
-    logln( "GNB Store is NULL\n");
+    LOG_D( "GNB Store is NULL\n");
     return -1;
   }
   
@@ -155,13 +155,13 @@ int E2Sim::run_loop(int argc, char* argv[]){
     }
  
   //Generate E2AP PDU for E2 Setup Request
-  logln("About to generate E2AP PDU for E2 Setup Request\n");
-  logln("Number of RAN Functions: %zu\n", all_funcs.size());
+  LOG_D("About to generate E2AP PDU for E2 Setup Request\n");
+  LOG_D("Number of RAN Functions: %zu\n", all_funcs.size());
   generate_e2apv2_setup_request_parameterized(pdu_setup, all_funcs, ops.gNB_CU_UP_ID, ops.gNB_DU_ID);
 
-  logln("After generating e2setup req ----------------------------------------------------------\n");
+  LOG_D("After generating e2setup req ----------------------------------------------------------\n");
   xer_fprint(stderr, &asn_DEF_E2AP_PDU, pdu_setup);
-  logln("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
+  LOG_D("After XER (XML Encoding Rules) Encoding ------------------------------------------------\n");
 
   auto buffer_size = MAX_SCTP_BUFFER;
   unsigned char buffer[MAX_SCTP_BUFFER];
@@ -174,57 +174,57 @@ int E2Sim::run_loop(int argc, char* argv[]){
   int checkConstraintE2AP_PDU=asn_check_constraints(&asn_DEF_E2AP_PDU, pdu_setup, error_buf, &errlen);
   
   if (checkConstraintE2AP_PDU != 0) {
-    logln("E2AP PDU constraints check failed: %s\n", error_buf);
-    logln("error length %ld\n", errlen);
-    logln("error buf %s\n", error_buf);
+    LOG_D("E2AP PDU constraints check failed: %s\n", error_buf);
+    LOG_D("error length %ld\n", errlen);
+    LOG_D("error buf %s\n", error_buf);
     return -1;
   }
 
-  logln("ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
+  LOG_D("ASN ENCODE TO BUFFER IN ATS_ALIGNED_BASIC_PER\n");
   auto er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2AP_PDU, pdu_setup, buffer, buffer_size);
   if(er.encoded < 0) {
-    logln("E2AP PDU encoding failed: %s\n", er.failed_type->name);
+    LOG_D("E2AP PDU encoding failed: %s\n", er.failed_type->name);
     return -1;
   }
 
   data.len = er.encoded;
 
-  logln("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
+  LOG_D("ASN_ENCODE_TO_BUFFER encoded is %ld length\n",er.encoded);
 
   memcpy(data.buffer, buffer, er.encoded); 
   client_fd = sctp_start_client(ops.server_ip, ops.server_port, ops.local_ip);
 
   if(client_fd == -1) {
-    logln("[SCTP] Unable to start SCTP client\n");
+    LOG_D("[SCTP] Unable to start SCTP client\n");
     return -1;
   }
-  logln("client_fd SCTP START CLIENT value is %d\n", client_fd);
+  LOG_D("client_fd SCTP START CLIENT value is %d\n", client_fd);
 
 
   if(sctp_send_data(client_fd, data) > 0) {
-    logln("[SCTP] Sent E2-SETUP-REQUEST\n");
+    LOG_D("[SCTP] Sent E2-SETUP-REQUEST\n");
 
   } else {
-    logln("[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
+    LOG_D("[SCTP] Unable to send E2-SETUP-REQUEST to peer\n");
   }
 
   sctp_buffer_t recv_buf;
 
-  logln("[SCTP] Waiting for SCTP data");
+  LOG_D("[SCTP] Waiting for SCTP data");
 
   while(1) //constantly looking for data on SCTP interface
   {
     int r = sctp_receive_data(client_fd, recv_buf);
     if (r == SCTP_RECV_E2AP) {
-        logln("[SCTP] Received E2AP len=%d", recv_buf.len);
+        LOG_D("[SCTP] Received E2AP len=%d", recv_buf.len);
         e2ap_handle_sctp_data(client_fd, recv_buf, this);
         // continua a leggere: potrebbero arrivare altri messaggi
     } else if (r == SCTP_RECV_SKIP) {
         // è solo una notifica o payload non E2AP → continua ad aspettare
-        logln("[SCTP] Received SCTP_RECV_SKIP");
+        LOG_D("[SCTP] Received SCTP_RECV_SKIP");
         continue;
     } else { // SCTP_RECV_ERR
-        logln("[SCTP] Received SCTP_RECV_ERR");
+        LOG_D("[SCTP] Received SCTP_RECV_ERR");
         // errore o connessione chiusa
         break;
     }

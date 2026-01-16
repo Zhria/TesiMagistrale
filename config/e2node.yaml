@@ -4,6 +4,13 @@ info:
 
 configuration:
   e2NodeName: E2Node # the name of this E2Node
+  logging:
+    # Where e2node writes logs by default (docker volume: ./n3iwf_e2logger -> /home/e2sim/log).
+    file: "/home/e2sim/log/e2node.log"
+    # Logs at/above this level go to console. Supported: trace|debug|info|warn|error|fatal
+    consoleLevel: "warn"
+    # If false: logs >= consoleLevel go ONLY to console (not to file). If true: they are also appended to file.
+    teeHighToFile: false
   ricAddress: # the address of the RIC
     - 192.168.17.74 #192.168.17.125 # RIC address
   ricPort: 32222 #36422 #36412 # the port of the RIC

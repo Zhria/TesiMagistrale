@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 
+#include "logging.h"
 
 //Include std map
 #include <map>

@@ -2,6 +2,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <cstdarg>
+#include <cstdio>
+#include <filesystem>
+#include <mutex>
+#include <string>
 
 
 
@@ -32,24 +37,223 @@ extern "C" {
 extern struct timespec ts;
 #include "n3iwf_utils.hpp"
 #include <map>
+#include <yaml-cpp/yaml.h>
+
+namespace {
+
+enum class LogLevel : int {
+  Trace = 0,
+  Debug = 1,
+  Info = 2,
+  Warn = 3,
+  Error = 4,
+  Fatal = 5,
+};
+
+static LogLevel clamp_level(int level) {
+  if (level <= static_cast<int>(LogLevel::Trace)) return LogLevel::Trace;
+  if (level >= static_cast<int>(LogLevel::Fatal)) return LogLevel::Fatal;
+  return static_cast<LogLevel>(level);
+}
+
+struct LoglnState {
+  std::mutex mu;
+  FILE* file = nullptr;
+  LogLevel console_level = LogLevel::Fatal; // default: no console output
+  bool tee_high_to_file = true;             // if false: >=console_level goes to console only
+};
+
+LoglnState& state() {
+  static LoglnState s;
+  return s;
+}
+
+static std::string to_lower(std::string s) {
+  for (char& c : s) {
+    if (c >= 'A' && c <= 'Z') c = static_cast<char>(c - 'A' + 'a');
+  }
+  return s;
+}
+
+static LogLevel parse_level(std::string s, LogLevel fallback) {
+  s = to_lower(s);
+  if (s == "trace") return LogLevel::Trace;
+  if (s == "debug") return LogLevel::Debug;
+  if (s == "info") return LogLevel::Info;
+  if (s == "warn" || s == "warning") return LogLevel::Warn;
+  if (s == "error" || s == "err") return LogLevel::Error;
+  if (s == "fatal") return LogLevel::Fatal;
+  return fallback;
+}
+
+static const char* skip_bracket_prefixes(const char* p) {
+  while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+  while (*p == '[') {
+    const char* close = std::strchr(p, ']');
+    if (!close) break;
+    p = close + 1;
+    while (*p == ' ' || *p == '\t') p++;
+  }
+  return p;
+}
+
+static bool starts_with_ci(const char* s, const char* prefix) {
+  for (; *prefix; ++prefix, ++s) {
+    char a = *s;
+    char b = *prefix;
+    if (a >= 'A' && a <= 'Z') a = static_cast<char>(a - 'A' + 'a');
+    if (b >= 'A' && b <= 'Z') b = static_cast<char>(b - 'A' + 'a');
+    if (a != b) return false;
+  }
+  return true;
+}
+
+static LogLevel infer_level_from_format(const char* fmt) {
+  if (!fmt) return LogLevel::Info;
+
+  const char* p = skip_bracket_prefixes(fmt);
+  if (starts_with_ci(p, "trace")) return LogLevel::Trace;
+  if (starts_with_ci(p, "debug")) return LogLevel::Debug;
+  if (starts_with_ci(p, "info")) return LogLevel::Info;
+  if (starts_with_ci(p, "warn") || starts_with_ci(p, "warning")) return LogLevel::Warn;
+  if (starts_with_ci(p, "error")) return LogLevel::Error;
+  if (starts_with_ci(p, "fatal")) return LogLevel::Fatal;
+
+  // Heuristics for existing strings that don't carry an explicit level.
+  std::string f(fmt);
+  std::string fl = to_lower(f);
+  if (fl.find("panic") != std::string::npos) return LogLevel::Fatal;
+  if (fl.find("unable") != std::string::npos) return LogLevel::Error;
+  if (fl.find("failed") != std::string::npos) return LogLevel::Error;
+  if (fl.find("error") != std::string::npos) return LogLevel::Error;
+  if (fl.find("invalid") != std::string::npos) return LogLevel::Warn;
+  if (fl.find("warning") != std::string::npos) return LogLevel::Warn;
+  return LogLevel::Info;
+}
+
+static void open_log_file_locked(const std::string& path) {
+  auto& s = state();
+  if (s.file) {
+    std::fclose(s.file);
+    s.file = nullptr;
+  }
+
+  if (path.empty()) return;
+  try {
+    std::filesystem::path p(path);
+    if (p.has_parent_path()) {
+      std::filesystem::create_directories(p.parent_path());
+    }
+  } catch (...) {
+    // Best-effort: directory creation failure will be caught by fopen().
+  }
+
+  s.file = std::fopen(path.c_str(), "a");
+}
+
+static void write_line(FILE* out, long seconds, long nseconds, const std::string& formatted) {
+  if (!out) return;
+  std::fprintf(out, "[%ld.%09ld] ", seconds, nseconds);
+  std::fwrite(formatted.data(), 1, formatted.size(), out);
+  std::fwrite("\n", 1, 1, out);
+  std::fflush(out);
+}
+
+static void logln_write(LogLevel level, const char* msg, va_list args) {
+  struct timespec now;
+  clock_gettime(CLOCK_REALTIME, &now);
+  long seconds = now.tv_sec - ts.tv_sec;
+  long nseconds = now.tv_nsec - ts.tv_nsec;
+  if (nseconds < 0) {
+    seconds -= 1;
+    nseconds += 1000000000L;
+  }
+
+  va_list args_copy;
+  va_copy(args_copy, args);
+  int needed = std::vsnprintf(nullptr, 0, msg ? msg : "", args_copy);
+  va_end(args_copy);
+
+  std::string formatted;
+  if (needed < 0) {
+    formatted = "(log format error)";
+  } else {
+    formatted.resize(static_cast<size_t>(needed) + 1);
+    std::vsnprintf(formatted.data(), static_cast<size_t>(needed) + 1, msg ? msg : "", args);
+    formatted.resize(static_cast<size_t>(needed));
+  }
+
+  auto& s = state();
+  std::lock_guard<std::mutex> lock(s.mu);
+
+  const bool to_console = static_cast<int>(level) >= static_cast<int>(s.console_level);
+  const bool to_file_low = !to_console;
+  const bool to_file_high = to_console && s.tee_high_to_file;
+
+  if (to_console) {
+    write_line(stdout, seconds, nseconds, formatted);
+  }
+  if (to_file_low || to_file_high) {
+    if (s.file) {
+      write_line(s.file, seconds, nseconds, formatted);
+    } else if (!to_console) {
+      // Avoid silently dropping logs if the file can't be opened.
+      write_line(stderr, seconds, nseconds, formatted);
+    }
+  }
+}
+
+} // namespace
+
+extern "C" void logln_init_from_yaml(const char* config_path) {
+  auto& s = state();
+  std::lock_guard<std::mutex> lock(s.mu);
+
+  // Defaults: write to a file in the docker volume, keep console silent.
+  std::string file_path = "/home/e2sim/log/e2node.log";
+  s.console_level = LogLevel::Fatal;
+  s.tee_high_to_file = true;
+
+  if (config_path && *config_path) {
+    try {
+      YAML::Node root = YAML::LoadFile(config_path);
+      YAML::Node cfg = root["configuration"];
+      YAML::Node logcfg = cfg ? cfg["logging"] : YAML::Node();
+
+      if (logcfg) {
+        if (logcfg["file"] && logcfg["file"].IsScalar()) {
+          file_path = logcfg["file"].as<std::string>(file_path);
+        }
+        if (logcfg["consoleLevel"] && logcfg["consoleLevel"].IsScalar()) {
+          s.console_level = parse_level(logcfg["consoleLevel"].as<std::string>("fatal"), LogLevel::Fatal);
+        }
+        if (logcfg["teeHighToFile"] && logcfg["teeHighToFile"].IsScalar()) {
+          s.tee_high_to_file = logcfg["teeHighToFile"].as<bool>(true);
+        }
+      }
+    } catch (...) {
+      // Keep defaults on parse/load errors.
+    }
+  }
+
+  open_log_file_locked(file_path);
+}
 
 //String ammettendo n variabili variabili
- void logln(const char* msg, ...) {
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
-    long seconds = now.tv_sec - ts.tv_sec;
-    long nseconds = now.tv_nsec - ts.tv_nsec;
-    if (nseconds < 0) {
-        seconds -= 1;
-        nseconds += 1000000000L;
-    }
-    printf("[%ld.%09ld] ", seconds, nseconds);
-    va_list args;
-    va_start(args, msg);
-    vprintf(msg, args);
-    va_end(args);
-    printf("\n");
-    fflush(stdout);
+void logln(const char* msg, ...) {
+  LogLevel level = infer_level_from_format(msg);
+
+  va_list args;
+  va_start(args, msg);
+  logln_write(level, msg, args);
+  va_end(args);
+}
+
+extern "C" void logln_level(int level, const char* msg, ...) {
+  va_list args;
+  va_start(args, msg);
+  logln_write(clamp_level(level), msg, args);
+  va_end(args);
 }
 // Ritorna il numero di bit effettivi (size*8 - bits_unused)
 static inline int bit_length(const BIT_STRING_t& bs) {
@@ -86,7 +290,7 @@ int validate_or_fix_gnb_id_length(BIT_STRING_t* gnb_id_bs,
 
   if (total_bits > max_bits) {
     // Non tronchiamo: meglio segnalare errore
-    logln("gNB ID too long: %d bits (max %d)\n", total_bits, max_bits);
+    LOG_D("gNB ID too long: %d bits (max %d)\n", total_bits, max_bits);
     return -1;
   }
 

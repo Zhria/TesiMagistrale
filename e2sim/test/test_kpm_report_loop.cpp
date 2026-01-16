@@ -11,7 +11,7 @@ extern "C" {
 #include "E2SM-KPM-IndicationMessage.h"
 }
 
-// Provide the global timestamp used by logln() in n3iwf_utils.cpp
+// Provide the global timestamp used by LOG_D() in n3iwf_utils.cpp
 extern struct timespec ts;
 
 // Stub for link-time dependency pulled in from e2ap_message_handler.cpp

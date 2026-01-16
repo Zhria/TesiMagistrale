@@ -23,6 +23,7 @@
 // #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
+#include "logging.h"
 
 #define VERSION             "1.2.0"      //May 2019
 #define DEFAULT_SCTP_IP     "127.0.0.1"
@@ -35,13 +36,7 @@
 
 char* time_stamp(void);
 
-// #define LOG_I(...) {printf("[%s]", time_stamp()); printf(__VA_ARGS__); printf("\n");}
-// #define LOG_E(...) {printf("[%s]", time_stamp()); printf(__VA_ARGS__); printf("\n");}
-// #define LOG_D(...) {printf("[%s]", time_stamp()); printf(__VA_ARGS__); printf("\n");}
-
-#define LOG_I(...) {printf(__VA_ARGS__); printf("\n");}
-#define LOG_E(...) {printf(__VA_ARGS__); printf("\n");}
-#define LOG_D(...) {printf(__VA_ARGS__); printf("\n");}
+// LOG_T/LOG_D/LOG_I/LOG_W/LOG_E/LOG_F are provided by logging.h and route through logln_level().
 
 typedef struct SCTP_DATA {
   unsigned char *data;

@@ -552,8 +552,8 @@ namespace
 
         struct curl_slist *headers = nullptr;
         headers = curl_slist_append(headers, "Content-Type: application/json");
-        logln("[RC CTRL] HTTP POST %s", url.c_str());
-        logln("[RC CTRL] Payload: %s", payload.c_str());
+        LOG_D("[RC CTRL] HTTP POST %s", url.c_str());
+        LOG_D("[RC CTRL] Payload: %s", payload.c_str());
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -1070,7 +1070,7 @@ namespace
             {
                 ctx.header_amf_ue_id = value;
                 ctx.header_amf_ue_id_present = true;
-                logln("[RC CONTROL] Header AMF UE NGAP ID=%ld", value);
+                LOG_D("[RC CONTROL] Header AMF UE NGAP ID=%ld", value);
             }
         };
         auto set_ran = [&](const OCTET_STRING_t *oct)
@@ -1080,7 +1080,7 @@ namespace
             {
                 ctx.header_ran_ue_id = value;
                 ctx.header_ran_ue_id_present = true;
-                logln("[RC CONTROL] Header RAN UE ID=%ld", value);
+                LOG_D("[RC CONTROL] Header RAN UE ID=%ld", value);
             }
         };
 
@@ -1217,8 +1217,8 @@ namespace
 
     static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err)
     {
-        logln("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
-        logln("Received ControlHeader PER dump:");
+        LOG_D("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
+        LOG_D("Received ControlHeader PER dump:");
 
         // Alcuni xApp inviano il ControlHeader come CHOICE completo, altri solo come Format1:
         // proviamo più decodifiche (aligned/unaligned, CHOICE/Format1) finché troviamo uno stile valido.
@@ -1244,7 +1244,7 @@ namespace
         ctx.ue_identity = describe_ueid(&fmt1->ueID);
         update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
 
-        logln("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
+        LOG_D("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
               ctx.style_type,ctx.control_action_id,ctx.ue_identity.c_str());
 
         return true;
@@ -1268,9 +1268,9 @@ namespace
         {
             return fail("Unable to decode E2SM RC ControlMessage");
         }
-        logln("[RC CONTROL] Raw ControlMessage PER dump:");
+        LOG_D("[RC CONTROL] Raw ControlMessage PER dump:");
         xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlMessage, decoded);
-        logln("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
+        LOG_D("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
         if (decoded->ric_controlMessage_formats.present !=
             E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1)
         {
@@ -1290,12 +1290,12 @@ namespace
             }
             if (!is_supported_control_param(item->ranParameter_ID))
             {
-                logln("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
+                LOG_D("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
                 continue;
             }
             if (item->ranParameter_valueType.present == RANParameter_ValueType_PR_NOTHING)
             {
-                logln("[RC CONTROL] Parameter ID %ld missing value", item->ranParameter_ID);
+                LOG_D("[RC CONTROL] Parameter ID %ld missing value", item->ranParameter_ID);
                 continue;
             }
             append_param_entry(ctx, item->ranParameter_ID, item->ranParameter_valueType);
@@ -1309,12 +1309,12 @@ namespace
         {
             return fail("RC control message missing target gNB/NR CGI parameters");
         }
-        logln("[RC CONTROL] Message OK params=%zu targetGNb=%d",
+        LOG_D("[RC CONTROL] Message OK params=%zu targetGNb=%d",
               ctx.params.size(),
               has_target_gnb ? 1 : 0);
         for (const auto &param : ctx.params)
         {
-            logln("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
+            LOG_D("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
                   param.id,
                   param.name.c_str(),
                   static_cast<int>(param.value_type),
@@ -1326,12 +1326,12 @@ namespace
 
     static bool build_handover_request_payload(const RcControlContext &ctx,json &payload, std::string &error)
     {
-        logln("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
+        LOG_D("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
         auto ran_ue = resolve_ran_ue_ngap_id(ctx);
         if (!ran_ue)
         {
             error = "Unable to resolve ranUeNgapId for UE";
-            logln("[RC CONTROL] %s", error.c_str());
+            LOG_D("[RC CONTROL] %s", error.c_str());
             return false;
         }
 
@@ -1339,7 +1339,7 @@ namespace
         if (target_id.empty())
         {
             error = "Missing target gNB/NR CGI identifier";
-            logln("[RC CONTROL] %s", error.c_str());
+            LOG_D("[RC CONTROL] %s", error.c_str());
             return false;
         }
 
@@ -1394,13 +1394,13 @@ namespace
             metadata_json["hoCause"] = ho_cause;
         }
         payload["metadata"] = metadata_json;
-        logln("[RC CONTROL] HO payload ready: ranUe=%ld target=%s", *ran_ue, target_id.c_str());
+        LOG_D("[RC CONTROL] HO payload ready: ranUe=%ld target=%s", *ran_ue, target_id.c_str());
         return true;
     }
 
     static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,const std::string &command_desc)
     {
-        logln("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
+        LOG_D("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
 
         N3iwfTriggerResponse response;
         json payload;
@@ -1418,7 +1418,7 @@ namespace
         long http_code = 0;
         std::string http_body;
         std::string curl_error;
-        logln("[RC CONTROL] POST %s (%zu bytes)", url.c_str(), payload_str.size());
+        LOG_D("[RC CONTROL] POST %s (%zu bytes)", url.c_str(), payload_str.size());
         if (!http_post_json(url, payload_str, http_code, http_body, curl_error))
         {
             response.success = false;
@@ -1429,7 +1429,7 @@ namespace
 
         if (http_code >= 200 && http_code < 300)
         {
-            logln("[RC CONTROL] HO HTTP success code=%ld", http_code);
+            LOG_D("[RC CONTROL] HO HTTP success code=%ld", http_code);
             response.success = true;
             if (!http_body.empty())
             {
@@ -1445,7 +1445,7 @@ namespace
         response.success = false;
         response.failure_cause = CauseRICrequest_control_failed_to_execute;
         response.description = "N3IWF HTTP " + std::to_string(http_code);
-        logln("[RC CONTROL] HO HTTP failure code=%ld", http_code);
+        LOG_D("[RC CONTROL] HO HTTP failure code=%ld", http_code);
         if (!http_body.empty())
         {
             response.description += ": " + http_body;
@@ -1819,10 +1819,10 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 
     if (!ctrl_req_pdu || ctrl_req_pdu->present != E2AP_PDU_PR_initiatingMessage)
     {
-        logln("[RC CONTROL] Invalid PDU received");
+        LOG_D("[RC CONTROL] Invalid PDU received");
         return;
     }
-    logln("[RC CONTROL] Received RICcontrolRequest");
+    LOG_D("[RC CONTROL] Received RICcontrolRequest");
 
     RICcontrolRequest_t &orig_req =
         ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
@@ -1878,13 +1878,13 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
     {
         if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
         {
-            logln("[RC CONTROL] Cannot send failure (missing identifiers)");
+            LOG_D("[RC CONTROL] Cannot send failure (missing identifiers)");
             return;
         }
         std::vector<uint8_t> outcome_buf;
         if (!encode_rc_control_outcome_single(kRcOutcomeStatus, reason, outcome_buf) && !reason.empty())
         {
-            logln("[RC CONTROL] Unable to encode failure outcome payload");
+            LOG_D("[RC CONTROL] Unable to encode failure outcome payload");
         }
         E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
         const uint8_t *buf_ptr = outcome_buf.empty() ? nullptr : outcome_buf.data();
@@ -1899,7 +1899,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
             buf_ptr,
             outcome_buf.size());
         e2.encode_and_send_sctp_data(rsp);
-        logln("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
+        LOG_D("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
               ctx.requestor_id,
               ctx.instance_id,
               cause_value,
@@ -1908,19 +1908,19 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 
     if (!decode_error.empty())
     {
-        logln("[RC CONTROL] Decode failure: %s", decode_error.c_str());
+        LOG_D("[RC CONTROL] Decode failure: %s", decode_error.c_str());
         send_failure(CauseRICrequest_control_message_invalid, decode_error);
         return;
     }
 
     if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
     {
-        logln("[RC CONTROL] Missing mandatory identifiers in RICcontrolRequest");
+        LOG_D("[RC CONTROL] Missing mandatory identifiers in RICcontrolRequest");
         return;
     }
 
     RcControlExecutionResult exec_result = execute_rc_control_command(ctx);
-    logln("[RC CONTROL] req=%ld/%ld action=%ld ack=%d status=%s",
+    LOG_D("[RC CONTROL] req=%ld/%ld action=%ld ack=%d status=%s",
           ctx.requestor_id,
           ctx.instance_id,
           ctx.control_action_id,
@@ -1932,7 +1932,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         std::vector<uint8_t> outcome_buf;
         if (!encode_rc_control_outcome(result.outcome_items, outcome_buf))
         {
-            logln("[RC CONTROL] Unable to encode control outcome for ACK");
+            LOG_D("[RC CONTROL] Unable to encode control outcome for ACK");
             outcome_buf.clear();
         }
         E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
@@ -1946,7 +1946,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
             buf_ptr,
             outcome_buf.size());
         e2.encode_and_send_sctp_data(rsp);
-        logln("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
+        LOG_D("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
               ctx.requestor_id,
               ctx.instance_id,
               outcome_buf.size());
@@ -1960,7 +1960,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         }
         else
         {
-            logln("[RC CONTROL] ACK not requested by RIC, action executed locally");
+            LOG_D("[RC CONTROL] ACK not requested by RIC, action executed locally");
         }
     }
     else
@@ -1980,7 +1980,7 @@ void registerRCfunctionDefinition(E2Sim &e2)
         (E2SM_RC_RANFunctionDefinition_t *)calloc(1, sizeof(E2SM_RC_RANFunctionDefinition_t));
     if (rc_ranfunc_desc == NULL)
     {
-        logln("calloc failed for rc_ranfunc_desc\n");
+        LOG_D("calloc failed for rc_ranfunc_desc\n");
         return;
     }
 
@@ -1992,7 +1992,7 @@ void registerRCfunctionDefinition(E2Sim &e2)
     uint8_t *e2smbuffer_rc = (uint8_t *)calloc(1, e2smbuffer_size);
     if (e2smbuffer_rc == NULL)
     {
-        logln("calloc failed for e2smbuffer_rc\n");
+        LOG_D("calloc failed for e2smbuffer_rc\n");
         return;
     }
 
@@ -2003,7 +2003,7 @@ void registerRCfunctionDefinition(E2Sim &e2)
 
     if (er_rc.encoded < 0)
     {
-        logln("Encoding failed: %s\n", er_rc.failed_type ? er_rc.failed_type->name : "unknown");
+        LOG_D("Encoding failed: %s\n", er_rc.failed_type ? er_rc.failed_type->name : "unknown");
         free(e2smbuffer_rc);
         return;
     }
@@ -2012,7 +2012,7 @@ void registerRCfunctionDefinition(E2Sim &e2)
     OCTET_STRING_t *ranfunc_ostr_rc = (OCTET_STRING_t *)calloc(1, sizeof(OCTET_STRING_t));
     if (ranfunc_ostr_rc == NULL)
     {
-        logln("calloc failed for ranfunc_ostr_rc\n");
+        LOG_D("calloc failed for ranfunc_ostr_rc\n");
         free(e2smbuffer_rc);
         return;
     }
@@ -2020,7 +2020,7 @@ void registerRCfunctionDefinition(E2Sim &e2)
     ranfunc_ostr_rc->size = (er_rc.encoded > 0) ? (size_t)er_rc.encoded : 0;
     if (ranfunc_ostr_rc->buf == NULL)
     {
-        logln("calloc failed for ranfunc_ostr_rc->buf\n");
+        LOG_D("calloc failed for ranfunc_ostr_rc->buf\n");
         free(ranfunc_ostr_rc);
         free(e2smbuffer_rc);
         return;
@@ -2040,11 +2040,11 @@ void registerRCfunctionDefinition(E2Sim &e2)
     asn_dec_rval_t dr = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_RANFunctionDefinition, (void **)&check, ranfunc_ostr_rc->buf, ranfunc_ostr_rc->size);
     if (dr.code != RC_OK)
     {
-        logln("Self-test decode RC FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
+        LOG_D("Self-test decode RC FAILED (%d) at byte %zu\n", dr.code, dr.consumed);
     }
     else
     {
-        logln("Self-test decode RC OK (consumed=%zu)\n", dr.consumed);
+        LOG_D("Self-test decode RC OK (consumed=%zu)\n", dr.consumed);
     }
 
     return;

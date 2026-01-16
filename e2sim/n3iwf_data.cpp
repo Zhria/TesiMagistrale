@@ -987,11 +987,11 @@ static inline double percent_or_zero(int64_t num, int64_t den) {
 std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPeriod) {
   RcSnapshot rc_snapshot;
   if (!loadRcSnapshot(rc_snapshot)) {
-    logln("[n3iwf] Unable to load RC snapshot, skipping metrics collection");
+    LOG_D("[n3iwf] Unable to load RC snapshot, skipping metrics collection");
     return {};
   }
   if (rc_snapshot.associations.empty()) {
-    logln("[n3iwf] RC snapshot has no associations, skipping metrics collection");
+    LOG_D("[n3iwf] RC snapshot has no associations, skipping metrics collection");
     return {};
   }
 
@@ -1005,7 +1005,7 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
   if (!g_prev_throughput_valid) {
     g_prev_throughput_totals = curr_totals;
     g_prev_throughput_valid = true;
-    logln("[n3iwf] Initialized throughput baseline from RC snapshot; waiting next interval");
+    LOG_D("[n3iwf] Initialized throughput baseline from RC snapshot; waiting next interval");
     return {};
   }
 
@@ -1079,7 +1079,7 @@ std::map<std::string, double> getMetricsKPM(GranularityPeriod_t granularityPerio
 std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(GranularityPeriod_t granularityPeriod) {
   std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
   if (assocs.empty()) {
-    logln("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
+    LOG_D("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
     return {};
   }
   return getMetricsKPMByRanUeId(assocs, granularityPeriod);
@@ -1087,7 +1087,7 @@ std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(Granular
 
 std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(const std::vector<RcAssociationSnapshot> &assocs, GranularityPeriod_t granularityPeriod) {
   if (assocs.empty()) {
-    logln("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
+    LOG_D("[n3iwf] RC snapshot has no associations, skipping per-UE metrics collection");
     return {};
   }
 
@@ -1100,14 +1100,14 @@ std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(const st
   }
 
   if (curr_by_ue.empty()) {
-    logln("[n3iwf] RC snapshot has no ranUeNgapId entries, skipping per-UE metrics collection");
+    LOG_D("[n3iwf] RC snapshot has no ranUeNgapId entries, skipping per-UE metrics collection");
     return {};
   }
 
   thread_local std::map<int64_t, RcThroughputTotals> prev_by_ue;
   if (prev_by_ue.empty()) {
     prev_by_ue = curr_by_ue;
-    logln("[n3iwf] Initialized per-UE throughput baselines from RC snapshot; waiting next interval");
+    LOG_D("[n3iwf] Initialized per-UE throughput baselines from RC snapshot; waiting next interval");
     return {};
   }
 
