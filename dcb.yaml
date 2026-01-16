@@ -62,16 +62,8 @@ services:
 
   free5gc-amf:
     container_name: amf
-    build:
-      context: .
-      dockerfile: amfCustom/Dockerfile
-    image: amfcustom-local:latest
-    entrypoint: ["/bin/sh", "-lc"]
-    command: |
-      if command -v ethtool >/dev/null 2>&1; then
-        ethtool -K eth0 tx-checksum-sctp off || ethtool -K eth0 tx off || true
-      fi
-      exec ./amf -c /free5gc/config/amfcfg.yaml
+    image: zhria/amfcustom:latest
+    command: ./amf -c ./config/amfcfg.yaml
     ports:
         - "8000:8000" 
         - "38412:38412/sctp"
