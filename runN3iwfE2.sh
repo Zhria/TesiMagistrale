@@ -29,8 +29,11 @@ for arg in "$@"; do
 done
 
 sudo ./setup-gtp5g.sh
-sudo git reset --hard origin/main 
-git pull
+if git diff --quiet && git diff --cached --quiet; then
+    git pull --rebase
+else
+    echo "Repo con modifiche locali: salto git pull"
+fi
 
 # Se build richiesto
 if [ "$DO_BUILD" = true ]; then
@@ -44,9 +47,11 @@ if [ -z "$PARAM_AVVIO" ]; then
 fi
 
 sudo docker pull zhria/n3iwfcustom:latest
-sudo docker pull zhria/amfcustom:latest
 sudo docker pull zhria/smfcustom:latest
 sudo docker pull zhria/e2node:latest
 # Run con docker compose
-sudo docker compose -f dcb.yaml up $PARAM_AVVIO
-
+COMPOSE_BUILD_FLAG=""
+if [ "$DO_BUILD" = true ]; then
+    COMPOSE_BUILD_FLAG="--build"
+fi
+sudo docker compose -f dcb.yaml up $COMPOSE_BUILD_FLAG $PARAM_AVVIO

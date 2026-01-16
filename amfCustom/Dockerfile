@@ -29,7 +29,16 @@ FROM debian:bookworm-slim
 LABEL description="Free5GC AMF custom build" \
       version="custom"
 
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libmnl0 libsctp1 libyaml-0-2 tzdata
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       ca-certificates \
+       ethtool \
+       iproute2 \
+       libmnl0 \
+       libsctp1 \
+       libyaml-0-2 \
+       tzdata \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /free5gc
 RUN mkdir -p cert public config log

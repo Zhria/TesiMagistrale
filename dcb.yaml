@@ -62,14 +62,24 @@ services:
 
   free5gc-amf:
     container_name: amf
-    image: zhria/amfcustom:latest
-    command: ./amf -c ./config/amfcfg.yaml
+    build:
+      context: .
+      dockerfile: amfCustom/Dockerfile
+    image: amfcustom-local:latest
+    entrypoint: ["/bin/sh", "-lc"]
+    command: |
+      if command -v ethtool >/dev/null 2>&1; then
+        ethtool -K eth0 tx-checksum-sctp off || ethtool -K eth0 tx off || true
+      fi
+      exec ./amf -c /free5gc/config/amfcfg.yaml
     ports:
         - "8000:8000" 
         - "38412:38412/sctp"
     volumes:
       - ./config/amfcfg.yaml:/free5gc/config/amfcfg.yaml
       - ./cert:/free5gc/cert
+    cap_add:
+      - NET_ADMIN
     environment:
       GIN_MODE: release
     networks:
@@ -255,6 +265,7 @@ services:
 
     environment:
       GIN_MODE: release
+      #N3IWF_DISABLE_OFFLOADS: "0" Questo serve per riattivare GRO TSO GSO sulle interfacce in uso.
     cap_add:
       - NET_ADMIN
 
