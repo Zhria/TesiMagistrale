@@ -46,10 +46,13 @@ RUN mkdir -p cert public config log
 # Copia il binario compilato
 COPY --from=builder /output/amf ./amf
 
+COPY amfCustom/amf-entrypoint.sh /usr/local/bin/amf-entrypoint
+RUN chmod +x /usr/local/bin/amf-entrypoint
+
 # Copia configurazioni e certificati di default presenti nel contesto build
 COPY cert/ ./cert/
 COPY config/ ./config/
 
 EXPOSE 8000
 
-ENTRYPOINT ["./amf"]
+ENTRYPOINT ["/usr/local/bin/amf-entrypoint"]

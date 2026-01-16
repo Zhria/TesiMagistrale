@@ -47,6 +47,7 @@ if [ -z "$PARAM_AVVIO" ]; then
 fi
 
 sudo docker pull zhria/n3iwfcustom:latest
+sudo docker pull zhria/amfcustom:latest
 sudo docker pull zhria/smfcustom:latest
 sudo docker pull zhria/e2node:latest
 # Run con docker compose
