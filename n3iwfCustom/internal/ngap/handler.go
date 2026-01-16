@@ -3655,19 +3655,28 @@ func (s *Server) HandleSendHandoverRequired(
 
 	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranUeNgapId)
 	if !ok {
+		err := fmt.Errorf("ranUeNgapId %d not found", ranUeNgapId)
 		ngapLog.Errorf("Cannot get RanUE from ranUeNgapId : %+v", ranUeNgapId)
+		// Propagate failure to HTTP handover trigger waiters.
+		rc.NotifyHandoverResult(ranUeNgapId, "handover_trigger_failed", err)
 		return
 	}
 
 	sharedCtx := ranUe.GetSharedCtx()
 	if sharedCtx.AMF == nil {
-		ngapLog.Errorf("RanUE[%d] has no associated AMF", ranUeNgapId)
+		err := fmt.Errorf("RanUE[%d] has no associated AMF", ranUeNgapId)
+		ngapLog.Errorf("%s", err.Error())
+		// Propagate failure to HTTP handover trigger waiters.
+		rc.NotifyHandoverResult(ranUeNgapId, "handover_trigger_failed", err)
 		return
 	}
 
 	pkt, err := message.BuildHandoverRequired(ranUe, evt)
 	if err != nil {
 		ngapLog.Errorf("Build Handover Required failed: %+v", err)
+		// This covers: missing PDU sessions, missing session context, state-sync/container build errors, etc.
+		// Propagate failure to HTTP handover trigger waiters.
+		rc.NotifyHandoverResult(ranUeNgapId, "handover_trigger_failed", fmt.Errorf("build HandoverRequired failed: %w", err))
 		return
 	}
 

@@ -67,8 +67,10 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	}
 
 	s.ulCh = make(chan ulForwardItem, ulForwardQueueLen)
-	wg.Add(1)
-	go s.ulListenAndServe(wg)
+	wg.Add(ulWorkerCount)
+	for i := 0; i < ulWorkerCount; i++ {
+		go s.ulListenAndServe(wg)
+	}
 
 	s.dlCh = make(chan dlReorderItem, dlReorderQueueLen)
 	wg.Add(1)

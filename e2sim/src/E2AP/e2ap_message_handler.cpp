@@ -32,6 +32,13 @@ extern "C" {
 }
 
 #include <unistd.h>
+#include <chrono>
+
+static inline long long unix_ms_now()
+{
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
 
 void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
 {
@@ -165,7 +172,7 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     {
     case E2AP_PDU_PR_initiatingMessage:
     {
-      LOG_D("[E2AP] Received RIC-CONTROL-REQUEST");
+      LOG_I("[E2AP] Received RIC-CONTROL-REQUEST");
       long func_id = get_function_id_from_control(pdu);
       if (func_id < 0)
       {
@@ -201,7 +208,29 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
     {
     case E2AP_PDU_PR_initiatingMessage:
     {
-      LOG_D("[E2AP] Received RIC-SUBSCRIPTION-DELETE-REQUEST");
+      const auto del_start_steady = std::chrono::steady_clock::now();
+      const long long del_start_ms = unix_ms_now();
+      auto log_del_timing = [&](const char *outcome,
+                                long reqRequestorId,
+                                long reqInstanceId,
+                                long ranFunctionId,
+                                const char *detail)
+      {
+        const long long end_ms = unix_ms_now();
+        const auto dur_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - del_start_steady).count();
+        LOG_I("[SUB DEL][E2AP] start_ms=%lld end_ms=%lld dur_ms=%lld outcome=%s req=%ld/%ld func=%ld detail=%s",
+              del_start_ms,
+              end_ms,
+              (long long)dur_ms,
+              outcome ? outcome : "unknown",
+              reqRequestorId,
+              reqInstanceId,
+              ranFunctionId,
+              detail ? detail : "");
+      };
+
+      LOG_I("[E2AP] Received RIC-SUBSCRIPTION-DELETE-REQUEST");
       long reqRequestorId = -1;
       long reqInstanceId = -1;
       long ranFunctionId = -1;
@@ -246,15 +275,20 @@ void e2ap_handle_sctp_data(int &socket_fd, sctp_buffer_t &data, E2Sim *e2sim)
               resp_pdu, reqRequestorId, reqInstanceId, ranFunctionId);
           e2sim->encode_and_send_sctp_data(resp_pdu);
           ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, resp_pdu);
+          LOG_I("[E2AP] Sent RIC-SUBSCRIPTION-DELETE-RESPONSE req=%ld/%ld func=%ld",
+                reqRequestorId, reqInstanceId, ranFunctionId);
+          log_del_timing("OK", reqRequestorId, reqInstanceId, ranFunctionId, "delete response sent");
         }
         else
         {
-          LOG_D("[E2AP] Failed to allocate response PDU for delete request");
+          LOG_E("[E2AP] Failed to allocate response PDU for delete request");
+          log_del_timing("FAIL", reqRequestorId, reqInstanceId, ranFunctionId, "calloc resp_pdu failed");
         }
       }
       else
       {
-        LOG_D("[E2AP] Missing identifiers for delete request, skipping response");
+        LOG_E("[E2AP] Missing identifiers for delete request, skipping response");
+        log_del_timing("FAIL", reqRequestorId, reqInstanceId, ranFunctionId, "missing identifiers");
       }
       break;
     }

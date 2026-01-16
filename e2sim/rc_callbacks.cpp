@@ -518,9 +518,15 @@ namespace
     {
 
         constexpr const char *kDefaultHandoverUrl = "http://127.0.0.1:9085/rc/handover";
-        constexpr long kHttpTimeoutMs = 5000;
+        constexpr long kHttpTimeoutMs = 800;
 
     } // namespace
+
+    static inline long long unix_ms_now()
+    {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
 
     static void ensure_curl_initialized()
     {
@@ -543,10 +549,19 @@ namespace
                                std::string &error_message)
     {
         ensure_curl_initialized();
+
+        const auto start_steady = std::chrono::steady_clock::now();
+        const long long start_ms = unix_ms_now();
+        long long end_ms = 0;
+        auto dur_ms=0;
         CURL *curl = curl_easy_init();
         if (!curl)
         {
             error_message = "curl_easy_init failed";
+            end_ms = unix_ms_now();
+            dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
+            LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
+                  start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
             return false;
         }
 
@@ -566,11 +581,15 @@ namespace
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "e2sim-rc");
 
         CURLcode res = curl_easy_perform(curl);
+        end_ms = unix_ms_now();
+        dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
         if (res != CURLE_OK)
         {
             error_message = curl_easy_strerror(res);
             curl_slist_free_all(headers);
             curl_easy_cleanup(curl);
+            LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
+                  start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
             return false;
         }
 
@@ -578,6 +597,8 @@ namespace
 
         curl_slist_free_all(headers);
         curl_easy_cleanup(curl);
+        LOG_I("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s http=%ld resp_bytes=%zu",
+              start_ms, end_ms, (long long)dur_ms, url.c_str(), http_code, response_body.size());
         return true;
     }
 
@@ -1805,10 +1826,29 @@ bool decode_rc_actiondef_format1(const OCTET_STRING_t *ad, std::vector<long> &ou
 
 void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 {
+    const auto ctrl_start_steady = std::chrono::steady_clock::now();
+    const long long ctrl_start_ms = unix_ms_now();
+
     RcControlContext ctx;
     bool header_ok = false;
     bool message_ok = false;
     std::string decode_error;
+
+    auto log_ctrl_timing = [&](const char *outcome, const std::string &detail)
+    {
+        const long long end_ms = unix_ms_now();
+        const auto dur_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - ctrl_start_steady).count();
+        LOG_I("[RC CONTROL][E2AP] start_ms=%lld end_ms=%lld dur_ms=%lld outcome=%s req=%ld/%ld func=%ld detail=%s",
+              ctrl_start_ms,
+              end_ms,
+              (long long)dur_ms,
+              outcome ? outcome : "unknown",
+              ctx.requestor_id,
+              ctx.instance_id,
+              ctx.ran_function_id,
+              detail.c_str());
+    };
 
     struct OctetStringGuard
     {
@@ -1819,10 +1859,11 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 
     if (!ctrl_req_pdu || ctrl_req_pdu->present != E2AP_PDU_PR_initiatingMessage)
     {
-        LOG_D("[RC CONTROL] Invalid PDU received");
+        LOG_E("[RC CONTROL] Invalid PDU received");
+        log_ctrl_timing("INVALID_PDU", "invalid E2AP PDU");
         return;
     }
-    LOG_D("[RC CONTROL] Received RICcontrolRequest");
+    LOG_I("[RC CONTROL] Received RICcontrolRequest");
 
     RICcontrolRequest_t &orig_req =
         ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
@@ -1879,6 +1920,7 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
         {
             LOG_D("[RC CONTROL] Cannot send failure (missing identifiers)");
+            log_ctrl_timing("FAIL_NO_IDS", reason);
             return;
         }
         std::vector<uint8_t> outcome_buf;
@@ -1899,11 +1941,12 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
             buf_ptr,
             outcome_buf.size());
         e2.encode_and_send_sctp_data(rsp);
-        LOG_D("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
+        LOG_I("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
               ctx.requestor_id,
               ctx.instance_id,
               cause_value,
               reason.c_str());
+        log_ctrl_timing("FAIL", reason);
     };
 
     if (!decode_error.empty())
@@ -1946,10 +1989,11 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
             buf_ptr,
             outcome_buf.size());
         e2.encode_and_send_sctp_data(rsp);
-        LOG_D("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
+        LOG_I("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
               ctx.requestor_id,
               ctx.instance_id,
               outcome_buf.size());
+        log_ctrl_timing("ACK", result.status);
     };
 
     if (exec_result.success)
@@ -1960,7 +2004,8 @@ void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
         }
         else
         {
-            LOG_D("[RC CONTROL] ACK not requested by RIC, action executed locally");
+            LOG_I("[RC CONTROL] ACK not requested by RIC, action executed locally");
+            log_ctrl_timing("NOACK", exec_result.status);
         }
     }
     else

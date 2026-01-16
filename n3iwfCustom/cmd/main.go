@@ -136,13 +136,11 @@ func action(cliCtx *cli.Context) error {
 	logger.InitCustomLogger(factory.N3iwfE2DefaultLogPath, 100)
 	logger.InitRCLogger("./log/rc_metrics.json")
 
-	//go startSnapshot(n3iwfApp)
-
-	//Avvio un altro thread per il kpm metrics logger.
-	//go startKPMLogger()
+	go startSnapshot(n3iwfApp)
+	go startKPMLogger()
 	rc.SetHandoverAlertHandler(rc.NewHandoverAlertHandler(n3iwfApp.Context(), n3iwfApp))
 	rc.StartHandoverHTTPServer("")
-	//go startRCLogger(n3iwfApp)
+	go startRCLogger(n3iwfApp)
 
 	n3iwfApp.Start()
 

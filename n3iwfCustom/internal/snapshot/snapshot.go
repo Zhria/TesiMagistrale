@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"strings"
 	"sync"
 	"time"
 
@@ -590,78 +589,6 @@ func (s *AggStore) getSnapshot() Snapshot {
 	return s.Snapshot()
 }*/
 
-type Query struct {
-	BucketS *int64
-	UEIP    *string
-	TEID    *uint32
-	QFI     *uint8
-	SNSSAI  *string
-	Dir     *Direction
-}
-
-func (s *AggStore) QueryJSON(q Query) []byte {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-
-	out := make(map[string]Counters)
-	for k, c := range s.byKey {
-		// parsing semplice della composite key
-		// per performance potresti conservare anche una struct Key {BucketS, UEIP, ...}
-		match := true
-		if q.BucketS != nil && !containsToken(k, fmt.Sprintf("b=%d", *q.BucketS)) {
-			match = false
-		}
-		if match && q.UEIP != nil && !containsToken(k, "ip="+*q.UEIP) {
-			match = false
-		}
-		if match && q.TEID != nil && !containsToken(k, fmt.Sprintf("teid=%d", *q.TEID)) {
-			match = false
-		}
-		if match && q.QFI != nil && !containsToken(k, fmt.Sprintf("qfi=%d", *q.QFI)) {
-			match = false
-		}
-		if match && q.SNSSAI != nil && !containsToken(k, "s="+*q.SNSSAI) {
-			match = false
-		}
-		if match && q.Dir != nil && !containsToken(k, fmt.Sprintf("d=%d", *q.Dir)) {
-			match = false
-		}
-		if match {
-			out[k] = *c
-		}
-	}
-	b, _ := json.MarshalIndent(out, "", "  ")
-	return b
-}
-
-// helper fast&cheap (per demo)
-func containsToken(s, token string) bool {
-	return len(s) >= len(token) && (s == token || (len(s) > len(token) && (containsWithSep(s, token))))
-}
-func containsWithSep(s, token string) bool {
-	// key composta con '|' come separatore
-	// "b=...|ip=...|..." => cerca "|token" o "token|" o inizio/fine
-	if len(s) < len(token) || token == "" {
-		return false
-	}
-	if s == token || hasPrefixToken(s, token) || hasSuffixToken(s, token) {
-		return true
-	}
-	return hasMidToken(s, token)
-}
-func hasPrefixToken(s, token string) bool { return len(s) >= len(token) && s[:len(token)] == token }
-func hasSuffixToken(s, token string) bool {
-	return len(s) >= len(token) && s[len(s)-len(token):] == token
-}
-func hasMidToken(s, token string) bool {
-	if token == "" {
-		return false
-	}
-	padded := "|" + s + "|"
-	needle := "|" + token + "|"
-	return strings.Contains(padded, needle)
-}
-
 var Agg = NewAggStore()
 
 func formatSNSSAI(s ngapType.SNSSAI) string {
@@ -677,9 +604,8 @@ func formatSNSSAI(s ngapType.SNSSAI) string {
 }
 
 func TransmittedVolumeDL(byteIncoming, byteTransmitted uint64, ueIP string, qfi uint8, _ bool, teid uint32, _ *context.QosFlow, snssai ngapType.SNSSAI) {
-	return
-	//Commento per test
-	/*rec := NewRecord(
+
+	rec := NewRecord(
 		ueIP, qfi, teid, formatSNSSAI(snssai),
 		DL,
 		byteIncoming, byteTransmitted,
@@ -691,12 +617,11 @@ func TransmittedVolumeDL(byteIncoming, byteTransmitted uint64, ueIP string, qfi 
 		}(),
 		NowBucketS(1), // granularity 1s
 	)
-	Agg.Ingest(rec)*/
+	Agg.Ingest(rec)
 }
 
 func TransmittedVolumeUL(byteIncoming, byteTransmitted uint64, ueIP string, qfi uint8, _ bool, teid uint32, _ *context.QosFlow, snssai ngapType.SNSSAI) {
-	return
-	/*rec := NewRecord(
+	rec := NewRecord(
 		ueIP, qfi, teid, formatSNSSAI(snssai),
 		UL,
 		byteIncoming, byteTransmitted,
@@ -708,5 +633,5 @@ func TransmittedVolumeUL(byteIncoming, byteTransmitted uint64, ueIP string, qfi 
 		}(),
 		NowBucketS(1),
 	)
-	Agg.Ingest(rec)*/
+	Agg.Ingest(rec)
 }

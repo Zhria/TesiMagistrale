@@ -9,6 +9,7 @@ import (
 
 const (
 	ulForwardQueueLen = 65536
+	ulWorkerCount     = 8 // parallel workers for UL forwarding
 )
 
 type ulForwardItem struct {

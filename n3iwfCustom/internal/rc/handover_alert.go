@@ -48,7 +48,7 @@ type hoResult struct {
 	err    error
 }
 
-const defaultHandoverHTTPWaitTimeout = 30 * time.Second
+const defaultHandoverHTTPWaitTimeout = 800 * time.Millisecond
 
 func NewHandoverAlertHandler(
 	ctx *n3iwf_context.N3IWFContext,
@@ -214,11 +214,11 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 	case <-timer.C:
 		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
 		writeHTTPSuccess(w, map[string]interface{}{
-			"status":       "triggered",
-			"ranUeId":      payload.RanUeNgapId,
-			"pending":      true,
-			"timeoutSec":   defaultHandoverHTTPWaitTimeout.Seconds(),
-			"description":  "handover result not yet available",
+			"status":      "triggered",
+			"ranUeId":     payload.RanUeNgapId,
+			"pending":     true,
+			"timeoutSec":  defaultHandoverHTTPWaitTimeout.Seconds(),
+			"description": "handover result not yet available",
 		})
 		return
 	case res := <-waitCh:

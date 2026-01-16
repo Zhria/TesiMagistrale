@@ -76,6 +76,12 @@ static E2Sim e2;
 std::atomic_bool g_app_stop{false};
 extern int client_fd;
 
+static inline long long unix_ms_now()
+{
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
 // Verifica locale: decodifica il messaggio KPM appena encodato (PER aligned, emr.encoded = byte count)
 // per assicurarsi che sia internamente consistente prima di inviarlo allo xApp.
 static bool kpm_self_decode_check(const uint8_t *buf, size_t encoded_len_bytes)
@@ -580,7 +586,32 @@ static bool extract_meas_names_from_kpm_actiondef(const OCTET_STRING_t *act_def,
  * ============================================================ */
 void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
 {
-  LOG_D("[CALLBACK KPM SUBSCRIPTION REQUEST] Received Subscription Request\n");
+  const auto sub_start_steady = std::chrono::steady_clock::now();
+  const long long sub_start_ms = unix_ms_now();
+
+  auto log_sub_timing = [&](const char *outcome,
+                            long reqRequestorId,
+                            long reqInstanceId,
+                            long ranFunctionId,
+                            int code,
+                            const std::string &detail)
+  {
+    const long long end_ms = unix_ms_now();
+    const auto dur_ms =
+        std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - sub_start_steady).count();
+    LOG_I("[KPM SUB][E2AP] start_ms=%lld end_ms=%lld dur_ms=%lld outcome=%s req=%ld/%ld func=%ld code=%d detail=%s",
+          sub_start_ms,
+          end_ms,
+          (long long)dur_ms,
+          outcome ? outcome : "unknown",
+          reqRequestorId,
+          reqInstanceId,
+          ranFunctionId,
+          code,
+          detail.c_str());
+  };
+
+  LOG_I("[KPM SUB] Received RICsubscriptionRequest");
   RICsubscriptionRequest_t orig_req =
       sub_req_pdu->choice.initiatingMessage->value.choice.RICsubscriptionRequest;
 
@@ -596,6 +627,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   long reqRequestorId = -1;
   long reqInstanceId = -1;
   long reqActionId = -1;
+  const long ranFunctionId = 2; // KPM
 
   // std::vector<long> actionIdsAccept;
   // std::vector<long> actionIdsReject;
@@ -625,9 +657,10 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
     case RICsubscriptionRequest_IEs__value_PR_RANfunctionID:
     {
       long ranFuncId = next_ie->value.choice.RANfunctionID;
-      if (ranFuncId != 2) // KPM
+      if (ranFuncId != ranFunctionId) // KPM
       {
-        LOG_D("Received Subscription Request for unsupported RANfunctionID %ld, ignoring\n", ranFuncId);
+        LOG_I("[KPM SUB] Unsupported RANfunctionID=%ld, ignoring", ranFuncId);
+        log_sub_timing("IGNORED", reqRequestorId, reqInstanceId, ranFuncId, 204, "unsupported RANfunctionID");
         return;
       }
       break;
@@ -645,6 +678,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
       if (dr.code != RC_OK || !ad)
       {
         LOG_D("[KPM SUB] TriggerDefinition decode failed: code=%d consumed=%zu", dr.code, dr.consumed);
+        log_sub_timing("FAIL", reqRequestorId, reqInstanceId, ranFunctionId, 500, "trigger definition decode failed");
         return;
       }
       if (ad->eventDefinition_formats.present == E2SM_KPM_EventTriggerDefinition__eventDefinition_formats_PR_eventDefinition_Format1)
@@ -726,7 +760,8 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   E2AP_PDU *e2ap_pdu = (E2AP_PDU *)calloc(1, sizeof(E2AP_PDU));
   if (e2ap_pdu == NULL)
   {
-    LOG_D("calloc failed for e2ap_pdu\n");
+    LOG_E("[KPM SUB] calloc failed for e2ap_pdu");
+    log_sub_timing("FAIL", reqRequestorId, reqInstanceId, ranFunctionId, 500, "calloc failed");
     return;
   }
 
@@ -739,20 +774,25 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   if (any_metric_not_allowed)
   {
     LOG_D("At least one action not allowed, rejecting subscription (accepted=%d, rejected=%d)\n", accept_size, reject_size);
-    generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, 2, reject_array, reject_size);
+    generate_e2apv2_subscription_failure(e2ap_pdu, reqRequestorId, reqInstanceId, ranFunctionId, reject_array, reject_size);
     e2.encode_and_send_sctp_data(e2ap_pdu);
+    LOG_I("[KPM SUB] Sent RICsubscriptionFailure req=%ld/%ld accepted=%d rejected=%d",
+          reqRequestorId, reqInstanceId, accept_size, reject_size);
+    log_sub_timing("FAIL", reqRequestorId, reqInstanceId, ranFunctionId, 500, "subscription rejected (metric not allowed)");
     return;
   }
 
   LOG_D("All actions allowed, accepting subscription\n");
-  generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, 2);
+  generate_e2apv2_subscription_response_success(e2ap_pdu, accept_array, reject_array, accept_size, reject_size, reqRequestorId, reqInstanceId, ranFunctionId);
   e2.encode_and_send_sctp_data(e2ap_pdu);
+  LOG_I("[KPM SUB] Sent RICsubscriptionResponse req=%ld/%ld accepted=%d rejected=%d",
+        reqRequestorId, reqInstanceId, accept_size, reject_size);
+  log_sub_timing("OK", reqRequestorId, reqInstanceId, ranFunctionId, 200, "subscription accepted");
 
-  long funcId = 2; // KPM
   if (accept_size > 0 && reqActionId >= 0)
   {
-    SubscriptionKey key{reqRequestorId, reqInstanceId, funcId, reqActionId};
-    start_kpm_worker(key, reqRequestorId, reqInstanceId, funcId, reqActionId, granularityPeriod);
+    SubscriptionKey key{reqRequestorId, reqInstanceId, ranFunctionId, reqActionId};
+    start_kpm_worker(key, reqRequestorId, reqInstanceId, ranFunctionId, reqActionId, granularityPeriod);
   }
   else
   {
