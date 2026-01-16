@@ -33,7 +33,6 @@ type Server struct {
 
 	greConn  *ipv4.PacketConn
 	gtpuConn *gtpv1.UPlaneConn
-	dlCh     chan dlReorderItem
 	log      *logrus.Entry
 }
 
@@ -64,10 +63,6 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	if err != nil {
 		return err
 	}
-
-	s.dlCh = make(chan dlReorderItem, dlReorderQueueLen)
-	wg.Add(1)
-	go s.dlListenAndServe(wg)
 
 	wg.Add(1)
 	go s.greListenAndServe(wg)
@@ -313,23 +308,7 @@ func (s *Server) handleQoSTPDU(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.Mes
 		return err
 	}
 
-	if s.dlCh == nil {
-		s.forwardDL(pdu)
-		return nil
-	}
-
-	item := dlReorderItem{
-		teid:   pdu.GetTEID(),
-		seq:    tpdu.Sequence(),
-		hasSeq: tpdu.HasSequence(),
-		packet: pdu,
-	}
-
-	select {
-	case s.dlCh <- item:
-	default:
-		s.log.Warnf("Downlink reorder queue full; dropping TEID=%d seq=%d", item.teid, item.seq)
-	}
+	s.forwardDL(pdu)
 	return nil
 }
 
