@@ -677,7 +677,9 @@ func formatSNSSAI(s ngapType.SNSSAI) string {
 }
 
 func TransmittedVolumeDL(byteIncoming, byteTransmitted uint64, ueIP string, qfi uint8, _ bool, teid uint32, _ *context.QosFlow, snssai ngapType.SNSSAI) {
-	rec := NewRecord(
+	return
+	//Commento per test
+	/*rec := NewRecord(
 		ueIP, qfi, teid, formatSNSSAI(snssai),
 		DL,
 		byteIncoming, byteTransmitted,
@@ -689,11 +691,12 @@ func TransmittedVolumeDL(byteIncoming, byteTransmitted uint64, ueIP string, qfi 
 		}(),
 		NowBucketS(1), // granularity 1s
 	)
-	Agg.Ingest(rec)
+	Agg.Ingest(rec)*/
 }
 
 func TransmittedVolumeUL(byteIncoming, byteTransmitted uint64, ueIP string, qfi uint8, _ bool, teid uint32, _ *context.QosFlow, snssai ngapType.SNSSAI) {
-	rec := NewRecord(
+	return
+	/*rec := NewRecord(
 		ueIP, qfi, teid, formatSNSSAI(snssai),
 		UL,
 		byteIncoming, byteTransmitted,
@@ -705,5 +708,5 @@ func TransmittedVolumeUL(byteIncoming, byteTransmitted uint64, ueIP string, qfi 
 		}(),
 		NowBucketS(1),
 	)
-	Agg.Ingest(rec)
+	Agg.Ingest(rec)*/
 }
