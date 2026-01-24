@@ -556,7 +556,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				DLPDR.FAR.State = smf_context.RULE_UPDATE
 				DLPDR.FAR.ApplyAction.Forw = false
 				DLPDR.FAR.ApplyAction.Buff = true
-				DLPDR.FAR.ApplyAction.Nocp = true
+				DLPDR.FAR.ApplyAction.Nocp = false
 				farList = append(farList, DLPDR.FAR)
 				sendPFCPModification = true
 				smContext.SetState(smf_context.PFCPModification)
