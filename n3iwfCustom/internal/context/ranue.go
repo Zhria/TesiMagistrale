@@ -23,6 +23,35 @@ const (
 	PduSessResRelStateOngoing PduSessResRelState = true
 )
 
+// HandoverState tracks the handover procedure state for a UE.
+type HandoverState uint8
+
+const (
+	// HoStateIdle - No handover in progress, can accept new HO trigger
+	HoStateIdle HandoverState = iota
+	// HoStatePreparing - HandoverRequired sent (source) or HandoverRequest received (target)
+	HoStatePreparing
+	// HoStateExecuting - HandoverCommand received, UE is migrating
+	HoStateExecuting
+	// HoStateCompleted - Handover completed (UEContextReleaseCommand received on source)
+	HoStateCompleted
+)
+
+func (s HandoverState) String() string {
+	switch s {
+	case HoStateIdle:
+		return "Idle"
+	case HoStatePreparing:
+		return "Preparing"
+	case HoStateExecuting:
+		return "Executing"
+	case HoStateCompleted:
+		return "Completed"
+	default:
+		return fmt.Sprintf("Unknown(%d)", s)
+	}
+}
+
 type RanUe interface {
 	// Get Attributes
 	GetUserLocationInformation() *ngapType.UserLocationInformation
@@ -92,6 +121,19 @@ type RanUeSharedCtx struct {
 
 	// Path Switch has been sent for this UE
 	PathSwitchSent bool
+
+	// Handover state tracking (for RC control validation)
+	HoState HandoverState
+}
+
+// CanStartHandover returns true if the UE is in a state that allows starting a new handover.
+func (ctx *RanUeSharedCtx) CanStartHandover() bool {
+	return ctx.HoState == HoStateIdle
+}
+
+// IsHandoverInProgress returns true if a handover procedure is currently ongoing.
+func (ctx *RanUeSharedCtx) IsHandoverInProgress() bool {
+	return ctx.HoState == HoStatePreparing || ctx.HoState == HoStateExecuting
 }
 
 type PDUSession struct {

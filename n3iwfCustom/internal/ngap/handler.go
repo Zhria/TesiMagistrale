@@ -1198,7 +1198,16 @@ func (s *Server) HandleUEContextReleaseCommand(
 		printAndGetCause(cause)
 	}
 
-	ranUe.GetSharedCtx().UeCtxRelState = n3iwf_context.UeCtxRelStateOngoing
+	shared := ranUe.GetSharedCtx()
+
+	// If UE was in handover, mark it as completed and notify waiters
+	if shared.IsHandoverInProgress() {
+		shared.HoState = n3iwf_context.HoStateCompleted
+		ngapLog.Debugf("UE %d handover state -> Completed", shared.RanUeNgapId)
+		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_completed", nil)
+	}
+
+	shared.UeCtxRelState = n3iwf_context.UeCtxRelStateOngoing
 
 	message.SendUEContextReleaseComplete(ranUe, nil)
 
@@ -3680,6 +3689,10 @@ func (s *Server) HandleSendHandoverRequired(
 		return
 	}
 
+	// Update handover state to Preparing
+	sharedCtx.HoState = n3iwf_context.HoStatePreparing
+	ngapLog.Debugf("UE %d handover state -> Preparing", ranUeNgapId)
+
 	message.SendToAmf(sharedCtx.AMF, pkt)
 }
 
@@ -4106,7 +4119,10 @@ func (s *Server) HandleHandoverPreparationFailure(
 		if ranUe, ok := s.Context().RanUePoolLoad(ranUeNgapID.Value); ok {
 			ngapLog.Warnf("Handover preparation failed for RanUeNgapId=%d (AMF UE NGAP ID=%d)",
 				ranUeNgapID.Value, amfID)
-			_ = ranUe
+			// Reset handover state to Idle after failure
+			shared := ranUe.GetSharedCtx()
+			shared.HoState = n3iwf_context.HoStateIdle
+			ngapLog.Debugf("UE %d handover state -> Idle (preparation failed)", ranUeNgapID.Value)
 			rc.NotifyHandoverResult(ranUeNgapID.Value, "handover_preparation_failed", fmt.Errorf("handover preparation failure"))
 		} else {
 			ngapLog.Warnf("Handover preparation failed for unknown RanUeNgapId=%d", ranUeNgapID.Value)
@@ -4232,7 +4248,11 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	if ranUe != nil {
-		rc.NotifyHandoverResult(ranUe.GetSharedCtx().RanUeNgapId, "handover_command_sent", nil)
+		shared := ranUe.GetSharedCtx()
+		// Update handover state to Executing
+		shared.HoState = n3iwf_context.HoStateExecuting
+		ngapLog.Debugf("UE %d handover state -> Executing", shared.RanUeNgapId)
+		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_command_sent", nil)
 	}
 
 	if ranUeNgapID != nil {

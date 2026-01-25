@@ -137,7 +137,8 @@ func action(cliCtx *cli.Context) error {
 	logger.InitRCLogger("./log/rc_metrics.json")
 
 	go startSnapshot(n3iwfApp)
-	go startKPMLogger()
+	// Deprecated: kpm_data.json is no longer used. E2sim reads metrics from rc_metrics.json instead.
+	// go startKPMLogger()
 	rc.SetHandoverAlertHandler(rc.NewHandoverAlertHandler(n3iwfApp.Context(), n3iwfApp))
 	rc.StartHandoverHTTPServer("")
 	go startRCLogger(n3iwfApp)

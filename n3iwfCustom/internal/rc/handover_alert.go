@@ -77,8 +77,30 @@ func (h *HandoverAlertHandler) Handle(alert HandoverAlert) error {
 		return fmt.Errorf("handover alert missing TargetID")
 	}
 
-	if _, ok := h.ctx.RanUePoolLoad(alert.RanUeNgapId); !ok {
+	ranUe, ok := h.ctx.RanUePoolLoad(alert.RanUeNgapId)
+	if !ok {
 		return fmt.Errorf("ranUe with id %d not found", alert.RanUeNgapId)
+	}
+
+	// Validate UE state for handover
+	shared := ranUe.GetSharedCtx()
+	if shared == nil {
+		return fmt.Errorf("ranUe %d has nil shared context", alert.RanUeNgapId)
+	}
+
+	// Check if UE is already in handover
+	if !shared.CanStartHandover() {
+		return fmt.Errorf("UE %d cannot start handover: already in state %s", alert.RanUeNgapId, shared.HoState.String())
+	}
+
+	// Check if UE has an associated AMF
+	if shared.AMF == nil {
+		return fmt.Errorf("UE %d has no associated AMF", alert.RanUeNgapId)
+	}
+
+	// Check if UE has active PDU sessions
+	if len(shared.PduSessionList) == 0 {
+		return fmt.Errorf("UE %d has no active PDU sessions", alert.RanUeNgapId)
 	}
 
 	cause := defaultHandoverCause()
