@@ -494,7 +494,7 @@ func (s *Server) bufferForForwarding(session *n3iwf_context.PDUSession, payload 
 		RQI:     rqi,
 	})
 
-	s.log.Infof("[HO-BUFFER] Packet buffered for PDU Session %d (total: %d)", session.Id, len(session.ForwardingBuffer))
+	s.log.Debugf("[HO-BUFFER] Packet buffered for PDU Session %d (total: %d)", session.Id, len(session.ForwardingBuffer))
 }
 
 // FlushForwardingBuffer sends all buffered packets to the UPF forwarding endpoint
