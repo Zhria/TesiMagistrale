@@ -388,9 +388,11 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 			break
 		}
 	}
-	// Check if handover forwarding is active - buffer instead of forwarding to UE
+	// Check if handover is in progress - buffer instead of forwarding to UE
 	if pdusession != nil {
 		shared := ranUe.GetSharedCtx()
+
+		// Source N3IWF: HoStateExecuting - buffer for indirect forwarding to target
 		if shared.HoState == n3iwf_context.HoStateExecuting {
 			if pdusession.ForwardingUPTNLInfo != nil {
 				qfi, rqi := uint8(0), false
@@ -405,13 +407,9 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 				nwuupLog.Warnf("[HO-SKIP] HoState=Executing but ForwardingUPTNLInfo is nil for PDU Session %d", pdusession.Id)
 			}
 		}
-	}
 
-	if cm == nil {
-		// Check if we're target N3IWF awaiting UE during handover
-		shared := ranUe.GetSharedCtx()
-		if shared.HoState == n3iwf_context.HoStateAwaitingUE && pdusession != nil {
-			// Buffer packet for later delivery when UE connects
+		// Target N3IWF: HoStateAwaitingUE - buffer until UE completes MOBIKE
+		if shared.HoState == n3iwf_context.HoStateAwaitingUE {
 			qfi, rqi := uint8(0), false
 			if packet.HasQoS() {
 				qfi, rqi = packet.GetQoSParameters()
@@ -419,7 +417,9 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 			s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
 			return
 		}
+	}
 
+	if cm == nil {
 		nwuupLog.Warnf("forwardDL(): Cannot match TEID(%d) to ChildSA", pktTEID)
 		snssai := ngapType.SNSSAI{}
 		if pdusession != nil {
