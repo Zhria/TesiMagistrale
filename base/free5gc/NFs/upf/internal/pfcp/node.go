@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	BUFFQ_LEN = 512
+	BUFFQ_LEN = 51200
 )
 
 type PDRInfo struct {

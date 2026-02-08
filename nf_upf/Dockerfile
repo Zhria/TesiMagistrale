@@ -4,7 +4,11 @@ RUN git clone https://github.com/free5gc/go-gtp5gnl.git && mkdir "go-gtp5gnl/bin
     cd "go-gtp5gnl/cmd/gogtp5g-tunnel" &&  go build -o "${GOPATH}/gtp5g-tunnel" . && \
     cd -
 
-FROM free5gc/upf-base:latest AS builder
+# Build UPF from local sources
+FROM free5gc/base AS builder
+COPY base/free5gc/ $GOPATH/src/free5gc/
+RUN cd $GOPATH/src/free5gc && make upf
+
 FROM bitnami/minideb:bullseye
 
 LABEL description="free5GC open source 5G Core Network" \
@@ -26,8 +30,8 @@ RUN apt-get update \
 WORKDIR /free5gc
 RUN mkdir -p config/ log/
 
-# Copy executable
-COPY --from=builder /free5gc/${F5GC_MODULE} ./
+# Copy executable built from local sources
+COPY --from=builder /go/src/free5gc/bin/${F5GC_MODULE} ./
 COPY --from=my-base /go/gtp5g-tunnel ./gtp5g-tunnel
 
 # Config files volume
