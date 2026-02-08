@@ -311,869 +311,896 @@ namespace
         return derived;
     }
 
-    /*    static bool map_param_to_value(long param_id,
-                                       const RcAssociationSnapshot &assoc,
-                                       const RcDerivedMetrics &metrics,
-                                       long &out_value)
-        {
-            switch (param_id)
-            {
-            case 41001:
-            {
-                if (assoc.ue.ran_ue_ngap_id >= 0)
-                {
-                    out_value = assoc.ue.ran_ue_ngap_id;
-                    return true;
-                }
-                if (assoc.ue.amf_ue_ngap_id >= 0)
-                {
-                    out_value = assoc.ue.amf_ue_ngap_id;
-                    return true;
-                }
-                const std::string key = build_assoc_key(assoc);
-                if (!key.empty())
-                {
-                    out_value = static_cast<long>(std::hash<std::string>{}(key) & 0x7fffffff);
-                    return true;
-                }
-                return false;
-            }
-            case 41003:
-                out_value = assoc.ue.rrc_establishment_cause;
-                return true;
-            case 42001:
-                out_value = (metrics.signal_dbm != kSignalUnknown) ? metrics.signal_dbm : 0;
-                return true;
-            case 43001:
-                out_value = clamp_double_to_long(metrics.ul_throughput_bps);
-                return true;
-            case 43002:
-                out_value = clamp_double_to_long(metrics.dl_throughput_bps);
-                return true;
-            case 44001:
-                out_value = clamp_double_to_long(metrics.ul_volume_kbits);
-                return true;
-            case 44002:
-                out_value = clamp_double_to_long(metrics.dl_volume_kbits);
-                return true;
-            default:
-                return false;
-            }
-        }
-
-        static bool append_param_item(E2SM_RC_IndicationMessage_Format1_t *fmt1, long param_id, long value)
-        {
-            if (!fmt1)
-            {
-                return false;
-            }
-            auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
-                1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
-            if (!item)
-            {
-                return false;
-            }
-            item->ranParameter_ID = param_id;
-            item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
-            item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
-                (RANParameter_ValueType_Choice_ElementTrue *)calloc(
-                    1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
-            if (!item->ranParameter_valueType.choice.ranP_Choice_ElementTrue)
-            {
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
-                return false;
-            }
-            auto *val =
-                &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
-            val->present = RANParameter_Value_PR_valueInt;
-            val->choice.valueInt = value;
-            ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
-            return true;
-        }
-
-        void stop_rc_worker_internal(const SubscriptionKey &key)
-        {
-            std::shared_ptr<std::atomic_bool> stop_flag;
-            std::thread worker;
-
-            {
-                std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
-                auto it = g_rc_workers.find(key);
-                if (it == g_rc_workers.end())
-                {
-                    return;
-                }
-                stop_flag = it->second.stop_flag;
-                worker = std::move(it->second.worker);
-                g_rc_workers.erase(it);
-            }
-
-            if (stop_flag)
-            {
-                stop_flag->store(true, std::memory_order_relaxed);
-            }
-            if (worker.joinable())
-            {
-                worker.join();
-            }
-        }
-
-        void stop_all_rc_workers_internal()
-        {
-            std::vector<std::thread> to_join;
-
-            {
-                std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
-                for (auto &entry : g_rc_workers)
-                {
-                    if (entry.second.stop_flag)
-                    {
-                        entry.second.stop_flag->store(true, std::memory_order_relaxed);
-                    }
-                    to_join.emplace_back(std::move(entry.second.worker));
-                }
-                g_rc_workers.clear();
-            }
-
-            for (auto &t : to_join)
-            {
-                if (t.joinable())
-                {
-                    t.join();
-                }
-            }
-        }
-
-
-    void stop_rc_worker(const SubscriptionKey &key)
+    static bool map_param_to_value(long param_id,
+                                   const RcAssociationSnapshot &assoc,
+                                   const RcDerivedMetrics &metrics,
+                                   long &out_value)
     {
-        stop_rc_worker_internal(key);
+        switch (param_id)
+        {
+        case 41001:
+        {
+            if (assoc.ue.ran_ue_ngap_id >= 0)
+            {
+                out_value = assoc.ue.ran_ue_ngap_id;
+                return true;
+            }
+            if (assoc.ue.amf_ue_ngap_id >= 0)
+            {
+                out_value = assoc.ue.amf_ue_ngap_id;
+                return true;
+            }
+            const std::string key = build_assoc_key(assoc);
+            if (!key.empty())
+            {
+                out_value = static_cast<long>(std::hash<std::string>{}(key) & 0x7fffffff);
+                return true;
+            }
+            return false;
+        }
+        case 41003:
+            out_value = assoc.ue.rrc_establishment_cause;
+            return true;
+        case 42001:
+            out_value = (metrics.signal_dbm != kSignalUnknown) ? metrics.signal_dbm : 0;
+            return true;
+        case 43001:
+            out_value = clamp_double_to_long(metrics.ul_throughput_bps);
+            return true;
+        case 43002:
+            out_value = clamp_double_to_long(metrics.dl_throughput_bps);
+            return true;
+        case 44001:
+            out_value = clamp_double_to_long(metrics.ul_volume_kbits);
+            return true;
+        case 44002:
+            out_value = clamp_double_to_long(metrics.dl_volume_kbits);
+            return true;
+        default:
+            return false;
+        }
     }
 
-    void stop_all_rc_workers()
+    static bool append_param_item(E2SM_RC_IndicationMessage_Format1_t *fmt1, long param_id, long value)
     {
-        stop_all_rc_workers_internal();
+        if (!fmt1)
+        {
+            return false;
+        }
+        auto *item = (E2SM_RC_IndicationMessage_Format1_Item *)calloc(
+            1, sizeof(E2SM_RC_IndicationMessage_Format1_Item));
+        if (!item)
+        {
+            return false;
+        }
+        item->ranParameter_ID = param_id;
+        item->ranParameter_valueType.present = RANParameter_ValueType_PR_ranP_Choice_ElementTrue;
+        item->ranParameter_valueType.choice.ranP_Choice_ElementTrue =
+            (RANParameter_ValueType_Choice_ElementTrue *)calloc(
+                1, sizeof(RANParameter_ValueType_Choice_ElementTrue));
+        if (!item->ranParameter_valueType.choice.ranP_Choice_ElementTrue)
+        {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_IndicationMessage_Format1_Item, item);
+            return false;
+        }
+        auto *val =
+            &item->ranParameter_valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+        val->present = RANParameter_Value_PR_valueInt;
+        val->choice.valueInt = value;
+        ASN_SEQUENCE_ADD(&fmt1->ranP_Reported_List.list, item);
+        return true;
     }
-    */
 
-        struct ControlOutcomeField
+    void stop_rc_worker_internal(const SubscriptionKey &key)
+    {
+        std::shared_ptr<std::atomic_bool> stop_flag;
+        std::thread worker;
+
         {
-            long id;
-            std::string_view value;
-        };
-
-        struct RcParamValue
-        {
-            long id{0};
-            std::string name;
-            RANParameter_ValueType_PR value_type{RANParameter_ValueType_PR_NOTHING};
-            std::string printable_value;
-            bool has_octets{false};
-            std::vector<uint8_t> octets;
-            bool has_int{false};
-            long int_value{0};
-        };
-
-        struct RcControlContext
-        {
-            long requestor_id{-1};
-            long instance_id{-1};
-            long ran_function_id{-1};
-            long control_action_id{-1};
-            long style_type{-1};
-            bool ack_requested{false};
-            OCTET_STRING_t call_process_id{0};
-            bool call_process_id_present{false};
-            std::string ue_identity;
-            long header_ran_ue_id{-1};
-            long header_amf_ue_id{-1};
-            bool header_ran_ue_id_present{false};
-            bool header_amf_ue_id_present{false};
-            std::vector<RcParamValue> params;
-        };
-
-        struct RcControlExecutionResult
-        {
-            bool success{false};
-            std::string status;
-            std::vector<std::pair<long, std::string>> outcome_items;
-            long cause_value{CauseRICrequest_action_not_supported};
-        };
-
-        struct N3iwfTriggerResponse
-        {
-            bool success{false};
-            std::string description;
-            long failure_cause{CauseRICrequest_control_failed_to_execute};
-        };
-
-        static std::string_view get_param_value(const RcControlContext &ctx, long id);
-
-        static std::once_flag g_curl_init_flag;
-
-        namespace
-        {
-
-            constexpr const char *kDefaultHandoverUrl = "http://127.0.0.1:9085/rc/handover";
-            constexpr long kHttpTimeoutMs = 800;
-
-        } // namespace
-
-        static inline long long unix_ms_now()
-        {
-            using namespace std::chrono;
-            return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-        }
-
-        static void ensure_curl_initialized()
-        {
-            std::call_once(g_curl_init_flag, []
-                           { curl_global_init(CURL_GLOBAL_DEFAULT); });
-        }
-
-        static size_t curl_write_callback(void *contents, size_t size, size_t nmemb, void *userp)
-        {
-            size_t total = size * nmemb;
-            auto *buffer = static_cast<std::string *>(userp);
-            buffer->append(static_cast<const char *>(contents), total);
-            return total;
-        }
-
-        static bool http_post_json(const std::string &url,
-                                   const std::string &payload,
-                                   long &http_code,
-                                   std::string &response_body,
-                                   std::string &error_message)
-        {
-            ensure_curl_initialized();
-
-            const auto start_steady = std::chrono::steady_clock::now();
-            const long long start_ms = unix_ms_now();
-            long long end_ms = 0;
-            auto dur_ms = 0;
-            CURL *curl = curl_easy_init();
-            if (!curl)
-            {
-                error_message = "curl_easy_init failed";
-                end_ms = unix_ms_now();
-                dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
-                LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
-                      start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
-                return false;
-            }
-
-            struct curl_slist *headers = nullptr;
-            headers = curl_slist_append(headers, "Content-Type: application/json");
-            LOG_D("[RC CTRL] HTTP POST %s", url.c_str());
-            LOG_D("[RC CTRL] Payload: %s", payload.c_str());
-
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-            curl_easy_setopt(curl, CURLOPT_POST, 1L);
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.c_str());
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(payload.size()));
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_callback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
-            curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, kHttpTimeoutMs);
-            curl_easy_setopt(curl, CURLOPT_USERAGENT, "e2sim-rc");
-
-            CURLcode res = curl_easy_perform(curl);
-            end_ms = unix_ms_now();
-            dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
-            if (res != CURLE_OK)
-            {
-                error_message = curl_easy_strerror(res);
-                curl_slist_free_all(headers);
-                curl_easy_cleanup(curl);
-                LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
-                      start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
-                return false;
-            }
-
-            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
-
-            curl_slist_free_all(headers);
-            curl_easy_cleanup(curl);
-            LOG_I("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s http=%ld resp_bytes=%zu",
-                  start_ms, end_ms, (long long)dur_ms, url.c_str(), http_code, response_body.size());
-            return true;
-        }
-        /*
-            static int hex_value(char c)
-            {
-                if (c >= '0' && c <= '9')
-                    return c - '0';
-                if (c >= 'a' && c <= 'f')
-                    return 10 + (c - 'a');
-                if (c >= 'A' && c <= 'F')
-                    return 10 + (c - 'A');
-                return -1;
-            }
-
-            static bool hex_to_bytes(std::string_view text, std::vector<uint8_t> &out)
-            {
-                std::string cleaned;
-                cleaned.reserve(text.size());
-                for (size_t i = 0; i < text.size(); ++i)
-                {
-                    char c = text[i];
-                    if (std::isspace(static_cast<unsigned char>(c)) || c == ':' || c == '-')
-                    {
-                        continue;
-                    }
-                    if (c == '0' && (i + 1) < text.size() && (text[i + 1] == 'x' || text[i + 1] == 'X'))
-                    {
-                        ++i; // skip the 'x'
-                        continue;
-                    }
-                    cleaned.push_back(c);
-                }
-
-                if (cleaned.empty() || (cleaned.size() % 2) != 0)
-                {
-                    return false;
-                }
-
-                out.clear();
-                out.reserve(cleaned.size() / 2);
-                for (size_t i = 0; i < cleaned.size(); i += 2)
-                {
-                    int hi = hex_value(cleaned[i]);
-                    int lo = hex_value(cleaned[i + 1]);
-                    if (hi < 0 || lo < 0)
-                    {
-                        out.clear();
-                        return false;
-                    }
-                    out.push_back(static_cast<uint8_t>((hi << 4) | lo));
-                }
-                return !out.empty();
-            }
-
-
-            static std::string base64_encode(const uint8_t *data, size_t len)
-            {
-                static const char kBase64Alphabet[] =
-                    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-                std::string out;
-                out.reserve(((len + 2) / 3) * 4);
-                size_t i = 0;
-                while (i + 2 < len)
-                {
-                    uint32_t triple = (static_cast<uint32_t>(data[i]) << 16) |
-                                      (static_cast<uint32_t>(data[i + 1]) << 8) |
-                                      static_cast<uint32_t>(data[i + 2]);
-                    out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
-                    out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
-                    out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
-                    out.push_back(kBase64Alphabet[triple & 0x3F]);
-                    i += 3;
-                }
-                if (i < len)
-                {
-                    uint32_t triple = static_cast<uint32_t>(data[i]) << 16;
-                    if ((i + 1) < len)
-                    {
-                        triple |= static_cast<uint32_t>(data[i + 1]) << 8;
-                    }
-                    out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
-                    out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
-                    if ((i + 1) < len)
-                    {
-                        out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
-                    }
-                    else
-                    {
-                        out.push_back('=');
-                    }
-                    out.push_back('=');
-                }
-                return out;
-            }
-
-            static std::string bytes_to_base64(const std::vector<uint8_t> &bytes)
-            {
-                if (bytes.empty())
-                {
-                    return {};
-                }
-                return base64_encode(bytes.data(), bytes.size());
-            }
-
-            static std::string string_to_base64(const std::string &value)
-            {
-                if (value.empty())
-                {
-                    return {};
-                }
-                return base64_encode(reinterpret_cast<const uint8_t *>(value.data()), value.size());
-            }
-
-            static std::string convert_hex_or_ascii_to_base64(const std::string &value)
-            {
-                std::vector<uint8_t> bytes;
-                if (hex_to_bytes(value, bytes))
-                {
-                    return bytes_to_base64(bytes);
-                }
-                return string_to_base64(value);
-            }*/
-
-        static std::string bytes_to_hex_compact(const uint8_t *data, size_t len)
-        {
-            static const char kHex[] = "0123456789ABCDEF";
-            if (!data || len == 0)
-            {
-                return {};
-            }
-            std::string out;
-            out.reserve(len * 2);
-            for (size_t i = 0; i < len; ++i)
-            {
-                uint8_t b = data[i];
-                out.push_back(kHex[(b >> 4) & 0x0F]);
-                out.push_back(kHex[b & 0x0F]);
-            }
-            return out;
-        }
-
-        static bool decode_plmn_identity_bcd(const uint8_t plmn[3], std::string &mcc_out, std::string &mnc_out)
-        {
-            if (!plmn)
-            {
-                return false;
-            }
-            auto nibble = [](uint8_t v)
-            { return static_cast<int>(v & 0x0F); };
-            int mcc1 = nibble(plmn[0]);
-            int mcc2 = nibble(plmn[0] >> 4);
-            int mcc3 = nibble(plmn[1]);
-            int mnc3 = nibble(plmn[1] >> 4);
-            int mnc1 = nibble(plmn[2]);
-            int mnc2 = nibble(plmn[2] >> 4);
-
-            auto is_digit = [](int v)
-            { return v >= 0 && v <= 9; };
-            if (!is_digit(mcc1) || !is_digit(mcc2) || !is_digit(mcc3) || !is_digit(mnc1) || !is_digit(mnc2))
-            {
-                return false;
-            }
-            if (!(is_digit(mnc3) || mnc3 == 0x0F))
-            {
-                return false;
-            }
-
-            mcc_out.clear();
-            mnc_out.clear();
-            mcc_out.push_back(static_cast<char>('0' + mcc1));
-            mcc_out.push_back(static_cast<char>('0' + mcc2));
-            mcc_out.push_back(static_cast<char>('0' + mcc3));
-
-            mnc_out.push_back(static_cast<char>('0' + mnc1));
-            mnc_out.push_back(static_cast<char>('0' + mnc2));
-            if (mnc3 != 0x0F)
-            {
-                mnc_out.push_back(static_cast<char>('0' + mnc3));
-            }
-            return true;
-        }
-
-        static std::optional<uint64_t> decode_nr_cell_identity_36(const uint8_t nr_cell_id[5], std::string &alignment_out)
-        {
-            if (!nr_cell_id)
-            {
-                return std::nullopt;
-            }
-            uint64_t value40 = 0;
-            for (int i = 0; i < 5; ++i)
-            {
-                value40 = (value40 << 8) | static_cast<uint64_t>(nr_cell_id[i]);
-            }
-
-            // Prefer spec-like encoding: 36 bits carried in 5 bytes with 4 unused bits at the LSB of the last octet.
-            if ((nr_cell_id[4] & 0x0F) == 0)
-            {
-                alignment_out = "lsb-padding";
-                return value40 >> 4;
-            }
-
-            // Tolerate "right-aligned" encodings where the 36-bit value is padded with 4 MSB zeros.
-            if ((nr_cell_id[0] & 0xF0) == 0)
-            {
-                alignment_out = "msb-padding";
-                return value40 & ((1ULL << 36) - 1);
-            }
-
-            alignment_out = "unknown-padding";
-            return std::nullopt;
-        }
-
-        // Generic callback to accumulate ASN.1 print output into a std::string.
-        static int asn_string_append_cb(const void *buffer, size_t size, void *app_key)
-        {
-            auto *out = static_cast<std::string *>(app_key);
-            if (!out || !buffer || size == 0)
-            {
-                return 0;
-            }
-            out->append(static_cast<const char *>(buffer), size);
-            return 0;
-        }
-
-        // Convert an OCTET STRING (e.g. RANUEID_t) to a human-readable string using ASN.1 printer.
-        static std::string octet_string_to_string(const OCTET_STRING_t &oct)
-        {
-            std::string out;
-            OCTET_STRING_print(&asn_DEF_OCTET_STRING, &oct, 0, asn_string_append_cb, &out);
-            return out;
-        }
-
-        // Convert a BIT STRING to a human-readable string using ASN.1 printer.
-        static std::string bit_string_to_string(const BIT_STRING_t &bs)
-        {
-            std::string out;
-            BIT_STRING_print(&asn_DEF_BIT_STRING, &bs, 0, asn_string_append_cb, &out);
-            return out;
-        }
-
-        static std::optional<int64_t> resolve_ran_ue_ngap_id(const RcControlContext &ctx)
-        {
-            if (ctx.header_ran_ue_id_present)
-            {
-                return ctx.header_ran_ue_id;
-            }
-            if (ctx.header_amf_ue_id_present)
-            {
-                auto assoc = findRcAssociationByAmfUeId(ctx.header_amf_ue_id);
-                if (assoc && assoc->ue.ran_ue_ngap_id >= 0)
-                {
-                    return assoc->ue.ran_ue_ngap_id;
-                }
-            }
-
-            return std::nullopt;
-        }
-
-        static std::string handover_endpoint_url()
-        {
-            const char *env = std::getenv("RC_HANDOVER_TRIGGER_URL");
-            if (env && *env)
-            {
-                return std::string(env);
-            }
-            return std::string(kDefaultHandoverUrl);
-        }
-
-        static void release_octet_string(OCTET_STRING_t &str)
-        {
-            if (str.buf)
-            {
-                free(str.buf);
-                str.buf = nullptr;
-            }
-            str.size = 0;
-        }
-
-        static std::string rc_param_name(long id)
-        {
-            static const auto metrics = getAllowedControlMetricsRC();
-            auto it = metrics.find(id);
-            if (it != metrics.end())
-            {
-                return it->second;
-            }
-            return std::string("RAN Parameter ") + std::to_string(id);
-        }
-
-        static std::string describe_ueid(const UEID_t *ue)
-        {
-            if (!ue)
-            {
-                return "<unknown UE>";
-            }
-            switch (ue->present)
-            {
-            case UEID_PR_gNB_UEID:
-                if (ue->choice.gNB_UEID && ue->choice.gNB_UEID->ran_UEID)
-                {
-                    const auto *ran = ue->choice.gNB_UEID->ran_UEID;
-                    return std::string("gNB-UEID ran=") + octet_string_to_string(*ran);
-                }
-                return "gNB-UEID";
-            case UEID_PR_gNB_DU_UEID:
-                return "gNB-DU-UEID";
-            case UEID_PR_gNB_CU_UP_UEID:
-                return "gNB-CU-UP-UEID";
-            case UEID_PR_ng_eNB_UEID:
-                return "ng-eNB-UEID";
-            default:
-                return std::string("UEID type=") + std::to_string(ue->present);
-            }
-        }
-
-        static const RcParamValue *find_param(const RcControlContext &ctx, long id)
-        {
-            for (const auto &p : ctx.params)
-            {
-                if (p.id == id)
-                {
-                    return &p;
-                }
-            }
-            return nullptr;
-        }
-
-        static std::string_view get_param_value(const RcControlContext &ctx, long id)
-        {
-            const RcParamValue *param = find_param(ctx, id);
-            return param ? std::string_view(param->printable_value) : std::string_view{};
-        }
-
-        static std::optional<long> get_param_int_value(const RcControlContext &ctx, long id)
-        {
-            const RcParamValue *param = find_param(ctx, id);
-            if (!param)
-            {
-                return std::nullopt;
-            }
-            if (param->has_int)
-            {
-                return param->int_value;
-            }
-            int64_t value = 0;
-            if (parse_first_integer(param->printable_value, value))
-            {
-                return static_cast<long>(value);
-            }
-            return std::nullopt;
-        }
-
-        static std::string get_target_identifier_value(const RcControlContext &ctx)
-        {
-            const RcParamValue *param = find_param(ctx, kRcParamTargetNrCgi);
-            if (!param)
-            {
-                return {};
-            }
-
-            if (!param->has_octets)
-            {
-                // Already a friendly target string (e.g. "208-93-136").
-                return param->printable_value;
-            }
-
-            const auto &bytes = param->octets;
-            if (bytes.size() != 8)
-            {
-                return {};
-            }
-
-            std::string mcc;
-            std::string mnc;
-            if (!decode_plmn_identity_bcd(bytes.data(), mcc, mnc))
-            {
-                return {};
-            }
-
-            std::string nr_cell_alignment;
-            auto nr_cell_id = decode_nr_cell_identity_36(bytes.data() + 3, nr_cell_alignment);
-            if (!nr_cell_id)
-            {
-                return {};
-            }
-
-            return mcc + "-" + mnc + "-" + std::to_string(*nr_cell_id);
-        }
-
-        static std::string ran_value_to_string(const RANParameter_Value_t &value)
-        {
-            switch (value.present)
-            {
-            case RANParameter_Value_PR_valueBoolean:
-                return value.choice.valueBoolean ? "true" : "false";
-            case RANParameter_Value_PR_valueInt:
-                return std::to_string(value.choice.valueInt);
-            case RANParameter_Value_PR_valueReal:
-                return std::to_string(value.choice.valueReal);
-            case RANParameter_Value_PR_valueBitS:
-                return bit_string_to_string(value.choice.valueBitS);
-            case RANParameter_Value_PR_valueOctS:
-                return octet_string_to_string(value.choice.valueOctS);
-            case RANParameter_Value_PR_valuePrintableString:
-                if (value.choice.valuePrintableString.buf && value.choice.valuePrintableString.size > 0)
-                {
-                    return std::string(reinterpret_cast<char *>(value.choice.valuePrintableString.buf),
-                                       value.choice.valuePrintableString.size);
-                }
-                return "";
-            default:
-                return "<unsupported>";
-            }
-        }
-
-        static const RANParameter_Value_t *get_element_value(const RANParameter_ValueType_t &valueType)
-        {
-            if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementTrue &&
-                valueType.choice.ranP_Choice_ElementTrue)
-            {
-                return &valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
-            }
-            if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementFalse &&
-                valueType.choice.ranP_Choice_ElementFalse)
-            {
-                return valueType.choice.ranP_Choice_ElementFalse->ranParameter_value;
-            }
-            return nullptr;
-        }
-
-        static std::string describe_ran_value_type(const RANParameter_ValueType_t &valueType)
-        {
-            switch (valueType.present)
-            {
-            case RANParameter_ValueType_PR_ranP_Choice_ElementTrue:
-                if (const auto *val = get_element_value(valueType))
-                {
-                    return ran_value_to_string(*val);
-                }
-                return "<element-null>";
-            case RANParameter_ValueType_PR_ranP_Choice_ElementFalse:
-                if (const auto *val = get_element_value(valueType))
-                {
-                    return ran_value_to_string(*val);
-                }
-                return "<element-false>";
-            case RANParameter_ValueType_PR_ranP_Choice_Structure:
-                if (valueType.choice.ranP_Choice_Structure &&
-                    valueType.choice.ranP_Choice_Structure->ranParameter_Structure &&
-                    valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters)
-                {
-                    auto &seq = valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters->list;
-                    return std::string("<structure items=") + std::to_string(seq.count) + ">";
-                }
-                return "<structure-null>";
-            case RANParameter_ValueType_PR_ranP_Choice_List:
-                if (valueType.choice.ranP_Choice_List && valueType.choice.ranP_Choice_List->ranParameter_List)
-                {
-                    auto &structures = valueType.choice.ranP_Choice_List->ranParameter_List->list_of_ranParameter.list;
-                    return std::string("<list structures=") + std::to_string(structures.count) + ">";
-                }
-                return "<list-null>";
-            default:
-                return "<unsupported-value-type>";
-            }
-        }
-
-        static bool octet_string_to_long(const OCTET_STRING_t *oct, long &out)
-        {
-            if (!oct || !oct->buf || oct->size <= 0 || oct->size > 8)
-            {
-                return false;
-            }
-            uint64_t value = 0;
-            for (int i = 0; i < oct->size; ++i)
-            {
-                value = (value << 8) | static_cast<uint8_t>(oct->buf[i]);
-            }
-            out = static_cast<long>(value);
-            return true;
-        }
-
-        static void update_ctx_ids_from_ueid(const UEID_t *ueid, RcControlContext &ctx)
-        {
-            if (!ueid)
+            std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
+            auto it = g_rc_workers.find(key);
+            if (it == g_rc_workers.end())
             {
                 return;
             }
-            auto set_amf = [&](const AMF_UE_NGAP_ID_t &src)
-            {
-                long value = 0;
-                if (asn_INTEGER2long(&src, &value) == 0)
-                {
-                    ctx.header_amf_ue_id = value;
-                    ctx.header_amf_ue_id_present = true;
-                    LOG_D("[RC CONTROL] Header AMF UE NGAP ID=%ld", value);
-                }
-            };
-            auto set_ran = [&](const OCTET_STRING_t *oct)
-            {
-                long value = 0;
-                if (octet_string_to_long(oct, value))
-                {
-                    ctx.header_ran_ue_id = value;
-                    ctx.header_ran_ue_id_present = true;
-                    LOG_D("[RC CONTROL] Header RAN UE ID=%ld", value);
-                }
-            };
+            stop_flag = it->second.stop_flag;
+            worker = std::move(it->second.worker);
+            g_rc_workers.erase(it);
+        }
 
-            switch (ueid->present)
+        if (stop_flag)
+        {
+            stop_flag->store(true, std::memory_order_relaxed);
+        }
+        if (worker.joinable())
+        {
+            worker.join();
+        }
+    }
+
+    void stop_all_rc_workers_internal()
+    {
+        std::vector<std::thread> to_join;
+
+        {
+            std::lock_guard<std::mutex> lock(g_rc_workers_mutex);
+            for (auto &entry : g_rc_workers)
             {
-            case UEID_PR_gNB_UEID:
-                if (ueid->choice.gNB_UEID)
+                if (entry.second.stop_flag)
                 {
-                    set_amf(ueid->choice.gNB_UEID->amf_UE_NGAP_ID);
-                    if (ueid->choice.gNB_UEID->ran_UEID)
-                    {
-                        set_ran(ueid->choice.gNB_UEID->ran_UEID);
-                    }
+                    entry.second.stop_flag->store(true, std::memory_order_relaxed);
                 }
-                break;
-            case UEID_PR_gNB_DU_UEID:
-                if (ueid->choice.gNB_DU_UEID && ueid->choice.gNB_DU_UEID->ran_UEID)
-                {
-                    set_ran(ueid->choice.gNB_DU_UEID->ran_UEID);
-                }
-                break;
-            case UEID_PR_gNB_CU_UP_UEID:
-                if (ueid->choice.gNB_CU_UP_UEID && ueid->choice.gNB_CU_UP_UEID->ran_UEID)
-                {
-                    set_ran(ueid->choice.gNB_CU_UP_UEID->ran_UEID);
-                }
-                break;
-            case UEID_PR_ng_eNB_UEID:
-                if (ueid->choice.ng_eNB_UEID)
-                {
-                    set_amf(ueid->choice.ng_eNB_UEID->amf_UE_NGAP_ID);
-                }
-                break;
-            default:
-                break;
+                to_join.emplace_back(std::move(entry.second.worker));
+            }
+            g_rc_workers.clear();
+        }
+
+        for (auto &t : to_join)
+        {
+            if (t.joinable())
+            {
+                t.join();
+            }
+        }
+    }
+
+} // namespace
+
+void stop_rc_worker(const SubscriptionKey &key)
+{
+    stop_rc_worker_internal(key);
+}
+
+void stop_all_rc_workers()
+{
+    stop_all_rc_workers_internal();
+}
+
+namespace
+{
+
+    struct ControlOutcomeField
+    {
+        long id;
+        std::string_view value;
+    };
+
+    struct RcParamValue
+    {
+        long id{0};
+        std::string name;
+        RANParameter_ValueType_PR value_type{RANParameter_ValueType_PR_NOTHING};
+        std::string printable_value;
+        bool has_octets{false};
+        std::vector<uint8_t> octets;
+        bool has_int{false};
+        long int_value{0};
+    };
+
+    struct RcControlContext
+    {
+        long requestor_id{-1};
+        long instance_id{-1};
+        long ran_function_id{-1};
+        long control_action_id{-1};
+        long style_type{-1};
+        bool ack_requested{false};
+        OCTET_STRING_t call_process_id{0};
+        bool call_process_id_present{false};
+        std::string ue_identity;
+        long header_ran_ue_id{-1};
+        long header_amf_ue_id{-1};
+        bool header_ran_ue_id_present{false};
+        bool header_amf_ue_id_present{false};
+        std::vector<RcParamValue> params;
+    };
+
+    struct RcControlExecutionResult
+    {
+        bool success{false};
+        std::string status;
+        std::vector<std::pair<long, std::string>> outcome_items;
+        long cause_value{CauseRICrequest_action_not_supported};
+    };
+
+    struct N3iwfTriggerResponse
+    {
+        bool success{false};
+        std::string description;
+        long failure_cause{CauseRICrequest_control_failed_to_execute};
+    };
+
+    static std::string_view get_param_value(const RcControlContext &ctx, long id);
+
+    static std::once_flag g_curl_init_flag;
+
+    namespace
+    {
+
+        constexpr const char *kDefaultHandoverUrl = "http://127.0.0.1:9085/rc/handover";
+        constexpr long kHttpTimeoutMs = 800;
+
+    } // namespace
+
+    static inline long long unix_ms_now()
+    {
+        using namespace std::chrono;
+        return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    }
+
+    static void ensure_curl_initialized()
+    {
+        std::call_once(g_curl_init_flag, []
+                       { curl_global_init(CURL_GLOBAL_DEFAULT); });
+    }
+
+    static size_t curl_write_callback(void *contents, size_t size, size_t nmemb, void *userp)
+    {
+        size_t total = size * nmemb;
+        auto *buffer = static_cast<std::string *>(userp);
+        buffer->append(static_cast<const char *>(contents), total);
+        return total;
+    }
+
+    static bool http_post_json(const std::string &url,
+                               const std::string &payload,
+                               long &http_code,
+                               std::string &response_body,
+                               std::string &error_message)
+    {
+        ensure_curl_initialized();
+
+        const auto start_steady = std::chrono::steady_clock::now();
+        const long long start_ms = unix_ms_now();
+        long long end_ms = 0;
+        auto dur_ms=0;
+        CURL *curl = curl_easy_init();
+        if (!curl)
+        {
+            error_message = "curl_easy_init failed";
+            end_ms = unix_ms_now();
+            dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
+            LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
+                  start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
+            return false;
+        }
+
+        struct curl_slist *headers = nullptr;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        LOG_D("[RC CTRL] HTTP POST %s", url.c_str());
+        LOG_D("[RC CTRL] Payload: %s", payload.c_str());
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_POST, 1L);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast<long>(payload.size()));
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, kHttpTimeoutMs);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "e2sim-rc");
+
+        CURLcode res = curl_easy_perform(curl);
+        end_ms = unix_ms_now();
+        dur_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_steady).count();
+        if (res != CURLE_OK)
+        {
+            error_message = curl_easy_strerror(res);
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            LOG_E("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s err=%s",
+                  start_ms, end_ms, (long long)dur_ms, url.c_str(), error_message.c_str());
+            return false;
+        }
+
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        LOG_I("[RC CTRL][HTTP] start_ms=%lld end_ms=%lld dur_ms=%lld url=%s http=%ld resp_bytes=%zu",
+              start_ms, end_ms, (long long)dur_ms, url.c_str(), http_code, response_body.size());
+        return true;
+    }
+
+    static int hex_value(char c)
+    {
+        if (c >= '0' && c <= '9')
+            return c - '0';
+        if (c >= 'a' && c <= 'f')
+            return 10 + (c - 'a');
+        if (c >= 'A' && c <= 'F')
+            return 10 + (c - 'A');
+        return -1;
+    }
+
+    static bool hex_to_bytes(std::string_view text, std::vector<uint8_t> &out)
+    {
+        std::string cleaned;
+        cleaned.reserve(text.size());
+        for (size_t i = 0; i < text.size(); ++i)
+        {
+            char c = text[i];
+            if (std::isspace(static_cast<unsigned char>(c)) || c == ':' || c == '-')
+            {
+                continue;
+            }
+            if (c == '0' && (i + 1) < text.size() && (text[i + 1] == 'x' || text[i + 1] == 'X'))
+            {
+                ++i; // skip the 'x'
+                continue;
+            }
+            cleaned.push_back(c);
+        }
+
+        if (cleaned.empty() || (cleaned.size() % 2) != 0)
+        {
+            return false;
+        }
+
+        out.clear();
+        out.reserve(cleaned.size() / 2);
+        for (size_t i = 0; i < cleaned.size(); i += 2)
+        {
+            int hi = hex_value(cleaned[i]);
+            int lo = hex_value(cleaned[i + 1]);
+            if (hi < 0 || lo < 0)
+            {
+                out.clear();
+                return false;
+            }
+            out.push_back(static_cast<uint8_t>((hi << 4) | lo));
+        }
+        return !out.empty();
+    }
+
+    static std::string base64_encode(const uint8_t *data, size_t len)
+    {
+        static const char kBase64Alphabet[] =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        std::string out;
+        out.reserve(((len + 2) / 3) * 4);
+        size_t i = 0;
+        while (i + 2 < len)
+        {
+            uint32_t triple = (static_cast<uint32_t>(data[i]) << 16) |
+                              (static_cast<uint32_t>(data[i + 1]) << 8) |
+                              static_cast<uint32_t>(data[i + 2]);
+            out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
+            out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
+            out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
+            out.push_back(kBase64Alphabet[triple & 0x3F]);
+            i += 3;
+        }
+        if (i < len)
+        {
+            uint32_t triple = static_cast<uint32_t>(data[i]) << 16;
+            if ((i + 1) < len)
+            {
+                triple |= static_cast<uint32_t>(data[i + 1]) << 8;
+            }
+            out.push_back(kBase64Alphabet[(triple >> 18) & 0x3F]);
+            out.push_back(kBase64Alphabet[(triple >> 12) & 0x3F]);
+            if ((i + 1) < len)
+            {
+                out.push_back(kBase64Alphabet[(triple >> 6) & 0x3F]);
+            }
+            else
+            {
+                out.push_back('=');
+            }
+            out.push_back('=');
+        }
+        return out;
+    }
+
+    static std::string bytes_to_base64(const std::vector<uint8_t> &bytes)
+    {
+        if (bytes.empty())
+        {
+            return {};
+        }
+        return base64_encode(bytes.data(), bytes.size());
+    }
+
+    static std::string string_to_base64(const std::string &value)
+    {
+        if (value.empty())
+        {
+            return {};
+        }
+        return base64_encode(reinterpret_cast<const uint8_t *>(value.data()), value.size());
+    }
+
+    static std::string convert_hex_or_ascii_to_base64(const std::string &value)
+    {
+        std::vector<uint8_t> bytes;
+        if (hex_to_bytes(value, bytes))
+        {
+            return bytes_to_base64(bytes);
+        }
+        return string_to_base64(value);
+    }
+
+    static std::string bytes_to_hex_compact(const uint8_t *data, size_t len)
+    {
+        static const char kHex[] = "0123456789ABCDEF";
+        if (!data || len == 0)
+        {
+            return {};
+        }
+        std::string out;
+        out.reserve(len * 2);
+        for (size_t i = 0; i < len; ++i)
+        {
+            uint8_t b = data[i];
+            out.push_back(kHex[(b >> 4) & 0x0F]);
+            out.push_back(kHex[b & 0x0F]);
+        }
+        return out;
+    }
+
+    static bool decode_plmn_identity_bcd(const uint8_t plmn[3], std::string &mcc_out, std::string &mnc_out)
+    {
+        if (!plmn)
+        {
+            return false;
+        }
+        auto nibble = [](uint8_t v) { return static_cast<int>(v & 0x0F); };
+        int mcc1 = nibble(plmn[0]);
+        int mcc2 = nibble(plmn[0] >> 4);
+        int mcc3 = nibble(plmn[1]);
+        int mnc3 = nibble(plmn[1] >> 4);
+        int mnc1 = nibble(plmn[2]);
+        int mnc2 = nibble(plmn[2] >> 4);
+
+        auto is_digit = [](int v) { return v >= 0 && v <= 9; };
+        if (!is_digit(mcc1) || !is_digit(mcc2) || !is_digit(mcc3) || !is_digit(mnc1) || !is_digit(mnc2))
+        {
+            return false;
+        }
+        if (!(is_digit(mnc3) || mnc3 == 0x0F))
+        {
+            return false;
+        }
+
+        mcc_out.clear();
+        mnc_out.clear();
+        mcc_out.push_back(static_cast<char>('0' + mcc1));
+        mcc_out.push_back(static_cast<char>('0' + mcc2));
+        mcc_out.push_back(static_cast<char>('0' + mcc3));
+
+        mnc_out.push_back(static_cast<char>('0' + mnc1));
+        mnc_out.push_back(static_cast<char>('0' + mnc2));
+        if (mnc3 != 0x0F)
+        {
+            mnc_out.push_back(static_cast<char>('0' + mnc3));
+        }
+        return true;
+    }
+
+    static std::optional<uint64_t> decode_nr_cell_identity_36(const uint8_t nr_cell_id[5], std::string &alignment_out)
+    {
+        if (!nr_cell_id)
+        {
+            return std::nullopt;
+        }
+        uint64_t value40 = 0;
+        for (int i = 0; i < 5; ++i)
+        {
+            value40 = (value40 << 8) | static_cast<uint64_t>(nr_cell_id[i]);
+        }
+
+        // Prefer spec-like encoding: 36 bits carried in 5 bytes with 4 unused bits at the LSB of the last octet.
+        if ((nr_cell_id[4] & 0x0F) == 0)
+        {
+            alignment_out = "lsb-padding";
+            return value40 >> 4;
+        }
+
+        // Tolerate "right-aligned" encodings where the 36-bit value is padded with 4 MSB zeros.
+        if ((nr_cell_id[0] & 0xF0) == 0)
+        {
+            alignment_out = "msb-padding";
+            return value40 & ((1ULL << 36) - 1);
+        }
+
+        alignment_out = "unknown-padding";
+        return std::nullopt;
+    }
+
+    // Generic callback to accumulate ASN.1 print output into a std::string.
+    static int asn_string_append_cb(const void *buffer, size_t size, void *app_key)
+    {
+        auto *out = static_cast<std::string *>(app_key);
+        if (!out || !buffer || size == 0)
+        {
+            return 0;
+        }
+        out->append(static_cast<const char *>(buffer), size);
+        return 0;
+    }
+
+    // Convert an OCTET STRING (e.g. RANUEID_t) to a human-readable string using ASN.1 printer.
+    static std::string octet_string_to_string(const OCTET_STRING_t &oct)
+    {
+        std::string out;
+        OCTET_STRING_print(&asn_DEF_OCTET_STRING, &oct, 0, asn_string_append_cb, &out);
+        return out;
+    }
+
+    // Convert a BIT STRING to a human-readable string using ASN.1 printer.
+    static std::string bit_string_to_string(const BIT_STRING_t &bs)
+    {
+        std::string out;
+        BIT_STRING_print(&asn_DEF_BIT_STRING, &bs, 0, asn_string_append_cb, &out);
+        return out;
+    }
+
+    static std::optional<int64_t> resolve_ran_ue_ngap_id(const RcControlContext &ctx)
+    {
+        if (ctx.header_ran_ue_id_present)
+        {
+            return ctx.header_ran_ue_id;
+        }
+        if (ctx.header_amf_ue_id_present)
+        {
+            auto assoc = findRcAssociationByAmfUeId(ctx.header_amf_ue_id);
+            if (assoc && assoc->ue.ran_ue_ngap_id >= 0)
+            {
+                return assoc->ue.ran_ue_ngap_id;
             }
         }
 
-        static void append_param_entry(RcControlContext &ctx, long id, const RANParameter_ValueType_t &valueType)
+        return std::nullopt;
+    }
+
+    static std::string handover_endpoint_url()
+    {
+        const char *env = std::getenv("RC_HANDOVER_TRIGGER_URL");
+        if (env && *env)
         {
-            RcParamValue entry;
-            entry.id = id;
-            entry.name = rc_param_name(id);
-            entry.value_type = valueType.present;
-            entry.printable_value = describe_ran_value_type(valueType);
+            return std::string(env);
+        }
+        return std::string(kDefaultHandoverUrl);
+    }
+
+    static void release_octet_string(OCTET_STRING_t &str)
+    {
+        if (str.buf)
+        {
+            free(str.buf);
+            str.buf = nullptr;
+        }
+        str.size = 0;
+    }
+
+    static std::string rc_param_name(long id)
+    {
+        static const auto metrics = getAllowedControlMetricsRC();
+        auto it = metrics.find(id);
+        if (it != metrics.end())
+        {
+            return it->second;
+        }
+        return std::string("RAN Parameter ") + std::to_string(id);
+    }
+
+    static std::string describe_ueid(const UEID_t *ue)
+    {
+        if (!ue)
+        {
+            return "<unknown UE>";
+        }
+        switch (ue->present)
+        {
+        case UEID_PR_gNB_UEID:
+            if (ue->choice.gNB_UEID && ue->choice.gNB_UEID->ran_UEID)
+            {
+                const auto *ran = ue->choice.gNB_UEID->ran_UEID;
+                return std::string("gNB-UEID ran=") + octet_string_to_string(*ran);
+            }
+            return "gNB-UEID";
+        case UEID_PR_gNB_DU_UEID:
+            return "gNB-DU-UEID";
+        case UEID_PR_gNB_CU_UP_UEID:
+            return "gNB-CU-UP-UEID";
+        case UEID_PR_ng_eNB_UEID:
+            return "ng-eNB-UEID";
+        default:
+            return std::string("UEID type=") + std::to_string(ue->present);
+        }
+    }
+
+    static const RcParamValue *find_param(const RcControlContext &ctx, long id)
+    {
+        for (const auto &p : ctx.params)
+        {
+            if (p.id == id)
+            {
+                return &p;
+            }
+        }
+        return nullptr;
+    }
+
+    static std::string_view get_param_value(const RcControlContext &ctx, long id)
+    {
+        const RcParamValue *param = find_param(ctx, id);
+        return param ? std::string_view(param->printable_value) : std::string_view{};
+    }
+
+    static std::optional<long> get_param_int_value(const RcControlContext &ctx, long id)
+    {
+        const RcParamValue *param = find_param(ctx, id);
+        if (!param)
+        {
+            return std::nullopt;
+        }
+        if (param->has_int)
+        {
+            return param->int_value;
+        }
+        int64_t value = 0;
+        if (parse_first_integer(param->printable_value, value))
+        {
+            return static_cast<long>(value);
+        }
+        return std::nullopt;
+    }
+
+    static std::string get_target_identifier_value(const RcControlContext &ctx)
+    {
+        const RcParamValue *param = find_param(ctx, kRcParamTargetNrCgi);
+        if (!param)
+        {
+            return {};
+        }
+
+        if (!param->has_octets)
+        {
+            // Already a friendly target string (e.g. "208-93-136").
+            return param->printable_value;
+        }
+
+        const auto &bytes = param->octets;
+        if (bytes.size() != 8)
+        {
+            return {};
+        }
+
+        std::string mcc;
+        std::string mnc;
+        if (!decode_plmn_identity_bcd(bytes.data(), mcc, mnc))
+        {
+            return {};
+        }
+
+        std::string nr_cell_alignment;
+        auto nr_cell_id = decode_nr_cell_identity_36(bytes.data() + 3, nr_cell_alignment);
+        if (!nr_cell_id)
+        {
+            return {};
+        }
+
+        return mcc + "-" + mnc + "-" + std::to_string(*nr_cell_id);
+    }
+
+    static std::string ran_value_to_string(const RANParameter_Value_t &value)
+    {
+        switch (value.present)
+        {
+        case RANParameter_Value_PR_valueBoolean:
+            return value.choice.valueBoolean ? "true" : "false";
+        case RANParameter_Value_PR_valueInt:
+            return std::to_string(value.choice.valueInt);
+        case RANParameter_Value_PR_valueReal:
+            return std::to_string(value.choice.valueReal);
+        case RANParameter_Value_PR_valueBitS:
+            return bit_string_to_string(value.choice.valueBitS);
+        case RANParameter_Value_PR_valueOctS:
+            return octet_string_to_string(value.choice.valueOctS);
+        case RANParameter_Value_PR_valuePrintableString:
+            if (value.choice.valuePrintableString.buf && value.choice.valuePrintableString.size > 0)
+            {
+                return std::string(reinterpret_cast<char *>(value.choice.valuePrintableString.buf),
+                                   value.choice.valuePrintableString.size);
+            }
+            return "";
+        default:
+            return "<unsupported>";
+        }
+    }
+
+    static const RANParameter_Value_t *get_element_value(const RANParameter_ValueType_t &valueType)
+    {
+        if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementTrue &&
+            valueType.choice.ranP_Choice_ElementTrue)
+        {
+            return &valueType.choice.ranP_Choice_ElementTrue->ranParameter_value;
+        }
+        if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_ElementFalse &&
+            valueType.choice.ranP_Choice_ElementFalse)
+        {
+            return valueType.choice.ranP_Choice_ElementFalse->ranParameter_value;
+        }
+        return nullptr;
+    }
+
+    static std::string describe_ran_value_type(const RANParameter_ValueType_t &valueType)
+    {
+        switch (valueType.present)
+        {
+        case RANParameter_ValueType_PR_ranP_Choice_ElementTrue:
             if (const auto *val = get_element_value(valueType))
             {
-                if (val->present == RANParameter_Value_PR_valueInt)
+                return ran_value_to_string(*val);
+            }
+            return "<element-null>";
+        case RANParameter_ValueType_PR_ranP_Choice_ElementFalse:
+            if (const auto *val = get_element_value(valueType))
+            {
+                return ran_value_to_string(*val);
+            }
+            return "<element-false>";
+        case RANParameter_ValueType_PR_ranP_Choice_Structure:
+            if (valueType.choice.ranP_Choice_Structure &&
+                valueType.choice.ranP_Choice_Structure->ranParameter_Structure &&
+                valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters)
+            {
+                auto &seq = valueType.choice.ranP_Choice_Structure->ranParameter_Structure->sequence_of_ranParameters->list;
+                return std::string("<structure items=") + std::to_string(seq.count) + ">";
+            }
+            return "<structure-null>";
+        case RANParameter_ValueType_PR_ranP_Choice_List:
+            if (valueType.choice.ranP_Choice_List && valueType.choice.ranP_Choice_List->ranParameter_List)
+            {
+                auto &structures = valueType.choice.ranP_Choice_List->ranParameter_List->list_of_ranParameter.list;
+                return std::string("<list structures=") + std::to_string(structures.count) + ">";
+            }
+            return "<list-null>";
+        default:
+            return "<unsupported-value-type>";
+        }
+    }
+
+    static bool octet_string_to_long(const OCTET_STRING_t *oct, long &out)
+    {
+        if (!oct || !oct->buf || oct->size <= 0 || oct->size > 8)
+        {
+            return false;
+        }
+        uint64_t value = 0;
+        for (int i = 0; i < oct->size; ++i)
+        {
+            value = (value << 8) | static_cast<uint8_t>(oct->buf[i]);
+        }
+        out = static_cast<long>(value);
+        return true;
+    }
+
+    static void update_ctx_ids_from_ueid(const UEID_t *ueid, RcControlContext &ctx)
+    {
+        if (!ueid)
+        {
+            return;
+        }
+        auto set_amf = [&](const AMF_UE_NGAP_ID_t &src)
+        {
+            long value = 0;
+            if (asn_INTEGER2long(&src, &value) == 0)
+            {
+                ctx.header_amf_ue_id = value;
+                ctx.header_amf_ue_id_present = true;
+                LOG_D("[RC CONTROL] Header AMF UE NGAP ID=%ld", value);
+            }
+        };
+        auto set_ran = [&](const OCTET_STRING_t *oct)
+        {
+            long value = 0;
+            if (octet_string_to_long(oct, value))
+            {
+                ctx.header_ran_ue_id = value;
+                ctx.header_ran_ue_id_present = true;
+                LOG_D("[RC CONTROL] Header RAN UE ID=%ld", value);
+            }
+        };
+
+        switch (ueid->present)
+        {
+        case UEID_PR_gNB_UEID:
+            if (ueid->choice.gNB_UEID)
+            {
+                set_amf(ueid->choice.gNB_UEID->amf_UE_NGAP_ID);
+                if (ueid->choice.gNB_UEID->ran_UEID)
                 {
-                    entry.has_int = true;
-                    entry.int_value = val->choice.valueInt;
-                }
-                else if (val->present == RANParameter_Value_PR_valueOctS)
-                {
-                    const auto &oct = val->choice.valueOctS;
-                    if (oct.buf && oct.size > 0)
-                    {
-                        entry.has_octets = true;
-                        entry.octets.assign(oct.buf, oct.buf + oct.size);
-                    }
+                    set_ran(ueid->choice.gNB_UEID->ran_UEID);
                 }
             }
-            ctx.params.push_back(std::move(entry));
-
-            if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_Structure)
+            break;
+        case UEID_PR_gNB_DU_UEID:
+            if (ueid->choice.gNB_DU_UEID && ueid->choice.gNB_DU_UEID->ran_UEID)
             {
-                auto *structure_choice = valueType.choice.ranP_Choice_Structure;
-                if (structure_choice &&
-                    structure_choice->ranParameter_Structure &&
-                    structure_choice->ranParameter_Structure->sequence_of_ranParameters)
+                set_ran(ueid->choice.gNB_DU_UEID->ran_UEID);
+            }
+            break;
+        case UEID_PR_gNB_CU_UP_UEID:
+            if (ueid->choice.gNB_CU_UP_UEID && ueid->choice.gNB_CU_UP_UEID->ran_UEID)
+            {
+                set_ran(ueid->choice.gNB_CU_UP_UEID->ran_UEID);
+            }
+            break;
+        case UEID_PR_ng_eNB_UEID:
+            if (ueid->choice.ng_eNB_UEID)
+            {
+                set_amf(ueid->choice.ng_eNB_UEID->amf_UE_NGAP_ID);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    static void append_param_entry(RcControlContext &ctx, long id, const RANParameter_ValueType_t &valueType)
+    {
+        RcParamValue entry;
+        entry.id = id;
+        entry.name = rc_param_name(id);
+        entry.value_type = valueType.present;
+        entry.printable_value = describe_ran_value_type(valueType);
+        if (const auto *val = get_element_value(valueType))
+        {
+            if (val->present == RANParameter_Value_PR_valueInt)
+            {
+                entry.has_int = true;
+                entry.int_value = val->choice.valueInt;
+            }
+            else if (val->present == RANParameter_Value_PR_valueOctS)
+            {
+                const auto &oct = val->choice.valueOctS;
+                if (oct.buf && oct.size > 0)
                 {
-                    auto &seq = structure_choice->ranParameter_Structure->sequence_of_ranParameters->list;
+                    entry.has_octets = true;
+                    entry.octets.assign(oct.buf, oct.buf + oct.size);
+                }
+            }
+        }
+        ctx.params.push_back(std::move(entry));
+
+        if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_Structure)
+        {
+            auto *structure_choice = valueType.choice.ranP_Choice_Structure;
+            if (structure_choice &&
+                structure_choice->ranParameter_Structure &&
+                structure_choice->ranParameter_Structure->sequence_of_ranParameters)
+            {
+                auto &seq = structure_choice->ranParameter_Structure->sequence_of_ranParameters->list;
+                for (int i = 0; i < seq.count; ++i)
+                {
+                    auto *item = static_cast<RANParameter_STRUCTURE_Item_t *>(seq.array[i]);
+                    if (!item || !item->ranParameter_valueType)
+                    {
+                        continue;
+                    }
+                    append_param_entry(ctx,
+                                       item->ranParameter_ID,
+                                       *item->ranParameter_valueType);
+                }
+            }
+        }
+        else if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_List)
+        {
+            auto *list_choice = valueType.choice.ranP_Choice_List;
+            if (list_choice && list_choice->ranParameter_List)
+            {
+                auto &structures = list_choice->ranParameter_List->list_of_ranParameter.list;
+                for (int si = 0; si < structures.count; ++si)
+                {
+                    auto *structure = static_cast<RANParameter_STRUCTURE_t *>(structures.array[si]);
+                    if (!structure || !structure->sequence_of_ranParameters)
+                    {
+                        continue;
+                    }
+                    auto &seq = structure->sequence_of_ranParameters->list;
                     for (int i = 0; i < seq.count; ++i)
                     {
                         auto *item = static_cast<RANParameter_STRUCTURE_Item_t *>(seq.array[i]);
@@ -1187,836 +1214,809 @@ namespace
                     }
                 }
             }
-            else if (valueType.present == RANParameter_ValueType_PR_ranP_Choice_List)
+        }
+    }
+
+    static bool is_supported_control_param(long id)
+    {
+        static const std::unordered_set<long> kSupportedIds = []
+        {
+            std::unordered_set<long> ids;
+            const auto metrics = getAllowedControlMetricsRC();
+            for (const auto &kv : metrics)
             {
-                auto *list_choice = valueType.choice.ranP_Choice_List;
-                if (list_choice && list_choice->ranParameter_List)
+                if (kv.first == kRcOutcomeStatus || kv.first == kRcOutcomeNotes || kv.first == kRcParamUeId)
                 {
-                    auto &structures = list_choice->ranParameter_List->list_of_ranParameter.list;
-                    for (int si = 0; si < structures.count; ++si)
-                    {
-                        auto *structure = static_cast<RANParameter_STRUCTURE_t *>(structures.array[si]);
-                        if (!structure || !structure->sequence_of_ranParameters)
-                        {
-                            continue;
-                        }
-                        auto &seq = structure->sequence_of_ranParameters->list;
-                        for (int i = 0; i < seq.count; ++i)
-                        {
-                            auto *item = static_cast<RANParameter_STRUCTURE_Item_t *>(seq.array[i]);
-                            if (!item || !item->ranParameter_valueType)
-                            {
-                                continue;
-                            }
-                            append_param_entry(ctx,
-                                               item->ranParameter_ID,
-                                               *item->ranParameter_valueType);
-                        }
-                    }
+                    continue; // outcome-only parameters are not part of control messages
+                }
+                ids.insert(kv.first);
+            }
+            return ids;
+        }();
+        return kSupportedIds.find(id) != kSupportedIds.end();
+    }
+
+    static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err)
+    {
+        LOG_D("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
+        LOG_D("Received ControlHeader PER dump:");
+
+        // Alcuni xApp inviano il ControlHeader come CHOICE completo, altri solo come Format1:
+        // proviamo più decodifiche (aligned/unaligned, CHOICE/Format1) finché troviamo uno stile valido.
+        E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
+        E2SM_RC_ControlHeader_t *choice_holder = nullptr;
+        bool fmt1_from_choice = false;
+
+
+        const asn_dec_rval_t ret = asn_decode(NULL,ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_RC_ControlHeader,(void **)&choice_holder,hdr.buf,hdr.size);
+        if (ret.code != RC_OK)
+        {
+            return false;
+        }
+        if (choice_holder->ric_controlHeader_formats.present != E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1)
+        {
+            return false;
+        }
+        fmt1 = choice_holder->ric_controlHeader_formats.choice.controlHeader_Format1;
+        xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, choice_holder);
+        
+        ctx.style_type = fmt1->ric_Style_Type;
+        ctx.control_action_id = fmt1->ric_ControlAction_ID;
+        ctx.ue_identity = describe_ueid(&fmt1->ueID);
+        update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
+
+        LOG_D("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
+              ctx.style_type,ctx.control_action_id,ctx.ue_identity.c_str());
+
+        return true;
+    }
+
+    static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContext &ctx, std::string &err)
+    {
+        E2SM_RC_ControlMessage_t *decoded = nullptr;
+        auto fail = [&](const std::string &msg_text) -> bool
+        {
+            err = msg_text;
+            if (decoded)
+            {
+                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
+                decoded = nullptr;
+            }
+            return false;
+        };
+        asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER,&asn_DEF_E2SM_RC_ControlMessage, (void **)&decoded, msg.buf, msg.size);
+        if (dr.code != RC_OK || !decoded)
+        {
+            return fail("Unable to decode E2SM RC ControlMessage");
+        }
+        LOG_D("[RC CONTROL] Raw ControlMessage PER dump:");
+        xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlMessage, decoded);
+        LOG_D("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
+        if (decoded->ric_controlMessage_formats.present !=
+            E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1)
+        {
+            return fail("Unsupported ControlMessage format");
+        }
+        auto *fmt1 = decoded->ric_controlMessage_formats.choice.controlMessage_Format1;
+        if (!fmt1)
+        {
+            return fail("ControlMessage Format1 payload missing");
+        }
+        for (int i = 0; i < fmt1->ranP_List.list.count; ++i)
+        {
+            auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
+            if (!item)
+            {
+                return fail("ControlMessage list contains null entry");
+            }
+            if (!is_supported_control_param(item->ranParameter_ID))
+            {
+                LOG_D("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
+                continue;
+            }
+            if (item->ranParameter_valueType.present == RANParameter_ValueType_PR_NOTHING)
+            {
+                LOG_D("[RC CONTROL] Parameter ID %ld missing value", item->ranParameter_ID);
+                continue;
+            }
+            append_param_entry(ctx, item->ranParameter_ID, item->ranParameter_valueType);
+        }
+        if (ctx.params.empty())
+        {
+            return fail("RC control message does not contain any RAN parameters");
+        }
+        const bool has_target_gnb = !get_target_identifier_value(ctx).empty();
+        if (!has_target_gnb)
+        {
+            return fail("RC control message missing target gNB/NR CGI parameters");
+        }
+        LOG_D("[RC CONTROL] Message OK params=%zu targetGNb=%d",
+              ctx.params.size(),
+              has_target_gnb ? 1 : 0);
+        for (const auto &param : ctx.params)
+        {
+            LOG_D("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
+                  param.id,
+                  param.name.c_str(),
+                  static_cast<int>(param.value_type),
+                  param.printable_value.c_str());
+        }
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
+        return true;
+    }
+
+    static bool build_handover_request_payload(const RcControlContext &ctx,json &payload, std::string &error)
+    {
+        LOG_D("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
+        auto ran_ue = resolve_ran_ue_ngap_id(ctx);
+        if (!ran_ue)
+        {
+            error = "Unable to resolve ranUeNgapId for UE";
+            LOG_D("[RC CONTROL] %s", error.c_str());
+            return false;
+        }
+
+        std::string target_id = get_target_identifier_value(ctx);
+        if (target_id.empty())
+        {
+            error = "Missing target gNB/NR CGI identifier";
+            LOG_D("[RC CONTROL] %s", error.c_str());
+            return false;
+        }
+
+        payload = json::object();
+        payload["ranUeNgapId"] = *ran_ue;
+        payload["directForwarding"] = false;
+        payload["targetId"] = target_id;
+
+        std::string metadata_ue = ctx.ue_identity;
+        std::string target_nrcgi_raw;
+        if (const RcParamValue *target = find_param(ctx, kRcParamTargetNrCgi))
+        {
+            target_nrcgi_raw = target->printable_value;
+        }
+        std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
+
+        json metadata_json = json::object();
+        if (!metadata_ue.empty())
+        {
+            metadata_json["ueIdentity"] = metadata_ue;
+        }
+        if (!target_nrcgi_raw.empty())
+        {
+            metadata_json["targetNrCgiRaw"] = target_nrcgi_raw;
+            std::vector<uint8_t> nrcgi_bytes;
+            if (const RcParamValue *target = find_param(ctx, kRcParamTargetNrCgi); target && target->has_octets)
+            {
+                nrcgi_bytes = target->octets;
+            }
+            if (nrcgi_bytes.size() == 8)
+            {
+                metadata_json["targetNrCgiHex"] = bytes_to_hex_compact(nrcgi_bytes.data(), nrcgi_bytes.size());
+
+                std::string mcc;
+                std::string mnc;
+                if (decode_plmn_identity_bcd(nrcgi_bytes.data(), mcc, mnc))
+                {
+                    metadata_json["targetMcc"] = mcc;
+                    metadata_json["targetMnc"] = mnc;
+                }
+                std::string nr_cell_alignment;
+                auto nr_cell_id = decode_nr_cell_identity_36(nrcgi_bytes.data() + 3, nr_cell_alignment);
+                if (nr_cell_id)
+                {
+                    metadata_json["targetNrCellId"] = std::to_string(*nr_cell_id);
+                    metadata_json["targetNrCellIdEncoding"] = nr_cell_alignment;
                 }
             }
         }
-
-        static bool is_supported_control_param(long id)
+        if (!ho_cause.empty())
         {
-            static const std::unordered_set<long> kSupportedIds = []
-            {
-                std::unordered_set<long> ids;
-                const auto metrics = getAllowedControlMetricsRC();
-                for (const auto &kv : metrics)
-                {
-                    if (kv.first == kRcOutcomeStatus || kv.first == kRcOutcomeNotes || kv.first == kRcParamUeId)
-                    {
-                        continue; // outcome-only parameters are not part of control messages
-                    }
-                    ids.insert(kv.first);
-                }
-                return ids;
-            }();
-            return kSupportedIds.find(id) != kSupportedIds.end();
+            metadata_json["hoCause"] = ho_cause;
         }
+        payload["metadata"] = metadata_json;
+        LOG_D("[RC CONTROL] HO payload ready: ranUe=%ld target=%s", *ran_ue, target_id.c_str());
+        return true;
+    }
 
-        static bool decode_rc_control_header(const RICcontrolHeader_t &hdr, RcControlContext &ctx, std::string &err)
+    static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx,const std::string &command_desc)
+    {
+        LOG_D("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
+
+        N3iwfTriggerResponse response;
+        json payload;
+        std::string payload_error;
+        if (!build_handover_request_payload(ctx, payload, payload_error))
         {
-            LOG_D("[RC CONTROL] Decoding ControlHeader (size=%ld)", hdr.size);
-            LOG_D("Received ControlHeader PER dump:");
-
-            // Alcuni xApp inviano il ControlHeader come CHOICE completo, altri solo come Format1:
-            // proviamo più decodifiche (aligned/unaligned, CHOICE/Format1) finché troviamo uno stile valido.
-            E2SM_RC_ControlHeader_Format1_t *fmt1 = nullptr;
-            E2SM_RC_ControlHeader_t *choice_holder = nullptr;
-            bool fmt1_from_choice = false;
-
-            const asn_dec_rval_t ret = asn_decode(NULL, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_ControlHeader, (void **)&choice_holder, hdr.buf, hdr.size);
-            if (ret.code != RC_OK)
-            {
-                return false;
-            }
-            if (choice_holder->ric_controlHeader_formats.present != E2SM_RC_ControlHeader__ric_controlHeader_formats_PR_controlHeader_Format1)
-            {
-                return false;
-            }
-            fmt1 = choice_holder->ric_controlHeader_formats.choice.controlHeader_Format1;
-            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlHeader, choice_holder);
-
-            ctx.style_type = fmt1->ric_Style_Type;
-            ctx.control_action_id = fmt1->ric_ControlAction_ID;
-            ctx.ue_identity = describe_ueid(&fmt1->ueID);
-            update_ctx_ids_from_ueid(&fmt1->ueID, ctx);
-
-            LOG_D("[RC CONTROL] Header OK style=%ld action=%ld ue=%s",
-                  ctx.style_type, ctx.control_action_id, ctx.ue_identity.c_str());
-
-            return true;
-        }
-
-        static bool decode_rc_control_message(const OCTET_STRING_t &msg, RcControlContext &ctx, std::string &err)
-        {
-            E2SM_RC_ControlMessage_t *decoded = nullptr;
-            auto fail = [&](const std::string &msg_text) -> bool
-            {
-                err = msg_text;
-                if (decoded)
-                {
-                    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
-                    decoded = nullptr;
-                }
-                return false;
-            };
-            asn_dec_rval_t dr = asn_decode(nullptr, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_RC_ControlMessage, (void **)&decoded, msg.buf, msg.size);
-            if (dr.code != RC_OK || !decoded)
-            {
-                return fail("Unable to decode E2SM RC ControlMessage");
-            }
-            LOG_D("[RC CONTROL] Raw ControlMessage PER dump:");
-            xer_fprint(stdout, &asn_DEF_E2SM_RC_ControlMessage, decoded);
-            LOG_D("[RC CONTROL] ControlMessage decoded (size=%ld)", msg.size);
-            if (decoded->ric_controlMessage_formats.present !=
-                E2SM_RC_ControlMessage__ric_controlMessage_formats_PR_controlMessage_Format1)
-            {
-                return fail("Unsupported ControlMessage format");
-            }
-            auto *fmt1 = decoded->ric_controlMessage_formats.choice.controlMessage_Format1;
-            if (!fmt1)
-            {
-                return fail("ControlMessage Format1 payload missing");
-            }
-            for (int i = 0; i < fmt1->ranP_List.list.count; ++i)
-            {
-                auto *item = (E2SM_RC_ControlMessage_Format1_Item *)fmt1->ranP_List.list.array[i];
-                if (!item)
-                {
-                    return fail("ControlMessage list contains null entry");
-                }
-                if (!is_supported_control_param(item->ranParameter_ID))
-                {
-                    LOG_D("[RC CONTROL] Skipping unsupported parameter ID %ld", item->ranParameter_ID);
-                    continue;
-                }
-                if (item->ranParameter_valueType.present == RANParameter_ValueType_PR_NOTHING)
-                {
-                    LOG_D("[RC CONTROL] Parameter ID %ld missing value", item->ranParameter_ID);
-                    continue;
-                }
-                append_param_entry(ctx, item->ranParameter_ID, item->ranParameter_valueType);
-            }
-            if (ctx.params.empty())
-            {
-                return fail("RC control message does not contain any RAN parameters");
-            }
-            const bool has_target_gnb = !get_target_identifier_value(ctx).empty();
-            if (!has_target_gnb)
-            {
-                return fail("RC control message missing target gNB/NR CGI parameters");
-            }
-            LOG_D("[RC CONTROL] Message OK params=%zu targetGNb=%d",
-                  ctx.params.size(),
-                  has_target_gnb ? 1 : 0);
-            for (const auto &param : ctx.params)
-            {
-                LOG_D("[RC CONTROL]   Param ID=%ld (%s) type=%d value=%s",
-                      param.id,
-                      param.name.c_str(),
-                      static_cast<int>(param.value_type),
-                      param.printable_value.c_str());
-            }
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlMessage, decoded);
-            return true;
-        }
-
-        static bool build_handover_request_payload(const RcControlContext &ctx, json &payload, std::string &error)
-        {
-            LOG_D("[RC CONTROL] Preparing HO payload for UE=%s", ctx.ue_identity.c_str());
-            auto ran_ue = resolve_ran_ue_ngap_id(ctx);
-            if (!ran_ue)
-            {
-                error = "Unable to resolve ranUeNgapId for UE";
-                LOG_D("[RC CONTROL] %s", error.c_str());
-                return false;
-            }
-
-            std::string target_id = get_target_identifier_value(ctx);
-            if (target_id.empty())
-            {
-                error = "Missing target gNB/NR CGI identifier";
-                LOG_D("[RC CONTROL] %s", error.c_str());
-                return false;
-            }
-
-            payload = json::object();
-            payload["ranUeNgapId"] = *ran_ue;
-            payload["directForwarding"] = false;
-            payload["targetId"] = target_id;
-
-            std::string metadata_ue = ctx.ue_identity;
-            std::string target_nrcgi_raw;
-            if (const RcParamValue *target = find_param(ctx, kRcParamTargetNrCgi))
-            {
-                target_nrcgi_raw = target->printable_value;
-            }
-            std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
-
-            json metadata_json = json::object();
-            if (!metadata_ue.empty())
-            {
-                metadata_json["ueIdentity"] = metadata_ue;
-            }
-            if (!target_nrcgi_raw.empty())
-            {
-                metadata_json["targetNrCgiRaw"] = target_nrcgi_raw;
-                std::vector<uint8_t> nrcgi_bytes;
-                if (const RcParamValue *target = find_param(ctx, kRcParamTargetNrCgi); target && target->has_octets)
-                {
-                    nrcgi_bytes = target->octets;
-                }
-                if (nrcgi_bytes.size() == 8)
-                {
-                    metadata_json["targetNrCgiHex"] = bytes_to_hex_compact(nrcgi_bytes.data(), nrcgi_bytes.size());
-
-                    std::string mcc;
-                    std::string mnc;
-                    if (decode_plmn_identity_bcd(nrcgi_bytes.data(), mcc, mnc))
-                    {
-                        metadata_json["targetMcc"] = mcc;
-                        metadata_json["targetMnc"] = mnc;
-                    }
-                    std::string nr_cell_alignment;
-                    auto nr_cell_id = decode_nr_cell_identity_36(nrcgi_bytes.data() + 3, nr_cell_alignment);
-                    if (nr_cell_id)
-                    {
-                        metadata_json["targetNrCellId"] = std::to_string(*nr_cell_id);
-                        metadata_json["targetNrCellIdEncoding"] = nr_cell_alignment;
-                    }
-                }
-            }
-            if (!ho_cause.empty())
-            {
-                metadata_json["hoCause"] = ho_cause;
-            }
-            payload["metadata"] = metadata_json;
-            LOG_D("[RC CONTROL] HO payload ready: ranUe=%ld target=%s", *ran_ue, target_id.c_str());
-            return true;
-        }
-
-        static N3iwfTriggerResponse trigger_n3iwf_handover(const RcControlContext &ctx, const std::string &command_desc)
-        {
-            LOG_D("[RC CONTROL] Triggering HO via N3IWF: %s", command_desc.c_str());
-
-            N3iwfTriggerResponse response;
-            json payload;
-            std::string payload_error;
-            if (!build_handover_request_payload(ctx, payload, payload_error))
-            {
-                response.success = false;
-                response.description = payload_error;
-                response.failure_cause = CauseRICrequest_control_message_invalid;
-                return response;
-            }
-
-            std::string url = handover_endpoint_url();
-            std::string payload_str = payload.dump();
-            long http_code = 0;
-            std::string http_body;
-            std::string curl_error;
-            LOG_D("[RC CONTROL] POST %s (%zu bytes)", url.c_str(), payload_str.size());
-            if (!http_post_json(url, payload_str, http_code, http_body, curl_error))
-            {
-                response.success = false;
-                response.description = "HTTP POST failed: " + curl_error;
-                response.failure_cause = CauseRICrequest_control_failed_to_execute;
-                return response;
-            }
-
-            if (http_code >= 200 && http_code < 300)
-            {
-                LOG_D("[RC CONTROL] HO HTTP success code=%ld", http_code);
-                response.success = true;
-                if (!http_body.empty())
-                {
-                    response.description = std::string("HTTP ") + std::to_string(http_code) + ": " + http_body;
-                }
-                else
-                {
-                    response.description = "HTTP " + std::to_string(http_code) + " (no body)";
-                }
-                return response;
-            }
-
             response.success = false;
+            response.description = payload_error;
+            response.failure_cause = CauseRICrequest_control_message_invalid;
+            return response;
+        }
+
+        std::string url = handover_endpoint_url();
+        std::string payload_str = payload.dump();
+        long http_code = 0;
+        std::string http_body;
+        std::string curl_error;
+        LOG_D("[RC CONTROL] POST %s (%zu bytes)", url.c_str(), payload_str.size());
+        if (!http_post_json(url, payload_str, http_code, http_body, curl_error))
+        {
+            response.success = false;
+            response.description = "HTTP POST failed: " + curl_error;
             response.failure_cause = CauseRICrequest_control_failed_to_execute;
-            response.description = "N3IWF HTTP " + std::to_string(http_code);
-            LOG_D("[RC CONTROL] HO HTTP failure code=%ld", http_code);
+            return response;
+        }
+
+        if (http_code >= 200 && http_code < 300)
+        {
+            LOG_D("[RC CONTROL] HO HTTP success code=%ld", http_code);
+            response.success = true;
             if (!http_body.empty())
             {
-                response.description += ": " + http_body;
+                response.description = std::string("HTTP ") + std::to_string(http_code) + ": " + http_body;
+            }
+            else
+            {
+                response.description = "HTTP " + std::to_string(http_code) + " (no body)";
             }
             return response;
         }
 
-        static RcControlExecutionResult execute_rc_control_command(const RcControlContext &ctx)
+        response.success = false;
+        response.failure_cause = CauseRICrequest_control_failed_to_execute;
+        response.description = "N3IWF HTTP " + std::to_string(http_code);
+        LOG_D("[RC CONTROL] HO HTTP failure code=%ld", http_code);
+        if (!http_body.empty())
         {
-            RcControlExecutionResult result;
-            if (ctx.control_action_id != kRcControlActionIdHandover)
-            {
-                result.status = "Unsupported control action ID " + std::to_string(ctx.control_action_id);
-                result.outcome_items.emplace_back(kRcOutcomeStatus, result.status);
-                result.cause_value = CauseRICrequest_action_not_supported;
-                return result;
-            }
+            response.description += ": " + http_body;
+        }
+        return response;
+    }
 
-            const std::string ue = ctx.ue_identity;
-            const std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
-            const std::string target_gnb = get_target_identifier_value(ctx);
-            const std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
+    static RcControlExecutionResult execute_rc_control_command(const RcControlContext &ctx)
+    {
+        RcControlExecutionResult result;
+        if (ctx.control_action_id != kRcControlActionIdHandover)
+        {
+            result.status = "Unsupported control action ID " + std::to_string(ctx.control_action_id);
+            result.outcome_items.emplace_back(kRcOutcomeStatus, result.status);
+            result.cause_value = CauseRICrequest_action_not_supported;
+            return result;
+        }
 
-            std::ostringstream oss;
-            oss << "HO command for UE=" << (ue.empty() ? "<unknown>" : ue);
-            if (!target_gnb.empty())
-            {
-                oss << " target-gNB=" << target_gnb;
-            }
-            if (!target_pci.empty())
-            {
-                oss << " target-PCI=" << target_pci;
-            }
-            if (!ho_cause.empty())
-            {
-                oss << " cause=" << ho_cause;
-            }
-            const std::string command_desc = oss.str();
-            auto ho_response = trigger_n3iwf_handover(ctx, command_desc);
+        const std::string ue = ctx.ue_identity;
+        const std::string target_pci = std::string(get_param_value(ctx, kRcParamTargetCellPci));
+        const std::string target_gnb = get_target_identifier_value(ctx);
+        const std::string ho_cause = std::string(get_param_value(ctx, kRcParamHoCause));
 
-            if (ho_response.success)
-            {
-                result.success = true;
-                result.status = command_desc;
-                result.outcome_items.emplace_back(kRcOutcomeStatus, "ACK: " + command_desc);
-                if (!ho_cause.empty())
-                {
-                    result.outcome_items.emplace_back(kRcOutcomeNotes, "Cause=" + ho_cause);
-                }
-                if (!ho_response.description.empty())
-                {
-                    result.outcome_items.emplace_back(kRcOutcomeNotes, ho_response.description);
-                }
-                return result;
-            }
+        std::ostringstream oss;
+        oss << "HO command for UE=" << (ue.empty() ? "<unknown>" : ue);
+        if (!target_gnb.empty())
+        {
+            oss << " target-gNB=" << target_gnb;
+        }
+        if (!target_pci.empty())
+        {
+            oss << " target-PCI=" << target_pci;
+        }
+        if (!ho_cause.empty())
+        {
+            oss << " cause=" << ho_cause;
+        }
+        const std::string command_desc = oss.str();
+        auto ho_response = trigger_n3iwf_handover(ctx, command_desc);
 
-            const std::string failure_detail = ho_response.description.empty()
-                                                   ? "N3IWF rejected the handover trigger"
-                                                   : ho_response.description;
-            result.success = false;
-            result.cause_value = ho_response.failure_cause;
-            result.status = command_desc.empty() ? failure_detail : (command_desc + " - " + failure_detail);
-            result.outcome_items.emplace_back(kRcOutcomeStatus, "FAIL: " + failure_detail);
+        if (ho_response.success)
+        {
+            result.success = true;
+            result.status = command_desc;
+            result.outcome_items.emplace_back(kRcOutcomeStatus, "ACK: " + command_desc);
             if (!ho_cause.empty())
             {
                 result.outcome_items.emplace_back(kRcOutcomeNotes, "Cause=" + ho_cause);
             }
+            if (!ho_response.description.empty())
+            {
+                result.outcome_items.emplace_back(kRcOutcomeNotes, ho_response.description);
+            }
             return result;
         }
 
-        static bool encode_rc_control_outcome_view(const ControlOutcomeField *fields,
-                                                   size_t count,
-                                                   std::vector<uint8_t> &buffer)
+        const std::string failure_detail = ho_response.description.empty()
+                                               ? "N3IWF rejected the handover trigger"
+                                               : ho_response.description;
+        result.success = false;
+        result.cause_value = ho_response.failure_cause;
+        result.status = command_desc.empty() ? failure_detail : (command_desc + " - " + failure_detail);
+        result.outcome_items.emplace_back(kRcOutcomeStatus, "FAIL: " + failure_detail);
+        if (!ho_cause.empty())
         {
-            buffer.clear();
-            if (count == 0)
-            {
-                return true;
-            }
+            result.outcome_items.emplace_back(kRcOutcomeNotes, "Cause=" + ho_cause);
+        }
+        return result;
+    }
 
-            E2SM_RC_ControlOutcome_t *outcome = (E2SM_RC_ControlOutcome_t *)calloc(1, sizeof(*outcome));
-            if (!outcome)
-            {
-                return false;
-            }
-            outcome->ric_controlOutcome_formats.present =
-                E2SM_RC_ControlOutcome__ric_controlOutcome_formats_PR_controlOutcome_Format1;
-            auto *fmt1 = (E2SM_RC_ControlOutcome_Format1_t *)calloc(1, sizeof(E2SM_RC_ControlOutcome_Format1_t));
-            if (!fmt1)
-            {
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlOutcome, outcome);
-                return false;
-            }
-            outcome->ric_controlOutcome_formats.choice.controlOutcome_Format1 = fmt1;
-
-            for (size_t i = 0; i < count; ++i)
-            {
-                const auto &field = fields[i];
-                auto *entry = (E2SM_RC_ControlOutcome_Format1_Item *)calloc(1, sizeof(E2SM_RC_ControlOutcome_Format1_Item));
-                if (!entry)
-                    continue;
-                entry->ranParameter_ID = field.id;
-                entry->ranParameter_value.present = RANParameter_Value_PR_valuePrintableString;
-                OCTET_STRING_fromBuf(&entry->ranParameter_value.choice.valuePrintableString,
-                                     field.value.data(),
-                                     field.value.size());
-                ASN_SEQUENCE_ADD(&fmt1->ranP_List.list, entry);
-            }
-
-            buffer.resize(MAX_SCTP_BUFFER);
-            asn_enc_rval_t er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
-                                                     &asn_DEF_E2SM_RC_ControlOutcome,
-                                                     outcome, buffer.data(), buffer.size());
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlOutcome, outcome);
-            if (er.encoded < 0)
-            {
-                buffer.clear();
-                return false;
-            }
-            buffer.resize(er.encoded);
+    static bool encode_rc_control_outcome_view(const ControlOutcomeField *fields,
+                                               size_t count,
+                                               std::vector<uint8_t> &buffer)
+    {
+        buffer.clear();
+        if (count == 0)
+        {
             return true;
         }
 
-        static bool encode_rc_control_outcome(const std::vector<std::pair<long, std::string>> &items,
-                                              std::vector<uint8_t> &buffer)
+        E2SM_RC_ControlOutcome_t *outcome = (E2SM_RC_ControlOutcome_t *)calloc(1, sizeof(*outcome));
+        if (!outcome)
         {
-            if (items.empty())
-            {
-                buffer.clear();
-                return true;
-            }
-            std::vector<ControlOutcomeField> fields;
-            fields.reserve(items.size());
-            for (const auto &item : items)
-            {
-                fields.push_back(ControlOutcomeField{item.first, item.second});
-            }
-            return encode_rc_control_outcome_view(fields.data(), fields.size(), buffer);
+            return false;
+        }
+        outcome->ric_controlOutcome_formats.present =
+            E2SM_RC_ControlOutcome__ric_controlOutcome_formats_PR_controlOutcome_Format1;
+        auto *fmt1 = (E2SM_RC_ControlOutcome_Format1_t *)calloc(1, sizeof(E2SM_RC_ControlOutcome_Format1_t));
+        if (!fmt1)
+        {
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlOutcome, outcome);
+            return false;
+        }
+        outcome->ric_controlOutcome_formats.choice.controlOutcome_Format1 = fmt1;
+
+        for (size_t i = 0; i < count; ++i)
+        {
+            const auto &field = fields[i];
+            auto *entry = (E2SM_RC_ControlOutcome_Format1_Item *)calloc(1, sizeof(E2SM_RC_ControlOutcome_Format1_Item));
+            if (!entry)
+                continue;
+            entry->ranParameter_ID = field.id;
+            entry->ranParameter_value.present = RANParameter_Value_PR_valuePrintableString;
+            OCTET_STRING_fromBuf(&entry->ranParameter_value.choice.valuePrintableString,
+                                 field.value.data(),
+                                 field.value.size());
+            ASN_SEQUENCE_ADD(&fmt1->ranP_List.list, entry);
         }
 
-        static bool encode_rc_control_outcome_single(long id,
-                                                     std::string_view value,
-                                                     std::vector<uint8_t> &buffer)
+        buffer.resize(MAX_SCTP_BUFFER);
+        asn_enc_rval_t er = asn_encode_to_buffer(nullptr, ATS_ALIGNED_BASIC_PER,
+                                                 &asn_DEF_E2SM_RC_ControlOutcome,
+                                                 outcome, buffer.data(), buffer.size());
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ControlOutcome, outcome);
+        if (er.encoded < 0)
         {
-            if (value.empty())
-            {
-                buffer.clear();
-                return true;
-            }
-            const ControlOutcomeField field{id, value};
-            return encode_rc_control_outcome_view(&field, 1, buffer);
+            buffer.clear();
+            return false;
         }
-
-    /*
-    // Raccoglie gli ID dichiarati in RANFunctionDefinition-Report, opzionalmente
-    // filtrando per ric_ReportStyle_Type == report_style_type (se >0).
-    static void collect_declared_report_param_ids(const E2SM_RC_RANFunctionDefinition_t *def,
-                                                  int report_style_type, // 0 = qualunque style
-                                                  std::unordered_set<long> &out_ids)
-    {
-        out_ids.clear();
-        if (!def || !def->ranFunctionDefinition_Report)
-            return;
-
-        const RANFunctionDefinition_Report_t *rep = def->ranFunctionDefinition_Report;
-        const auto &lst = rep->ric_ReportStyle_List.list;
-        for (int i = 0; i < lst.count; ++i)
-        {
-            const RANFunctionDefinition_Report_Item_t *it =
-                (const RANFunctionDefinition_Report_Item_t *)lst.array[i];
-            if (!it)
-                continue;
-
-            // se richiesto, filtra per style specifico
-            if (report_style_type > 0 && (int)it->ric_ReportStyle_Type != report_style_type)
-            {
-                continue;
-            }
-
-            // lista dei RAN params supportati per quello style
-            const auto *rp_list = it->ran_ReportParameters_List;
-            if (!rp_list)
-                continue;
-
-            const auto &rp = rp_list->list;
-            for (int j = 0; j < rp.count; ++j)
-            {
-                const Report_RANParameter_Item_t *p =
-                    (const Report_RANParameter_Item_t *)rp.array[j];
-                if (!p)
-                    continue;
-                out_ids.insert((long)p->ranParameter_ID);
-            }
-        }
+        buffer.resize(er.encoded);
+        return true;
     }
 
-    // Verifica che tutti gli ID richiesti compaiano tra quelli dichiarati.
-    // Se 'out_missing' non è nullptr, riporta quelli mancanti.
-    // report_style_type: 0 = qualunque style; >0 = filtra su uno specifico.
-    bool all_ids_declared_in_ranFunctionDefinition(const std::vector<long> &ids, int report_style_type, std::vector<long> *out_missing)
+    static bool encode_rc_control_outcome(const std::vector<std::pair<long, std::string>> &items,
+                                          std::vector<uint8_t> &buffer)
     {
-        if (out_missing)
-            out_missing->clear();
-        if (!g_rc_ranfunc_def)
-            return false;
-
-        std::unordered_set<long> declared;
-        collect_declared_report_param_ids(g_rc_ranfunc_def, report_style_type, declared);
-
-        bool ok = true;
-        for (long id : ids)
+        if (items.empty())
         {
-            if (declared.find(id) == declared.end())
-            {
-                ok = false;
-                if (out_missing)
-                    out_missing->push_back(id);
-            }
+            buffer.clear();
+            return true;
         }
-        return ok;
+        std::vector<ControlOutcomeField> fields;
+        fields.reserve(items.size());
+        for (const auto &item : items)
+        {
+            fields.push_back(ControlOutcomeField{item.first, item.second});
+        }
+        return encode_rc_control_outcome_view(fields.data(), fields.size(), buffer);
     }
 
-    bool decode_rc_event_trigger(RICeventTriggerDefinition_t *et, int *out_format)
+    static bool encode_rc_control_outcome_single(long id,
+                                                 std::string_view value,
+                                                 std::vector<uint8_t> &buffer)
     {
-        if (!et || !et->buf || et->size == 0 || !out_format)
-            return false;
-
-        // Decodifica PER non allineata (Packed Encoding Rules) come da E2AP
-        asn_dec_rval_t rval;
-        E2SM_RC_EventTrigger *decoded = NULL;
-
-        rval = aper_decode_complete(
-            NULL,                          // codec context
-            &asn_DEF_E2SM_RC_EventTrigger, // descrittore ASN.1
-            (void **)&decoded,
-            et->buf,
-            et->size);
-
-        if (rval.code != RC_OK || decoded == NULL)
+        if (value.empty())
         {
-            fprintf(stderr, "[decode_rc_event_trigger] Decode failed: %s (consumed %zu bytes)\n",
-                    rval.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE",
-                    rval.consumed);
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_EventTrigger, decoded);
-            return false;
+            buffer.clear();
+            return true;
+        }
+        const ControlOutcomeField field{id, value};
+        return encode_rc_control_outcome_view(&field, 1, buffer);
+    }
+
+} // namespace
+
+// Raccoglie gli ID dichiarati in RANFunctionDefinition-Report, opzionalmente
+// filtrando per ric_ReportStyle_Type == report_style_type (se >0).
+static void collect_declared_report_param_ids(const E2SM_RC_RANFunctionDefinition_t *def,
+                                              int report_style_type, // 0 = qualunque style
+                                              std::unordered_set<long> &out_ids)
+{
+    out_ids.clear();
+    if (!def || !def->ranFunctionDefinition_Report)
+        return;
+
+    const RANFunctionDefinition_Report_t *rep = def->ranFunctionDefinition_Report;
+    const auto &lst = rep->ric_ReportStyle_List.list;
+    for (int i = 0; i < lst.count; ++i)
+    {
+        const RANFunctionDefinition_Report_Item_t *it =
+            (const RANFunctionDefinition_Report_Item_t *)lst.array[i];
+        if (!it)
+            continue;
+
+        // se richiesto, filtra per style specifico
+        if (report_style_type > 0 && (int)it->ric_ReportStyle_Type != report_style_type)
+        {
+            continue;
         }
 
-        // Identifica quale formato è presente
-        if (decoded->ric_eventTrigger_formats.present ==
-            E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format1)
-        {
-            *out_format = 1;
-        }
-        else if (decoded->ric_eventTrigger_formats.present ==
-                 E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format2)
-        {
-            *out_format = 2;
-        }
-        else if (decoded->ric_eventTrigger_formats.present ==
-                 E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format3)
-        {
-            *out_format = 3;
-        }
-        else if (decoded->ric_eventTrigger_formats.present ==
-                 E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format4)
-        {
-            *out_format = 4;
-        }
-        else
-        {
-            fprintf(stderr, "[decode_rc_event_trigger] Unknown format in EventTrigger\n");
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_EventTrigger, decoded);
-            return false;
-        }
+        // lista dei RAN params supportati per quello style
+        const auto *rp_list = it->ran_ReportParameters_List;
+        if (!rp_list)
+            continue;
 
-        xer_fprint(stdout, &asn_DEF_E2SM_RC_EventTrigger, decoded);
+        const auto &rp = rp_list->list;
+        for (int j = 0; j < rp.count; ++j)
+        {
+            const Report_RANParameter_Item_t *p =
+                (const Report_RANParameter_Item_t *)rp.array[j];
+            if (!p)
+                continue;
+            out_ids.insert((long)p->ranParameter_ID);
+        }
+    }
+}
 
-        // Cleanup
+// Verifica che tutti gli ID richiesti compaiano tra quelli dichiarati.
+// Se 'out_missing' non è nullptr, riporta quelli mancanti.
+// report_style_type: 0 = qualunque style; >0 = filtra su uno specifico.
+bool all_ids_declared_in_ranFunctionDefinition(const std::vector<long> &ids, int report_style_type, std::vector<long> *out_missing)
+{
+    if (out_missing)
+        out_missing->clear();
+    if (!g_rc_ranfunc_def)
+        return false;
+
+    std::unordered_set<long> declared;
+    collect_declared_report_param_ids(g_rc_ranfunc_def, report_style_type, declared);
+
+    bool ok = true;
+    for (long id : ids)
+    {
+        if (declared.find(id) == declared.end())
+        {
+            ok = false;
+            if (out_missing)
+                out_missing->push_back(id);
+        }
+    }
+    return ok;
+}
+
+bool decode_rc_event_trigger(RICeventTriggerDefinition_t *et, int *out_format)
+{
+    if (!et || !et->buf || et->size == 0 || !out_format)
+        return false;
+
+    // Decodifica PER non allineata (Packed Encoding Rules) come da E2AP
+    asn_dec_rval_t rval;
+    E2SM_RC_EventTrigger *decoded = NULL;
+
+    rval = aper_decode_complete(
+        NULL,                          // codec context
+        &asn_DEF_E2SM_RC_EventTrigger, // descrittore ASN.1
+        (void **)&decoded,
+        et->buf,
+        et->size);
+
+    if (rval.code != RC_OK || decoded == NULL)
+    {
+        fprintf(stderr, "[decode_rc_event_trigger] Decode failed: %s (consumed %zu bytes)\n",
+                rval.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE",
+                rval.consumed);
         ASN_STRUCT_FREE(asn_DEF_E2SM_RC_EventTrigger, decoded);
-        return true;
+        return false;
     }
-    */
-    /**
-     * Decodifica E2SM-RC Action Definition e accetta solo il Format 1 (REPORT).
-     * Estrae la lista di RAN Parameter ID richiesti dalla xApp.
-     *
-     * @param ad                 OCTET STRING (E2AP) con la Action Definition RC
-     * @param out_ids            output: lista di RAN Parameter ID richiesti
-     * @return true se decodifica ok e format==1, altrimenti false
 
-    bool decode_rc_actiondef_format1(const OCTET_STRING_t *ad, std::vector<long> &out_ids)
+    // Identifica quale formato è presente
+    if (decoded->ric_eventTrigger_formats.present ==
+        E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format1)
     {
-        out_ids.clear();
-
-        if (!ad || !ad->buf || ad->size == 0)
-        {
-            fprintf(stderr, "[decode_rc_actiondef_format1] invalid input\n");
-            return false;
-        }
-
-        E2SM_RC_ActionDefinition_t *decoded = nullptr;
-        asn_dec_rval_t rval = aper_decode_complete(
-            nullptr,
-            &asn_DEF_E2SM_RC_ActionDefinition,
-            (void **)&decoded,
-            ad->buf,
-            ad->size);
-
-        if (rval.code != RC_OK || !decoded)
-        {
-            fprintf(stderr, "[decode_rc_actiondef_format1] PER decode failed (%s), consumed=%zu\n",
-                    (rval.code == RC_WMORE ? "RC_WMORE" : "RC_FAIL"), rval.consumed);
-            if (decoded)
-                ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
-            return false;
-        }
-
-        // Verifica che il CHOICE sia il Format 1 (REPORT) come da 9.2.1.2.1. :contentReference[oaicite:3]{index=3}
-        auto &fmt = decoded->ric_actionDefinition_formats;
-        if (fmt.present != E2SM_RC_ActionDefinition__ric_actionDefinition_formats_PR_actionDefinition_Format1)
-        {
-            fprintf(stderr, "[decode_rc_actiondef_format1] not Format1 (present=%d)\n", fmt.present);
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
-            return false;
-        }
-
-        // Estrai i RAN Parameter ID dalla lista "Parameters to be Reported"
-        E2SM_RC_ActionDefinition_Format1 *f1 = fmt.choice.actionDefinition_Format1;
-        if (!f1)
-        {
-            fprintf(stderr, "[decode_rc_actiondef_format1] NULL Format1 pointer\n");
-            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
-            return false;
-        }
-
-        auto lst = f1->ranP_ToBeReported_List.list;
-        for (int i = 0; i < lst.count; ++i)
-        {
-            E2SM_RC_ActionDefinition_Format1_Item *item = (E2SM_RC_ActionDefinition_Format1_Item *)lst.array[i];
-            if (!item)
-                continue;
-
-            // Ogni item ha: RAN Parameter ID (obbligatorio) + RAN Parameter Definition (opzionale).
-            // "Solo ID dichiarati in RAN Function Definition" sono validi. :contentReference[oaicite:4]{index=4}
-            long id = (long)item->ranParameter_ID;
-            out_ids.push_back(id);
-
-            // Se ti serve: l'item->ranParameter_Definition (opzionale) ti dice se il parametro è STRUCTURE/LIST
-            // e, se non incluso per STRUCTURE/LIST, la spec assume "tutti i sub-parameters supportati". :contentReference[oaicite:5]{index=5}
-        }
-
-        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
-        return true;
+        *out_format = 1;
     }
-    */
+    else if (decoded->ric_eventTrigger_formats.present ==
+             E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format2)
+    {
+        *out_format = 2;
+    }
+    else if (decoded->ric_eventTrigger_formats.present ==
+             E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format3)
+    {
+        *out_format = 3;
+    }
+    else if (decoded->ric_eventTrigger_formats.present ==
+             E2SM_RC_EventTrigger__ric_eventTrigger_formats_PR_eventTrigger_Format4)
+    {
+        *out_format = 4;
+    }
+    else
+    {
+        fprintf(stderr, "[decode_rc_event_trigger] Unknown format in EventTrigger\n");
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_EventTrigger, decoded);
+        return false;
+    }
 
-} // end anonymous namespace
+    xer_fprint(stdout, &asn_DEF_E2SM_RC_EventTrigger, decoded);
+
+    // Cleanup
+    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_EventTrigger, decoded);
+    return true;
+}
+
+/**
+ * Decodifica E2SM-RC Action Definition e accetta solo il Format 1 (REPORT).
+ * Estrae la lista di RAN Parameter ID richiesti dalla xApp.
+ *
+ * @param ad                 OCTET STRING (E2AP) con la Action Definition RC
+ * @param out_ids            output: lista di RAN Parameter ID richiesti
+ * @return true se decodifica ok e format==1, altrimenti false
+ */
+bool decode_rc_actiondef_format1(const OCTET_STRING_t *ad, std::vector<long> &out_ids)
+{
+    out_ids.clear();
+
+    if (!ad || !ad->buf || ad->size == 0)
+    {
+        fprintf(stderr, "[decode_rc_actiondef_format1] invalid input\n");
+        return false;
+    }
+
+    E2SM_RC_ActionDefinition_t *decoded = nullptr;
+    asn_dec_rval_t rval = aper_decode_complete(
+        /*opt_codec_ctx*/ nullptr,
+        &asn_DEF_E2SM_RC_ActionDefinition,
+        (void **)&decoded,
+        ad->buf,
+        ad->size);
+
+    if (rval.code != RC_OK || !decoded)
+    {
+        fprintf(stderr, "[decode_rc_actiondef_format1] PER decode failed (%s), consumed=%zu\n",
+                (rval.code == RC_WMORE ? "RC_WMORE" : "RC_FAIL"), rval.consumed);
+        if (decoded)
+            ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
+        return false;
+    }
+
+    // Verifica che il CHOICE sia il Format 1 (REPORT) come da 9.2.1.2.1. :contentReference[oaicite:3]{index=3}
+    auto &fmt = decoded->ric_actionDefinition_formats;
+    if (fmt.present != E2SM_RC_ActionDefinition__ric_actionDefinition_formats_PR_actionDefinition_Format1)
+    {
+        fprintf(stderr, "[decode_rc_actiondef_format1] not Format1 (present=%d)\n", fmt.present);
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
+        return false;
+    }
+
+    // Estrai i RAN Parameter ID dalla lista "Parameters to be Reported"
+    E2SM_RC_ActionDefinition_Format1 *f1 = fmt.choice.actionDefinition_Format1;
+    if (!f1)
+    {
+        fprintf(stderr, "[decode_rc_actiondef_format1] NULL Format1 pointer\n");
+        ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
+        return false;
+    }
+
+    auto lst = f1->ranP_ToBeReported_List.list;
+    for (int i = 0; i < lst.count; ++i)
+    {
+        E2SM_RC_ActionDefinition_Format1_Item *item = (E2SM_RC_ActionDefinition_Format1_Item *)lst.array[i];
+        if (!item)
+            continue;
+
+        // Ogni item ha: RAN Parameter ID (obbligatorio) + RAN Parameter Definition (opzionale).
+        // "Solo ID dichiarati in RAN Function Definition" sono validi. :contentReference[oaicite:4]{index=4}
+        long id = (long)item->ranParameter_ID;
+        out_ids.push_back(id);
+
+        // Se ti serve: l'item->ranParameter_Definition (opzionale) ti dice se il parametro è STRUCTURE/LIST
+        // e, se non incluso per STRUCTURE/LIST, la spec assume "tutti i sub-parameters supportati". :contentReference[oaicite:5]{index=5}
+    }
+
+    ASN_STRUCT_FREE(asn_DEF_E2SM_RC_ActionDefinition, decoded);
+    return true;
+}
+
 
 void callback_rc_control_request(E2AP_PDU_t *ctrl_req_pdu)
 {
-        const auto ctrl_start_steady = std::chrono::steady_clock::now();
-        const long long ctrl_start_ms = unix_ms_now();
+    const auto ctrl_start_steady = std::chrono::steady_clock::now();
+    const long long ctrl_start_ms = unix_ms_now();
 
-        RcControlContext ctx;
-        bool header_ok = false;
-        bool message_ok = false;
-        std::string decode_error;
+    RcControlContext ctx;
+    bool header_ok = false;
+    bool message_ok = false;
+    std::string decode_error;
 
-        auto log_ctrl_timing = [&](const char *outcome, const std::string &detail)
-        {
-            const long long end_ms = unix_ms_now();
-            const auto dur_ms =
-                std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - ctrl_start_steady).count();
-            LOG_I("[RC CONTROL][E2AP] start_ms=%lld end_ms=%lld dur_ms=%lld outcome=%s req=%ld/%ld func=%ld detail=%s",
-                  ctrl_start_ms,
-                  end_ms,
-                  (long long)dur_ms,
-                  outcome ? outcome : "unknown",
-                  ctx.requestor_id,
-                  ctx.instance_id,
-                  ctx.ran_function_id,
-                  detail.c_str());
-        };
-
-        struct OctetStringGuard
-        {
-            OCTET_STRING_t &ref;
-            explicit OctetStringGuard(OCTET_STRING_t &r) : ref(r) {}
-            ~OctetStringGuard() { release_octet_string(ref); }
-        } guard{ctx.call_process_id};
-
-        if (!ctrl_req_pdu || ctrl_req_pdu->present != E2AP_PDU_PR_initiatingMessage)
-        {
-            LOG_E("[RC CONTROL] Invalid PDU received");
-            log_ctrl_timing("INVALID_PDU", "invalid E2AP PDU");
-            return;
-        }
-        LOG_I("[RC CONTROL] Received RICcontrolRequest");
-
-        RICcontrolRequest_t &orig_req =
-            ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
-
-        xer_fprint(stdout, &asn_DEF_RICcontrolRequest, &orig_req);
-
-        auto **ies = (RICcontrolRequest_IEs_t **)orig_req.protocolIEs.list.array;
-        int ie_count = orig_req.protocolIEs.list.count;
-
-        for (int i = 0; i < ie_count; ++i)
-        {
-            RICcontrolRequest_IEs_t *ie = ies[i];
-            switch (ie->value.present)
-            {
-            case RICcontrolRequest_IEs__value_PR_RICrequestID:
-                ctx.requestor_id = ie->value.choice.RICrequestID.ricRequestorID;
-                ctx.instance_id = ie->value.choice.RICrequestID.ricInstanceID;
-                break;
-            case RICcontrolRequest_IEs__value_PR_RANfunctionID:
-                ctx.ran_function_id = ie->value.choice.RANfunctionID;
-                break;
-            case RICcontrolRequest_IEs__value_PR_RICcallProcessID:
-                release_octet_string(ctx.call_process_id);
-                OCTET_STRING_fromBuf(&ctx.call_process_id,
-                                     (const char *)ie->value.choice.RICcallProcessID.buf,
-                                     ie->value.choice.RICcallProcessID.size);
-                ctx.call_process_id_present = ctx.call_process_id.buf && ctx.call_process_id.size > 0;
-                break;
-            case RICcontrolRequest_IEs__value_PR_RICcontrolHeader:
-                header_ok = decode_rc_control_header(ie->value.choice.RICcontrolHeader, ctx, decode_error);
-                break;
-            case RICcontrolRequest_IEs__value_PR_RICcontrolMessage:
-                message_ok = decode_rc_control_message(ie->value.choice.RICcontrolMessage, ctx, decode_error);
-                break;
-            case RICcontrolRequest_IEs__value_PR_RICcontrolAckRequest:
-                ctx.ack_requested = (ie->value.choice.RICcontrolAckRequest == RICcontrolAckRequest_ack);
-                break;
-            default:
-                break;
-            }
-        }
-
-        if (!header_ok)
-        {
-            decode_error = decode_error.empty() ? "Missing/invalid RC control header" : decode_error;
-        }
-        if (!message_ok && decode_error.empty())
-        {
-            decode_error = "Missing/invalid RC control message";
-        }
-
-        auto send_failure = [&](long cause_value, const std::string &reason)
-        {
-            if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
-            {
-                LOG_D("[RC CONTROL] Cannot send failure (missing identifiers)");
-                log_ctrl_timing("FAIL_NO_IDS", reason);
-                return;
-            }
-            std::vector<uint8_t> outcome_buf;
-            if (!encode_rc_control_outcome_single(kRcOutcomeStatus, reason, outcome_buf) && !reason.empty())
-            {
-                LOG_D("[RC CONTROL] Unable to encode failure outcome payload");
-            }
-            E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
-            const uint8_t *buf_ptr = outcome_buf.empty() ? nullptr : outcome_buf.data();
-            generate_e2apv2_control_failure(
-                rsp,
-                ctx.requestor_id,
-                ctx.instance_id,
-                ctx.ran_function_id,
-                Cause_PR_ricRequest,
-                cause_value,
-                ctx.call_process_id_present ? &ctx.call_process_id : nullptr,
-                buf_ptr,
-                outcome_buf.size());
-            e2.encode_and_send_sctp_data(rsp);
-            LOG_I("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
-                  ctx.requestor_id,
-                  ctx.instance_id,
-                  cause_value,
-                  reason.c_str());
-            log_ctrl_timing("FAIL", reason);
-        };
-
-        if (!decode_error.empty())
-        {
-            LOG_D("[RC CONTROL] Decode failure: %s", decode_error.c_str());
-            send_failure(CauseRICrequest_control_message_invalid, decode_error);
-            return;
-        }
-
-        if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
-        {
-            LOG_D("[RC CONTROL] Missing mandatory identifiers in RICcontrolRequest");
-            return;
-        }
-
-        RcControlExecutionResult exec_result = execute_rc_control_command(ctx);
-        LOG_D("[RC CONTROL] req=%ld/%ld action=%ld ack=%d status=%s",
+    auto log_ctrl_timing = [&](const char *outcome, const std::string &detail)
+    {
+        const long long end_ms = unix_ms_now();
+        const auto dur_ms =
+            std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - ctrl_start_steady).count();
+        LOG_I("[RC CONTROL][E2AP] start_ms=%lld end_ms=%lld dur_ms=%lld outcome=%s req=%ld/%ld func=%ld detail=%s",
+              ctrl_start_ms,
+              end_ms,
+              (long long)dur_ms,
+              outcome ? outcome : "unknown",
               ctx.requestor_id,
               ctx.instance_id,
-              ctx.control_action_id,
-              ctx.ack_requested ? 1 : 0,
-              exec_result.status.c_str());
+              ctx.ran_function_id,
+              detail.c_str());
+    };
 
-        auto send_ack = [&](const RcControlExecutionResult &result)
-        {
-            std::vector<uint8_t> outcome_buf;
-            if (!encode_rc_control_outcome(result.outcome_items, outcome_buf))
-            {
-                LOG_D("[RC CONTROL] Unable to encode control outcome for ACK");
-                outcome_buf.clear();
-            }
-            E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
-            const uint8_t *buf_ptr = outcome_buf.empty() ? nullptr : outcome_buf.data();
-            generate_e2apv2_control_ack(
-                rsp,
-                ctx.requestor_id,
-                ctx.instance_id,
-                ctx.ran_function_id,
-                ctx.call_process_id_present ? &ctx.call_process_id : nullptr,
-                buf_ptr,
-                outcome_buf.size());
-            e2.encode_and_send_sctp_data(rsp);
-            LOG_I("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
-                  ctx.requestor_id,
-                  ctx.instance_id,
-                  outcome_buf.size());
-            log_ctrl_timing("ACK", result.status);
-        };
+    struct OctetStringGuard
+    {
+        OCTET_STRING_t &ref;
+        explicit OctetStringGuard(OCTET_STRING_t &r) : ref(r) {}
+        ~OctetStringGuard() { release_octet_string(ref); }
+    } guard{ctx.call_process_id};
 
-        if (exec_result.success)
+    if (!ctrl_req_pdu || ctrl_req_pdu->present != E2AP_PDU_PR_initiatingMessage)
+    {
+        LOG_E("[RC CONTROL] Invalid PDU received");
+        log_ctrl_timing("INVALID_PDU", "invalid E2AP PDU");
+        return;
+    }
+    LOG_I("[RC CONTROL] Received RICcontrolRequest");
+
+    RICcontrolRequest_t &orig_req =
+        ctrl_req_pdu->choice.initiatingMessage->value.choice.RICcontrolRequest;
+
+    xer_fprint(stdout, &asn_DEF_RICcontrolRequest, &orig_req);
+
+    auto **ies = (RICcontrolRequest_IEs_t **)orig_req.protocolIEs.list.array;
+    int ie_count = orig_req.protocolIEs.list.count;
+
+    for (int i = 0; i < ie_count; ++i)
+    {
+        RICcontrolRequest_IEs_t *ie = ies[i];
+        switch (ie->value.present)
         {
-            if (ctx.ack_requested)
-            {
-                send_ack(exec_result);
-            }
-            else
-            {
-                LOG_I("[RC CONTROL] ACK not requested by RIC, action executed locally");
-                log_ctrl_timing("NOACK", exec_result.status);
-            }
+        case RICcontrolRequest_IEs__value_PR_RICrequestID:
+            ctx.requestor_id = ie->value.choice.RICrequestID.ricRequestorID;
+            ctx.instance_id = ie->value.choice.RICrequestID.ricInstanceID;
+            break;
+        case RICcontrolRequest_IEs__value_PR_RANfunctionID:
+            ctx.ran_function_id = ie->value.choice.RANfunctionID;
+            break;
+        case RICcontrolRequest_IEs__value_PR_RICcallProcessID:
+            release_octet_string(ctx.call_process_id);
+            OCTET_STRING_fromBuf(&ctx.call_process_id,
+                                 (const char *)ie->value.choice.RICcallProcessID.buf,
+                                 ie->value.choice.RICcallProcessID.size);
+            ctx.call_process_id_present = ctx.call_process_id.buf && ctx.call_process_id.size > 0;
+            break;
+        case RICcontrolRequest_IEs__value_PR_RICcontrolHeader:
+            header_ok = decode_rc_control_header(ie->value.choice.RICcontrolHeader, ctx, decode_error);
+            break;
+        case RICcontrolRequest_IEs__value_PR_RICcontrolMessage:
+            message_ok = decode_rc_control_message(ie->value.choice.RICcontrolMessage, ctx, decode_error);
+            break;
+        case RICcontrolRequest_IEs__value_PR_RICcontrolAckRequest:
+            ctx.ack_requested = (ie->value.choice.RICcontrolAckRequest == RICcontrolAckRequest_ack);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (!header_ok)
+    {
+        decode_error = decode_error.empty() ? "Missing/invalid RC control header" : decode_error;
+    }
+    if (!message_ok && decode_error.empty())
+    {
+        decode_error = "Missing/invalid RC control message";
+    }
+
+    auto send_failure = [&](long cause_value, const std::string &reason)
+    {
+        if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
+        {
+            LOG_D("[RC CONTROL] Cannot send failure (missing identifiers)");
+            log_ctrl_timing("FAIL_NO_IDS", reason);
+            return;
+        }
+        std::vector<uint8_t> outcome_buf;
+        if (!encode_rc_control_outcome_single(kRcOutcomeStatus, reason, outcome_buf) && !reason.empty())
+        {
+            LOG_D("[RC CONTROL] Unable to encode failure outcome payload");
+        }
+        E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
+        const uint8_t *buf_ptr = outcome_buf.empty() ? nullptr : outcome_buf.data();
+        generate_e2apv2_control_failure(
+            rsp,
+            ctx.requestor_id,
+            ctx.instance_id,
+            ctx.ran_function_id,
+            Cause_PR_ricRequest,
+            cause_value,
+            ctx.call_process_id_present ? &ctx.call_process_id : nullptr,
+            buf_ptr,
+            outcome_buf.size());
+        e2.encode_and_send_sctp_data(rsp);
+        LOG_I("[RC CONTROL] Sent control FAILURE req=%ld/%ld cause=%ld reason=%s",
+              ctx.requestor_id,
+              ctx.instance_id,
+              cause_value,
+              reason.c_str());
+        log_ctrl_timing("FAIL", reason);
+    };
+
+    if (!decode_error.empty())
+    {
+        LOG_D("[RC CONTROL] Decode failure: %s", decode_error.c_str());
+        send_failure(CauseRICrequest_control_message_invalid, decode_error);
+        return;
+    }
+
+    if (ctx.requestor_id < 0 || ctx.instance_id < 0 || ctx.ran_function_id < 0)
+    {
+        LOG_D("[RC CONTROL] Missing mandatory identifiers in RICcontrolRequest");
+        return;
+    }
+
+    RcControlExecutionResult exec_result = execute_rc_control_command(ctx);
+    LOG_D("[RC CONTROL] req=%ld/%ld action=%ld ack=%d status=%s",
+          ctx.requestor_id,
+          ctx.instance_id,
+          ctx.control_action_id,
+          ctx.ack_requested ? 1 : 0,
+          exec_result.status.c_str());
+
+    auto send_ack = [&](const RcControlExecutionResult &result)
+    {
+        std::vector<uint8_t> outcome_buf;
+        if (!encode_rc_control_outcome(result.outcome_items, outcome_buf))
+        {
+            LOG_D("[RC CONTROL] Unable to encode control outcome for ACK");
+            outcome_buf.clear();
+        }
+        E2AP_PDU_t *rsp = (E2AP_PDU_t *)calloc(1, sizeof(*rsp));
+        const uint8_t *buf_ptr = outcome_buf.empty() ? nullptr : outcome_buf.data();
+        generate_e2apv2_control_ack(
+            rsp,
+            ctx.requestor_id,
+            ctx.instance_id,
+            ctx.ran_function_id,
+            ctx.call_process_id_present ? &ctx.call_process_id : nullptr,
+            buf_ptr,
+            outcome_buf.size());
+        e2.encode_and_send_sctp_data(rsp);
+        LOG_I("[RC CONTROL] Sent control ACK req=%ld/%ld outcomeLen=%zu",
+              ctx.requestor_id,
+              ctx.instance_id,
+              outcome_buf.size());
+        log_ctrl_timing("ACK", result.status);
+    };
+
+    if (exec_result.success)
+    {
+        if (ctx.ack_requested)
+        {
+            send_ack(exec_result);
         }
         else
         {
-            if (exec_result.outcome_items.empty())
-            {
-                exec_result.outcome_items.emplace_back(kRcOutcomeStatus, exec_result.status);
-            }
-            send_failure(exec_result.cause_value, exec_result.status);
+            LOG_I("[RC CONTROL] ACK not requested by RIC, action executed locally");
+            log_ctrl_timing("NOACK", exec_result.status);
         }
     }
+    else
+    {
+        if (exec_result.outcome_items.empty())
+        {
+            exec_result.outcome_items.emplace_back(kRcOutcomeStatus, exec_result.status);
+        }
+        send_failure(exec_result.cause_value, exec_result.status);
+    }
+}
 
 void registerRCfunctionDefinition(E2Sim &e2)
 {

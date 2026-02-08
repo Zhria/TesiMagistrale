@@ -120,11 +120,6 @@ func (a *N3iwfApp) Config() *factory.Config {
 	return a.cfg
 }
 
-// NwuupForwarder returns the nwuup server which implements forwarding buffer methods
-func (a *N3iwfApp) NwuupForwarder() n3iwf_context.ForwardingFlusher {
-	return a.nwuupServer
-}
-
 func (a *N3iwfApp) SetLogEnable(enable bool) {
 	logger.MainLog.Infof("Log enable is set to [%v]", enable)
 	if enable && logger.Log.Out == os.Stderr {

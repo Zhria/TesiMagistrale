@@ -362,14 +362,14 @@ std::vector<std::string> getAllowedKPI() {
         "UE.RxBitrateAvgMbps"*/
     };
 }
-/*
+
 std::vector<std::string> getJSONKeysKPM(){
   return {
     "incomingOctets",
     "transmitOctets",
     "droppedOctets"
   };
-}*/
+}
 
 // RAN Parameters that are declared as part of the RC report style.
 std::map<long,std::string> getAllowedReportMetricsRC(){

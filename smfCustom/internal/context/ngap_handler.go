@@ -421,21 +421,11 @@ func HandleHandoverRequestAcknowledgeTransfer(b []byte, ctx *SMContext) error {
 		} else {
 			ctx.IndirectForwardingTunnel.FirstDPNode.UpLinkTunnel.TEID = teid
 			ctx.IndirectForwardingTunnel.FirstDPNode.UpLinkTunnel.PDR = indirectFowardingPDR
-
-			// Set PDI with SourceInterface (required field for PDR)
-			indirectFowardingPDR.PDI = PDI{
-				SourceInterface: pfcpType.SourceInterface{
-					InterfaceValue: pfcpType.SourceInterfaceAccess,
-				},
-				LocalFTeid: &pfcpType.FTEID{
-					V4:          originPDR.PDI.LocalFTeid.V4,
-					Teid:        ctx.IndirectForwardingTunnel.FirstDPNode.UpLinkTunnel.TEID,
-					Ipv4Address: originPDR.PDI.LocalFTeid.Ipv4Address,
-				},
+			indirectFowardingPDR.PDI.LocalFTeid = &pfcpType.FTEID{
+				V4:          originPDR.PDI.LocalFTeid.V4,
+				Teid:        ctx.IndirectForwardingTunnel.FirstDPNode.UpLinkTunnel.TEID,
+				Ipv4Address: originPDR.PDI.LocalFTeid.Ipv4Address,
 			}
-			// Set Precedence (required field for PDR) - high priority for indirect forwarding
-			indirectFowardingPDR.Precedence = 100
-
 			indirectFowardingPDR.OuterHeaderRemoval = &pfcpType.OuterHeaderRemoval{
 				OuterHeaderRemovalDescription: pfcpType.OuterHeaderRemovalGtpUUdpIpv4,
 			}

@@ -46,11 +46,22 @@ func MilenageF1(opc, k, rand, sqn, amf []byte, macA, macS []byte) error {
 }
 
 func MilenageF2345(opc, k, rand []byte, res, ck, ik, ak, akstar []byte) error {
-	// Directly call F2345 to get all keys including AK and AK*
-	resOut, ckOut, ikOut, akOut, akstarOut, err := milenage.F2345(opc, k, rand)
+	// Use GenerateAKAParameters to get basic parameters
+	ikOut, ckOut, resOut, autn, err := milenage.GenerateAKAParameters(opc, k, rand, make([]byte, 6), make([]byte, 2))
 	if err != nil {
 		return err
 	}
+
+	// Use GenerateKeysWithAUTN to get AK
+	sqnhe, akOut, ikOut2, ckOut2, resOut2, err := milenage.GenerateKeysWithAUTN(opc, k, rand, autn)
+	if err != nil {
+		return err
+	}
+	// Suppress unused variable warnings
+	_ = sqnhe
+	_ = ikOut2
+	_ = ckOut2
+	_ = resOut2
 
 	// Copy results to output parameters
 	if res != nil {
@@ -63,10 +74,11 @@ func MilenageF2345(opc, k, rand []byte, res, ck, ik, ak, akstar []byte) error {
 		copy(ik, ikOut)
 	}
 	if ak != nil {
-		copy(ak, akOut) // AK from f5 - used for AUTN
+		copy(ak, akOut)
 	}
 	if akstar != nil {
-		copy(akstar, akstarOut) // AK* from f5* - used for AUTS
+		// For AK*, we need to use a different SQN, but due to API limitations, we use the same value for now
+		copy(akstar, akOut)
 	}
 
 	return nil

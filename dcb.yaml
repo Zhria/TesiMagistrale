@@ -5,11 +5,12 @@ services:
       context: ./nf_upf
       args:
         DEBUG_TOOLS: "false"
-    # Optional iperf3 server (disabled by default). Enable with: ENABLE_IPERF3_SERVER=1
-    command: bash -c "./upf-iptables.sh && if [ \"${ENABLE_IPERF3_SERVER:-0}\" = \"1\" ]; then iperf3 -s -D; fi && exec ./upf -c ./config/upfcfg.yaml"
+    command: bash -c "./upf-iptables.sh && iperf3 -s -D && ./upf -c ./config/upfcfg.yaml"
     ports:
       - "2152:2152/udp"
       - "8805:8805/udp"
+      - "5202:5201"
+      - "5202:5201/udp"
     volumes:
       - ./config/upfcfg.yaml:/free5gc/config/upfcfg.yaml
       - ./config/upf-iptables.sh:/free5gc/upf-iptables.sh

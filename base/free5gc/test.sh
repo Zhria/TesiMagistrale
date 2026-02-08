@@ -29,7 +29,7 @@ do
 done
 shift $(($OPTIND - 1))
 
-TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf|TestDC|TestDynamicDC|TestXnDCHandover"
+TEST_POOL="All|TestRegistration|TestGUTIRegistration|TestServiceRequest|TestXnHandover|TestN2Handover|TestDeregistration|TestPDUSessionReleaseRequest|TestPaging|TestNon3GPP|TestReSynchronization|TestDuplicateRegistration|TestEAPAKAPrimeAuthentication|TestMultiAmfRegistration|TestNasReroute|TestTngf|TestDC|TestDynamicDC"
 if [[ ! "$1" =~ $TEST_POOL ]]
 then
     echo "Usage: $0 [ ${TEST_POOL//|/ | } ]"
@@ -49,12 +49,7 @@ if [ $1 == "All" ]; then
             echo "    Output saved to testing_output/$i.log"
             exec $(realpath $0) $i &> testing_output/$i.log &
             wait
-            # Extra cleanup for tests that might leave residual processes
-            if [[ "$i" == "TestTngf" || "$i" == "TestNon3GPP" ]]; then
-                sudo killall -9 n3iwf tngf 2>/dev/null
-                sleep 2
-            fi
-            STATUS=$(grep -a -E "\-\-\-.*:" testing_output/$i.log)
+            STATUS=$(grep -E "\-\-\-.*:" testing_output/$i.log)
             if [ ! -z "$STATUS" ]; then
                 echo "$STATUS" | while read -r a; do echo "    ${a:4}"; done
             else
@@ -105,16 +100,8 @@ function terminate()
         sudo ip netns del ${UENS}
         removeN3iwfInterfaces
         sudo ip link del veth2
-        # Kill n3iwf and tngf processes more aggressively
-        sudo killall -15 n3iwf tngf 2>/dev/null
-        sleep 1
-        sudo killall -9 n3iwf tngf 2>/dev/null
-        sleep 1
-        # Also kill any remaining processes by name pattern (including sudo wrapper processes)
-        ps aux | grep -E "[n]3iwf|[t]ngf" | awk '{print $2}' | xargs -r sudo kill -9 2>/dev/null
-        # Kill test processes
-        ps aux | grep "[t]est.test" | awk '{print $2}' | xargs -r sudo kill -SIGUSR1 2>/dev/null
-        sleep 1
+        sudo killall n3iwf tngf
+        ps aux | grep test.test | awk '{print $2}' | xargs sudo kill -SIGUSR1
     fi
 
     if [[ "$1" == "TestMultiAmfRegistration" ]]
@@ -204,7 +191,7 @@ ${EXEC_UPFNS} ip addr add 10.200.200.102/24 dev veth1
 ${EXEC_UPFNS} ip route add 10.200.200.1/32 dev veth1 src 10.200.200.102
 ${EXEC_UPFNS} ip route add 10.200.200.2/32 dev veth1 src 10.200.200.102
 
-if [[ "$1" == "TestDC" || "$1" == "TestDynamicDC" || "$1" == "TestXnDCHandover" ]]
+if [[ "$1" == "TestDC" || "$1" == "TestDynamicDC" ]]
 then
     ${EXEC_UPFNS} ip tuntap add dev googleDNS mode tun
     ${EXEC_UPFNS} ip link set googleDNS up

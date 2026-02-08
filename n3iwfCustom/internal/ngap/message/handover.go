@@ -330,7 +330,6 @@ func BuildHandoverRequestAcknowledgeTransfer(pduSession *n3iwf_context.PDUSessio
 
 	transfer := ngapType.HandoverRequestAcknowledgeTransfer{}
 
-	// DL N3 tunnel info (where UPF sends normal DL traffic)
 	transfer.DLNGUUPTNLInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
 	transfer.DLNGUUPTNLInformation.GTPTunnel = new(ngapType.GTPTunnel)
 	gtpTunnel := transfer.DLNGUUPTNLInformation.GTPTunnel
@@ -339,16 +338,6 @@ func BuildHandoverRequestAcknowledgeTransfer(pduSession *n3iwf_context.PDUSessio
 	binary.BigEndian.PutUint32(teid, pduSession.GTPConnInfo.IncomingTEID)
 	gtpTunnel.GTPTEID.Value = teid
 	gtpTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(gtpIPv4, "")
-
-	// DL Forwarding tunnel info for indirect forwarding during handover
-	// Use the same endpoint as DLNGUUPTNLInformation - the target N3IWF will receive
-	// forwarded packets from UPF on this same GTP tunnel
-	transfer.DLForwardingUPTNLInformation = new(ngapType.UPTransportLayerInformation)
-	transfer.DLForwardingUPTNLInformation.Present = ngapType.UPTransportLayerInformationPresentGTPTunnel
-	transfer.DLForwardingUPTNLInformation.GTPTunnel = new(ngapType.GTPTunnel)
-	fwdTunnel := transfer.DLForwardingUPTNLInformation.GTPTunnel
-	fwdTunnel.GTPTEID.Value = append([]byte(nil), teid...) // Same TEID
-	fwdTunnel.TransportLayerAddress = ngapConvert.IPAddressToNgap(gtpIPv4, "")
 
 	for _, qfi := range pduSession.QFIList {
 		item := ngapType.QosFlowItemWithDataForwarding{

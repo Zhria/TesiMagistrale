@@ -2,13 +2,9 @@ package nwuup
 
 import (
 	"context"
-	"encoding/binary"
-	goerrors "errors"
-	"fmt"
 	"net"
 	"runtime/debug"
 	"sync"
-	"time"
 
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/pkg/errors"
@@ -44,12 +40,7 @@ type Server struct {
 const (
 	// Default socket buffer used for the raw GRE socket. This helps avoid ENOBUFS
 	// ("no buffer space available") when forwarding high-rate downlink traffic to UE.
-	// Note: the effective value is capped by kernel sysctls (net.core.{wmem,rmem}_max).
-	greSocketBufferBytes = 25 * 1024 * 1024
-
-	greWriteRetryMaxAttempts    = 50
-	greWriteRetryInitialBackoff = 200 * time.Microsecond
-	greWriteRetryMaxBackoff     = 5 * time.Millisecond
+	greSocketBufferBytes = 4 * 1024 * 1024
 )
 
 func NewServer(n3iwf n3iwf) (*Server, error) {
@@ -338,36 +329,6 @@ func (s *Server) handleEndMarker(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.M
 	return nil
 }
 
-func isGreTemporarySendErr(err error) bool {
-	if err == nil {
-		return false
-	}
-	return goerrors.Is(err, unix.ENOBUFS) ||
-		goerrors.Is(err, unix.EAGAIN) ||
-		goerrors.Is(err, unix.EWOULDBLOCK)
-}
-
-func (s *Server) greWriteToWithRetry(data []byte, cm *ipv4.ControlMessage, dst net.Addr) (int, error) {
-	backoff := greWriteRetryInitialBackoff
-	var lastErr error
-	for attempt := 0; attempt < greWriteRetryMaxAttempts; attempt++ {
-		n, err := s.greConn.WriteTo(data, cm, dst)
-		if err == nil {
-			return n, nil
-		}
-		lastErr = err
-		if !isGreTemporarySendErr(err) {
-			return n, err
-		}
-		time.Sleep(backoff)
-		backoff *= 2
-		if backoff > greWriteRetryMaxBackoff {
-			backoff = greWriteRetryMaxBackoff
-		}
-	}
-	return 0, lastErr
-}
-
 // Forward user plane packets from N3 to UE with GRE header and new IP header encapsulated
 func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	nwuupLog := s.log
@@ -425,37 +386,6 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 			break
 		}
 	}
-	// Check if handover is in progress - buffer instead of forwarding to UE
-	if pdusession != nil {
-		shared := ranUe.GetSharedCtx()
-
-		// Source N3IWF: HoStateExecuting - buffer for indirect forwarding to target
-		if shared.HoState == n3iwf_context.HoStateExecuting {
-			if pdusession.ForwardingUPTNLInfo != nil {
-				qfi, rqi := uint8(0), false
-				if packet.HasQoS() {
-					qfi, rqi = packet.GetQoSParameters()
-				}
-				s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
-				nwuupLog.Debugf("Buffered DL packet for HO forwarding (TEID=%d, QFI=%d, size=%d)",
-					pktTEID, qfi, len(packet.GetPayload()))
-				return
-			} else {
-				nwuupLog.Warnf("[HO-SKIP] HoState=Executing but ForwardingUPTNLInfo is nil for PDU Session %d", pdusession.Id)
-			}
-		}
-
-		// Target N3IWF: HoStateAwaitingUE - buffer until UE completes MOBIKE
-		if shared.HoState == n3iwf_context.HoStateAwaitingUE {
-			qfi, rqi := uint8(0), false
-			if packet.HasQoS() {
-				qfi, rqi = packet.GetQoSParameters()
-			}
-			s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
-			return
-		}
-	}
-
 	if cm == nil {
 		nwuupLog.Warnf("forwardDL(): Cannot match TEID(%d) to ChildSA", pktTEID)
 		snssai := ngapType.SNSSAI{}
@@ -495,7 +425,7 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	qoSFlow := pdusession.QosFlows[int64(qfi)]
 
 	// Send to UE through Nwu
-	if n, err := s.greWriteToWithRetry(forwardData, cm, ueInnerIPAddr); err != nil {
+	if n, err := s.greConn.WriteTo(forwardData, cm, ueInnerIPAddr); err != nil {
 		nwuupLog.Errorf("Write to UE failed: %+v", err)
 		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(0), ueInnerIPAddr.IP.String(), qfi, rqi, pktTEID, qoSFlow, pdusession.Snssai)
 		return
@@ -505,196 +435,4 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(len(packet.GetPayload())), ueInnerIPAddr.IP.String(), qfi, rqi, pktTEID, qoSFlow, pdusession.Snssai)
 
 	}
-}
-
-// MaxForwardingBufferSize is the maximum number of packets to buffer during handover
-const MaxForwardingBufferSize = 50000
-
-// bufferForForwarding adds a packet to the forwarding buffer for indirect forwarding during handover
-func (s *Server) bufferForForwarding(session *n3iwf_context.PDUSession, payload []byte, qfi uint8, rqi bool) {
-	session.ForwardingBufferLock.Lock()
-	defer session.ForwardingBufferLock.Unlock()
-
-	if len(session.ForwardingBuffer) >= MaxForwardingBufferSize {
-		s.log.Warnf("Forwarding buffer full (max=%d), dropping packet for PDU Session %d",
-			MaxForwardingBufferSize, session.Id)
-		return
-	}
-
-	// Copy payload to avoid data race
-	payloadCopy := make([]byte, len(payload))
-	copy(payloadCopy, payload)
-
-	session.ForwardingBuffer = append(session.ForwardingBuffer, n3iwf_context.ForwardingPacket{
-		Payload: payloadCopy,
-		QFI:     qfi,
-		RQI:     rqi,
-	})
-
-	s.log.Debugf("[HO-BUFFER] Packet buffered for PDU Session %d (total: %d)", session.Id, len(session.ForwardingBuffer))
-}
-
-// FlushForwardingBuffer sends all buffered packets to the UPF forwarding endpoint
-func (s *Server) FlushForwardingBuffer(session *n3iwf_context.PDUSession) error {
-	if session == nil {
-		return errors.New("nil session")
-	}
-	if session.ForwardingUPTNLInfo == nil {
-		return errors.New("no forwarding endpoint configured")
-	}
-	if session.ForwardingUPTNLInfo.Present != ngapType.UPTransportLayerInformationPresentGTPTunnel {
-		return errors.New("forwarding info is not GTP tunnel")
-	}
-
-	gtpTunnel := session.ForwardingUPTNLInfo.GTPTunnel
-	if gtpTunnel == nil {
-		return errors.New("GTP tunnel is nil")
-	}
-
-	// Extract TEID and IP from forwarding info
-	teid := binary.BigEndian.Uint32(gtpTunnel.GTPTEID.Value)
-	ipBytes := gtpTunnel.TransportLayerAddress.Value.Bytes
-	if len(ipBytes) < 4 {
-		return fmt.Errorf("invalid transport layer address length: %d", len(ipBytes))
-	}
-	upfIP := net.IP(ipBytes[:4])
-	upfAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s%s", upfIP.String(), gtpv1.GTPUPort))
-	if err != nil {
-		return fmt.Errorf("resolve forwarding address: %w", err)
-	}
-
-	// Take packets from buffer
-	session.ForwardingBufferLock.Lock()
-	packets := session.ForwardingBuffer
-	session.ForwardingBuffer = nil
-	session.ForwardingBufferLock.Unlock()
-
-	if len(packets) == 0 {
-		s.log.Debugf("[HO-FLUSH] No packets to forward for PDU Session %d", session.Id)
-		return nil
-	}
-
-	s.log.Infof("[HO-FLUSH] Starting flush of %d buffered packets to %s TEID=%d for PDU Session %d",
-		len(packets), upfAddr.String(), teid, session.Id)
-
-	// Send each packet to the UPF forwarding endpoint
-	for _, pkt := range packets {
-		gtpPacket, err := gtpQoSMsg.BuildQoSGTPPacket(teid, pkt.QFI, pkt.RQI, pkt.Payload)
-		if err != nil {
-			s.log.Warnf("[HO-FLUSH] Failed to build GTP packet: %v", err)
-			continue
-		}
-		if _, err := s.gtpuConn.WriteTo(gtpPacket, upfAddr); err != nil {
-			s.log.Warnf("[HO-FLUSH] Failed to send forwarded packet: %v", err)
-		}
-	}
-
-	s.log.Infof("[HO-FLUSH] Completed forwarding %d packets for PDU Session %d", len(packets), session.Id)
-	return nil
-}
-
-// FlushBufferToUE sends buffered packets to the UE via IPSec/GRE (for target N3IWF after UE connects)
-func (s *Server) FlushBufferToUE(ranUe n3iwf_context.RanUe, session *n3iwf_context.PDUSession) error {
-	if session == nil {
-		return errors.New("nil session")
-	}
-	if ranUe == nil {
-		return errors.New("nil ranUe")
-	}
-
-	n3iwfCtx := s.Context()
-	ranUeNgapID := ranUe.GetSharedCtx().RanUeNgapId
-
-	ikeUe, err := n3iwfCtx.IkeUeLoadFromNgapId(ranUeNgapID)
-	if err != nil {
-		return fmt.Errorf("cannot find IkeUe: %w", err)
-	}
-
-	ueInnerIPAddr := ikeUe.IPSecInnerIPAddr
-	if ueInnerIPAddr == nil {
-		return errors.New("UE inner IP not available")
-	}
-
-	// Find the ChildSA for this PDU session
-	var cm *ipv4.ControlMessage
-	for _, childSA := range ikeUe.N3IWFChildSecurityAssociation {
-		if childSA == nil || childSA.XfrmIface == nil {
-			continue
-		}
-		for _, pduID := range childSA.PDUSessionIds {
-			if pduID == session.Id {
-				cm = &ipv4.ControlMessage{
-					IfIndex: childSA.XfrmIface.Attrs().Index,
-				}
-				break
-			}
-		}
-		if cm != nil {
-			break
-		}
-	}
-
-	if cm == nil {
-		return fmt.Errorf("no ChildSA found for PDU Session %d", session.Id)
-	}
-
-	// Take packets from buffer
-	session.ForwardingBufferLock.Lock()
-	packets := session.ForwardingBuffer
-	session.ForwardingBuffer = nil
-	session.ForwardingBufferLock.Unlock()
-
-	if len(packets) == 0 {
-		s.log.Debugf("[HO-TARGET-FLUSH] No packets to deliver for PDU Session %d", session.Id)
-		return nil
-	}
-
-	s.log.Infof("[HO-TARGET-FLUSH] Starting delivery of %d buffered packets to UE for PDU Session %d",
-		len(packets), session.Id)
-
-	delivered := 0
-	failed := 0
-	var firstErr error
-	for _, pkt := range packets {
-		grePacket := gre.GREPacket{}
-		grePacket.SetPayload(pkt.Payload, gre.IPv4)
-		grePacket.SetQoS(pkt.QFI, pkt.RQI)
-		forwardData := grePacket.Marshal()
-
-		if _, err := s.greWriteToWithRetry(forwardData, cm, ueInnerIPAddr); err != nil {
-			if firstErr == nil {
-				firstErr = err
-			}
-			failed++
-		} else {
-			delivered++
-		}
-	}
-
-	if failed > 0 {
-		s.log.Warnf("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d (failed=%d firstErr=%v)",
-			delivered, len(packets), session.Id, failed, firstErr)
-	} else {
-		s.log.Infof("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d",
-			delivered, len(packets), session.Id)
-	}
-	return nil
-}
-
-// ClearForwardingBuffer drops all buffered packets (used on HO failure)
-func (s *Server) ClearForwardingBuffer(session *n3iwf_context.PDUSession) int {
-	if session == nil {
-		return 0
-	}
-
-	session.ForwardingBufferLock.Lock()
-	defer session.ForwardingBufferLock.Unlock()
-
-	count := len(session.ForwardingBuffer)
-	session.ForwardingBuffer = nil
-
-	if count > 0 {
-		s.log.Infof("[HO-CLEAR] Dropped %d buffered packets for PDU Session %d", count, session.Id)
-	}
-	return count
 }

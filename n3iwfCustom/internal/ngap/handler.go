@@ -1200,20 +1200,8 @@ func (s *Server) HandleUEContextReleaseCommand(
 
 	shared := ranUe.GetSharedCtx()
 
-	// If UE was in handover, flush buffered packets and mark as completed
+	// If UE was in handover, mark it as completed and notify waiters
 	if shared.IsHandoverInProgress() {
-		// Flush buffered DL packets to forwarding endpoint BEFORE releasing resources
-		forwarder := s.NwuupForwarder()
-		if forwarder != nil {
-			for _, session := range shared.PduSessionList {
-				if session.ForwardingUPTNLInfo != nil {
-					if err := forwarder.FlushForwardingBuffer(session); err != nil {
-						ngapLog.Warnf("Flush forwarding buffer for PDU Session %d failed: %v", session.Id, err)
-					}
-				}
-			}
-		}
-
 		shared.HoState = n3iwf_context.HoStateCompleted
 		ngapLog.Debugf("UE %d handover state -> Completed", shared.RanUeNgapId)
 		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_completed", nil)
@@ -3774,33 +3762,6 @@ func (s *Server) HandleSendHandoverNotify(
 		return
 	}
 
-	// Flush buffered DL packets to UE before sending HandoverNotify
-	ngapLog.Infof("[HO-TARGET] HandleSendHandoverNotify: HoState=%s for RanUeNgapId=%d", sharedCtx.HoState, ranUeNgapId)
-	if sharedCtx.HoState == n3iwf_context.HoStateAwaitingUE {
-		ngapLog.Infof("[HO-TARGET] Flushing buffer for RanUeNgapId=%d, PduSessionList len=%d", ranUeNgapId, len(sharedCtx.PduSessionList))
-		forwarder := s.NwuupForwarder()
-		if forwarder != nil {
-			for _, session := range sharedCtx.PduSessionList {
-				if session == nil {
-					continue
-				}
-				ngapLog.Infof("[HO-TARGET] Calling FlushBufferToUE for PDU Session %d", session.Id)
-				if err := forwarder.FlushBufferToUE(ranUe, session); err != nil {
-					ngapLog.Warnf("FlushBufferToUE failed for PDU Session %d: %v", session.Id, err)
-				}
-			}
-		} else {
-			ngapLog.Warnf("[HO-TARGET] forwarder is nil!")
-		}
-		sharedCtx.HoState = n3iwf_context.HoStateIdle
-		ngapLog.Infof("[HO-TARGET] HoState -> Idle for RanUeNgapId=%d", ranUeNgapId)
-	} else {
-		ngapLog.Warnf("[HO-TARGET] HoState is NOT AwaitingUE (actual=%s/%d), skipping flush for RanUeNgapId=%d, AmfUeNgapId=%d",
-			sharedCtx.HoState, sharedCtx.HoState, ranUeNgapId, sharedCtx.AmfUeNgapId)
-		ngapLog.Warnf("[HO-TARGET] Context info: HandoverNotifySent=%v, PduSessionList len=%d",
-			sharedCtx.HandoverNotifySent, len(sharedCtx.PduSessionList))
-	}
-
 	pkt, err := message.BuildHandoverNotify(ranUe)
 	if err != nil {
 		ngapLog.Errorf("Build HandoverNotify failed: %+v", err)
@@ -4041,8 +4002,6 @@ func (s *Server) HandleHandoverRequest(
 				}
 				continue
 			}
-			ngapLog.Infof("[HO-ACK] PDU Session %d: DLForwardingUPTNLInformation included (IP=%s, TEID=0x%x)",
-				pduSessionID, gtpBindAddr, pduSession.GTPConnInfo.IncomingTEID)
 
 			admittedItems = append(admittedItems, message.HandoverAdmittedItem{
 				PDUSessionID: pduSessionID,
@@ -4090,10 +4049,6 @@ func (s *Server) HandleHandoverRequest(
 	message.SendToAmf(amf, ackPkt)
 	rc.NotifyHandoverResult(n3iwfUe.GetSharedCtx().RanUeNgapId, "handover_prepared", nil)
 
-	// Set HoState to AwaitingUE - target is waiting for UE to connect
-	sharedCtx.HoState = n3iwf_context.HoStateAwaitingUE
-	ngapLog.Infof("[HO-TARGET] HoState -> AwaitingUE for RanUeNgapId=%d", sharedCtx.RanUeNgapId)
-
 	if securityContext != nil {
 		sharedCtx.NextHopChainingCount = securityContext.NextHopChainingCount.Value
 		sharedCtx.NextHopNH = append([]byte(nil), securityContext.NextHopNH.Value.Bytes...)
@@ -4104,36 +4059,6 @@ func (s *Server) HandleHandoverRequest(
 			len(sharedCtx.NextHopNH),
 		)
 	}
-
-	// Start HO timeout timer - if UE doesn't connect within timeout, clean up buffered packets
-	ranUeNgapIdCopy := sharedCtx.RanUeNgapId
-	go func() {
-		timeout := s.Config().GetHandoverTimeoutDuration()
-		time.Sleep(timeout)
-
-		// Re-load UE context and check state
-		if ue, ok := s.Context().RanUePoolLoad(ranUeNgapIdCopy); ok {
-			ueShared := ue.GetSharedCtx()
-			if ueShared.HoState == n3iwf_context.HoStateAwaitingUE {
-				ngapLog.Warnf("Target HO timeout for UE %d - clearing buffered packets", ranUeNgapIdCopy)
-
-				forwarder := s.NwuupForwarder()
-				if forwarder != nil {
-					for _, session := range ueShared.PduSessionList {
-						if session == nil {
-							continue
-						}
-						if dropped := forwarder.ClearForwardingBuffer(session); dropped > 0 {
-							ngapLog.Warnf("Dropped %d buffered packets for PDU Session %d due to target HO timeout", dropped, session.Id)
-						}
-					}
-				}
-
-				ueShared.HoState = n3iwf_context.HoStateIdle
-				ngapLog.Debugf("Target N3IWF: HoState -> Idle (timeout) for RanUeNgapId=%d", ranUeNgapIdCopy)
-			}
-		}
-	}()
 }
 
 func (s *Server) HandleHandoverPreparationFailure(
@@ -4194,21 +4119,8 @@ func (s *Server) HandleHandoverPreparationFailure(
 		if ranUe, ok := s.Context().RanUePoolLoad(ranUeNgapID.Value); ok {
 			ngapLog.Warnf("Handover preparation failed for RanUeNgapId=%d (AMF UE NGAP ID=%d)",
 				ranUeNgapID.Value, amfID)
-			shared := ranUe.GetSharedCtx()
-
-			// Clear any buffered packets on HO failure
-			forwarder := s.NwuupForwarder()
-			if forwarder != nil {
-				for _, session := range shared.PduSessionList {
-					if dropped := forwarder.ClearForwardingBuffer(session); dropped > 0 {
-						ngapLog.Warnf("Dropped %d buffered packets for PDU Session %d due to HO failure", dropped, session.Id)
-					}
-					session.ForwardingUPTNLInfo = nil
-					session.QosFlowsToForward = nil
-				}
-			}
-
 			// Reset handover state to Idle after failure
+			shared := ranUe.GetSharedCtx()
 			shared.HoState = n3iwf_context.HoStateIdle
 			ngapLog.Debugf("UE %d handover state -> Idle (preparation failed)", ranUeNgapID.Value)
 			rc.NotifyHandoverResult(ranUeNgapID.Value, "handover_preparation_failed", fmt.Errorf("handover preparation failure"))
@@ -4302,7 +4214,6 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	if pduSessionHandoverList != nil && ranUe != nil {
-		ngapLog.Infof("[HO-CMD] Processing %d PDU Sessions in HandoverCommand", len(pduSessionHandoverList.List))
 		for _, item := range pduSessionHandoverList.List {
 			pduSessionID := item.PDUSessionID.Value
 			session := ranUe.GetSharedCtx().FindPDUSession(pduSessionID)
@@ -4319,20 +4230,14 @@ func (s *Server) HandleHandoverCommand(
 
 			if transfer.DLForwardingUPTNLInformation != nil {
 				session.ForwardingUPTNLInfo = transfer.DLForwardingUPTNLInformation
-				ngapLog.Infof("[HO-CMD] PDU Session %d: ForwardingUPTNLInfo SET (indirect forwarding enabled)", pduSessionID)
-			} else {
-				ngapLog.Warnf("[HO-CMD] PDU Session %d: DLForwardingUPTNLInformation is nil (no indirect forwarding)", pduSessionID)
 			}
 			session.QosFlowsToForward = session.QosFlowsToForward[:0]
 			if transfer.QosFlowToBeForwardedList != nil {
 				for _, flow := range transfer.QosFlowToBeForwardedList.List {
 					session.QosFlowsToForward = append(session.QosFlowsToForward, flow.QosFlowIdentifier)
 				}
-				ngapLog.Infof("[HO-CMD] PDU Session %d: %d QoS flows to forward", pduSessionID, len(session.QosFlowsToForward))
 			}
 		}
-	} else {
-		ngapLog.Warnf("[HO-CMD] pduSessionHandoverList is nil or ranUe is nil - no forwarding info processed")
 	}
 
 	if targetToSourceContainer != nil && ranUe != nil {
@@ -4348,36 +4253,6 @@ func (s *Server) HandleHandoverCommand(
 		shared.HoState = n3iwf_context.HoStateExecuting
 		ngapLog.Debugf("UE %d handover state -> Executing", shared.RanUeNgapId)
 		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_command_sent", nil)
-
-		// Start HO timeout timer as fallback - if UE Context Release doesn't arrive, clean up
-		ranUeNgapIdCopy := shared.RanUeNgapId
-		go func() {
-			timeout := s.Config().GetHandoverTimeoutDuration()
-			time.Sleep(timeout)
-
-			// Re-load UE context and check state
-			if ue, ok := s.Context().RanUePoolLoad(ranUeNgapIdCopy); ok {
-				ueShared := ue.GetSharedCtx()
-				if ueShared.HoState == n3iwf_context.HoStateExecuting {
-					ngapLog.Warnf("Handover timeout for UE %d - clearing forwarding buffer", ranUeNgapIdCopy)
-
-					forwarder := s.NwuupForwarder()
-					if forwarder != nil {
-						for _, session := range ueShared.PduSessionList {
-							if dropped := forwarder.ClearForwardingBuffer(session); dropped > 0 {
-								ngapLog.Warnf("Dropped %d buffered packets for PDU Session %d due to HO timeout", dropped, session.Id)
-							}
-							session.ForwardingUPTNLInfo = nil
-							session.QosFlowsToForward = nil
-						}
-					}
-
-					ueShared.HoState = n3iwf_context.HoStateIdle
-					ngapLog.Debugf("UE %d handover state -> Idle (timeout)", ranUeNgapIdCopy)
-					rc.NotifyHandoverResult(ranUeNgapIdCopy, "handover_timeout", fmt.Errorf("handover timed out"))
-				}
-			}
-		}()
 	}
 
 	if ranUeNgapID != nil {

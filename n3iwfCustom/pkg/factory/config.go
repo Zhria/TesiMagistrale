@@ -165,7 +165,6 @@ type Configuration struct {
 	Wifi                 *Wifi              `yaml:"wifi,omitempty"       valid:"optional"`
 	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
 	XfrmMTU              int                `yaml:"xfrmMTU,omitempty"    valid:"optional"`
-	HandoverTimeoutSec   int                `yaml:"handoverTimeoutSec,omitempty" valid:"optional"` // Timeout for HO forwarding (default 30s)
 }
 
 type Logger struct {
@@ -626,15 +625,4 @@ func (c *Config) GetMetricsNamespace() string {
 		return c.Configuration.Metrics.Namespace
 	}
 	return N3iwfMetricsDefaultNamespace
-}
-
-// GetHandoverTimeoutDuration returns the timeout duration for handover forwarding.
-// If not configured, defaults to 30 seconds.
-func (c *Config) GetHandoverTimeoutDuration() time.Duration {
-	c.RLock()
-	defer c.RUnlock()
-	if c.Configuration.HandoverTimeoutSec > 0 {
-		return time.Duration(c.Configuration.HandoverTimeoutSec) * time.Second
-	}
-	return 30 * time.Second
 }

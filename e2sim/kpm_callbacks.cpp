@@ -292,7 +292,7 @@ static void on_term(int)
   graceful_sctp_close(client_fd);
 
   stop_all_kpm_workers();
-//  stop_all_rc_workers();
+  stop_all_rc_workers();
 
   // libera risorse (ASN.1, heap, thread join, ecc.)
   // cleanup_asn1();
