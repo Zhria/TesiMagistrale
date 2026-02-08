@@ -978,6 +978,39 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			smContext.SetState(smf_context.PFCPModification)
 		}
 
+		// Enable DL buffering on the main DL FAR(s) during the break-before-make phase.
+		// The UPF will hold DL packets instead of forwarding them to the (old) AN tunnel
+		// that is about to become unreachable. HoState_COMPLETED will restore Forw=true.
+		farInList := make(map[uint32]bool, len(farList))
+		for _, f := range farList {
+			farInList[f.FARID] = true
+		}
+		bufferedDL := 0
+		for _, dataPath := range smContext.Tunnel.DataPathPool {
+			if dataPath.Activated {
+				ANUPF := dataPath.FirstDPNode
+				if ANUPF.DownLinkTunnel == nil || ANUPF.DownLinkTunnel.PDR == nil {
+					continue
+				}
+				dlFAR := ANUPF.DownLinkTunnel.PDR.FAR
+				if dlFAR == nil {
+					continue
+				}
+				dlFAR.ApplyAction.Forw = false
+				dlFAR.ApplyAction.Buff = true
+				dlFAR.ApplyAction.Nocp = true
+				dlFAR.State = smf_context.RULE_UPDATE
+				if !farInList[dlFAR.FARID] {
+					farList = append(farList, dlFAR)
+					farInList[dlFAR.FARID] = true
+				}
+				bufferedDL++
+				sendPFCPModification = true
+				smContext.SetState(smf_context.PFCPModification)
+			}
+		}
+		logger.PduSessLog.Infof("HoState_PREPARED: DL buffering enabled on %d FAR(s)", bufferedDL)
+
 		if n2Buf, err = smf_context.BuildHandoverCommandTransfer(smContext); err != nil {
 			smContext.Log.Errorf("Build HandoverCommandTransfer failed: %v", err)
 		} else {

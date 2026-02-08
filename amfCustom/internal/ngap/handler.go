@@ -1529,21 +1529,9 @@ func handleHandoverRequestAcknowledgeMain(ran *context.AmfRan,
 		ngap_message.SendHandoverCommand(sourceUe, pduSessionResourceHandoverList, pduSessionResourceToReleaseList,
 			*targetToSourceTransparentContainer, nil)
 
-		// Start DL buffering at UPF right after HandoverCommand is sent to the source RAN.
-		// This reduces downlink loss during the break-before-make phase (e.g., Wi-Fi switch for N3IWF).
-		if amfUe != nil {
-			for _, pduSessionID := range targetUe.SuccessPduSessionId {
-				smContext, ok := amfUe.SmContextFindByPDUSessionID(pduSessionID)
-				if !ok {
-					continue
-				}
-				_, _, _, err := consumer.GetConsumer().SendUpdateSmContextDeactivateUpCnxState(amfUe, smContext, context.CauseAll{})
-				if err != nil {
-					sourceUe.Log.Errorf("SendUpdateSmContextDeactivateUpCnxState (DL buffering) Error for pduSessionID[%d]: %+v",
-						pduSessionID, err)
-				}
-			}
-		}
+		// NOTE: DL buffering during handover is now handled directly in the SMF (HoState_PREPARED)
+		// by setting Buff=true on the main DL FAR. The previous approach using
+		// SendUpdateSmContextDeactivateUpCnxState caused a DLDR/N1N2Transfer storm and UPF crash.
 	}
 }
 
