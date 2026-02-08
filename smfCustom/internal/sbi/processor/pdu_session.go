@@ -963,15 +963,33 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 
 		// request UPF establish indirect forwarding path for DL
 		if smContext.DLForwardingType == smf_context.IndirectForwarding {
-			ANUPF := smContext.IndirectForwardingTunnel.FirstDPNode
 			IndirectForwardingPDR := smContext.IndirectForwardingTunnel.FirstDPNode.UpLinkTunnel.PDR
 
 			pdrList = append(pdrList, IndirectForwardingPDR)
 			farList = append(farList, IndirectForwardingPDR.FAR)
 
-			// release indirect forwading path
-			if err = ANUPF.UPF.RemovePDR(IndirectForwardingPDR); err != nil {
-				logger.PduSessLog.Errorln("release indirect path: ", err)
+			// Include main DL FAR(s) marked RULE_UPDATE by UpdateANInformation
+			// This ensures the UPF switches the main DL path to the target N3IWF
+			for _, dataPath := range smContext.Tunnel.DataPathPool {
+				if dataPath.Activated {
+					ANUPF := dataPath.FirstDPNode
+					if ANUPF.DownLinkTunnel != nil && ANUPF.DownLinkTunnel.PDR != nil {
+						dlFAR := ANUPF.DownLinkTunnel.PDR.FAR
+						if dlFAR != nil && dlFAR.State == smf_context.RULE_UPDATE {
+							farList = append(farList, dlFAR)
+							logger.PduSessLog.Infof("HoState_PREPARED: including main DL FAR ID=%d for update", dlFAR.FARID)
+						}
+					}
+				}
+			}
+
+			// Debug logging: show what PDR/FAR are being sent to UPF
+			logger.PduSessLog.Infof("HoState_PREPARED: sending %d PDR(s), %d FAR(s) to UPF", len(pdrList), len(farList))
+			for _, pdr := range pdrList {
+				logger.PduSessLog.Debugf("  PDR ID=%d State=%d Precedence=%d", pdr.PDRID, pdr.State, pdr.Precedence)
+			}
+			for _, far := range farList {
+				logger.PduSessLog.Debugf("  FAR ID=%d State=%d Forw=%v Buff=%v", far.FARID, far.State, far.ApplyAction.Forw, far.ApplyAction.Buff)
 			}
 
 			sendPFCPModification = true
