@@ -3775,20 +3775,30 @@ func (s *Server) HandleSendHandoverNotify(
 	}
 
 	// Flush buffered DL packets to UE before sending HandoverNotify
+	ngapLog.Infof("[HO-TARGET] HandleSendHandoverNotify: HoState=%s for RanUeNgapId=%d", sharedCtx.HoState, ranUeNgapId)
 	if sharedCtx.HoState == n3iwf_context.HoStateAwaitingUE {
+		ngapLog.Infof("[HO-TARGET] Flushing buffer for RanUeNgapId=%d, PduSessionList len=%d", ranUeNgapId, len(sharedCtx.PduSessionList))
 		forwarder := s.NwuupForwarder()
 		if forwarder != nil {
 			for _, session := range sharedCtx.PduSessionList {
 				if session == nil {
 					continue
 				}
+				ngapLog.Infof("[HO-TARGET] Calling FlushBufferToUE for PDU Session %d", session.Id)
 				if err := forwarder.FlushBufferToUE(ranUe, session); err != nil {
 					ngapLog.Warnf("FlushBufferToUE failed for PDU Session %d: %v", session.Id, err)
 				}
 			}
+		} else {
+			ngapLog.Warnf("[HO-TARGET] forwarder is nil!")
 		}
 		sharedCtx.HoState = n3iwf_context.HoStateIdle
-		ngapLog.Debugf("Target N3IWF: HoState -> Idle for RanUeNgapId=%d", ranUeNgapId)
+		ngapLog.Infof("[HO-TARGET] HoState -> Idle for RanUeNgapId=%d", ranUeNgapId)
+	} else {
+		ngapLog.Warnf("[HO-TARGET] HoState is NOT AwaitingUE (actual=%s/%d), skipping flush for RanUeNgapId=%d, AmfUeNgapId=%d",
+			sharedCtx.HoState, sharedCtx.HoState, ranUeNgapId, sharedCtx.AmfUeNgapId)
+		ngapLog.Warnf("[HO-TARGET] Context info: HandoverNotifySent=%v, PduSessionList len=%d",
+			sharedCtx.HandoverNotifySent, len(sharedCtx.PduSessionList))
 	}
 
 	pkt, err := message.BuildHandoverNotify(ranUe)
@@ -4082,7 +4092,7 @@ func (s *Server) HandleHandoverRequest(
 
 	// Set HoState to AwaitingUE - target is waiting for UE to connect
 	sharedCtx.HoState = n3iwf_context.HoStateAwaitingUE
-	ngapLog.Debugf("Target N3IWF: HoState -> AwaitingUE for RanUeNgapId=%d", sharedCtx.RanUeNgapId)
+	ngapLog.Infof("[HO-TARGET] HoState -> AwaitingUE for RanUeNgapId=%d", sharedCtx.RanUeNgapId)
 
 	if securityContext != nil {
 		sharedCtx.NextHopChainingCount = securityContext.NextHopChainingCount.Value
