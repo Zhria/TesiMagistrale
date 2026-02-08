@@ -4014,6 +4014,8 @@ func (s *Server) HandleHandoverRequest(
 				}
 				continue
 			}
+			ngapLog.Infof("[HO-ACK] PDU Session %d: DLForwardingUPTNLInformation included (IP=%s, TEID=0x%x)",
+				pduSessionID, gtpBindAddr, pduSession.GTPConnInfo.IncomingTEID)
 
 			admittedItems = append(admittedItems, message.HandoverAdmittedItem{
 				PDUSessionID: pduSessionID,
