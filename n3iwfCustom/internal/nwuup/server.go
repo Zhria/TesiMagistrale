@@ -2,6 +2,8 @@ package nwuup
 
 import (
 	"context"
+	"encoding/binary"
+	"fmt"
 	"net"
 	"runtime/debug"
 	"sync"
@@ -386,6 +388,21 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 			break
 		}
 	}
+	// Check if handover forwarding is active - buffer instead of forwarding to UE
+	if pdusession != nil {
+		shared := ranUe.GetSharedCtx()
+		if shared.HoState == n3iwf_context.HoStateExecuting && pdusession.ForwardingUPTNLInfo != nil {
+			qfi, rqi := uint8(0), false
+			if packet.HasQoS() {
+				qfi, rqi = packet.GetQoSParameters()
+			}
+			s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
+			nwuupLog.Debugf("Buffered DL packet for HO forwarding (TEID=%d, QFI=%d, size=%d)",
+				pktTEID, qfi, len(packet.GetPayload()))
+			return
+		}
+	}
+
 	if cm == nil {
 		nwuupLog.Warnf("forwardDL(): Cannot match TEID(%d) to ChildSA", pktTEID)
 		snssai := ngapType.SNSSAI{}
@@ -435,4 +452,108 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(len(packet.GetPayload())), ueInnerIPAddr.IP.String(), qfi, rqi, pktTEID, qoSFlow, pdusession.Snssai)
 
 	}
+}
+
+// MaxForwardingBufferSize is the maximum number of packets to buffer during handover
+const MaxForwardingBufferSize = 50000
+
+// bufferForForwarding adds a packet to the forwarding buffer for indirect forwarding during handover
+func (s *Server) bufferForForwarding(session *n3iwf_context.PDUSession, payload []byte, qfi uint8, rqi bool) {
+	session.ForwardingBufferLock.Lock()
+	defer session.ForwardingBufferLock.Unlock()
+
+	if len(session.ForwardingBuffer) >= MaxForwardingBufferSize {
+		s.log.Warnf("Forwarding buffer full (max=%d), dropping packet for PDU Session %d",
+			MaxForwardingBufferSize, session.Id)
+		return
+	}
+
+	// Copy payload to avoid data race
+	payloadCopy := make([]byte, len(payload))
+	copy(payloadCopy, payload)
+
+	session.ForwardingBuffer = append(session.ForwardingBuffer, n3iwf_context.ForwardingPacket{
+		Payload: payloadCopy,
+		QFI:     qfi,
+		RQI:     rqi,
+	})
+
+	s.log.Infof("[HO-BUFFER] Packet buffered for PDU Session %d (total: %d)", session.Id, len(session.ForwardingBuffer))
+}
+
+// FlushForwardingBuffer sends all buffered packets to the UPF forwarding endpoint
+func (s *Server) FlushForwardingBuffer(session *n3iwf_context.PDUSession) error {
+	if session == nil {
+		return errors.New("nil session")
+	}
+	if session.ForwardingUPTNLInfo == nil {
+		return errors.New("no forwarding endpoint configured")
+	}
+	if session.ForwardingUPTNLInfo.Present != ngapType.UPTransportLayerInformationPresentGTPTunnel {
+		return errors.New("forwarding info is not GTP tunnel")
+	}
+
+	gtpTunnel := session.ForwardingUPTNLInfo.GTPTunnel
+	if gtpTunnel == nil {
+		return errors.New("GTP tunnel is nil")
+	}
+
+	// Extract TEID and IP from forwarding info
+	teid := binary.BigEndian.Uint32(gtpTunnel.GTPTEID.Value)
+	ipBytes := gtpTunnel.TransportLayerAddress.Value.Bytes
+	if len(ipBytes) < 4 {
+		return fmt.Errorf("invalid transport layer address length: %d", len(ipBytes))
+	}
+	upfIP := net.IP(ipBytes[:4])
+	upfAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s%s", upfIP.String(), gtpv1.GTPUPort))
+	if err != nil {
+		return fmt.Errorf("resolve forwarding address: %w", err)
+	}
+
+	// Take packets from buffer
+	session.ForwardingBufferLock.Lock()
+	packets := session.ForwardingBuffer
+	session.ForwardingBuffer = nil
+	session.ForwardingBufferLock.Unlock()
+
+	if len(packets) == 0 {
+		s.log.Debugf("[HO-FLUSH] No packets to forward for PDU Session %d", session.Id)
+		return nil
+	}
+
+	s.log.Infof("[HO-FLUSH] Starting flush of %d buffered packets to %s TEID=%d for PDU Session %d",
+		len(packets), upfAddr.String(), teid, session.Id)
+
+	// Send each packet to the UPF forwarding endpoint
+	for _, pkt := range packets {
+		gtpPacket, err := gtpQoSMsg.BuildQoSGTPPacket(teid, pkt.QFI, pkt.RQI, pkt.Payload)
+		if err != nil {
+			s.log.Warnf("[HO-FLUSH] Failed to build GTP packet: %v", err)
+			continue
+		}
+		if _, err := s.gtpuConn.WriteTo(gtpPacket, upfAddr); err != nil {
+			s.log.Warnf("[HO-FLUSH] Failed to send forwarded packet: %v", err)
+		}
+	}
+
+	s.log.Infof("[HO-FLUSH] Completed forwarding %d packets for PDU Session %d", len(packets), session.Id)
+	return nil
+}
+
+// ClearForwardingBuffer drops all buffered packets (used on HO failure)
+func (s *Server) ClearForwardingBuffer(session *n3iwf_context.PDUSession) int {
+	if session == nil {
+		return 0
+	}
+
+	session.ForwardingBufferLock.Lock()
+	defer session.ForwardingBufferLock.Unlock()
+
+	count := len(session.ForwardingBuffer)
+	session.ForwardingBuffer = nil
+
+	if count > 0 {
+		s.log.Infof("[HO-CLEAR] Dropped %d buffered packets for PDU Session %d", count, session.Id)
+	}
+	return count
 }

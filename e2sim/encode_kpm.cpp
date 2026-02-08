@@ -257,7 +257,7 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t *hdr)
   hdr->indicationHeader_formats.choice.indicationHeader_Format1 = h1;
   
 }
-
+/*
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::string, double> kpi)
 {
   memset(indMsg, 0, sizeof(*indMsg));
@@ -279,7 +279,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
   }
 
   indMsg->indicationMessage_formats.choice.indicationMessage_Format1 = fmt1;
-}
+}*/
 
 void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
                               const std::vector<RcAssociationSnapshot> &assocs,

@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"net"
+	"sync"
 
 	"github.com/free5gc/ngap/ngapType"
 )
@@ -136,6 +137,20 @@ func (ctx *RanUeSharedCtx) IsHandoverInProgress() bool {
 	return ctx.HoState == HoStatePreparing || ctx.HoState == HoStateExecuting
 }
 
+// ForwardingPacket holds a single packet buffered for indirect forwarding during handover.
+type ForwardingPacket struct {
+	Payload []byte
+	QFI     uint8
+	RQI     bool
+}
+
+// ForwardingFlusher provides methods to flush/clear handover forwarding buffers.
+// This interface is implemented by the nwuup server and used by the ngap server.
+type ForwardingFlusher interface {
+	FlushForwardingBuffer(session *PDUSession) error
+	ClearForwardingBuffer(session *PDUSession) int
+}
+
 type PDUSession struct {
 	Id                               int64 // PDU Session ID
 	Type                             *ngapType.PDUSessionType
@@ -151,6 +166,10 @@ type PDUSession struct {
 	QosFlowsToForward                []ngapType.QosFlowIdentifier
 	QFIList                          []uint8
 	QosFlows                         map[int64]*QosFlow // QosFlowIdentifier as key
+
+	// Indirect forwarding buffer for handover
+	ForwardingBuffer     []ForwardingPacket
+	ForwardingBufferLock sync.Mutex
 }
 
 type QosFlow struct {

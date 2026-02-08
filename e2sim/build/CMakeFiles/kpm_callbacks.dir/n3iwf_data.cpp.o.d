@@ -295,6 +295,7 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/encode_e2apv2.hpp \
  /home/zakaria/TesiMagistrale/e2sim/encode_kpm.hpp \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
+ /home/zakaria/TesiMagistrale/e2sim/logging.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-RANfunction-Description.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_application.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/asn_system.h \
@@ -339,6 +340,7 @@ CMakeFiles/kpm_callbacks.dir/n3iwf_data.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_SET_OF.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_asn1c_codec.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
+ /home/zakaria/TesiMagistrale/e2sim/./logging.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2AP-PDU.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/constr_CHOICE.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/InitiatingMessage.h \

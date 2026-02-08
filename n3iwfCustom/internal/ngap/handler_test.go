@@ -14,7 +14,7 @@ func TestReleaseIkeUeAndRanUe(t *testing.T) {
 	n3iwf, err := NewN3iwfTestApp(&factory.Config{})
 	require.NoError(t, err)
 
-	n3iwf.ngapServer, err = NewServer(n3iwf)
+	n3iwf.ngapServer, err = NewServer(n3iwf.ngapServer.n3iwf)
 	require.NoError(t, err)
 
 	n3iwf.ikeServer, err = ike.NewServer(n3iwf)

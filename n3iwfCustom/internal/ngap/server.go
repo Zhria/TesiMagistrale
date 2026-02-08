@@ -29,6 +29,7 @@ type n3iwf interface {
 	CancelContext() context.Context
 
 	SendIkeEvt(n3iwf_context.IkeEvt)
+	NwuupForwarder() n3iwf_context.ForwardingFlusher
 }
 
 type Server struct {

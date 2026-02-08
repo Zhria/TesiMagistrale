@@ -233,6 +233,7 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-ActionDefinition.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/RIC-Style-Type.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/DEF/e2sim_defs.h \
+ /home/zakaria/TesiMagistrale/e2sim/./logging.h \
  /home/zakaria/TesiMagistrale/e2sim/./src/SCTP/e2sim_sctp.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./src/E2AP/e2ap_message_handler.hpp \
  /home/zakaria/TesiMagistrale/e2sim/./e2sim.hpp \
@@ -297,8 +298,9 @@ CMakeFiles/kpm_callbacks.dir/e2sim.cpp.o: \
  /home/zakaria/TesiMagistrale/e2sim/encode_e2apv2.hpp \
  /home/zakaria/TesiMagistrale/e2sim/encode_kpm.hpp \
  /usr/include/c++/13/cstring /usr/include/c++/13/cassert \
+ /usr/include/c++/13/cstdint \
  /home/zakaria/TesiMagistrale/e2sim/n3iwf_utils.hpp \
- /usr/include/c++/13/cstdint /usr/include/c++/13/map \
+ /home/zakaria/TesiMagistrale/e2sim/logging.h /usr/include/c++/13/map \
  /usr/include/c++/13/bits/stl_tree.h /usr/include/c++/13/bits/stl_map.h \
  /usr/include/c++/13/bits/stl_multimap.h \
  /home/zakaria/TesiMagistrale/e2sim/./ASN1c/E2SM-KPM-RANfunction-Description.h \
