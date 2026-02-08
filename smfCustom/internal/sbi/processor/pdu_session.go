@@ -983,7 +983,47 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				}
 			}
 
-			// Debug logging: show what PDR/FAR are being sent to UPF
+			sendPFCPModification = true
+			smContext.SetState(smf_context.PFCPModification)
+		}
+
+		// Enable DL buffering on the main DL FAR(s) during the break-before-make phase.
+		// The UPF will hold DL packets instead of forwarding them to the (old) AN tunnel
+		// that is about to become unreachable. HoState_COMPLETED will restore Forw=true.
+		// Build a set of FAR IDs already in farList to avoid duplicates.
+		farInList := make(map[uint32]bool, len(farList))
+		for _, f := range farList {
+			farInList[f.FARID] = true
+		}
+		bufferedDL := 0
+		for _, dataPath := range smContext.Tunnel.DataPathPool {
+			if dataPath.Activated {
+				ANUPF := dataPath.FirstDPNode
+				if ANUPF.DownLinkTunnel == nil || ANUPF.DownLinkTunnel.PDR == nil {
+					continue
+				}
+				dlFAR := ANUPF.DownLinkTunnel.PDR.FAR
+				if dlFAR == nil {
+					continue
+				}
+				// Switch to BUFF so the UPF queues DL packets during handover
+				dlFAR.ApplyAction.Forw = false
+				dlFAR.ApplyAction.Buff = true
+				dlFAR.ApplyAction.Nocp = true
+				dlFAR.State = smf_context.RULE_UPDATE
+				if !farInList[dlFAR.FARID] {
+					farList = append(farList, dlFAR)
+					farInList[dlFAR.FARID] = true
+				}
+				bufferedDL++
+				sendPFCPModification = true
+				smContext.SetState(smf_context.PFCPModification)
+			}
+		}
+		logger.PduSessLog.Infof("HoState_PREPARED: DL buffering enabled on %d FAR(s)", bufferedDL)
+
+		// Debug logging: show what PDR/FAR are being sent to UPF
+		if sendPFCPModification {
 			logger.PduSessLog.Infof("HoState_PREPARED: sending %d PDR(s), %d FAR(s) to UPF", len(pdrList), len(farList))
 			for _, pdr := range pdrList {
 				logger.PduSessLog.Debugf("  PDR ID=%d State=%d Precedence=%d", pdr.PDRID, pdr.State, pdr.Precedence)
@@ -991,9 +1031,6 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			for _, far := range farList {
 				logger.PduSessLog.Debugf("  FAR ID=%d State=%d Forw=%v Buff=%v", far.FARID, far.State, far.ApplyAction.Forw, far.ApplyAction.Buff)
 			}
-
-			sendPFCPModification = true
-			smContext.SetState(smf_context.PFCPModification)
 		}
 
 		if n2Buf, err = smf_context.BuildHandoverCommandTransfer(smContext); err != nil {
