@@ -36,6 +36,8 @@ const (
 	HoStateExecuting
 	// HoStateCompleted - Handover completed (UEContextReleaseCommand received on source)
 	HoStateCompleted
+	// HoStateAwaitingUE - Target N3IWF waiting for UE to connect after HandoverRequest
+	HoStateAwaitingUE
 )
 
 func (s HandoverState) String() string {
@@ -48,6 +50,8 @@ func (s HandoverState) String() string {
 		return "Executing"
 	case HoStateCompleted:
 		return "Completed"
+	case HoStateAwaitingUE:
+		return "AwaitingUE"
 	default:
 		return fmt.Sprintf("Unknown(%d)", s)
 	}
@@ -148,6 +152,7 @@ type ForwardingPacket struct {
 // This interface is implemented by the nwuup server and used by the ngap server.
 type ForwardingFlusher interface {
 	FlushForwardingBuffer(session *PDUSession) error
+	FlushBufferToUE(ranUe RanUe, session *PDUSession) error
 	ClearForwardingBuffer(session *PDUSession) int
 }
 

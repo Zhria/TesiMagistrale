@@ -408,6 +408,18 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	}
 
 	if cm == nil {
+		// Check if we're target N3IWF awaiting UE during handover
+		shared := ranUe.GetSharedCtx()
+		if shared.HoState == n3iwf_context.HoStateAwaitingUE && pdusession != nil {
+			// Buffer packet for later delivery when UE connects
+			qfi, rqi := uint8(0), false
+			if packet.HasQoS() {
+				qfi, rqi = packet.GetQoSParameters()
+			}
+			s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
+			return
+		}
+
 		nwuupLog.Warnf("forwardDL(): Cannot match TEID(%d) to ChildSA", pktTEID)
 		snssai := ngapType.SNSSAI{}
 		if pdusession != nil {
@@ -541,6 +553,84 @@ func (s *Server) FlushForwardingBuffer(session *n3iwf_context.PDUSession) error 
 	}
 
 	s.log.Infof("[HO-FLUSH] Completed forwarding %d packets for PDU Session %d", len(packets), session.Id)
+	return nil
+}
+
+// FlushBufferToUE sends buffered packets to the UE via IPSec/GRE (for target N3IWF after UE connects)
+func (s *Server) FlushBufferToUE(ranUe n3iwf_context.RanUe, session *n3iwf_context.PDUSession) error {
+	if session == nil {
+		return errors.New("nil session")
+	}
+	if ranUe == nil {
+		return errors.New("nil ranUe")
+	}
+
+	n3iwfCtx := s.Context()
+	ranUeNgapID := ranUe.GetSharedCtx().RanUeNgapId
+
+	ikeUe, err := n3iwfCtx.IkeUeLoadFromNgapId(ranUeNgapID)
+	if err != nil {
+		return fmt.Errorf("cannot find IkeUe: %w", err)
+	}
+
+	ueInnerIPAddr := ikeUe.IPSecInnerIPAddr
+	if ueInnerIPAddr == nil {
+		return errors.New("UE inner IP not available")
+	}
+
+	// Find the ChildSA for this PDU session
+	var cm *ipv4.ControlMessage
+	for _, childSA := range ikeUe.N3IWFChildSecurityAssociation {
+		if childSA == nil || childSA.XfrmIface == nil {
+			continue
+		}
+		for _, pduID := range childSA.PDUSessionIds {
+			if pduID == session.Id {
+				cm = &ipv4.ControlMessage{
+					IfIndex: childSA.XfrmIface.Attrs().Index,
+				}
+				break
+			}
+		}
+		if cm != nil {
+			break
+		}
+	}
+
+	if cm == nil {
+		return fmt.Errorf("no ChildSA found for PDU Session %d", session.Id)
+	}
+
+	// Take packets from buffer
+	session.ForwardingBufferLock.Lock()
+	packets := session.ForwardingBuffer
+	session.ForwardingBuffer = nil
+	session.ForwardingBufferLock.Unlock()
+
+	if len(packets) == 0 {
+		s.log.Debugf("[HO-TARGET-FLUSH] No packets to deliver for PDU Session %d", session.Id)
+		return nil
+	}
+
+	s.log.Infof("[HO-TARGET-FLUSH] Starting delivery of %d buffered packets to UE for PDU Session %d",
+		len(packets), session.Id)
+
+	delivered := 0
+	for _, pkt := range packets {
+		grePacket := gre.GREPacket{}
+		grePacket.SetPayload(pkt.Payload, gre.IPv4)
+		grePacket.SetQoS(pkt.QFI, pkt.RQI)
+		forwardData := grePacket.Marshal()
+
+		if _, err := s.greConn.WriteTo(forwardData, cm, ueInnerIPAddr); err != nil {
+			s.log.Warnf("[HO-TARGET-FLUSH] Failed to send packet to UE: %v", err)
+		} else {
+			delivered++
+		}
+	}
+
+	s.log.Infof("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d",
+		delivered, len(packets), session.Id)
 	return nil
 }
 
