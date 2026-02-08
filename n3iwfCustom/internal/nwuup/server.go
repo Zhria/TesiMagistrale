@@ -391,15 +391,19 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	// Check if handover forwarding is active - buffer instead of forwarding to UE
 	if pdusession != nil {
 		shared := ranUe.GetSharedCtx()
-		if shared.HoState == n3iwf_context.HoStateExecuting && pdusession.ForwardingUPTNLInfo != nil {
-			qfi, rqi := uint8(0), false
-			if packet.HasQoS() {
-				qfi, rqi = packet.GetQoSParameters()
+		if shared.HoState == n3iwf_context.HoStateExecuting {
+			if pdusession.ForwardingUPTNLInfo != nil {
+				qfi, rqi := uint8(0), false
+				if packet.HasQoS() {
+					qfi, rqi = packet.GetQoSParameters()
+				}
+				s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
+				nwuupLog.Debugf("Buffered DL packet for HO forwarding (TEID=%d, QFI=%d, size=%d)",
+					pktTEID, qfi, len(packet.GetPayload()))
+				return
+			} else {
+				nwuupLog.Warnf("[HO-SKIP] HoState=Executing but ForwardingUPTNLInfo is nil for PDU Session %d", pdusession.Id)
 			}
-			s.bufferForForwarding(pdusession, packet.GetPayload(), qfi, rqi)
-			nwuupLog.Debugf("Buffered DL packet for HO forwarding (TEID=%d, QFI=%d, size=%d)",
-				pktTEID, qfi, len(packet.GetPayload()))
-			return
 		}
 	}
 

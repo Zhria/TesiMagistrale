@@ -4239,6 +4239,7 @@ func (s *Server) HandleHandoverCommand(
 	}
 
 	if pduSessionHandoverList != nil && ranUe != nil {
+		ngapLog.Infof("[HO-CMD] Processing %d PDU Sessions in HandoverCommand", len(pduSessionHandoverList.List))
 		for _, item := range pduSessionHandoverList.List {
 			pduSessionID := item.PDUSessionID.Value
 			session := ranUe.GetSharedCtx().FindPDUSession(pduSessionID)
@@ -4255,14 +4256,20 @@ func (s *Server) HandleHandoverCommand(
 
 			if transfer.DLForwardingUPTNLInformation != nil {
 				session.ForwardingUPTNLInfo = transfer.DLForwardingUPTNLInformation
+				ngapLog.Infof("[HO-CMD] PDU Session %d: ForwardingUPTNLInfo SET (indirect forwarding enabled)", pduSessionID)
+			} else {
+				ngapLog.Warnf("[HO-CMD] PDU Session %d: DLForwardingUPTNLInformation is nil (no indirect forwarding)", pduSessionID)
 			}
 			session.QosFlowsToForward = session.QosFlowsToForward[:0]
 			if transfer.QosFlowToBeForwardedList != nil {
 				for _, flow := range transfer.QosFlowToBeForwardedList.List {
 					session.QosFlowsToForward = append(session.QosFlowsToForward, flow.QosFlowIdentifier)
 				}
+				ngapLog.Infof("[HO-CMD] PDU Session %d: %d QoS flows to forward", pduSessionID, len(session.QosFlowsToForward))
 			}
 		}
+	} else {
+		ngapLog.Warnf("[HO-CMD] pduSessionHandoverList is nil or ranUe is nil - no forwarding info processed")
 	}
 
 	if targetToSourceContainer != nil && ranUe != nil {
