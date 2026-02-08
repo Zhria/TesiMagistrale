@@ -3,10 +3,12 @@ package nwuup
 import (
 	"context"
 	"encoding/binary"
+	goerrors "errors"
 	"fmt"
 	"net"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/pkg/errors"
@@ -42,7 +44,12 @@ type Server struct {
 const (
 	// Default socket buffer used for the raw GRE socket. This helps avoid ENOBUFS
 	// ("no buffer space available") when forwarding high-rate downlink traffic to UE.
-	greSocketBufferBytes = 4 * 1024 * 1024
+	// Note: the effective value is capped by kernel sysctls (net.core.{wmem,rmem}_max).
+	greSocketBufferBytes = 25 * 1024 * 1024
+
+	greWriteRetryMaxAttempts    = 50
+	greWriteRetryInitialBackoff = 200 * time.Microsecond
+	greWriteRetryMaxBackoff     = 5 * time.Millisecond
 )
 
 func NewServer(n3iwf n3iwf) (*Server, error) {
@@ -331,6 +338,36 @@ func (s *Server) handleEndMarker(c gtpv1.Conn, senderAddr net.Addr, msg gtpMsg.M
 	return nil
 }
 
+func isGreTemporarySendErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	return goerrors.Is(err, unix.ENOBUFS) ||
+		goerrors.Is(err, unix.EAGAIN) ||
+		goerrors.Is(err, unix.EWOULDBLOCK)
+}
+
+func (s *Server) greWriteToWithRetry(data []byte, cm *ipv4.ControlMessage, dst net.Addr) (int, error) {
+	backoff := greWriteRetryInitialBackoff
+	var lastErr error
+	for attempt := 0; attempt < greWriteRetryMaxAttempts; attempt++ {
+		n, err := s.greConn.WriteTo(data, cm, dst)
+		if err == nil {
+			return n, nil
+		}
+		lastErr = err
+		if !isGreTemporarySendErr(err) {
+			return n, err
+		}
+		time.Sleep(backoff)
+		backoff *= 2
+		if backoff > greWriteRetryMaxBackoff {
+			backoff = greWriteRetryMaxBackoff
+		}
+	}
+	return 0, lastErr
+}
+
 // Forward user plane packets from N3 to UE with GRE header and new IP header encapsulated
 func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	nwuupLog := s.log
@@ -458,7 +495,7 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	qoSFlow := pdusession.QosFlows[int64(qfi)]
 
 	// Send to UE through Nwu
-	if n, err := s.greConn.WriteTo(forwardData, cm, ueInnerIPAddr); err != nil {
+	if n, err := s.greWriteToWithRetry(forwardData, cm, ueInnerIPAddr); err != nil {
 		nwuupLog.Errorf("Write to UE failed: %+v", err)
 		snapshot.TransmittedVolumeDL(uint64(len(packet.GetPayload())), uint64(0), ueInnerIPAddr.IP.String(), qfi, rqi, pktTEID, qoSFlow, pdusession.Snssai)
 		return
@@ -616,21 +653,31 @@ func (s *Server) FlushBufferToUE(ranUe n3iwf_context.RanUe, session *n3iwf_conte
 		len(packets), session.Id)
 
 	delivered := 0
+	failed := 0
+	var firstErr error
 	for _, pkt := range packets {
 		grePacket := gre.GREPacket{}
 		grePacket.SetPayload(pkt.Payload, gre.IPv4)
 		grePacket.SetQoS(pkt.QFI, pkt.RQI)
 		forwardData := grePacket.Marshal()
 
-		if _, err := s.greConn.WriteTo(forwardData, cm, ueInnerIPAddr); err != nil {
-			s.log.Warnf("[HO-TARGET-FLUSH] Failed to send packet to UE: %v", err)
+		if _, err := s.greWriteToWithRetry(forwardData, cm, ueInnerIPAddr); err != nil {
+			if firstErr == nil {
+				firstErr = err
+			}
+			failed++
 		} else {
 			delivered++
 		}
 	}
 
-	s.log.Infof("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d",
-		delivered, len(packets), session.Id)
+	if failed > 0 {
+		s.log.Warnf("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d (failed=%d firstErr=%v)",
+			delivered, len(packets), session.Id, failed, firstErr)
+	} else {
+		s.log.Infof("[HO-TARGET-FLUSH] Delivered %d/%d packets to UE for PDU Session %d",
+			delivered, len(packets), session.Id)
+	}
 	return nil
 }
 
