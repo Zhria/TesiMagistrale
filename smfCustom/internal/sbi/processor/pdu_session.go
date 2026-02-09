@@ -998,7 +998,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 				}
 				dlFAR.ApplyAction.Forw = false
 				dlFAR.ApplyAction.Buff = true
-				dlFAR.ApplyAction.Nocp = true
+				dlFAR.ApplyAction.Nocp = false
 				dlFAR.State = smf_context.RULE_UPDATE
 				if !farInList[dlFAR.FARID] {
 					farList = append(farList, dlFAR)
