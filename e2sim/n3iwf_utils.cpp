@@ -402,7 +402,7 @@ std::map<long,std::string> getAllowedControlMetricsRC(){
         {2, "CHOICE Target Cell"},
         {3, "NR Cell"},
         {4, "NR CGI"},
-        {5, "E-UTRA Cell"},
+/*        {5, "E-UTRA Cell"},
         {6, "E-UTRA CGI"},
         {7, "List of PDU sessions for handover"},
         {8, "PDU session Item for handover"},
@@ -418,7 +418,7 @@ std::map<long,std::string> getAllowedControlMetricsRC(){
         {18, "QoS flow Identifier"},
         {19, "List of Secondary cells to be setup"},
         {20, "Secondary cell Item to be setup"},
-        {21, "Secondary Cell ID"},
+        {21, "Secondary Cell ID"},*/
     };
 }
 

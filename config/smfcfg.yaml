@@ -121,5 +121,5 @@ configuration:
 # Logging Configuration
 logger:
   enable: true # true or false
-  level: debug # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  level: warn # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
