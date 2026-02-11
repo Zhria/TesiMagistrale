@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/free5gc/aper"
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
@@ -48,7 +47,7 @@ type hoResult struct {
 	err    error
 }
 
-const defaultHandoverHTTPWaitTimeout = 800 * time.Millisecond
+
 
 func NewHandoverAlertHandler(
 	ctx *n3iwf_context.N3IWFContext,
@@ -226,22 +225,9 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	timer := time.NewTimer(defaultHandoverHTTPWaitTimeout)
-	defer timer.Stop()
-
 	select {
 	case <-r.Context().Done():
 		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
-		return
-	case <-timer.C:
-		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
-		writeHTTPSuccess(w, map[string]interface{}{
-			"status":      "triggered",
-			"ranUeId":     payload.RanUeNgapId,
-			"pending":     true,
-			"timeoutSec":  defaultHandoverHTTPWaitTimeout.Seconds(),
-			"description": "handover result not yet available",
-		})
 		return
 	case res := <-waitCh:
 		if res.err != nil || strings.Contains(res.status, "failed") {

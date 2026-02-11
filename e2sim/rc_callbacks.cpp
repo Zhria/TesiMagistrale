@@ -518,7 +518,7 @@ namespace
     {
 
         constexpr const char *kDefaultHandoverUrl = "http://127.0.0.1:9085/rc/handover";
-        constexpr long kHttpTimeoutMs = 800;
+        constexpr long kHttpTimeoutMs = 950;
 
     } // namespace
 
