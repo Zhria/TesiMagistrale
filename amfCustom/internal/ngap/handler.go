@@ -1228,23 +1228,56 @@ func handleHandoverNotifyMain(ran *context.AmfRan,
 			business_metrics.HANDOVER_NOT_YET_IMPLEMENT_N2_HANDOVER_BETWEEN_AMF, targetUe.HandOverStartTime)
 	} else {
 		ran.Log.Info("Handle Handover notification Finshed")
+		hoCompleteFailed := false
 		for _, pduSessionID := range targetUe.SuccessPduSessionId {
 			smContext, ok := amfUe.SmContextFindByPDUSessionID(pduSessionID)
 			if !ok {
 				sourceUe.Log.Warnf("SmContext[PDU Session ID:%d] not found", pduSessionID)
-				// TODO: Check if doing error handling here
 				continue
 			}
 			_, _, _, err := consumer.GetConsumer().SendUpdateSmContextN2HandoverComplete(amfUe, smContext, "", nil)
 			if err != nil {
 				ran.Log.Errorf("Send UpdateSmContextN2HandoverComplete Error[%s]", err.Error())
+				hoCompleteFailed = true
 			}
 		}
 
-		business_metrics.IncrHoEventCounter(business_metrics.HANDOVER_TYPE_NGAP_VALUE,
-			utils.SuccessMetric,
-			business_metrics.HANDOVER_EMPTY_CAUSE, targetUe.HandOverStartTime)
-		gmm_common.AttachRanUeToAmfUeAndReleaseOldHandover(amfUe, sourceUe, targetUe)
+		if hoCompleteFailed {
+			// HO completion failed (e.g. PFCP timeout). Treat as HO failure:
+			// cancel the SMF HO state, release the target UE context, and keep
+			// the source UE attached so that a subsequent HO can be retried.
+			ran.Log.Warnf("Handover completion failed for UE, rolling back to source")
+			amfUe.SmContextList.Range(func(key, value interface{}) bool {
+				pduSessionID := key.(int32)
+				smCtx := value.(*context.SmContext)
+				causeAll := context.CauseAll{
+					NgapCause: &models.NgApCause{
+						Group: int32(ngapType.CausePresentRadioNetwork),
+						Value: int32(ngapType.CauseRadioNetworkPresentHoFailureInTarget5GCNgranNodeOrTargetSystem),
+					},
+				}
+				_, _, _, err := consumer.GetConsumer().SendUpdateSmContextN2HandoverCanceled(amfUe, smCtx, causeAll)
+				if err != nil {
+					ran.Log.Errorf("Send UpdateSmContextN2HandoverCanceled Error for pduSessionID[%d]", pduSessionID)
+				}
+				return true
+			})
+			amfUe.SetOnGoing(sourceUe.Ran.AnType, &context.OnGoing{
+				Procedure: context.OnGoingProcedureNothing,
+			})
+			context.DetachSourceUeTargetUe(sourceUe)
+			targetUe.SuccessPduSessionId = nil
+			business_metrics.IncrHoEventCounter(business_metrics.HANDOVER_TYPE_NGAP_VALUE,
+				utils.FailureMetric, "HO_COMPLETE_PFCP_FAILURE", targetUe.HandOverStartTime)
+			ngap_message.SendUEContextReleaseCommand(targetUe, context.UeContextReleaseHandover,
+				ngapType.CausePresentRadioNetwork,
+				ngapType.CauseRadioNetworkPresentHoFailureInTarget5GCNgranNodeOrTargetSystem)
+		} else {
+			business_metrics.IncrHoEventCounter(business_metrics.HANDOVER_TYPE_NGAP_VALUE,
+				utils.SuccessMetric,
+				business_metrics.HANDOVER_EMPTY_CAUSE, targetUe.HandOverStartTime)
+			gmm_common.AttachRanUeToAmfUeAndReleaseOldHandover(amfUe, sourceUe, targetUe)
+		}
 	}
 
 	// TODO: The UE initiates Mobility Registration Update procedure as described in clause 4.2.2.2.2.

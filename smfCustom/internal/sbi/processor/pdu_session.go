@@ -923,10 +923,21 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 	switch smContextUpdateData.HoState {
 	case models.HoState_PREPARING:
 		smContext.Log.Traceln("In HoState_PREPARING")
-		// If state is stuck in ModificationPending from a previous failed HO, recover it first.
+		// If state is stuck from a previous failed HO, recover it first.
 		if smContext.State() == smf_context.ModificationPending {
 			smContext.Log.Warnf("HoState_PREPARING: recovering from stale ModificationPending state")
 			smContext.SetState(smf_context.Active)
+		}
+		// Reset stale handover state from any previous failed HO attempt.
+		if smContext.HoState != "" {
+			smContext.Log.Warnf("HoState_PREPARING: clearing stale HoState=%s from previous HO", smContext.HoState)
+			smContext.HoState = ""
+			smContext.TargetAccessType = ""
+			smContext.TargetRanNodeID = nil
+			smContext.TargetANIP = nil
+			smContext.DLForwardingType = smf_context.DirectForwarding
+			smContext.DLDirectForwardingTunnel = nil
+			smContext.IndirectForwardingTunnel = nil
 		}
 		smContext.CheckState(smf_context.Active)
 		// Wait till the state becomes Active again
@@ -1144,6 +1155,15 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 
 		// Handover was cancelled and UE stays on the current AN.
 		smContext.UpCnxState = models.UpCnxState_ACTIVATED
+
+		// Reset all handover-related state so that subsequent HOs can proceed cleanly.
+		smContext.HoState = ""
+		smContext.TargetAccessType = ""
+		smContext.TargetRanNodeID = nil
+		smContext.TargetANIP = nil
+		smContext.DLForwardingType = smf_context.DirectForwarding
+		smContext.DLDirectForwardingTunnel = nil
+		smContext.IndirectForwardingTunnel = nil
 	}
 
 	if smContextUpdateData.Cause == models.SmfPduSessionCause_REL_DUE_TO_DUPLICATE_SESSION_ID {
@@ -1195,6 +1215,18 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		case smf_context.SessionUpdateFailed:
 			smContext.Log.Traceln("In case SessionUpdateFailed")
 			smContext.SetState(smf_context.Active)
+			// If PFCP failed during an HO phase, reset all handover state so the session
+			// is clean for a subsequent HO attempt.
+			if smContext.HoState != "" {
+				smContext.Log.Warnf("SessionUpdateFailed: resetting HoState=%s due to PFCP failure", smContext.HoState)
+				smContext.HoState = ""
+				smContext.TargetAccessType = ""
+				smContext.TargetRanNodeID = nil
+				smContext.TargetANIP = nil
+				smContext.DLForwardingType = smf_context.DirectForwarding
+				smContext.DLDirectForwardingTunnel = nil
+				smContext.IndirectForwardingTunnel = nil
+			}
 			// It is just a template
 			updateSmContextError := models.UpdateSmContextResponse400{
 				JsonData: &models.SmContextUpdateError{
