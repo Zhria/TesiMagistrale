@@ -544,24 +544,10 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 
 		smContext.UeLocation = body.JsonData.UeLocation
 
-		// Set FAR and An, N3 Release Info
-		// TODO: Deactivate all datapath in ANUPF
-		farList = []*smf_context.FAR{}
-		for _, dataPath := range smContext.Tunnel.DataPathPool {
-			ANUPF := dataPath.FirstDPNode
-			DLPDR := ANUPF.DownLinkTunnel.PDR
-			if DLPDR == nil {
-				smContext.Log.Warnf("Access network resource is released")
-			} else {
-				DLPDR.FAR.State = smf_context.RULE_UPDATE
-				DLPDR.FAR.ApplyAction.Forw = false
-				DLPDR.FAR.ApplyAction.Buff = true
-				DLPDR.FAR.ApplyAction.Nocp = false
-				farList = append(farList, DLPDR.FAR)
-				sendPFCPModification = true
-				smContext.SetState(smf_context.PFCPModification)
-			}
-		}
+		// DL buffering disabled (gtp5g v0.9.16 workaround): skip PFCP Modification
+		// during HoState_PREPARING. UPF keeps forwarding to old tunnel; packets
+		// arriving during break-before-make will be dropped at the old AN.
+		// HoState_COMPLETED will update the FAR to point to the new tunnel.
 	}
 
 	switch smContextUpdateData.N2SmInfoType {
@@ -999,38 +985,11 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			smContext.SetState(smf_context.PFCPModification)
 		}
 
-		// Enable DL buffering on the main DL FAR(s) during the break-before-make phase.
-		// The UPF will hold DL packets instead of forwarding them to the (old) AN tunnel
-		// that is about to become unreachable. HoState_COMPLETED will restore Forw=true.
-		farInList := make(map[uint32]bool, len(farList))
-		for _, f := range farList {
-			farInList[f.FARID] = true
-		}
-		bufferedDL := 0
-		for _, dataPath := range smContext.Tunnel.DataPathPool {
-			if dataPath.Activated {
-				ANUPF := dataPath.FirstDPNode
-				if ANUPF.DownLinkTunnel == nil || ANUPF.DownLinkTunnel.PDR == nil {
-					continue
-				}
-				dlFAR := ANUPF.DownLinkTunnel.PDR.FAR
-				if dlFAR == nil {
-					continue
-				}
-				dlFAR.ApplyAction.Forw = false
-				dlFAR.ApplyAction.Buff = true
-				dlFAR.ApplyAction.Nocp = false
-				dlFAR.State = smf_context.RULE_UPDATE
-				if !farInList[dlFAR.FARID] {
-					farList = append(farList, dlFAR)
-					farInList[dlFAR.FARID] = true
-				}
-				bufferedDL++
-				sendPFCPModification = true
-				smContext.SetState(smf_context.PFCPModification)
-			}
-		}
-		logger.PduSessLog.Infof("HoState_PREPARED: DL buffering enabled on %d FAR(s)", bufferedDL)
+		// DL buffering disabled: gtp5g v0.9.16 blocks on netlink syscall when Buff=true,
+		// freezing the entire UPF PFCP loop. DL packets will be dropped during the
+		// break-before-make phase instead of being buffered.
+		// DL buffering skipped (gtp5g v0.9.16 workaround)
+		logger.PduSessLog.Infof("HoState_PREPARED: DL buffering disabled (gtp5g workaround), packets will drop during break-before-make")
 
 		if n2Buf, err = smf_context.BuildHandoverCommandTransfer(smContext); err != nil {
 			smContext.Log.Errorf("Build HandoverCommandTransfer failed: %v", err)
