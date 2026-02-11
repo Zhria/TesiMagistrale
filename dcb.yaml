@@ -2,8 +2,7 @@ services:
   free5gc-upf:
     container_name: upf
     build:
-      context: .
-      dockerfile: nf_upf/Dockerfile
+      context: ./nf_upf
       args:
         DEBUG_TOOLS: "false"
     command: bash -c "./upf-iptables.sh && iperf3 -s -D && ./upf -c ./config/upfcfg.yaml"
