@@ -660,9 +660,11 @@ func SendHandoverRequest(sourceUe *context.RanUe, targetRan *context.AmfRan, cau
 	}
 
 	if sourceUe.TargetUe != nil {
-		additionalCause = ngap_metrics.HANDOVER_REQUIRED_DUP_ERR
-		sourceUe.Log.Error("Handover Required Duplicated")
-		return
+		// A previous handover left a stale TargetUe link (e.g. PFCP timeout during HO completion).
+		// Detach the old link so that a new handover can proceed instead of being permanently blocked.
+		sourceUe.Log.Warnf("Detaching stale TargetUe[AmfUeNgapId:%d] from previous failed handover",
+			sourceUe.TargetUe.AmfUeNgapId)
+		context.DetachSourceUeTargetUe(sourceUe)
 	}
 
 	if len(pduSessionResourceSetupListHOReq.List) > context.MaxNumOfPDUSessions {

@@ -923,6 +923,11 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 	switch smContextUpdateData.HoState {
 	case models.HoState_PREPARING:
 		smContext.Log.Traceln("In HoState_PREPARING")
+		// If state is stuck in ModificationPending from a previous failed HO, recover it first.
+		if smContext.State() == smf_context.ModificationPending {
+			smContext.Log.Warnf("HoState_PREPARING: recovering from stale ModificationPending state")
+			smContext.SetState(smf_context.Active)
+		}
 		smContext.CheckState(smf_context.Active)
 		// Wait till the state becomes Active again
 		// TODO: implement sleep wait in concurrent architecture
@@ -948,6 +953,11 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		response.JsonData.HoState = models.HoState_PREPARING
 	case models.HoState_PREPARED:
 		smContext.Log.Traceln("In HoState_PREPARED")
+		// If state is stuck in ModificationPending from a previous failed HO, recover it first.
+		if smContext.State() == smf_context.ModificationPending {
+			smContext.Log.Warnf("HoState_PREPARED: recovering from stale ModificationPending state")
+			smContext.SetState(smf_context.Active)
+		}
 		smContext.CheckState(smf_context.Active)
 		// Wait till the state becomes Active again
 		// TODO: implement sleep wait in concurrent architecture
@@ -1023,6 +1033,11 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		response.JsonData.HoState = models.HoState_PREPARING
 	case models.HoState_COMPLETED:
 		smContext.Log.Traceln("In HoState_COMPLETED")
+		// If state is stuck in ModificationPending from a previous failed HO phase, recover it first.
+		if smContext.State() == smf_context.ModificationPending {
+			smContext.Log.Warnf("HoState_COMPLETED: recovering from stale ModificationPending state")
+			smContext.SetState(smf_context.Active)
+		}
 		smContext.CheckState(smf_context.Active)
 		// Wait till the state becomes Active again
 		// TODO: implement sleep wait in concurrent architecture
@@ -1088,6 +1103,11 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 
 	case models.HoState_CANCELLED:
 		smContext.Log.Traceln("In HoState_CANCELLED")
+		// If state is stuck in ModificationPending from a previous failed HO phase, recover it first.
+		if smContext.State() == smf_context.ModificationPending {
+			smContext.Log.Warnf("HoState_CANCELLED: recovering from stale ModificationPending state")
+			smContext.SetState(smf_context.Active)
+		}
 		smContext.CheckState(smf_context.Active)
 		// Wait till the state becomes Active again
 		// TODO: implement sleep wait in concurrent architecture

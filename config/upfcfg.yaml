@@ -5,8 +5,8 @@ description: UPF initial local configuration
 pfcp:
   addr: 10.100.200.17 #upf.free5gc.org # IP addr for listening
   nodeID: 10.100.200.17 #upf.free5gc.org # External IP or FQDN can be reached
-  retransTimeout: 1s # retransmission timeout
-  maxRetrans: 3 # the max number of retransmission
+  retransTimeout: 4s # retransmission timeout
+  maxRetrans: 5 # the max number of retransmission
 
 gtpu:
   forwarder: gtp5g
@@ -30,5 +30,5 @@ dnnList:
 
 logger: # log output setting
   enable: true # true or false
-  level: warn # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
+  level: info # how detailed to output, value: trace, debug, info, warn, error, fatal, panic
   reportCaller: false # enable the caller report or not, value: true or false
