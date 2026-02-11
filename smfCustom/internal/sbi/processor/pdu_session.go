@@ -1027,14 +1027,13 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		response.JsonData.HoState = models.HoState_PREPARING
 	case models.HoState_COMPLETED:
 		smContext.Log.Traceln("In HoState_COMPLETED")
-		// If state is stuck in ModificationPending from a previous failed HO phase, recover it first.
-		if smContext.State() == smf_context.ModificationPending {
-			smContext.Log.Warnf("HoState_COMPLETED: recovering from stale ModificationPending state")
+		// The early path switch at HoState_PREPARED may have left the state in
+		// PFCPModification (waiting for UPF response) or ModificationPending.
+		// Since COMPLETED no longer touches the UPF, force state to Active.
+		if curState := smContext.State(); curState != smf_context.Active {
+			smContext.Log.Warnf("HoState_COMPLETED: recovering from state %s (expected Active)", curState)
 			smContext.SetState(smf_context.Active)
 		}
-		smContext.CheckState(smf_context.Active)
-		// Wait till the state becomes Active again
-		// TODO: implement sleep wait in concurrent architecture
 
 		if smContext.TargetAccessType != "" && smContext.AnType != smContext.TargetAccessType {
 			smContext.Log.Infof("Access type switch due to handover: %s -> %s",
