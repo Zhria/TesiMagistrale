@@ -984,11 +984,36 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			smContext.SetState(smf_context.PFCPModification)
 		}
 
-		// DL buffering disabled: gtp5g v0.9.16 blocks on netlink syscall when Buff=true,
-		// freezing the entire UPF PFCP loop. DL packets will be dropped during the
-		// break-before-make phase instead of being buffered.
-		// DL buffering skipped (gtp5g v0.9.16 workaround)
-		logger.PduSessLog.Infof("HoState_PREPARED: DL buffering disabled (gtp5g workaround), packets will drop during break-before-make")
+		// Early path switch (make-before-break): update DL FARs to forward to the
+		// new target AN tunnel immediately. ANInformation was already updated by
+		// HandleHandoverRequestAcknowledgeTransfer above. This avoids the dangerous
+		// PFCP Modification at HoState_COMPLETED that can block on gtp5g netlink.
+		// Conformant with 3GPP TS 23.502 section 4.9.1.3.
+		earlySwitch := 0
+		for _, dataPath := range tunnel.DataPathPool {
+			if dataPath.Activated {
+				ANUPF := dataPath.FirstDPNode
+				DLPDR := ANUPF.DownLinkTunnel.PDR
+				if DLPDR == nil || DLPDR.FAR == nil {
+					continue
+				}
+				DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{Forw: true}
+				DLPDR.FAR.State = smf_context.RULE_UPDATE
+				pdrList = append(pdrList, DLPDR)
+				farList = append(farList, DLPDR.FAR)
+				earlySwitch++
+			}
+		}
+		if earlySwitch > 0 {
+			sendPFCPModification = true
+			smContext.SetState(smf_context.PFCPModification)
+		}
+		anIP := "<nil>"
+		if tunnel.ANInformation.IPAddress != nil {
+			anIP = tunnel.ANInformation.IPAddress.String()
+		}
+		logger.PduSessLog.Infof("HoState_PREPARED: early path switch to AN=%s teid=%d (%d FAR(s))",
+			anIP, tunnel.ANInformation.TEID, earlySwitch)
 
 		if n2Buf, err = smf_context.BuildHandoverCommandTransfer(smContext); err != nil {
 			smContext.Log.Errorf("Build HandoverCommandTransfer failed: %v", err)
@@ -1020,40 +1045,9 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		smContext.TargetRanNodeID = nil
 		smContext.TargetANIP = nil
 
-		anIP := "<nil>"
-		if tunnel.ANInformation.IPAddress != nil {
-			anIP = tunnel.ANInformation.IPAddress.String()
-		}
-		smContext.Log.Infof("HoState_COMPLETED: resume DL forwarding towards AN=%s teid=%d", anIP, tunnel.ANInformation.TEID)
-
-		// Resume DL forwarding towards the (new) AN and flush any buffered DL packets.
-		// AMF may have requested DL buffering right after HandoverCommand to minimize packet loss during
-		// the break-before-make phase; after HO completion we should forward again.
-		updatedDLFAR := 0
-		for _, dataPath := range tunnel.DataPathPool {
-			if dataPath.Activated {
-				ANUPF := dataPath.FirstDPNode
-				DLPDR := ANUPF.DownLinkTunnel.PDR
-				if DLPDR == nil || DLPDR.FAR == nil {
-					continue
-				}
-
-				DLPDR.FAR.ApplyAction = pfcpType.ApplyAction{
-					Buff: false,
-					Drop: false,
-					Dupl: false,
-					Forw: true,
-					Nocp: false,
-				}
-				DLPDR.FAR.State = smf_context.RULE_UPDATE
-				pdrList = append(pdrList, DLPDR)
-				farList = append(farList, DLPDR.FAR)
-				updatedDLFAR++
-			}
-		}
-		smContext.Log.Infof("HoState_COMPLETED: updated %d DL FAR(s)", updatedDLFAR)
-
-		// User plane is now switched and should be active.
+		// DL FAR path switch already happened at HoState_PREPARED (early/make-before-break).
+		// Only finalize state and clean up indirect forwarding if needed.
+		smContext.Log.Infof("HoState_COMPLETED: finalizing handover (path switch done at PREPARED)")
 		smContext.UpCnxState = models.UpCnxState_ACTIVATED
 
 		// remove indirect forwarding path
@@ -1063,10 +1057,10 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			indirectForwardingPDR.FAR.State = smf_context.RULE_REMOVE
 			pdrList = append(pdrList, indirectForwardingPDR)
 			farList = append(farList, indirectForwardingPDR.FAR)
+			sendPFCPModification = true
+			smContext.SetState(smf_context.PFCPModification)
 		}
 
-		sendPFCPModification = true
-		smContext.SetState(smf_context.PFCPModification)
 		smContext.HoState = models.HoState_COMPLETED
 		response.JsonData.HoState = models.HoState_COMPLETED
 
