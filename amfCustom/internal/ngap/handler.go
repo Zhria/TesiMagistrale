@@ -345,15 +345,25 @@ func handleUEContextReleaseCompleteMain(ran *context.AmfRan,
 		amfUe.Lock.Unlock()
 	case context.UeContextReleaseHandover:
 		ran.Log.Infof("Release UE[%s] Context : Release for Handover", amfUe.Supi)
-		// TODO: it's a workaround, need to fix it.
-		targetRanUe := context.GetSelf().RanUeFindByAmfUeNgapID(ranUe.TargetUe.AmfUeNgapId)
-
-		context.DetachSourceUeTargetUe(ranUe)
-		err := ranUe.Remove()
-		if err != nil {
-			ran.Log.Errorln(err.Error())
+		if ranUe.TargetUe != nil {
+			// Normal HO success path: ranUe is the sourceUe being released after HO completion.
+			targetRanUe := context.GetSelf().RanUeFindByAmfUeNgapID(ranUe.TargetUe.AmfUeNgapId)
+			context.DetachSourceUeTargetUe(ranUe)
+			err := ranUe.Remove()
+			if err != nil {
+				ran.Log.Errorln(err.Error())
+			}
+			gmm_common.AttachRanUeToAmfUeAndReleaseOldIfAny(amfUe, targetRanUe)
+		} else {
+			// HO failure path: ranUe is the targetUe being released after HO rollback.
+			// No TargetUe to attach; just clean up and remove this RanUe.
+			ran.Log.Warnf("Release UE Context for Handover: TargetUe is nil (HO failure cleanup)")
+			context.DetachSourceUeTargetUe(ranUe)
+			err := ranUe.Remove()
+			if err != nil {
+				ran.Log.Errorln(err.Error())
+			}
 		}
-		gmm_common.AttachRanUeToAmfUeAndReleaseOldIfAny(amfUe, targetRanUe)
 		// Todo: remove indirect tunnel
 	default:
 		ran.Log.Errorf("Invalid Release Action[%d]", ranUe.ReleaseAction)
