@@ -545,8 +545,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		smContext.UeLocation = body.JsonData.UeLocation
 
 		// DL buffering disabled (gtp5g v0.9.16 workaround): skip PFCP Modification
-		// during HoState_PREPARING. UPF keeps forwarding to old tunnel; packets
-		// arriving during break-before-make will be dropped at the old AN.
+		// during HoState_PREPARING. UPF keeps forwarding to old tunnel;
 		// HoState_COMPLETED will update the FAR to point to the new tunnel.
 	}
 
