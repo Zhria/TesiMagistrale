@@ -6,6 +6,8 @@
 package hobuffer
 
 import (
+	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -178,22 +180,64 @@ func (m *Manager) Len() int {
 	return len(m.buffers)
 }
 
+// Flush retry parameters.
+const (
+	flushMaxRetries    = 8                   // max retries per packet on ENOBUFS
+	flushInitBackoff   = 200 * time.Microsecond
+	flushMaxBackoff    = 5 * time.Millisecond
+	flushYieldInterval = 64 // yield to scheduler every N successful writes
+)
+
+// isENOBUFS returns true if the error is caused by a full kernel socket buffer.
+func isENOBUFS(err error) bool {
+	return err != nil && strings.Contains(err.Error(), "no buffer space available")
+}
+
 // FlushAndWrite flushes the buffer for the given TEID and writes each packet
 // using the provided write function. This is intended to be called after XFRM
 // rules have been updated so that packets are sent with the correct outer IP.
-// Returns the number of packets successfully written.
+//
+// When the kernel socket buffer is full (ENOBUFS), the write is retried with
+// exponential backoff to let the kernel drain. Returns the number of packets
+// successfully written.
 func (m *Manager) FlushAndWrite(teid uint32, writeFn func(pkt []byte) error) int {
 	packets := m.Flush(teid)
 	if len(packets) == 0 {
 		return 0
 	}
 	written := 0
-	for _, pkt := range packets {
-		if err := writeFn(pkt); err != nil {
-			m.log.Warnf("HOBuffer: re-inject write failed for TEID %d: %v", teid, err)
-		} else {
-			written++
+	dropped := 0
+	for i, pkt := range packets {
+		ok := false
+		backoff := flushInitBackoff
+		for retry := 0; retry <= flushMaxRetries; retry++ {
+			if err := writeFn(pkt); err != nil {
+				if isENOBUFS(err) && retry < flushMaxRetries {
+					time.Sleep(backoff)
+					backoff *= 2
+					if backoff > flushMaxBackoff {
+						backoff = flushMaxBackoff
+					}
+					continue
+				}
+				// Non-ENOBUFS error or retries exhausted: drop packet
+				dropped++
+				break
+			}
+			ok = true
+			break
 		}
+		if ok {
+			written++
+			// Yield periodically so the kernel can process queued packets
+			if (i+1)%flushYieldInterval == 0 {
+				runtime.Gosched()
+			}
+		}
+	}
+	if dropped > 0 {
+		m.log.Warnf("HOBuffer: TEID %d flush: %d/%d written, %d dropped (ENOBUFS)",
+			teid, written, len(packets), dropped)
 	}
 	return written
 }

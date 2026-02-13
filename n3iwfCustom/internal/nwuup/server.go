@@ -43,7 +43,7 @@ type Server struct {
 const (
 	// Default socket buffer used for the raw GRE socket. This helps avoid ENOBUFS
 	// ("no buffer space available") when forwarding high-rate downlink traffic to UE.
-	greSocketBufferBytes = 4 * 1024 * 1024
+	greSocketBufferBytes = 8 * 1024 * 1024
 )
 
 func NewServer(n3iwf n3iwf) (*Server, error) {
@@ -116,6 +116,7 @@ func (s *Server) newGreConn() error {
 		if err := bufConn.SetWriteBuffer(greSocketBufferBytes); err != nil {
 			s.log.Warnf("Unable to set GRE socket write buffer: %v", err)
 		}
+		s.log.Infof("GRE socket buffers requested: %d bytes (%.1f MB)", greSocketBufferBytes, float64(greSocketBufferBytes)/(1024*1024))
 	}
 	s.greConn = ipv4.NewPacketConn(connection)
 	if s.greConn == nil {
