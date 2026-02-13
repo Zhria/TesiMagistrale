@@ -40,12 +40,6 @@ type Server struct {
 	stopHOBufCleanup   chan struct{}
 }
 
-const (
-	// Default socket buffer used for the raw GRE socket. This helps avoid ENOBUFS
-	// ("no buffer space available") when forwarding high-rate downlink traffic to UE.
-	greSocketBufferBytes = 8 * 1024 * 1024
-)
-
 func NewServer(n3iwf n3iwf) (*Server, error) {
 	s := &Server{
 		n3iwf: n3iwf,
@@ -106,18 +100,10 @@ func (s *Server) newGreConn() error {
 	if err != nil {
 		return errors.Wrapf(err, "Error setting GRE listen socket on %s", listenAddr)
 	}
-	if bufConn, ok := connection.(interface {
-		SetReadBuffer(bytes int) error
-		SetWriteBuffer(bytes int) error
-	}); ok {
-		if err := bufConn.SetReadBuffer(greSocketBufferBytes); err != nil {
-			s.log.Warnf("Unable to set GRE socket read buffer: %v", err)
-		}
-		if err := bufConn.SetWriteBuffer(greSocketBufferBytes); err != nil {
-			s.log.Warnf("Unable to set GRE socket write buffer: %v", err)
-		}
-		s.log.Infof("GRE socket buffers requested: %d bytes (%.1f MB)", greSocketBufferBytes, float64(greSocketBufferBytes)/(1024*1024))
-	}
+	// Socket buffer sizes are left at the kernel defaults (net.core.wmem_default /
+	// net.core.rmem_default), which on this system are already ~25 MB — larger than
+	// any value we would set here. Calling SetReadBuffer/SetWriteBuffer with a
+	// smaller value would actually *reduce* the buffer.
 	s.greConn = ipv4.NewPacketConn(connection)
 	if s.greConn == nil {
 		return errors.Wrapf(err, "Error opening GRE IPv4 packet connection socket on %s", listenAddr)
