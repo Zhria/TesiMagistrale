@@ -193,20 +193,59 @@ func isENOBUFS(err error) bool {
 	return err != nil && strings.Contains(err.Error(), "no buffer space available")
 }
 
-// FlushAndWrite flushes the buffer for the given TEID and writes each packet
-// using the provided write function. This is intended to be called after XFRM
-// rules have been updated so that packets are sent with the correct outer IP.
+// FlushAndWrite drains and re-injects all buffered packets for a TEID.
 //
-// When the kernel socket buffer is full (ENOBUFS), the write is retried with
-// exponential backoff to let the kernel drain. Returns the number of packets
-// successfully written.
+// Crucially, the buffer entry is kept "active" (IsActive == true) for the
+// entire duration of the write loop. This means forwardDL() keeps enqueuing
+// new arriving packets instead of sending them directly. Only after ALL
+// buffered packets have been written do we deactivate the buffer, so that
+// subsequent packets flow through forwardDL() normally. This guarantees
+// packet ordering: old (buffered) packets are sent first, new packets after.
+//
+// When the kernel socket buffer is full (ENOBUFS), each write is retried with
+// exponential backoff. Returns the total number of packets successfully written
+// across all drain passes.
 func (m *Manager) FlushAndWrite(teid uint32, writeFn func(pkt []byte) error) int {
-	packets := m.Flush(teid)
-	if len(packets) == 0 {
-		return 0
+	totalWritten := 0
+	totalDropped := 0
+
+	// We may need multiple drain passes: while we are writing the first
+	// batch (without holding the lock), forwardDL() can enqueue more
+	// packets. We drain again until the buffer is empty.
+	for pass := 0; ; pass++ {
+		// --- drain under lock (fast) ---
+		m.mu.Lock()
+		buf, ok := m.buffers[teid]
+		if !ok {
+			m.mu.Unlock()
+			break
+		}
+		packets := buf.drain()
+		if len(packets) == 0 {
+			// Buffer is empty — deactivate so forwardDL sends directly.
+			delete(m.buffers, teid)
+			m.mu.Unlock()
+			m.log.Infof("HOBuffer: flushed TEID %d in %d pass(es), %d written, %d dropped",
+				teid, pass+1, totalWritten, totalDropped)
+			break
+		}
+		m.mu.Unlock()
+
+		if pass == 0 {
+			m.log.Infof("HOBuffer: flushing %d packets for TEID %d", len(packets), teid)
+		}
+
+		// --- write without lock (slow) ---
+		written, dropped := m.writePackets(teid, packets, writeFn)
+		totalWritten += written
+		totalDropped += dropped
 	}
-	written := 0
-	dropped := 0
+
+	return totalWritten
+}
+
+// writePackets writes a slice of packets using writeFn, retrying on ENOBUFS.
+func (m *Manager) writePackets(teid uint32, packets [][]byte, writeFn func(pkt []byte) error) (written, dropped int) {
 	for i, pkt := range packets {
 		ok := false
 		backoff := flushInitBackoff
@@ -220,7 +259,6 @@ func (m *Manager) FlushAndWrite(teid uint32, writeFn func(pkt []byte) error) int
 					}
 					continue
 				}
-				// Non-ENOBUFS error or retries exhausted: drop packet
 				dropped++
 				break
 			}
@@ -229,15 +267,14 @@ func (m *Manager) FlushAndWrite(teid uint32, writeFn func(pkt []byte) error) int
 		}
 		if ok {
 			written++
-			// Yield periodically so the kernel can process queued packets
 			if (i+1)%flushYieldInterval == 0 {
 				runtime.Gosched()
 			}
 		}
 	}
 	if dropped > 0 {
-		m.log.Warnf("HOBuffer: TEID %d flush: %d/%d written, %d dropped (ENOBUFS)",
+		m.log.Warnf("HOBuffer: TEID %d write batch: %d/%d written, %d dropped",
 			teid, written, len(packets), dropped)
 	}
-	return written
+	return
 }
