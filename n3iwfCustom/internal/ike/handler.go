@@ -1201,13 +1201,6 @@ func (s *Server) continueCreateChildSA(
 
 	ikeSecurityAssociation.ResponderMessageID++
 
-	// Trigger Path Switch when handover reuses NAS security and not already sent
-	if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
-		if shared := ranUe.GetSharedCtx(); shared != nil && shared.ReuseNasSecurity && !shared.PathSwitchSent {
-			s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
-		}
-	}
-
 	// If needed, setup another PDU session
 	s.CreatePDUSessionChildSA(ikeUe, temporaryPDUSessionSetupData)
 }
@@ -1228,7 +1221,7 @@ func (s *Server) HandleInformational(
 
 	var deletePayload *ike_message.Delete
 	var updateSaAddrs bool
-	var triggerPathSwitch bool
+	var mobikeCompleted bool
 	var err error
 	responseIKEPayload := new(ike_message.IKEPayloadContainer)
 
@@ -1261,7 +1254,7 @@ func (s *Server) HandleInformational(
 		if err := s.handleMobikeUpdateSaAddresses(udpConn, n3iwfAddr, ueAddr, ikeSecurityAssociation); err != nil {
 			ikeLog.Errorf("HandleInformational(): MOBIKE update failed: %v", err)
 		} else {
-			triggerPathSwitch = true
+			mobikeCompleted = true
 		}
 	}
 
@@ -1280,11 +1273,33 @@ func (s *Server) HandleInformational(
 			responseIKEPayload, false, true, message.MessageID,
 			udpConn, ueAddr, n3iwfAddr)
 
-		// After acknowledging MOBIKE UPDATE_SA_ADDRESSES, trigger Path Switch for handover when NAS security is reused.
-		// For 5GS HO, HandoverNotify should be sent first (UE connected to target), then PathSwitchRequest.
-		// PathSwitch updates CN (AMF/SMF/UPF) to route DL packets to this N3IWF.
-		if triggerPathSwitch {
+		// After acknowledging MOBIKE UPDATE_SA_ADDRESSES, flush HO buffers and send
+		// HandoverNotify to complete the N2 handover.
+		if mobikeCompleted {
 			n3iwfCtx := s.Context()
+
+			// Flush handover DL buffers now that XFRM rules have been
+			// reinstalled with the UE's real outer IP.
+			if hoBuffer := n3iwfCtx.HOBuffer; hoBuffer != nil && n3iwfCtx.GreDLWriteFunc != nil {
+				ranNgapIdForFlush, okFlush := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI)
+				if okFlush {
+					if ranUeFlush, okFlush := n3iwfCtx.RanUePoolLoad(ranNgapIdForFlush); okFlush {
+						sharedFlush := ranUeFlush.GetSharedCtx()
+						for _, pdu := range sharedFlush.PduSessionList {
+							if pdu != nil && pdu.GTPConnInfo != nil {
+								teid := pdu.GTPConnInfo.IncomingTEID
+								writeFn := func(pkt []byte) error {
+									return n3iwfCtx.GreDLWriteFunc(teid, pkt)
+								}
+								if n := hoBuffer.FlushAndWrite(teid, writeFn); n > 0 {
+									ikeLog.Infof("HOBuffer: re-injected %d buffered DL packets for TEID %d", n, teid)
+								}
+							}
+						}
+					}
+				}
+			}
+
 			ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSecurityAssociation.LocalSPI)
 			if ok {
 				if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok {
@@ -1292,9 +1307,6 @@ func (s *Server) HandleInformational(
 						if !shared.HandoverNotifySent {
 							s.SendNgapEvt(n3iwf_context.NewSendHandoverNotifyEvt(ranNgapId))
 						}
-						//if !shared.PathSwitchSent {
-						//	s.SendNgapEvt(n3iwf_context.NewSendPathSwitchRequestEvt(ranNgapId))
-						//}
 					}
 				}
 			}
@@ -1336,7 +1348,7 @@ func (s *Server) handleMobikeUpdateSaAddresses(
 	}
 	ikeSA.IkeUE.IKEConnection = ikeSA.IKEConnection
 
-	// Ensure UserLocationInformationN3IWF can be encoded in NGAP messages (e.g., PathSwitchRequest)
+	// Ensure UserLocationInformationN3IWF can be encoded in NGAP messages (e.g., HandoverNotify)
 	// during handover when InitialUEMessage is skipped (ReuseNasSecurity=true).
 	if ueAddr.IP != nil {
 		n3iwfCtx := s.Context()
@@ -2016,7 +2028,7 @@ func (s *Server) StartDPD(ikeUe *n3iwf_context.N3IWFIkeUe) {
 
 						// During inter-N3IWF handover, the UE intentionally moves to a new access point / outer IP
 						// and may not respond to DPD probes from the source N3IWF.
-						// Triggering UEContextReleaseRequest here races with PathSwitch and can cause duplicate PFCP
+						// Triggering UEContextReleaseRequest here races with HandoverNotify and can cause duplicate PFCP
 						// modifications (URR "file exists") and break data plane continuity on the target.
 						if ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId); ok && ranUe != nil {
 							if shared := ranUe.GetSharedCtx(); shared != nil && len(shared.TargetToSourceContainer) > 0 {

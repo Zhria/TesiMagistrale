@@ -5,6 +5,7 @@ import (
 	"net"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	"github.com/free5gc/ngap/ngapType"
 	"github.com/pkg/errors"
@@ -17,6 +18,7 @@ import (
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/gre"
 	gtpQoSMsg "github.com/free5gc/n3iwf/internal/gtp/message"
+	"github.com/free5gc/n3iwf/internal/hobuffer"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/internal/snapshot"
 	"github.com/free5gc/n3iwf/pkg/factory"
@@ -31,10 +33,11 @@ type n3iwf interface {
 type Server struct {
 	n3iwf
 
-	greConn  *ipv4.PacketConn
-	gtpuConn *gtpv1.UPlaneConn
-	ulCh     chan ulItem // buffered channel for UL forwarding with backpressure
-	log      *logrus.Entry
+	greConn            *ipv4.PacketConn
+	gtpuConn           *gtpv1.UPlaneConn
+	ulCh               chan ulItem // buffered channel for UL forwarding with backpressure
+	log                *logrus.Entry
+	stopHOBufCleanup   chan struct{}
 }
 
 const (
@@ -70,6 +73,19 @@ func (s *Server) Run(wg *sync.WaitGroup) error {
 	wg.Add(ulWorkerCount)
 	for i := 0; i < ulWorkerCount; i++ {
 		go s.ulWorker(wg, i)
+	}
+
+	// Register a DL write function on the context so that other subsystems
+	// (e.g. the IKE handler during HO buffer flush) can write pre-encoded
+	// GRE packets through this socket.
+	s.Context().GreDLWriteFunc = s.writeGreForTEID
+
+	// Start HO buffer TTL cleanup goroutine if buffer is enabled.
+	if hoBuffer := s.Context().HOBuffer; hoBuffer != nil {
+		ttl := time.Duration(s.Config().GetHOBufferTTLSeconds()) * time.Second
+		s.stopHOBufCleanup = make(chan struct{})
+		wg.Add(1)
+		go s.hoBufferCleanupLoop(wg, hoBuffer, ttl)
 	}
 
 	wg.Add(1)
@@ -293,6 +309,11 @@ func (s *Server) Stop() {
 	nwuupLog := s.log
 	nwuupLog.Infof("Close Nwuup server...")
 
+	// Stop HO buffer cleanup goroutine
+	if s.stopHOBufCleanup != nil {
+		close(s.stopHOBufCleanup)
+	}
+
 	if err := s.greConn.Close(); err != nil {
 		nwuupLog.Errorf("Stop nwuup greConn error : %v", err)
 	}
@@ -305,6 +326,71 @@ func (s *Server) Stop() {
 	if s.ulCh != nil {
 		close(s.ulCh)
 	}
+}
+
+// hoBufferCleanupLoop periodically cleans up expired HO DL buffers.
+func (s *Server) hoBufferCleanupLoop(wg *sync.WaitGroup, mgr *hobuffer.Manager, ttl time.Duration) {
+	defer wg.Done()
+	ticker := time.NewTicker(ttl / 2) // check at twice the TTL frequency
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			mgr.CleanupExpired(ttl)
+		case <-s.stopHOBufCleanup:
+			return
+		case <-s.CancelContext().Done():
+			return
+		}
+	}
+}
+
+// writeGreForTEID writes a pre-encoded GRE packet for the given TEID through
+// the raw GRE socket. This is used during HO buffer flush to re-inject
+// buffered DL packets after XFRM rules have been updated.
+func (s *Server) writeGreForTEID(teid uint32, grePayload []byte) error {
+	n3iwfCtx := s.Context()
+	ranUe, ok := n3iwfCtx.AllocatedUETEIDLoad(teid)
+	if !ok {
+		return errors.Errorf("TEID %d: no RanUE context", teid)
+	}
+	ranUeNgapID := ranUe.GetSharedCtx().RanUeNgapId
+	ikeUe, err := n3iwfCtx.IkeUeLoadFromNgapId(ranUeNgapID)
+	if err != nil {
+		return errors.Wrapf(err, "TEID %d: IkeUe lookup", teid)
+	}
+	ueInnerIPAddr := ikeUe.IPSecInnerIPAddr
+
+	var cm *ipv4.ControlMessage
+	for _, childSA := range ikeUe.N3IWFChildSecurityAssociation {
+		if childSA == nil || childSA.XfrmIface == nil {
+			continue
+		}
+		for _, pduID := range childSA.PDUSessionIds {
+			if pduID <= 0 {
+				continue
+			}
+			pdu := ranUe.FindPDUSession(pduID)
+			if pdu != nil && pdu.GTPConnInfo.IncomingTEID == teid {
+				cm = &ipv4.ControlMessage{
+					IfIndex: childSA.XfrmIface.Attrs().Index,
+				}
+				break
+			}
+		}
+		if cm != nil {
+			break
+		}
+	}
+	if cm == nil {
+		return errors.Errorf("TEID %d: no matching ChildSA/XfrmIface", teid)
+	}
+
+	if _, err := s.greConn.WriteTo(grePayload, cm, ueInnerIPAddr); err != nil {
+		return errors.Wrapf(err, "TEID %d: WriteTo", teid)
+	}
+	return nil
 }
 
 // Parse the fields not supported by go-gtp and forward data to UE.
@@ -423,6 +509,14 @@ func (s *Server) forwardDL(packet gtpQoSMsg.QoSTPDUPacket) {
 	grePacket.SetQoS(qfi, rqi)
 	forwardData := grePacket.Marshal()
 	qoSFlow := pdusession.QosFlows[int64(qfi)]
+
+	// During handover the XFRM outbound rules still point to the UE's old
+	// outer IP (imported via state-sync). Buffer the packet instead of
+	// sending it into the void.
+	if hoBuffer := n3iwfCtx.HOBuffer; hoBuffer != nil && hoBuffer.IsActive(pktTEID) {
+		hoBuffer.Enqueue(pktTEID, forwardData)
+		return
+	}
 
 	// Send to UE through Nwu
 	if n, err := s.greConn.WriteTo(forwardData, cm, ueInnerIPAddr); err != nil {

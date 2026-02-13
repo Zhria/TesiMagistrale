@@ -119,9 +119,6 @@ type RanUeSharedCtx struct {
 	// Handover Notify has been sent for this UE
 	HandoverNotifySent bool
 
-	// Path Switch has been sent for this UE
-	PathSwitchSent bool
-
 	// Handover state tracking (for RC control validation)
 	HoState HandoverState
 }

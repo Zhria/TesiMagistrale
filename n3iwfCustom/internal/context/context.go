@@ -19,6 +19,7 @@ import (
 	"github.com/pkg/errors"
 	gtpv1 "github.com/wmnsk/go-gtp/gtpv1"
 
+	"github.com/free5gc/n3iwf/internal/hobuffer"
 	"github.com/free5gc/n3iwf/internal/logger"
 	"github.com/free5gc/n3iwf/pkg/factory"
 	"github.com/free5gc/ngap/ngapType"
@@ -65,6 +66,16 @@ type N3IWFContext struct {
 	XfrmParentIfaceName string
 	// Every UE's first UP IPsec will use default XFRM interface, additoinal UP IPsec will offset its XFRM id
 	XfrmIfaceIdOffsetForUP uint32
+
+	// Handover DL buffer: holds DL packets between early UPF path switch and MOBIKE completion.
+	HOBuffer *hobuffer.Manager
+
+	// GreDLWriteFunc is registered by the nwuup server and writes a pre-encoded
+	// GRE packet to the UE through the raw GRE socket. It is used by the HO
+	// buffer flush path (IKE handler) to re-inject buffered DL packets after
+	// the XFRM rules are updated with the UE's correct outer IP.
+	// Parameters: teid (to look up the UE/session), grePayload (marshalled GRE).
+	GreDLWriteFunc func(teid uint32, grePayload []byte) error
 }
 
 func NewContext(n3iwf n3iwf) (*N3IWFContext, error) {
@@ -133,6 +144,11 @@ func NewContext(n3iwf n3iwf) (*N3IWFContext, error) {
 		return nil, err
 	}
 	n.XfrmParentIfaceName = ikeBindIfaceName
+
+	// Handover DL buffer
+	if cfg.GetHOBufferEnabled() {
+		n.HOBuffer = hobuffer.NewManager(cfg.GetHOBufferMaxPacketsPerTEID())
+	}
 
 	return n, nil
 }

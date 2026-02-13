@@ -87,6 +87,16 @@ type HandoverStateSync struct {
 	Token    string `yaml:"token,omitempty" valid:"optional"`
 }
 
+// HOBufferConfig controls the downlink handover buffer on the target N3IWF.
+// When enabled, DL packets arriving from the UPF between the early path switch
+// and MOBIKE completion are buffered in userspace instead of being sent to the
+// wrong peer IP via stale XFRM rules.
+type HOBufferConfig struct {
+	Enabled          *bool `yaml:"enabled,omitempty"          valid:"optional"` // default: true
+	MaxPacketsPerTEID int  `yaml:"maxPacketsPerTeid,omitempty" valid:"optional"` // default: 65536
+	TTLSeconds        int  `yaml:"ttlSeconds,omitempty"        valid:"optional"` // default: 60
+}
+
 func (a *AMFSCTPAddresses) validate() error {
 	var errs govalidator.Errors
 
@@ -165,6 +175,7 @@ type Configuration struct {
 	Wifi                 *Wifi              `yaml:"wifi,omitempty"       valid:"optional"`
 	HandoverStateSync    *HandoverStateSync `yaml:"handoverStateSync,omitempty" valid:"optional"`
 	XfrmMTU              int                `yaml:"xfrmMTU,omitempty"    valid:"optional"`
+	HOBuffer             *HOBufferConfig    `yaml:"hoBuffer,omitempty"   valid:"optional"`
 }
 
 type Logger struct {
@@ -503,6 +514,33 @@ func (c *Config) GetHandoverStateSyncToken() string {
 		return ""
 	}
 	return c.Configuration.HandoverStateSync.Token
+}
+
+func (c *Config) GetHOBufferEnabled() bool {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HOBuffer == nil || c.Configuration.HOBuffer.Enabled == nil {
+		return true // enabled by default
+	}
+	return *c.Configuration.HOBuffer.Enabled
+}
+
+func (c *Config) GetHOBufferMaxPacketsPerTEID() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HOBuffer == nil || c.Configuration.HOBuffer.MaxPacketsPerTEID <= 0 {
+		return 65536
+	}
+	return c.Configuration.HOBuffer.MaxPacketsPerTEID
+}
+
+func (c *Config) GetHOBufferTTLSeconds() int {
+	c.RLock()
+	defer c.RUnlock()
+	if c.Configuration == nil || c.Configuration.HOBuffer == nil || c.Configuration.HOBuffer.TTLSeconds <= 0 {
+		return 60
+	}
+	return c.Configuration.HOBuffer.TTLSeconds
 }
 
 type Tls struct {
