@@ -930,6 +930,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 
 		smContext.SetState(smf_context.ModificationPending)
 		smContext.HoState = models.HoState_PREPARING
+		smContext.Log.Infof("DIAG HoState_PREPARING: state=%s sendPFCPModification=%v", smContext.State(), sendPFCPModification)
 		err = smf_context.HandleHandoverRequiredTransfer(
 			body.BinaryDataN2SmInformation, smContext, smContextUpdateData)
 		if err != nil {
@@ -1008,6 +1009,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 			sendPFCPModification = true
 			smContext.SetState(smf_context.PFCPModification)
 		}
+		smContext.Log.Infof("DIAG HoState_PREPARED: earlySwitch=%d state=%s sendPFCPModification=%v", earlySwitch, smContext.State(), sendPFCPModification)
 		anIP := "<nil>"
 		if tunnel.ANInformation.IPAddress != nil {
 			anIP = tunnel.ANInformation.IPAddress.String()
@@ -1026,7 +1028,7 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 		}
 		response.JsonData.HoState = models.HoState_PREPARING
 	case models.HoState_COMPLETED:
-		smContext.Log.Traceln("In HoState_COMPLETED")
+		smContext.Log.Infof("DIAG HoState_COMPLETED entry: state=%s sendPFCPModification=%v HoState=%s", smContext.State(), sendPFCPModification, smContext.HoState)
 		// The early path switch at HoState_PREPARED may have left the state in
 		// PFCPModification (waiting for UPF response) or ModificationPending.
 		// Since COMPLETED no longer touches the UPF, force state to Active.
@@ -1150,6 +1152,8 @@ func (p *Processor) HandlePDUSessionSMContextUpdate(
 	}
 
 	// Check FSM and take corresponding action
+	smContext.Log.Infof("DIAG FSM pre-check: state=%s sendPFCPModification=%v pfcpResponseStatus=%d HoState=%s",
+		smContext.State(), sendPFCPModification, pfcpResponseStatus, smContext.HoState)
 	switch smContext.State() {
 	case smf_context.PFCPModification:
 		smContext.Log.Traceln("In case PFCPModification")

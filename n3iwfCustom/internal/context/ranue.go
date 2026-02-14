@@ -3,6 +3,7 @@ package context
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/free5gc/ngap/ngapType"
 )
@@ -120,7 +121,8 @@ type RanUeSharedCtx struct {
 	HandoverNotifySent bool
 
 	// Handover state tracking (for RC control validation)
-	HoState HandoverState
+	HoState          HandoverState
+	HoExecutingTimer *time.Timer
 }
 
 // CanStartHandover returns true if the UE is in a state that allows starting a new handover.
@@ -131,6 +133,20 @@ func (ctx *RanUeSharedCtx) CanStartHandover() bool {
 // IsHandoverInProgress returns true if a handover procedure is currently ongoing.
 func (ctx *RanUeSharedCtx) IsHandoverInProgress() bool {
 	return ctx.HoState == HoStatePreparing || ctx.HoState == HoStateExecuting
+}
+
+// StopHoExecutingTimer cancels the executing timeout timer if active.
+func (ctx *RanUeSharedCtx) StopHoExecutingTimer() {
+	if ctx.HoExecutingTimer != nil {
+		ctx.HoExecutingTimer.Stop()
+		ctx.HoExecutingTimer = nil
+	}
+}
+
+// ResetHoState cancels any active executing timer and resets the handover state to Idle.
+func (ctx *RanUeSharedCtx) ResetHoState() {
+	ctx.StopHoExecutingTimer()
+	ctx.HoState = HoStateIdle
 }
 
 type PDUSession struct {

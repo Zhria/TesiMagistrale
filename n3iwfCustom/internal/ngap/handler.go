@@ -1202,6 +1202,7 @@ func (s *Server) HandleUEContextReleaseCommand(
 
 	// If UE was in handover, mark it as completed and notify waiters
 	if shared.IsHandoverInProgress() {
+		shared.StopHoExecutingTimer()
 		shared.HoState = n3iwf_context.HoStateCompleted
 		ngapLog.Debugf("UE %d handover state -> Completed", shared.RanUeNgapId)
 		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_completed", nil)
@@ -4066,6 +4067,19 @@ func (s *Server) HandleHandoverCommand(
 		shared.HoState = n3iwf_context.HoStateExecuting
 		ngapLog.Debugf("UE %d handover state -> Executing", shared.RanUeNgapId)
 		rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_command_sent", nil)
+
+		// Start a safety timer: if the handover does not complete within the timeout,
+		// reset the state to Idle so that a new handover can be triggered.
+		const hoExecutingTimeout = 30 * time.Second
+		shared.StopHoExecutingTimer()
+		ueID := shared.RanUeNgapId
+		shared.HoExecutingTimer = time.AfterFunc(hoExecutingTimeout, func() {
+			if shared.HoState == n3iwf_context.HoStateExecuting {
+				shared.ResetHoState()
+				ngapLog.Warnf("UE %d handover executing timeout (%s) expired, state reset to Idle", ueID, hoExecutingTimeout)
+				rc.NotifyHandoverResult(ueID, "handover_executing_timeout", fmt.Errorf("handover executing timeout after %s", hoExecutingTimeout))
+			}
+		})
 	}
 
 	if ranUeNgapID != nil {
