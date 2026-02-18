@@ -724,6 +724,33 @@ func (s *Server) HandleInitialContextSetupRequest(
 		}
 	}
 
+	// Handover without state-sync: the handover PDU sessions (created in
+	// HandleHandoverRequest) already have GTP tunnels but lack IPSec Child SAs.
+	// Inject them into UnactivatedPDUSession so that EndSignalling triggers
+	// CREATE_CHILD_SA toward the UE.
+	if !s.Config().GetHandoverStateSyncEnabled() && ranUeCtx.ReuseNasSecurity &&
+		len(ranUeCtx.PduSessionList) > 0 &&
+		len(ranUeCtx.TemporaryPDUSessionSetupData.UnactivatedPDUSession) == 0 {
+
+		ngapLog.Infof("Handover without state-sync: injecting %d handover PDU sessions for Child SA creation",
+			len(ranUeCtx.PduSessionList))
+
+		ranUeCtx.TemporaryPDUSessionSetupData.NGAPProcedureCode.Value = ngapType.ProcedureCodeInitialContextSetup
+		if ranUeCtx.TemporaryPDUSessionSetupData.SetupListCxtRes == nil {
+			ranUeCtx.TemporaryPDUSessionSetupData.SetupListCxtRes = new(ngapType.PDUSessionResourceSetupListCxtRes)
+		}
+		if ranUeCtx.TemporaryPDUSessionSetupData.FailedListCxtRes == nil {
+			ranUeCtx.TemporaryPDUSessionSetupData.FailedListCxtRes = new(ngapType.PDUSessionResourceFailedToSetupListCxtRes)
+		}
+		ranUeCtx.TemporaryPDUSessionSetupData.Index = 0
+		for _, pdu := range ranUeCtx.PduSessionList {
+			if pdu != nil {
+				ranUeCtx.TemporaryPDUSessionSetupData.UnactivatedPDUSession = append(
+					ranUeCtx.TemporaryPDUSessionSetupData.UnactivatedPDUSession, pdu)
+			}
+		}
+	}
+
 	if oldAMF != nil {
 		ngapLog.Debugf("Old AMF: %s\n", oldAMF.Value)
 	}
@@ -3274,7 +3301,9 @@ func (s *Server) HandleSendNASMsg(
 		return
 	}
 
-	if n, ikeErr := n3iwfUe.TCPConnection.Write(n3iwfUe.TemporaryCachedNASMessage); ikeErr != nil {
+	if n3iwfUe.TemporaryCachedNASMessage == nil {
+		ngapLog.Debugf("No cached NAS message for RanUeNgapId=%d (handover PDU session)", ranUeNgapId)
+	} else if n, ikeErr := n3iwfUe.TCPConnection.Write(n3iwfUe.TemporaryCachedNASMessage); ikeErr != nil {
 		ngapLog.Errorf("Writing via IPSec signalling SA failed: %v", ikeErr)
 	} else {
 		ngapLog.Tracef("Forward PDU Seesion Establishment Accept to UE. Wrote %d bytes", n)
@@ -3868,11 +3897,7 @@ func (s *Server) HandleHandoverRequest(
 	if securityContext != nil {
 		sharedCtx.NextHopChainingCount = securityContext.NextHopChainingCount.Value
 		sharedCtx.NextHopNH = append([]byte(nil), securityContext.NextHopNH.Value.Bytes...)
-		if s.Config().GetHandoverStateSyncEnabled() {
-			sharedCtx.ReuseNasSecurity = true
-		} else {
-			ngapLog.Infof("State-sync disabled: UE will perform fresh IKE + registration (ReuseNasSecurity=false)")
-		}
+		sharedCtx.ReuseNasSecurity = true
 		ngapLog.Debugf(
 			"Received security context NH/NCC for handover (NCC=%d, NH len=%d)",
 			sharedCtx.NextHopChainingCount,
