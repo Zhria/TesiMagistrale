@@ -3303,6 +3303,22 @@ func (s *Server) HandleSendNASMsg(
 
 	if n3iwfUe.TemporaryCachedNASMessage == nil {
 		ngapLog.Debugf("No cached NAS message for RanUeNgapId=%d (handover PDU session)", ranUeNgapId)
+		// Child SA + XFRM rules are now in place; flush HOBuffer so DL packets
+		// reach the UE immediately instead of waiting for the buffer TTL to expire.
+		ranUeCtx := n3iwfUe.GetSharedCtx()
+		if hoBuffer := n3iwfCtx.HOBuffer; hoBuffer != nil && n3iwfCtx.GreDLWriteFunc != nil && ranUeCtx != nil {
+			for _, pdu := range ranUeCtx.PduSessionList {
+				if pdu != nil && pdu.GTPConnInfo != nil {
+					teid := pdu.GTPConnInfo.IncomingTEID
+					writeFn := func(pkt []byte) error {
+						return n3iwfCtx.GreDLWriteFunc(teid, pkt)
+					}
+					if n := hoBuffer.FlushAndWrite(teid, writeFn); n > 0 {
+						ngapLog.Infof("HOBuffer: flushed %d DL packets for TEID %d (no state-sync path)", n, teid)
+					}
+				}
+			}
+		}
 	} else if n, ikeErr := n3iwfUe.TCPConnection.Write(n3iwfUe.TemporaryCachedNASMessage); ikeErr != nil {
 		ngapLog.Errorf("Writing via IPSec signalling SA failed: %v", ikeErr)
 	} else {
