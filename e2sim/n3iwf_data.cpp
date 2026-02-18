@@ -1,5 +1,7 @@
 #include <cctype>
 #include <cerrno>
+#include <chrono>
+#include <cinttypes>
 #include <iostream>
 #include <map>
 #include <fstream>
@@ -492,6 +494,73 @@ static RcThroughputTotals subtract_totals(const RcThroughputTotals &curr,
           : 0;
   return delta;
 }
+
+// ── KPM metrics CSV logger ─────────────────────────────────────────────────
+static FILE *g_kpm_csv = nullptr;
+static std::mutex g_kpm_csv_mu;
+
+static inline long long kpm_csv_ms() {
+  using namespace std::chrono;
+  return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+}
+
+static uint64_t station_u64(const RcStationSnapshot &st,
+                            std::initializer_list<const char *> keys) {
+  std::string field;
+  uint64_t val = 0;
+  if (lookup_station_field(st, keys, field) && parse_first_uint64(field, val))
+    return val;
+  return 0;
+}
+
+static void kpm_csv_write(int64_t ranUeId,
+                          const RcStationSnapshot *station,
+                          const RcThroughputTotals &delta,
+                          const std::map<std::string, double> &kpi,
+                          long granularityMs) {
+  std::lock_guard<std::mutex> lk(g_kpm_csv_mu);
+  if (!g_kpm_csv) {
+    try { std::filesystem::create_directories("/home/e2sim/log"); } catch (...) {}
+    g_kpm_csv = std::fopen("/home/e2sim/log/kpm_metrics.csv", "a");
+    if (!g_kpm_csv) return;
+    std::fseek(g_kpm_csv, 0, SEEK_END);
+    if (std::ftell(g_kpm_csv) == 0) {
+      std::fprintf(g_kpm_csv,
+          "timestamp_ms,ranUeNgapId,"
+          "iw_tx_bytes,iw_rx_bytes,iw_tx_packets,iw_rx_packets,"
+          "iw_tx_retries,iw_tx_failed,"
+          "delta_dl_bytes,delta_ul_bytes,delta_dl_pkts,delta_ul_pkts,"
+          "DRB.UEThpDl,DRB.UEThpUl,granularity_ms\n");
+    }
+  }
+
+  uint64_t tx_b = 0, rx_b = 0, tx_p = 0, rx_p = 0, tx_ret = 0, tx_fail = 0;
+  if (station) {
+    tx_b    = station_u64(*station, {"tx_bytes",   "iw.tx_bytes"});
+    rx_b    = station_u64(*station, {"rx_bytes",   "iw.rx_bytes"});
+    tx_p    = station_u64(*station, {"tx_packets", "iw.tx_packets"});
+    rx_p    = station_u64(*station, {"rx_packets", "iw.rx_packets"});
+    tx_ret  = station_u64(*station, {"tx_retries", "iw.tx_retries"});
+    tx_fail = station_u64(*station, {"tx_failed",  "iw.tx_failed"});
+  }
+
+  double thpDl = 0, thpUl = 0;
+  if (auto it = kpi.find("DRB.UEThpDl"); it != kpi.end()) thpDl = it->second;
+  if (auto it = kpi.find("DRB.UEThpUl"); it != kpi.end()) thpUl = it->second;
+
+  std::fprintf(g_kpm_csv,
+      "%" PRId64 ",%" PRId64 ","
+      "%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ","
+      "%" PRIu64 ",%" PRIu64 ","
+      "%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ","
+      "%.2f,%.2f,%ld\n",
+      (int64_t)kpm_csv_ms(), ranUeId,
+      tx_b, rx_b, tx_p, rx_p, tx_ret, tx_fail,
+      delta.dl_bytes, delta.ul_bytes, delta.dl_packets, delta.ul_packets,
+      thpDl, thpUl, granularityMs);
+  std::fflush(g_kpm_csv);
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 static RcCountersSnapshot parse_rc_counters(const json& counters) {
   RcCountersSnapshot out;
@@ -1151,6 +1220,12 @@ std::map<int64_t, std::map<std::string, double>> getMetricsKPMByRanUeId(const st
         continue;
       }
     }
+
+    const RcStationSnapshot *station = nullptr;
+    for (const auto &a : assocs) {
+      if (a.ue.ran_ue_ngap_id == ran_ue_id) { station = &a.station; break; }
+    }
+    kpm_csv_write(ran_ue_id, station, delta, result, (long)granularityPeriod);
 
     if (!result.empty()) {
       result_by_ue.emplace(ran_ue_id, std::move(result));
