@@ -449,7 +449,7 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
 
     for (const auto &[ranUeId, kpi] : kpi_by_ue)
     {
-      LOG_I("KPM report UE ranUeNgapId=%ld", (long)ranUeId);
+      LOG_I("[%lld] KPM report UE ranUeNgapId=%ld", unix_ms_now(), (long)ranUeId);
       log_kpm_parameters(kpi);
     }
 
