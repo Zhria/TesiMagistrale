@@ -3710,7 +3710,7 @@ func (s *Server) HandleHandoverRequest(
 	amf.N3iwfRanUeList[n3iwfUe.RanUeNgapId] = n3iwfUe
 
 	// Stateful IPSec handover: import IKE/ESP state embedded in the SourceToTarget transparent container (relayed via AMF).
-	if len(sharedCtx.SourceToTargetContainer) > 0 {
+	if s.Config().GetHandoverStateSyncEnabled() && len(sharedCtx.SourceToTargetContainer) > 0 {
 		var stt ngapType.SourceNGRANNodeToTargetNGRANNodeTransparentContainer
 		if err := aper.UnmarshalWithParams(sharedCtx.SourceToTargetContainer, &stt, "valueExt"); err != nil {
 			ngapLog.Debugf("Handover state-sync: decode SourceToTarget container failed: %v", err)
@@ -3724,6 +3724,8 @@ func (s *Server) HandleHandoverRequest(
 				ngapLog.Infof("Handover state-sync: imported IPSec state for AMF UE NGAP ID=%d", transfer.AMFUeNgapID)
 			}
 		}
+	} else if !s.Config().GetHandoverStateSyncEnabled() {
+		ngapLog.Infof("Handover state-sync disabled on target, skipping IPSec state import")
 	}
 
 	gtpBindAddr := s.Config().GetN3iwfGtpBindAddress()
