@@ -3868,7 +3868,11 @@ func (s *Server) HandleHandoverRequest(
 	if securityContext != nil {
 		sharedCtx.NextHopChainingCount = securityContext.NextHopChainingCount.Value
 		sharedCtx.NextHopNH = append([]byte(nil), securityContext.NextHopNH.Value.Bytes...)
-		sharedCtx.ReuseNasSecurity = true
+		if s.Config().GetHandoverStateSyncEnabled() {
+			sharedCtx.ReuseNasSecurity = true
+		} else {
+			ngapLog.Infof("State-sync disabled: UE will perform fresh IKE + registration (ReuseNasSecurity=false)")
+		}
 		ngapLog.Debugf(
 			"Received security context NH/NCC for handover (NCC=%d, NH len=%d)",
 			sharedCtx.NextHopChainingCount,

@@ -359,7 +359,7 @@ static void log_kpm_parameters(const std::map<std::string, double> &kpi)
     line.push_back('=');
     line.append(std::to_string(entry.second));
   }
-  LOG_D("KPM report parameters: %s", line.c_str());
+  LOG_I("KPM report parameters: %s", line.c_str());
 }
 
 /* ============================================================
@@ -447,7 +447,11 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       continue;
     }
 
-    // log_kpm_parameters(kpi);
+    for (const auto &[ranUeId, kpi] : kpi_by_ue)
+    {
+      LOG_I("KPM report UE ranUeNgapId=%ld", (long)ranUeId);
+      log_kpm_parameters(kpi);
+    }
 
     generate_e2apv2_indication_request_parameterized(pdu, requestorId, instanceId, ranFunctionId, actionId, seqNum,
                                                      hdr_buf, (int)ehr.encoded, msg_buf, (int)emr.encoded);
