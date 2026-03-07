@@ -24,7 +24,6 @@ type HandoverAlert struct {
 	RanUeNgapId             int64
 	Cause                   *ngapType.Cause
 	TargetID                *ngapType.TargetID
-	PDUSessionResourceHORqd []ngapType.PDUSessionResourceItemHORqd
 	DirectForwarding        bool
 	SourceToTargetContainer []byte
 	Metadata                map[string]string
@@ -111,7 +110,6 @@ func (h *HandoverAlertHandler) Handle(alert HandoverAlert) error {
 		alert.RanUeNgapId,
 		cause,
 		alert.TargetID,
-		alert.PDUSessionResourceHORqd,
 		alert.DirectForwarding,
 		alert.SourceToTargetContainer,
 	)
@@ -214,36 +212,15 @@ func handleHandoverHTTPPost(w http.ResponseWriter, r *http.Request) {
 		Metadata:                payload.Metadata,
 	}
 
-	waitCh := make(chan hoResult, 1)
-	hoWaitersMu.Lock()
-	hoWaiters[payload.RanUeNgapId] = append(hoWaiters[payload.RanUeNgapId], waitCh)
-	hoWaitersMu.Unlock()
-
 	if err := HandleHandoverAlert(alert); err != nil {
-		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
 		writeHTTPError(w, http.StatusBadGateway, err)
 		return
 	}
 
-	select {
-	case <-r.Context().Done():
-		unregisterHoWaiter(payload.RanUeNgapId, waitCh)
-		return
-	case res := <-waitCh:
-		if res.err != nil || strings.Contains(res.status, "failed") {
-			writeHTTPJSON(w, http.StatusInternalServerError, map[string]interface{}{
-				"status":  res.status,
-				"ranUeId": payload.RanUeNgapId,
-				"error":   errString(res.err),
-			})
-			return
-		}
-		writeHTTPJSON(w, http.StatusOK, map[string]interface{}{
-			"status":  res.status,
-			"ranUeId": payload.RanUeNgapId,
-		})
-		return
-	}
+	writeHTTPSuccess(w, map[string]interface{}{
+		"status":  "handover_triggered",
+		"ranUeId": payload.RanUeNgapId,
+	})
 }
 
 func decodeTargetID(ctx *n3iwf_context.N3IWFContext, encoded string) (*ngapType.TargetID, error) {

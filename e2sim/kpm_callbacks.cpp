@@ -61,7 +61,7 @@ extern "C"
 #include "subscription_key.hpp"
 #include "app_state.hpp"
 
-#include "encode_e2apv2.hpp"
+#include "encode_e2apv3.hpp"
 
 #include <nlohmann/json.hpp>
 #include "n3iwf_data.hpp"
@@ -365,38 +365,57 @@ static void log_kpm_parameters(const std::map<std::string, double> &kpi)
 /* ============================================================
  * REPORT LOOP (genera e invia Indication in base ai file JSON)
  * ============================================================ */
-void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod, const std::shared_ptr<std::atomic_bool> &stop_token)
+void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long actionId, GranularityPeriod_t granularityPeriod, long reportingPeriod, const std::shared_ptr<std::atomic_bool> &stop_token)
 {
   long seqNum = 1;
-  asn_codec_ctx_t *opt_cod = NULL; // usare NULL per il contesto (standard)
+  asn_codec_ctx_t *opt_cod = NULL;
+
+  if (reportingPeriod <= 0)
+  {
+    reportingPeriod = granularityPeriod;
+  }
+
+  long samplesPerReport = std::max(1L, reportingPeriod / (long)granularityPeriod);
+  LOG_I("KPM report loop: granularityPeriod=%ld ms, reportingPeriod=%ld ms, samplesPerReport=%ld",
+        (long)granularityPeriod, reportingPeriod, samplesPerReport);
+
+  using KpiSnapshot = std::map<int64_t, std::map<std::string, double>>;
+  std::vector<KpiSnapshot> batch;
+  std::vector<std::vector<RcAssociationSnapshot>> assocs_batch;
+  batch.reserve(samplesPerReport);
+  assocs_batch.reserve(samplesPerReport);
 
   for (;;)
   {
     if (g_app_stop.load(std::memory_order_relaxed))
-    {
       break;
-    }
     if (stop_token && stop_token->load(std::memory_order_relaxed))
-    {
       break;
-    }
 
     std::this_thread::sleep_for(std::chrono::milliseconds(granularityPeriod));
 
     std::vector<RcAssociationSnapshot> assocs = getRcAssociations();
     if (assocs.empty())
     {
-      LOG_D("KPM report loop: no RC associations available, skipping seqNum %ld", seqNum);
+      LOG_D("KPM report loop: no RC associations available, skipping sample");
       continue;
     }
 
-    std::map<int64_t, std::map<std::string, double>> kpi_by_ue =
-        getMetricsKPMByRanUeId(assocs, granularityPeriod);
+    KpiSnapshot kpi_by_ue = getMetricsKPMByRanUeId(assocs, granularityPeriod);
     if (kpi_by_ue.empty())
     {
-      LOG_D("KPM report loop: no per-UE KPI metrics available, skipping seqNum %ld", seqNum);
+      LOG_D("KPM report loop: no per-UE KPI metrics available, skipping sample");
       continue;
     }
+
+    batch.push_back(std::move(kpi_by_ue));
+    assocs_batch.push_back(std::move(assocs));
+
+    if ((long)batch.size() < samplesPerReport)
+      continue;
+
+    const std::vector<RcAssociationSnapshot> &latest_assocs = assocs_batch.back();
+
     E2SM_KPM_IndicationHeader_t hdr;
     encode_kpm_ind_hdr_fmt1(&hdr);
 
@@ -406,29 +425,39 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
         &hdr, hdr_buf, sizeof(hdr_buf));
     if (ehr.encoded < 0)
     {
-      LOG_D("hdr enc failed\n"); /* handle */
+      LOG_D("hdr enc failed\n");
       LOG_D("Reason: %s\n", ehr.failed_type ? ehr.failed_type->name : "unknown");
+      batch.clear();
+      assocs_batch.clear();
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
       continue;
     }
 
     E2SM_KPM_IndicationMessage_t *ind_msg =
         (E2SM_KPM_IndicationMessage_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_t));
 
-    kpm_fill_ind_msg_format3(ind_msg, assocs, kpi_by_ue);
+    kpm_fill_ind_msg_format3(ind_msg, latest_assocs, batch);
     if (!ind_msg->indicationMessage_formats.choice.indicationMessage_Format3)
     {
       LOG_D("KPM indication message (Format3) was not populated, skipping seqNum %ld", seqNum);
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      batch.clear();
+      assocs_batch.clear();
       continue;
     }
 
     uint8_t msg_buf[MAX_SCTP_BUFFER];
-
     asn_enc_rval_t emr = asn_encode_to_buffer(opt_cod, ATS_ALIGNED_BASIC_PER, &asn_DEF_E2SM_KPM_IndicationMessage,
                                               ind_msg, msg_buf, sizeof(msg_buf));
     if (emr.encoded < 0)
     {
-      LOG_D("msg enc failed\n"); /* handle */
+      LOG_D("msg enc failed\n");
       LOG_D("Reason: %s\n", emr.failed_type ? emr.failed_type->name : "unknown");
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      batch.clear();
+      assocs_batch.clear();
       continue;
     }
 
@@ -437,6 +466,8 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
       LOG_D("KPM self-decode check failed, skipping seqNum %ld", seqNum);
       ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      batch.clear();
+      assocs_batch.clear();
       continue;
     }
 
@@ -444,12 +475,16 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     if (pdu == NULL)
     {
       LOG_D("calloc failed for pdu\n");
+      ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
+      batch.clear();
+      assocs_batch.clear();
       continue;
     }
 
-    for (const auto &[ranUeId, kpi] : kpi_by_ue)
+    for (const auto &[ranUeId, kpi] : batch.back())
     {
-      LOG_I("[%lld] KPM report UE ranUeNgapId=%ld", unix_ms_now(), (long)ranUeId);
+      LOG_I("[%lld] KPM report UE ranUeNgapId=%ld (batch of %ld samples)", unix_ms_now(), (long)ranUeId, (long)batch.size());
       log_kpm_parameters(kpi);
     }
 
@@ -460,8 +495,11 @@ void run_report_loop(long requestorId, long instanceId, long ranFunctionId, long
     ASN_STRUCT_FREE(asn_DEF_E2AP_PDU, pdu);
     ASN_STRUCT_FREE(asn_DEF_E2SM_KPM_IndicationMessage, ind_msg);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationHeader, &hdr);
-    LOG_D("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld", requestorId, instanceId, ranFunctionId, actionId, seqNum);
+    LOG_D("KPM Indication sent: reqId=%ld instId=%ld ranFuncId=%ld actionId=%ld seqNum=%ld samples=%ld",
+          requestorId, instanceId, ranFunctionId, actionId, seqNum, (long)batch.size());
 
+    batch.clear();
+    assocs_batch.clear();
     seqNum++;
   }
 }
@@ -471,14 +509,15 @@ static void start_kpm_worker(const SubscriptionKey &key,
                              long instanceId,
                              long ranFunctionId,
                              long actionId,
-                             GranularityPeriod_t granularityPeriod)
+                             GranularityPeriod_t granularityPeriod,
+                             long reportingPeriod)
 {
   stop_kpm_worker(key);
 
   auto stop_flag = std::make_shared<std::atomic_bool>(false);
 
-  std::thread worker([requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag]()
-                     { run_report_loop(requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, stop_flag); });
+  std::thread worker([requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, reportingPeriod, stop_flag]()
+                     { run_report_loop(requestorId, instanceId, ranFunctionId, actionId, granularityPeriod, reportingPeriod, stop_flag); });
 
   std::lock_guard<std::mutex> lock(g_kpm_workers_mutex);
   g_kpm_workers.emplace(key, KpmWorkerCtx{std::move(worker), stop_flag});
@@ -796,7 +835,7 @@ void callback_kpm_subscription_request(E2AP_PDU_t *sub_req_pdu)
   if (accept_size > 0 && reqActionId >= 0)
   {
     SubscriptionKey key{reqRequestorId, reqInstanceId, ranFunctionId, reqActionId};
-    start_kpm_worker(key, reqRequestorId, reqInstanceId, ranFunctionId, reqActionId, granularityPeriod);
+    start_kpm_worker(key, reqRequestorId, reqInstanceId, ranFunctionId, reqActionId, granularityPeriod, reportingPeriod);
   }
   else
   {

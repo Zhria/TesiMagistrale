@@ -100,6 +100,8 @@ func (s *Server) NGAPDispatch(conn *sctp.SCTPConn, msg []byte) {
 			s.HandlePDUSessionResourceModifyConfirm(amf, pdu)
 		case ngapType.ProcedureCodeRANConfigurationUpdate:
 			s.HandleRANConfigurationUpdateAcknowledge(amf, pdu)
+		case ngapType.ProcedureCodeHandoverCancel:
+			s.HandleHandoverCancelAcknowledge(amf, pdu)
 		default:
 			ngapLog.Warnf("Not implemented NGAP message(successfulOutcome), procedureCode:%d]\n",
 				successfulOutcome.ProcedureCode.Value)

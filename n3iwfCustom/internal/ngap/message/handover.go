@@ -43,13 +43,9 @@ func BuildHandoverRequired(
 		return nil, fmt.Errorf("AMF UE NGAP ID unspecified for RanUE %d", sharedCtx.RanUeNgapId)
 	}
 
-	pduItems := evt.PDUSessionResourceHORqd
-	if len(pduItems) == 0 {
-		var err error
-		pduItems, err = buildPDUSessionResourceHORqd(sharedCtx, evt.DirectForwardingAvailable)
-		if err != nil {
-			return nil, fmt.Errorf("build pdu session resource list: %w", err)
-		}
+	pduItems, err := buildPDUSessionResourceHORqd(sharedCtx, evt.DirectForwardingAvailable)
+	if err != nil {
+		return nil, fmt.Errorf("build pdu session resource list: %w", err)
 	}
 
 	sourceToTarget := evt.SourceToTargetContainer

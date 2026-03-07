@@ -281,7 +281,6 @@ type TriggerHandoverEvt struct {
 	RanUeNgapId               int64
 	Cause                     ngapType.Cause
 	TargetID                  *ngapType.TargetID
-	PDUSessionResourceHORqd   []ngapType.PDUSessionResourceItemHORqd
 	DirectForwardingAvailable bool
 	SourceToTargetContainer   []byte
 }
@@ -294,17 +293,13 @@ func NewTriggerHandoverEvt(
 	ranUeNgapId int64,
 	cause ngapType.Cause,
 	targetID *ngapType.TargetID,
-	pduItems []ngapType.PDUSessionResourceItemHORqd,
 	directForwarding bool,
 	sourceToTargetContainer []byte,
 ) *TriggerHandoverEvt {
-	items := make([]ngapType.PDUSessionResourceItemHORqd, len(pduItems))
-	copy(items, pduItems)
 	return &TriggerHandoverEvt{
 		RanUeNgapId:               ranUeNgapId,
 		Cause:                     cause,
 		TargetID:                  targetID,
-		PDUSessionResourceHORqd:   items,
 		DirectForwardingAvailable: directForwarding,
 		SourceToTargetContainer:   append([]byte(nil), sourceToTargetContainer...),
 	}

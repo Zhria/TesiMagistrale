@@ -96,7 +96,7 @@ extern "C"
 #include "n3iwf_data.hpp"
 
 #include "encode_rc.hpp"
-#include "encode_e2apv2.hpp"
+#include "encode_e2apv3.hpp"
 #include "e2sim_defs.h"
 #include "rc_ids.hpp"
 

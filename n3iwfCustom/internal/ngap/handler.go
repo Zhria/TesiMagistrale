@@ -4122,9 +4122,8 @@ func (s *Server) HandleHandoverCommand(
 		ueID := shared.RanUeNgapId
 		shared.HoExecutingTimer = time.AfterFunc(hoExecutingTimeout, func() {
 			if shared.HoState == n3iwf_context.HoStateExecuting {
-				shared.ResetHoState()
-				ngapLog.Warnf("UE %d handover executing timeout (%s) expired, state reset to Idle", ueID, hoExecutingTimeout)
-				rc.NotifyHandoverResult(ueID, "handover_executing_timeout", fmt.Errorf("handover executing timeout after %s", hoExecutingTimeout))
+				ngapLog.Warnf("UE %d handover executing timeout (%s) expired, sending HandoverCancel", ueID, hoExecutingTimeout)
+				TriggerHandoverCancel(shared, fmt.Sprintf("executing timeout after %s", hoExecutingTimeout))
 			}
 		})
 	}
@@ -4405,4 +4404,71 @@ func (s *Server) HandleSendSendPDUSessionResourceRelease(
 	}
 
 	metricStatusOk = true
+}
+
+// HandleHandoverCancelAcknowledge processes the HandoverCancelAcknowledge from AMF.
+// At this point the source N3IWF has already reset HoState when it sent the cancel,
+// so this is just a confirmation log.
+func (s *Server) HandleHandoverCancelAcknowledge(
+	amf *n3iwf_context.N3IWFAMF,
+	pdu *ngapType.NGAPPDU,
+) {
+	ngapLog := logger.NgapLog
+	ngapLog.Info("Handle Handover Cancel Acknowledge")
+
+	if pdu == nil || pdu.SuccessfulOutcome == nil {
+		ngapLog.Error("HandoverCancelAcknowledge: nil PDU or SuccessfulOutcome")
+		return
+	}
+
+	ack := pdu.SuccessfulOutcome.Value.HandoverCancelAcknowledge
+	if ack == nil {
+		ngapLog.Error("HandoverCancelAcknowledge is nil")
+		return
+	}
+
+	for _, ie := range ack.ProtocolIEs.List {
+		switch ie.Id.Value {
+		case ngapType.ProtocolIEIDAMFUENGAPID:
+			ngapLog.Tracef("HandoverCancelAcknowledge AMF UE NGAP ID: %d", ie.Value.AMFUENGAPID.Value)
+		case ngapType.ProtocolIEIDRANUENGAPID:
+			ngapLog.Tracef("HandoverCancelAcknowledge RAN UE NGAP ID: %d", ie.Value.RANUENGAPID.Value)
+		case ngapType.ProtocolIEIDCriticalityDiagnostics:
+			ngapLog.Tracef("HandoverCancelAcknowledge CriticalityDiagnostics present")
+		}
+	}
+
+	ngapLog.Info("HandoverCancelAcknowledge processed successfully")
+}
+
+// TriggerHandoverCancel builds and sends NGAP Handover Cancel for the given UE.
+// Safe to call from any goroutine (IKE handler, timeout callback, etc.).
+// It resets HoState to Idle and notifies RC waiters.
+func TriggerHandoverCancel(shared *n3iwf_context.RanUeSharedCtx, reason string) {
+	ngapLog := logger.NgapLog
+	if shared == nil {
+		ngapLog.Warn("TriggerHandoverCancel: nil shared context")
+		return
+	}
+	if !shared.IsHandoverInProgress() {
+		ngapLog.Debugf("TriggerHandoverCancel: UE %d not in handover (state=%d), skipping", shared.RanUeNgapId, shared.HoState)
+		return
+	}
+	if shared.AMF == nil {
+		ngapLog.Errorf("TriggerHandoverCancel: UE %d has no AMF association", shared.RanUeNgapId)
+		shared.ResetHoState()
+		return
+	}
+
+	pkt, err := message.BuildHandoverCancel(shared)
+	if err != nil {
+		ngapLog.Errorf("TriggerHandoverCancel: build failed for UE %d: %v", shared.RanUeNgapId, err)
+		shared.ResetHoState()
+		return
+	}
+
+	message.SendToAmf(shared.AMF, pkt)
+	shared.ResetHoState()
+	ngapLog.Infof("Sent HandoverCancel for UE %d (reason: %s)", shared.RanUeNgapId, reason)
+	rc.NotifyHandoverResult(shared.RanUeNgapId, "handover_cancelled", fmt.Errorf("%s", reason))
 }

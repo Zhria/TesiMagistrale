@@ -54,7 +54,7 @@ file(GLOB E2SIM_SOURCES
   "${E2SIM_ROOT}/encode_kpm.cpp"
   "${E2SIM_ROOT}/encode_rc.cpp"
   "${E2SIM_ROOT}/rc_callbacks.cpp"
-  "${E2SIM_ROOT}/encode_e2apv2.cpp"
+  "${E2SIM_ROOT}/encode_e2apv3.cpp"
   "${E2SIM_ROOT}/n3iwf_data.cpp"
   "${E2SIM_ROOT}/n3iwf_utils.cpp"
   "${E2SIM_ROOT}/src/DEF/*.cpp"
@@ -153,7 +153,7 @@ endif()
 #file(GLOB RICSIM_SOURCES
 
 #  "${E2SIM_ROOT}/ricsim.cpp"
-#  "${E2SIM_ROOT}/encode_e2apv2.cpp"
+#  "${E2SIM_ROOT}/encode_e2apv3.cpp"
 #  "${E2SIM_ROOT}/src/DEF/*.cpp"
 #  "${E2SIM_ROOT}/src/SCTP/*.cpp"
 #  "${E2SIM_ROOT}/src/E2APr/*.c"

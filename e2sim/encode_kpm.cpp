@@ -26,51 +26,71 @@ static inline void rec_add_double(MeasurementRecord_t *rec, double v)
   ASN_SEQUENCE_ADD(&rec->list, item);
 }
 
-// Riempie una struttura E2SM_KPM_IndicationMessage_Format1_t con la lista di KPI.
-// Ritorna true se almeno una misura è stata aggiunta, false in caso di errore o lista vuota.
+// Builds a Format1 structure from one or more granularity-period snapshots.
+// Each snapshot becomes a separate MeasurementDataItem in measData.
+// The measInfoList (metric names) is derived from the first valid snapshot.
 static bool fill_ind_msg_format1_struct(E2SM_KPM_IndicationMessage_Format1_t &fmt1,
-                                        const std::map<std::string, double> &kpi)
+                                        const std::vector<std::map<std::string, double>> &snapshots)
 {
   memset(&fmt1, 0, sizeof(fmt1));
 
-  MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(MeasurementDataItem_t));
-  if (!mdi)
-  {
+  if (snapshots.empty())
     return false;
-  }
 
   MeasurementInfoList_t *measInfoList = (MeasurementInfoList_t *)calloc(1, sizeof(MeasurementInfoList_t));
   if (!measInfoList)
-  {
-    free(mdi);
     return false;
-  }
   fmt1.measInfoList = measInfoList;
 
-  for (const auto &kv : kpi)
+  std::vector<std::string> metric_order;
+  for (const auto &kv : snapshots[0])
   {
-    const char *name = kv.first.c_str();
-    double value = kv.second;
-    if (value != -1)
+    if (kv.second != -1)
     {
-      add_meas_name(fmt1.measInfoList, name);
-      rec_add_double(&mdi->measRecord, value);
+      add_meas_name(fmt1.measInfoList, kv.first.c_str());
+      metric_order.push_back(kv.first);
     }
   }
 
-  if (fmt1.measInfoList->list.count == 0 ||
-      mdi->measRecord.list.count != fmt1.measInfoList->list.count)
+  if (metric_order.empty())
   {
-    LOG_D("No measurements to send in KPM Indication Message or inconsistent measurement counts\n");
-    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
-    free(mdi);
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1.measInfoList);
     free(fmt1.measInfoList);
     fmt1.measInfoList = nullptr;
     return false;
   }
 
-  ASN_SEQUENCE_ADD(&fmt1.measData.list, mdi);
+  for (const auto &snap : snapshots)
+  {
+    MeasurementDataItem_t *mdi = (MeasurementDataItem_t *)calloc(1, sizeof(MeasurementDataItem_t));
+    if (!mdi)
+      continue;
+
+    for (const auto &name : metric_order)
+    {
+      auto it = snap.find(name);
+      double val = (it != snap.end() && it->second != -1) ? it->second : 0.0;
+      rec_add_double(&mdi->measRecord, val);
+    }
+
+    if (mdi->measRecord.list.count != (int)metric_order.size())
+    {
+      ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementRecord, &mdi->measRecord);
+      free(mdi);
+      continue;
+    }
+
+    ASN_SEQUENCE_ADD(&fmt1.measData.list, mdi);
+  }
+
+  if (fmt1.measData.list.count == 0)
+  {
+    ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_MeasurementInfoList, fmt1.measInfoList);
+    free(fmt1.measInfoList);
+    fmt1.measInfoList = nullptr;
+    return false;
+  }
+
   return true;
 }
 
@@ -271,7 +291,8 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
     return;
   }
 
-  if (!fill_ind_msg_format1_struct(*fmt1, kpi))
+  std::vector<std::map<std::string, double>> single_snapshot = {kpi};
+  if (!fill_ind_msg_format1_struct(*fmt1, single_snapshot))
   {
     ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format1, fmt1);
     free(fmt1);
@@ -283,7 +304,7 @@ void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t *indMsg, std::map<std::st
 
 void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
                               const std::vector<RcAssociationSnapshot> &assocs,
-                              const std::map<int64_t, std::map<std::string, double>> &kpi_by_ue)
+                              const std::vector<std::map<int64_t, std::map<std::string, double>>> &batch)
 {
   memset(indMsg, 0, sizeof(*indMsg));
   indMsg->indicationMessage_formats.present =
@@ -292,31 +313,32 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
   E2SM_KPM_IndicationMessage_Format3_t *fmt3 =
       (E2SM_KPM_IndicationMessage_Format3_t *)calloc(1, sizeof(E2SM_KPM_IndicationMessage_Format3_t));
   if (!fmt3)
-  {
     return;
-  }
 
   size_t added = 0;
   for (const auto &assoc : assocs)
   {
-    // Considera solo UE con un ran_ue_ngap_id valido
     if (assoc.ue.ran_ue_ngap_id < 0)
-    {
       continue;
+
+    int64_t ue_id = assoc.ue.ran_ue_ngap_id;
+
+    std::vector<std::map<std::string, double>> ue_snapshots;
+    ue_snapshots.reserve(batch.size());
+    for (const auto &snap : batch)
+    {
+      auto it = snap.find(ue_id);
+      if (it != snap.end() && !it->second.empty())
+        ue_snapshots.push_back(it->second);
     }
 
-    auto kpi_it = kpi_by_ue.find(assoc.ue.ran_ue_ngap_id);
-    if (kpi_it == kpi_by_ue.end() || kpi_it->second.empty())
-    {
+    if (ue_snapshots.empty())
       continue;
-    }
 
     UEMeasurementReportItem_t *item =
         (UEMeasurementReportItem_t *)calloc(1, sizeof(UEMeasurementReportItem_t));
     if (!item)
-    {
       continue;
-    }
 
     bool have_ueid = fill_ueid_from_assoc_gnb(assoc, item->ueID);
     if (!have_ueid)
@@ -326,7 +348,7 @@ void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t *indMsg,
       continue;
     }
 
-    if (!fill_ind_msg_format1_struct(item->measReport, kpi_it->second))
+    if (!fill_ind_msg_format1_struct(item->measReport, ue_snapshots))
     {
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_UEID, &item->ueID);
       ASN_STRUCT_FREE_CONTENTS_ONLY(asn_DEF_E2SM_KPM_IndicationMessage_Format3, &item->measReport);

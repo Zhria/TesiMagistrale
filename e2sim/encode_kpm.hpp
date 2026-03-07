@@ -71,9 +71,11 @@ void encode_kpm_ind_hdr_fmt1(E2SM_KPM_IndicationHeader_t* hdr);
 void kpm_fill_ue_rf_basic(E2SM_KPM_IndicationMessage_t* indMsg,std::map<std::string, double> kpi);
 
 // Build IndicationMessage Format3 (per-UE reports wrapping Format1 per UE)
+// batch: vector of per-granularity-period snapshots (oldest first),
+// each mapping ranUeNgapId -> metric_name -> value.
 void kpm_fill_ind_msg_format3(E2SM_KPM_IndicationMessage_t* indMsg,
                               const std::vector<RcAssociationSnapshot>& assocs,
-                              const std::map<int64_t, std::map<std::string, double>>& kpi_by_ue);
+                              const std::vector<std::map<int64_t, std::map<std::string, double>>>& batch);
 
 
 #endif // ENCODE_KPM_V3_HPP

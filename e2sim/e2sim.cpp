@@ -28,7 +28,7 @@
 #include "e2sim_defs.h"
 #include "e2sim_sctp.hpp"
 #include "e2ap_message_handler.hpp"
-#include "encode_e2apv2.hpp"
+#include "encode_e2apv3.hpp"
 #include "n3iwf_data.hpp"
 #include "n3iwf_utils.hpp"
 #include <mutex>

@@ -28,6 +28,7 @@ import (
 	n3iwf_context "github.com/free5gc/n3iwf/internal/context"
 	"github.com/free5gc/n3iwf/internal/ike/xfrm"
 	"github.com/free5gc/n3iwf/internal/logger"
+	ngap_message "github.com/free5gc/n3iwf/internal/ngap/message"
 )
 
 func (s *Server) HandleIKESAINIT(
@@ -1219,9 +1220,12 @@ func (s *Server) HandleInformational(
 		return
 	}
 
+	const hoFailureNotifyType uint16 = 40961
+
 	var deletePayload *ike_message.Delete
 	var updateSaAddrs bool
 	var mobikeCompleted bool
+	var hoFailureReason string
 	var err error
 	responseIKEPayload := new(ike_message.IKEPayloadContainer)
 
@@ -1242,6 +1246,10 @@ func (s *Server) HandleInformational(
 			if notification.ProtocolID == ike_message.TypeNone &&
 				notification.NotifyMessageType == ike_message.UPDATE_SA_ADDRESSES {
 				updateSaAddrs = true
+			}
+			if notification.NotifyMessageType == hoFailureNotifyType {
+				hoFailureReason = string(notification.NotificationData)
+				ikeLog.Warnf("Received handover failure notification from UE: %s", hoFailureReason)
 			}
 		default:
 			ikeLog.Warnf(
@@ -1264,6 +1272,10 @@ func (s *Server) HandleInformational(
 			ikeLog.Errorf("HandleInformational(): %v", err)
 			return
 		}
+	}
+
+	if hoFailureReason != "" {
+		s.handleHandoverFailureNotify(ikeSecurityAssociation, hoFailureReason)
 	}
 
 	if message.IsResponse() {
@@ -1312,6 +1324,47 @@ func (s *Server) HandleInformational(
 			}
 		}
 	}
+}
+
+func (s *Server) handleHandoverFailureNotify(
+	ikeSA *n3iwf_context.IKESecurityAssociation,
+	reason string,
+) {
+	ikeLog := logger.IKELog
+	n3iwfCtx := s.Context()
+
+	ranNgapId, ok := n3iwfCtx.NgapIdLoad(ikeSA.LocalSPI)
+	if !ok {
+		ikeLog.Warnf("handleHandoverFailureNotify: no NGAP ID mapped for SPI %016x", ikeSA.LocalSPI)
+		return
+	}
+	ranUe, ok := n3iwfCtx.RanUePoolLoad(ranNgapId)
+	if !ok {
+		ikeLog.Warnf("handleHandoverFailureNotify: RanUE %d not found", ranNgapId)
+		return
+	}
+	shared := ranUe.GetSharedCtx()
+	if shared == nil {
+		ikeLog.Warnf("handleHandoverFailureNotify: nil shared context for RanUE %d", ranNgapId)
+		return
+	}
+
+	if !shared.IsHandoverInProgress() {
+		ikeLog.Debugf("handleHandoverFailureNotify: UE %d not in handover, ignoring", ranNgapId)
+		return
+	}
+
+	ikeLog.Warnf("UE %d handover failure reported via IKE: %s — sending HandoverCancel", ranNgapId, reason)
+
+	pkt, err := ngap_message.BuildHandoverCancel(shared)
+	if err != nil {
+		ikeLog.Errorf("handleHandoverFailureNotify: build HandoverCancel failed: %v", err)
+		shared.ResetHoState()
+		return
+	}
+	ngap_message.SendToAmf(shared.AMF, pkt)
+	shared.ResetHoState()
+	ikeLog.Infof("Sent HandoverCancel for UE %d (reason: %s)", ranNgapId, reason)
 }
 
 func (s *Server) handleMobikeUpdateSaAddresses(
